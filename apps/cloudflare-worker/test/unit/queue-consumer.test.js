@@ -601,8 +601,9 @@ test('computeAppPath - _footer.md is an ordinary markdown page', () => {
   expect(computeAppPath('notes/_footer.md')).toBe('/notes/_footer');
 });
 
-test('computeAppPath - html files, including the reserved _footer.html, have no app path', () => {
+test('computeAppPath - html files, including the reserved _footer.html and _navbar.html, have no app path', () => {
   expect(computeAppPath('_footer.html')).toBeNull();
+  expect(computeAppPath('_navbar.html')).toBeNull();
   expect(computeAppPath('notes/page.html')).toBeNull();
 });
 
@@ -618,6 +619,7 @@ test('isMarkdownPage - markdown is processed as a page, html and assets are not'
   expect(isMarkdownPage('a.MDX')).toBe(true);
   expect(isMarkdownPage('_footer.md')).toBe(true);
   expect(isMarkdownPage('_footer.html')).toBe(false);
+  expect(isMarkdownPage('_navbar.html')).toBe(false);
   expect(isMarkdownPage('custom.css')).toBe(false);
 });
 

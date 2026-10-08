@@ -8,7 +8,8 @@ import { cache, type ReactNode } from 'react';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
 import { CustomHead } from '@/components/public/custom-head';
 import Footer from '@/components/public/footer';
-import Nav from '@/components/public/nav';
+import { ChromeErrorBoundary } from '@/components/public/chrome-error-boundary';
+import Nav, { CustomNavbar } from '@/components/public/nav';
 import { SiteProvider } from '@/components/public/site-context';
 import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { env } from '@/env.mjs';
@@ -30,7 +31,7 @@ import type { SiteConfig } from '@/components/types';
 import { loadProtectedCardSource } from '@/lib/protected-card-source';
 import { getThemeUrl } from '@/lib/get-theme';
 import { resolveSiteName } from '@/lib/site-config';
-import { loadCustomFooter } from '@/lib/site-chrome';
+import { loadCustomFooter, loadCustomNavbar } from '@/lib/site-chrome';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
 import { api } from '@/trpc/server';
@@ -171,19 +172,22 @@ export default async function PublicLayout(props: {
     })
     .catch(() => null);
 
-  const [siteConfig, customStylesheet, customFooter] = await Promise.all([
-    siteConfigPromise,
-    // custom.css is linked as a cached same-origin stylesheet, not inlined.
-    // If its metadata can't be loaded, still link it (unversioned, served
-    // must-revalidate) rather than drop the site's styling.
-    api.site.getCustomStylesheet
-      .query({
-        siteId: site.id,
-      })
-      .catch(() => ({ version: null, usesGoogleFonts: false })),
-    // Premium: `_footer.html` replaces the default footer body (null otherwise).
-    loadCustomFooter({ site }),
-  ]);
+  const [siteConfig, customStylesheet, customFooter, customNavbar] =
+    await Promise.all([
+      siteConfigPromise,
+      // custom.css is linked as a cached same-origin stylesheet, not inlined.
+      // If its metadata can't be loaded, still link it (unversioned, served
+      // must-revalidate) rather than drop the site's styling.
+      api.site.getCustomStylesheet
+        .query({
+          siteId: site.id,
+        })
+        .catch(() => ({ version: null, usesGoogleFonts: false })),
+      // Premium: `_footer.html` replaces the default footer body (null otherwise).
+      loadCustomFooter({ site }),
+      // Premium: `_navbar.html` replaces the navbar content (null otherwise).
+      loadCustomNavbar({ site }),
+    ]);
 
   const usesGoogleFonts = customStylesheet?.usesGoogleFonts ?? false;
 
@@ -220,8 +224,26 @@ export default async function PublicLayout(props: {
   const showSearch =
     isFeatureEnabled(Feature.Search, site) && !!siteConfig?.enableSearch;
   const cta = siteConfig?.nav?.cta;
-  const showNav =
+  const showDefaultNav =
     !!siteConfig?.nav || !!siteConfig?.enableSearch || !!siteConfig?.social;
+  // A custom navbar shows even when the site configures no default navbar.
+  // (If it then fails to render, the error boundary falls back to no navbar
+  // while the layout still lacks `.no-nav`; acceptable for an error path.)
+  const showNav = !!customNavbar || showDefaultNav;
+
+  const defaultNav = showDefaultNav ? (
+    <Nav
+      logo={logo}
+      url={sitePrefix || '/'}
+      title={navTitle}
+      links={links}
+      social={social}
+      showSearch={showSearch}
+      searchId={site.id}
+      showThemeSwitch={showThemeModeSwitch}
+      cta={cta}
+    />
+  ) : null;
 
   return (
     <html
@@ -322,18 +344,17 @@ export default async function PublicLayout(props: {
                     anonymousOwnerId={site.anonymousOwnerId}
                   />
                 )}
-                {showNav && (
-                  <Nav
-                    logo={logo}
-                    url={sitePrefix || '/'}
-                    title={navTitle}
-                    links={links}
-                    social={social}
-                    showSearch={showSearch}
-                    searchId={site.id}
-                    showThemeSwitch={showThemeModeSwitch}
-                    cta={cta}
-                  />
+                {customNavbar ? (
+                  <ChromeErrorBoundary label="navbar" fallback={defaultNav}>
+                    <CustomNavbar
+                      content={customNavbar}
+                      showSearch={showSearch}
+                      searchId={site.id}
+                      showThemeSwitch={showThemeModeSwitch}
+                    />
+                  </ChromeErrorBoundary>
+                ) : (
+                  defaultNav
                 )}
                 <div className="site-body">{children}</div>
                 <Footer

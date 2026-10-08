@@ -106,6 +106,12 @@ describe('FsImage click-to-enlarge', () => {
         <FsImage src="/badge.png" alt="Badge" />
       </div>,
     ],
+    [
+      'custom navbar images',
+      <div key="n" className="site-navbar-custom">
+        <FsImage src="/badge.png" alt="Badge" />
+      </div>,
+    ],
   ])('leaves %s alone', (_, content) => {
     render(content);
     const img = screen.getByAltText('Badge');

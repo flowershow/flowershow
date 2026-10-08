@@ -1,5 +1,6 @@
-import { SITE_FOOTER_PATH } from '@flowershow/core';
+import { SITE_FOOTER_PATH, SITE_NAVBAR_PATH } from '@flowershow/core';
 import type { ReactNode } from 'react';
+import NavbarAnchor from '@/components/public/navbar-anchor';
 import { env } from '@/env.mjs';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
@@ -101,5 +102,23 @@ export function loadCustomFooter({ site }: { site: SiteLookupResult }) {
     scope: '.site-footer-custom',
     styleId: 'unocss-footer',
     label: 'footer',
+  });
+}
+
+/**
+ * The site's `_navbar.html` (Premium, `Feature.CustomNavbar`), or null to keep
+ * the default navbar. It replaces the content of the navbar shell (see
+ * `CustomNavbar`). Same-site page links are rendered with `NavbarAnchor`
+ * (`next/link`, `aria-current`). See `loadSiteChromeHtml`.
+ */
+export function loadCustomNavbar({ site }: { site: SiteLookupResult }) {
+  return loadSiteChromeHtml({
+    site,
+    feature: Feature.CustomNavbar,
+    path: SITE_NAVBAR_PATH,
+    scope: '.site-navbar-custom',
+    styleId: 'unocss-navbar',
+    label: 'navbar',
+    components: { a: NavbarAnchor },
   });
 }

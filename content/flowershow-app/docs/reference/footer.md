@@ -139,6 +139,8 @@ The footer keeps its usual wrapper, so the content sits inside `footer.site-foot
 
 See [[custom-styles]] and the [[theme-class-reference|theme class reference]].
 
+You can replace the navbar content the same way with a `_navbar.html` file; see [[navbar#custom-navbar|Custom navbar]].
+
 ## Hide the footer on a page
 
 Set `showFooter: false` in a page's frontmatter to hide the site footer on that page. This works on all plans.

@@ -68,6 +68,8 @@ export default defineConfig({
         '**/page-scripts.spec.ts',
         // Custom footer (`_footer.html`) is also Premium-only.
         '**/custom-footer.spec.ts',
+        // Custom navbar (`_navbar.html`) is Premium-only as well.
+        '**/custom-navbar.spec.ts',
         '**/annotations.spec.ts',
         // Self-hosted fonts must resolve on custom domains too.
         '**/custom-fonts.spec.ts',

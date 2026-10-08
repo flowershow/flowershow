@@ -518,6 +518,134 @@
     }
   }
 
+  /* Custom navbar: rendered `_navbar.html` (Premium) inside the navbar shell.
+     Deliberately not `.rendered-mdx`/prose, so only light defaults; style the
+     rest with Tailwind classes or custom.css. Search and the theme switch
+     stay at the end of the row (move them with `order` in custom.css). */
+  .site-navbar--custom .site-navbar-inner {
+    /* `clip` (unlike `auto`/`hidden`) doesn't force overflow-y to scroll, so
+       `<details>` menus and absolutely positioned panels can still drop below
+       the bar, while content wider than the screen never makes the page
+       scroll sideways. Clipping at the shell (viewport width) rather than at
+       .site-navbar-custom lets a menu panel extend past its own column. */
+    overflow-x: clip;
+  }
+  .site-navbar--custom .site-navbar-search-container {
+    flex-grow: 0;
+  }
+  .site-navbar-custom {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+
+    & p {
+      margin: 0;
+    }
+
+    & a {
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.15s ease-in-out;
+
+      &:hover {
+        color: var(--color-foreground-900);
+      }
+    }
+
+    & a[aria-current='page'] {
+      color: var(--color-foreground-900);
+      font-weight: var(--font-weight-semibold);
+    }
+
+    & a:focus-visible,
+    & summary:focus-visible {
+      outline: 2px solid currentColor;
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    /* A logo always fits the bar; intrinsic width/height can't distort it. */
+    & img {
+      display: inline-block;
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: calc(var(--navbar-height) - 1rem);
+    }
+
+    /* A top-level list of links is a horizontal row. `list-style-type: ""`
+       (not `none`) keeps list semantics for VoiceOver in Safari. */
+    & > :is(ul, ol) {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      list-style-type: "";
+      white-space: nowrap;
+
+      & > li {
+        margin: 0;
+        padding: 0;
+        flex-shrink: 0;
+      }
+    }
+
+    /* On narrow screens such a row scrolls sideways rather than overflowing,
+       unless it holds a <details> menu (a scroll container would clip it). */
+    & > :is(ul, ol):not(:has(details)) {
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    /* <details>/<summary>: the supported no-JS dropdown and mobile menu. */
+    & details {
+      position: relative;
+    }
+
+    & summary {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      cursor: pointer;
+      list-style: none;
+
+      &::-webkit-details-marker {
+        display: none;
+      }
+    }
+
+    & details > :not(summary) {
+      position: absolute;
+      top: calc(100% + 0.5rem);
+      left: 0;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-width: 12rem;
+      margin: 0;
+      padding: 0.5rem 1rem;
+      list-style-type: "";
+      white-space: nowrap;
+      background: var(--color-background);
+      border: 1px solid var(--color-foreground-100);
+      border-radius: var(--radius-md);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    }
+
+    /* The last menu in the bar (typically a mobile menu) opens leftwards. */
+    & > details:last-child > :not(summary) {
+      left: auto;
+      right: 0;
+    }
+  }
+
   /* Mobile navigation */
   .mobile-nav {
     position: fixed;

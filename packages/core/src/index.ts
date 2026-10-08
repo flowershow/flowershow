@@ -12,6 +12,7 @@ export {
   isSiteChromeFile,
   SITE_CHROME_FILES,
   SITE_FOOTER_PATH,
+  SITE_NAVBAR_PATH,
 } from './site-files';
 export type { InlineTagMatch, TagSource, TagWithSource } from './tags';
 export {

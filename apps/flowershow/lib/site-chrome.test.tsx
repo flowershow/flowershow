@@ -35,7 +35,7 @@ vi.mock('@/lib/generate-scoped-css', async (importOriginal) => {
   return { generateScopedCss };
 });
 
-import { loadCustomFooter } from './site-chrome';
+import { loadCustomFooter, loadCustomNavbar } from './site-chrome';
 
 const premiumSite = {
   id: 'site-1',
@@ -51,16 +51,21 @@ async function renderFooter(html: string) {
   return renderToStaticMarkup(result as ReactElement);
 }
 
-describe('loadCustomFooter', () => {
-  let actualProcess: (...a: any[]) => any;
-  let actualCss: (...a: any[]) => any;
+let actualProcess: (...a: any[]) => any;
+let actualCss: (...a: any[]) => any;
 
+/** Clear mocks and restore the real HTML pipeline and CSS generation. */
+function resetMocks() {
+  actualProcess ??= processHtmlFragment.getMockImplementation()!;
+  actualCss ??= generateScopedCss.getMockImplementation()!;
+  vi.clearAllMocks();
+  processHtmlFragment.mockImplementation(actualProcess);
+  generateScopedCss.mockImplementation(actualCss);
+}
+
+describe('loadCustomFooter', () => {
   beforeEach(async () => {
-    actualProcess ??= processHtmlFragment.getMockImplementation()!;
-    actualCss ??= generateScopedCss.getMockImplementation()!;
-    vi.clearAllMocks();
-    processHtmlFragment.mockImplementation(actualProcess);
-    generateScopedCss.mockImplementation(actualCss);
+    resetMocks();
     query.getSiteChromeFile.mockResolvedValue('<p>Made by Acme</p>');
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -198,5 +203,63 @@ describe('loadCustomFooter', () => {
   it('returns null when the footer fetch fails', async () => {
     query.getSiteChromeFile.mockRejectedValue(new Error('s3 down'));
     expect(await loadCustomFooter({ site: premiumSite })).toBeNull();
+  });
+});
+
+describe('loadCustomNavbar', () => {
+  beforeEach(() => {
+    resetMocks();
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  it('returns null on the Free plan without fetching anything', async () => {
+    const result = await loadCustomNavbar({
+      site: { ...premiumSite, plan: 'FREE' },
+    });
+    expect(result).toBeNull();
+    expect(query.getSiteChromeFile).not.toHaveBeenCalled();
+  });
+
+  it('fetches _navbar.html and renders it with a scoped #unocss-navbar style', async () => {
+    query.getSiteChromeFile.mockResolvedValue(
+      '<a class="font-bold" href="about">About</a>',
+    );
+    const result = await loadCustomNavbar({ site: premiumSite });
+    expect(query.getSiteChromeFile).toHaveBeenCalledWith({
+      siteId: 'site-1',
+      path: '_navbar.html',
+    });
+    const html = renderToStaticMarkup(result as ReactElement);
+    const style = html.match(/<style id="unocss-navbar">([\s\S]*?)<\/style>/);
+    expect(style?.[1]).toContain('.site-navbar-custom .font-bold');
+    expect(html).toMatch(/<a[^>]*href="\/about"[^>]*>About<\/a>/);
+  });
+
+  it('keeps external and file links as plain anchors', async () => {
+    query.getSiteChromeFile.mockResolvedValue(
+      '<a href="https://example.com">Ext</a><a href="/rss.xml">RSS</a>',
+    );
+    const html = renderToStaticMarkup(
+      (await loadCustomNavbar({ site: premiumSite })) as ReactElement,
+    );
+    expect(html).toContain(
+      '<a href="https://example.com" target="_blank" rel="noopener noreferrer">Ext</a>',
+    );
+    expect(html).toContain('<a href="/rss.xml">RSS</a>');
+  });
+
+  it.each([null, '', '<!-- todo -->'])(
+    'returns null (default navbar) for a missing or empty file (%j)',
+    async (content) => {
+      query.getSiteChromeFile.mockResolvedValue(content);
+      expect(await loadCustomNavbar({ site: premiumSite })).toBeNull();
+    },
+  );
+
+  it('returns null when the fetch fails or the HTML cannot be rendered', async () => {
+    query.getSiteChromeFile.mockRejectedValue(new Error('s3 down'));
+    expect(await loadCustomNavbar({ site: premiumSite })).toBeNull();
+    query.getSiteChromeFile.mockResolvedValue('<div style="color">x</div>');
+    expect(await loadCustomNavbar({ site: premiumSite })).toBeNull();
   });
 });

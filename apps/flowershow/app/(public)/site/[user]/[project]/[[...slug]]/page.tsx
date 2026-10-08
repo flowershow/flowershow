@@ -138,7 +138,7 @@ export async function generateMetadata(props: {
   if (metadata?.publish === false) {
     notFound();
   }
-  // Reserved site-chrome files (`_footer.html`) are never pages (defence in
+  // Reserved site-chrome files (`_footer.html`, `_navbar.html`) are never pages (defence in
   // depth: getBlob already skips them).
   if (blob && isSiteChromeFile(blob.path)) {
     notFound();

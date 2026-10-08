@@ -543,12 +543,19 @@ describe('site.getBlob', () => {
       expect(result.id).toBe('fallback-blob');
     });
 
-    it('skips the reserved _footer.html in the first-html fallback', async () => {
-      // `_footer.html` sorts before lowercase names, so it is listed first.
+    it('skips the reserved _footer.html and _navbar.html in the first-html fallback', async () => {
+      // Reserved files sort before lowercase names, so they are listed first.
       const blobs = [
         makeBlob({
           id: 'footer',
           path: '_footer.html',
+          appPath: null,
+          metadata: null,
+          extension: 'html',
+        }),
+        makeBlob({
+          id: 'navbar',
+          path: '_navbar.html',
           appPath: null,
           metadata: null,
           extension: 'html',
@@ -1052,11 +1059,18 @@ describe('site.getSiteTree', () => {
     expect(names).toContain('blog');
   });
 
-  it('omits the reserved root _footer.html but keeps other html and _footer.md', async () => {
+  it('omits the reserved root _footer.html and _navbar.html but keeps other html and _footer.md', async () => {
     const blobs = [
       makeBlob({
         id: 'footer',
         path: '_footer.html',
+        appPath: null,
+        metadata: null,
+        extension: 'html',
+      }),
+      makeBlob({
+        id: 'navbar',
+        path: '_navbar.html',
         appPath: null,
         metadata: null,
         extension: 'html',
@@ -1083,6 +1097,7 @@ describe('site.getSiteTree', () => {
     const serialized = JSON.stringify(tree);
 
     expect(serialized).not.toContain('"path":"_footer.html"');
+    expect(serialized).not.toContain('"path":"_navbar.html"');
     expect(serialized).toContain('"path":"notes/_footer.html"');
     expect(serialized).toContain('"path":"landing.html"');
     expect(serialized).toContain('"path":"_footer.md"');
@@ -1700,6 +1715,31 @@ describe('site.getSiteChromeFile', () => {
       projectId: 'site-1',
       path: '_footer.html',
     });
+  });
+
+  it('returns the content of the root _navbar.html', async () => {
+    vi.mocked(fetchFile).mockResolvedValue('<a href="/">Home</a>');
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_navbar.html' }),
+    ).resolves.toBe('<a href="/">Home</a>');
+    expect(fetchFile).toHaveBeenCalledWith({
+      projectId: 'site-1',
+      path: '_navbar.html',
+    });
+  });
+
+  it('rejects paths that are not reserved site-chrome files', async () => {
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getSiteChromeFile({
+        siteId: 'site-1',
+        path: 'secret/notes.md' as any,
+      }),
+    ).rejects.toThrow();
+    expect(fetchFile).not.toHaveBeenCalled();
   });
 
   it('returns null when the site has no _footer.html', async () => {

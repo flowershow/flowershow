@@ -15,7 +15,13 @@ import {
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import { SearchModal } from '@/components/public/search-modal';
 import { socialIcons } from '@/components/public/social-icons';
 import {
@@ -41,17 +47,8 @@ export interface Props {
   cta?: NavLink;
 }
 
-const Nav = ({
-  logo,
-  url,
-  title,
-  links,
-  social,
-  showThemeSwitch = true,
-  showSearch = false,
-  searchId,
-  cta,
-}: Props) => {
+/** True once the page has scrolled (drives the navbar's scroll shadow). */
+function useIsScrolled() {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -65,10 +62,29 @@ const Nav = ({
     };
   }, []);
 
+  return isScrolled;
+}
+
+const Nav = ({
+  logo,
+  url,
+  title,
+  links,
+  social,
+  showThemeSwitch = true,
+  showSearch = false,
+  searchId,
+  cta,
+}: Props) => {
+  const isScrolled = useIsScrolled();
+
   return (
     <Disclosure>
       {({ open, close }) => (
-        <nav className={clsx('site-navbar', isScrolled && 'is-scrolled')}>
+        <nav
+          className={clsx('site-navbar', isScrolled && 'is-scrolled')}
+          aria-label="Main"
+        >
           {/* Desktop Navigation */}
           <div className="site-navbar-inner">
             <Link href={url} className="site-navbar-site-title">
@@ -236,6 +252,104 @@ const Nav = ({
     </Disclosure>
   );
 };
+
+/**
+ * Close every open `<details>` menu in `container`, except the one(s)
+ * containing `keep`. When focus was inside a closed menu, it moves to that
+ * menu's `<summary>` so keyboard users aren't left on a hidden element.
+ */
+function closeDetailsMenus(container: HTMLElement, keep?: Element | null) {
+  for (const details of container.querySelectorAll('details[open]')) {
+    if (keep && details.contains(keep)) continue;
+    const hadFocus = details.contains(document.activeElement);
+    details.removeAttribute('open');
+    if (hadFocus) details.querySelector('summary')?.focus();
+  }
+}
+
+export interface CustomNavbarProps {
+  /** Rendered `_navbar.html` (Premium). */
+  content: ReactNode;
+  showThemeSwitch?: boolean;
+  showSearch?: boolean;
+  searchId?: string;
+}
+
+/**
+ * The navbar shell (sticky `<nav class="site-navbar">`, `--navbar-height`,
+ * scroll shadow, `showNavbar: false` hiding) with the site's `_navbar.html`
+ * as its content, replacing the config-driven logo, title, links, dropdowns,
+ * social links, CTA and mobile menu. Search and the dark-mode toggle are kept
+ * when the site enables them.
+ *
+ * `<details>` elements are the supported no-JS dropdown / mobile menu. The
+ * navbar lives in the layout and survives client navigation, so open menus
+ * are closed on route change, on a link click inside them, on Escape and on a
+ * click outside.
+ */
+export function CustomNavbar({
+  content,
+  showThemeSwitch = false,
+  showSearch = false,
+  searchId,
+}: CustomNavbarProps) {
+  const isScrolled = useIsScrolled();
+  const pathname = usePathname();
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (contentRef.current) closeDetailsMenus(contentRef.current);
+  }, [pathname]);
+
+  useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+    const onPointerDown = (e: PointerEvent) => {
+      closeDetailsMenus(container, e.target as Element | null);
+    };
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') closeDetailsMenus(container);
+    };
+    const onClick = (e: MouseEvent) => {
+      const link = (e.target as Element | null)?.closest?.('a');
+      if (link?.closest('details[open]')) closeDetailsMenus(container);
+    };
+    document.addEventListener('pointerdown', onPointerDown);
+    document.addEventListener('keydown', onKeyDown);
+    container.addEventListener('click', onClick);
+    return () => {
+      document.removeEventListener('pointerdown', onPointerDown);
+      document.removeEventListener('keydown', onKeyDown);
+      container.removeEventListener('click', onClick);
+    };
+  }, []);
+
+  return (
+    <nav
+      className={clsx(
+        'site-navbar site-navbar--custom',
+        isScrolled && 'is-scrolled',
+      )}
+      aria-label="Main"
+    >
+      <div className="site-navbar-inner">
+        <div ref={contentRef} className="site-navbar-custom">
+          {content}
+        </div>
+        {showSearch && (
+          <div className="site-navbar-search-container">
+            <SearchModal indexId={searchId!} />
+          </div>
+        )}
+        {showThemeSwitch && (
+          <div className="site-navbar-theme-switch-container">
+            <ThemeSwitch />
+          </div>
+        )}
+      </div>
+    </nav>
+  );
+}
 
 function NavbarDropdown({
   item,
