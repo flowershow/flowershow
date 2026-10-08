@@ -2,6 +2,7 @@ import { GlobeIcon } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { FooterNavigationGroup, SocialLink } from '@/components/types';
+import { FooterErrorBoundary } from './footer-error-boundary';
 import { socialIcons } from './social-icons';
 
 interface FooterProps {
@@ -21,22 +22,40 @@ export default async function Footer({
   social,
   customContent,
 }: FooterProps) {
+  const defaultFooter = (
+    <DefaultFooter
+      siteName={siteName}
+      navigation={navigation}
+      social={social}
+    />
+  );
+
   if (customContent) {
     return (
-      <footer
-        className="site-footer site-footer--custom"
-        aria-labelledby="footer"
-      >
-        <div className="site-footer-inner">
-          <p id="footer" className="sr-only">
-            Footer
-          </p>
-          <div className="site-footer-custom">{customContent}</div>
-        </div>
-      </footer>
+      <FooterErrorBoundary fallback={defaultFooter}>
+        <footer
+          className="site-footer site-footer--custom"
+          aria-labelledby="footer"
+        >
+          <div className="site-footer-inner">
+            <p id="footer" className="sr-only">
+              Footer
+            </p>
+            <div className="site-footer-custom">{customContent}</div>
+          </div>
+        </footer>
+      </FooterErrorBoundary>
     );
   }
 
+  return defaultFooter;
+}
+
+function DefaultFooter({
+  siteName,
+  navigation,
+  social,
+}: Omit<FooterProps, 'customContent'>) {
   const currentYear = new Date().getFullYear();
 
   return (

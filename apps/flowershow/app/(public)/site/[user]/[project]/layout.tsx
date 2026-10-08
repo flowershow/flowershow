@@ -164,20 +164,22 @@ export default async function PublicLayout(props: {
   const sitePrefix = '';
   const appConfig = getConfig();
 
-  const siteConfig = await api.site.getConfig
+  const siteConfigPromise = api.site.getConfig
     .query({
       siteId: site.id,
     })
     .catch(() => null);
 
-  const customCss = await api.site.getCustomStyles
-    .query({
-      siteId: site.id,
-    })
-    .catch(() => null);
-
-  // Premium: `_footer.md` replaces the default footer body (null otherwise).
-  const customFooter = await loadCustomFooter({ site, siteConfig });
+  const [siteConfig, customCss, customFooter] = await Promise.all([
+    siteConfigPromise,
+    api.site.getCustomStyles
+      .query({
+        siteId: site.id,
+      })
+      .catch(() => null),
+    // Premium: `_footer.md` replaces the default footer body (null otherwise).
+    loadCustomFooter({ site, siteConfig: siteConfigPromise }),
+  ]);
 
   const usesGoogleFonts = customCss
     ? /fonts\.googleapis\.com/i.test(customCss)

@@ -12,10 +12,11 @@ import {
 import { createPortal } from 'react-dom';
 
 /**
- * Images inside these keep their own interaction: links stay links, and
- * canvases keep pan/zoom.
+ * Images inside these keep their own interaction: links stay links, canvases
+ * keep pan/zoom, and custom footer (`_footer.md`) logos/badges stay plain
+ * images rather than adding a lightbox tab stop to every page.
  */
-const NON_ZOOMABLE_ANCESTORS = 'a, .canvas-container';
+const NON_ZOOMABLE_ANCESTORS = 'a, .canvas-container, .site-footer-custom';
 
 /** Kept short and soft: the zoom should feel like the image lifting, not flying. */
 const ANIMATION: KeyframeAnimationOptions = {

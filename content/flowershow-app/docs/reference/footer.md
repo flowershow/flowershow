@@ -100,7 +100,9 @@ To replace the default footer with your own content, add a file called `_footer.
 How it works:
 
 - **It replaces the whole default footer.** The site name, copyright line, social icons and footer navigation are no longer shown. Put anything you want to keep in `_footer.md`.
-- **It is not a page.** `_footer.md` is not published at `/_footer`, and it doesn't appear in the sidebar, search, sitemap or RSS feed.
+- **It is not a page.** `_footer.md` is not published at `/_footer`, and it doesn't appear in the sidebar, search, sitemap, RSS feed, tag pages or `<List />`. The raw file is still served at `/_footer.md`, like `custom.css`, so don't put anything private in it.
+- **Frontmatter is ignored.** A frontmatter block is allowed but has no effect; `publish: false` does not hide the footer (delete or rename the file instead). A file with only frontmatter and no content keeps the default footer.
+- **If it fails to render**, the default footer is shown instead, so a broken `_footer.md` never takes down your pages.
 - **Only the root file counts.** The name is exact and case-sensitive: `_Footer.md` or `notes/_footer.md` are ordinary pages.
 - **It is always rendered as Markdown**, even if your site uses `syntaxMode: mdx`, so the footer is part of the server-rendered HTML on every page. Use HTML with `class="..."` for layout; JSX components are not supported.
 - **It follows your content filters.** If you use `contentInclude`, add `_footer.md` to it. If `_footer.md` matches `contentExclude`, it isn't published and the default footer is shown.

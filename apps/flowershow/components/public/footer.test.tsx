@@ -1,5 +1,5 @@
 import { cleanup, render, screen } from '@testing-library/react';
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import Footer from './footer';
 import type { FooterNavigationGroup } from '@/components/types';
 
@@ -78,6 +78,23 @@ describe('Footer custom content', () => {
     expect(container.querySelector('.site-footer-custom')).toHaveTextContent(
       'Hi',
     );
+  });
+
+  it('falls back to the default footer when the custom content throws while rendering', async () => {
+    const Boom = () => {
+      throw new Error('broken footer embed');
+    };
+    const consoleError = vi
+      .spyOn(console, 'error')
+      .mockImplementation(() => {});
+
+    render(await Footer({ siteName: 'My Site', customContent: <Boom /> }));
+
+    expect(screen.getByText(/All rights reserved/)).toBeInTheDocument();
+    expect(screen.getByRole('contentinfo')).not.toHaveClass(
+      'site-footer--custom',
+    );
+    consoleError.mockRestore();
   });
 
   it('renders the default footer when no custom content is given', async () => {

@@ -50,6 +50,7 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
         await processNonMarkdownFile({
           storage,
           sql,
+          typesense,
           siteId,
           branch,
           path,
@@ -155,6 +156,22 @@ async function upsertBlob(
   return rows[0].id;
 }
 
+/**
+ * Remove the page-only rows (outgoing links, tags, search document) of a blob
+ * that is no longer a page. Makes re-syncing a legacy root `_footer.md` (which
+ * used to be processed as a page) self-healing.
+ */
+export async function clearPageArtifacts({ sql, typesense, siteId, blobId }) {
+  await sql`DELETE FROM "Link" WHERE source_blob_id = ${blobId}`;
+  await sql`DELETE FROM "Tag" WHERE blob_id = ${blobId}`;
+  if (!typesense) return;
+  try {
+    await typesense.collections(siteId).documents(`${blobId}`).delete();
+  } catch (_) {
+    // Document usually doesn't exist (never indexed or already removed).
+  }
+}
+
 async function updatePublishFile(sql, publishId, path, status, errorMsg) {
   if (!publishId) return;
   if (status === 'error') {
@@ -236,6 +253,7 @@ async function processMarkdownFile({
 async function processNonMarkdownFile({
   storage,
   sql,
+  typesense,
   siteId,
   branch,
   path,
@@ -260,7 +278,15 @@ async function processNonMarkdownFile({
       }
     }
 
-    await upsertBlob(sql, siteId, path, { sha, size, width, height });
+    const blobId = await upsertBlob(sql, siteId, path, {
+      sha,
+      size,
+      width,
+      height,
+    });
+    if (isSiteChromeFile(path)) {
+      await clearPageArtifacts({ sql, typesense, siteId, blobId });
+    }
     await updatePublishFile(sql, publishId, path, 'success');
   } catch (e) {
     await updatePublishFile(sql, publishId, path, 'error', e.message);

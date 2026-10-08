@@ -6,6 +6,7 @@ import {
   extractLinks,
   extractTags,
   extractTitle,
+  handleMessage,
   isSupportedImagePath,
   normalizePermalink,
   parseMarkdown,
@@ -588,4 +589,123 @@ test('isMarkdownPage - markdown is processed as a page, reserved chrome files an
   expect(isMarkdownPage('notes/_footer.md')).toBe(true);
   expect(isMarkdownPage('_footer.md')).toBe(false);
   expect(isMarkdownPage('custom.css')).toBe(false);
+});
+
+// handleMessage routing for the reserved root `_footer.md`: stored as a plain
+// blob (no app_path/metadata), never parsed as a page, and any page rows left
+// over from before it was reserved (links, tags, search doc) are removed.
+
+function createRecordingSql() {
+  const queries = [];
+  const sql = (strings, ...values) => {
+    const text = strings.join('?').replace(/\s+/g, ' ').trim();
+    queries.push({ text, values });
+    if (text.startsWith('INSERT INTO "Blob"')) return [{ id: 'blob-1' }];
+    return [];
+  };
+  sql.begin = async (fn) => fn(sql);
+  return { sql, queries };
+}
+
+function createR2Storage(content) {
+  const bytes = new TextEncoder().encode(content);
+  return {
+    type: 'r2',
+    client: {
+      head: async () => ({ customMetadata: {} }),
+      get: async () => ({
+        size: bytes.length,
+        arrayBuffer: async () => bytes.buffer,
+      }),
+    },
+  };
+}
+
+function createTypesenseMock() {
+  const calls = { upsert: 0, deleted: [] };
+  const typesense = {
+    collections: (siteId) => ({
+      documents: (id) => ({
+        upsert: async () => {
+          calls.upsert += 1;
+        },
+        delete: async () => {
+          calls.deleted.push({ siteId, id });
+        },
+      }),
+    }),
+  };
+  return { typesense, calls };
+}
+
+function putMessage(path) {
+  return {
+    body: {
+      action: 'PutObject',
+      object: { key: `site-1/main/raw/${path}` },
+    },
+    ack: vi.fn(),
+  };
+}
+
+test('handleMessage - root _footer.md is a plain blob and clears legacy page rows', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense, calls } = createTypesenseMock();
+  const msg = putMessage('_footer.md');
+
+  await handleMessage({
+    msg,
+    storage: createR2Storage('---\ntags: [meta]\n---\nHello [[about]] #meta'),
+    sql,
+    typesense,
+    env: {},
+  });
+
+  expect(msg.ack).toHaveBeenCalled();
+  const insert = queries.find((q) => q.text.startsWith('INSERT INTO "Blob"'));
+  expect(insert).toBeDefined();
+  // values: id, site_id, path, app_path, extension, sha, size, metadata, permalink, ...
+  expect(insert.values[2]).toBe('_footer.md');
+  expect(insert.values[3]).toBeNull();
+  expect(insert.values[7]).toBeNull();
+  expect(insert.values[8]).toBeNull();
+  // No page processing: no link/tag inserts, no search indexing.
+  expect(queries.some((q) => q.text.startsWith('INSERT INTO "Link"'))).toBe(
+    false,
+  );
+  expect(queries.some((q) => q.text.startsWith('INSERT INTO "Tag"'))).toBe(
+    false,
+  );
+  expect(calls.upsert).toBe(0);
+  // Legacy cleanup.
+  expect(
+    queries.find((q) => q.text.startsWith('DELETE FROM "Link"'))?.values,
+  ).toEqual(['blob-1']);
+  expect(
+    queries.find((q) => q.text.startsWith('DELETE FROM "Tag"'))?.values,
+  ).toEqual(['blob-1']);
+  expect(calls.deleted).toEqual([{ siteId: 'site-1', id: 'blob-1' }]);
+});
+
+test('handleMessage - a normal markdown page is still indexed and gets an app path', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense, calls } = createTypesenseMock();
+  const msg = putMessage('notes/_footer.md');
+
+  await handleMessage({
+    msg,
+    storage: createR2Storage('# Hi\n\nSee [[about]] #meta'),
+    sql,
+    typesense,
+    env: {},
+  });
+
+  expect(msg.ack).toHaveBeenCalled();
+  const insert = queries.find((q) => q.text.startsWith('INSERT INTO "Blob"'));
+  expect(insert.values[3]).toBe('/notes/_footer');
+  expect(queries.some((q) => q.text.startsWith('INSERT INTO "Link"'))).toBe(
+    true,
+  );
+  expect(calls.upsert).toBe(1);
+  expect(calls.deleted).toEqual([]);
 });
