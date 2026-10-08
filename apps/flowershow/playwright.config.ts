@@ -64,6 +64,8 @@ export default defineConfig({
         '**/html-page.spec.ts',
         // Custom head is a Premium feature: this is the seeded Premium site.
         '**/custom-head.spec.ts',
+        // Page scripts (`scripts` frontmatter) are a Premium feature too.
+        '**/page-scripts.spec.ts',
         '**/annotations.spec.ts',
         // Self-hosted fonts must resolve on custom domains too.
         '**/custom-fonts.spec.ts',
