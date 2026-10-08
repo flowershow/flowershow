@@ -151,6 +151,8 @@ export interface PageMetadata {
   showReadingTime?: boolean;
   showComments?: boolean;
   annotations?: boolean;
+  /** Premium: JS files/URLs to load on this page (see `resolvePageScripts`). Untrusted. */
+  scripts?: unknown;
   permalink?: string;
   cta?: Array<{
     href: string;

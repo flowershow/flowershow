@@ -2,6 +2,7 @@ import type { Blob } from '@prisma/client';
 import { serialize } from 'next-mdx-remote-client/serialize';
 import ErrorMessage from '@/components/public/error-message';
 import MDXClient from '@/components/public/mdx-client';
+import { PageScripts } from '@/components/public/page-scripts';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import {
   getMdxOptions,
@@ -28,6 +29,12 @@ export type RenderPageContentOptions = {
   changelog?: RemarkChangelogOptions;
   /** Site `showTags` config; when `false`, inline `#tags` stay plain text. */
   showTags?: boolean;
+  /**
+   * Page scripts to load after the content (already gated and resolved with
+   * `resolvePageScripts`). Pass only for the page being viewed, never for
+   * embedded or listed content.
+   */
+  scripts?: string[];
 };
 
 /**
@@ -45,6 +52,7 @@ export async function renderPageContent({
   imageDimensions,
   changelog,
   showTags,
+  scripts,
 }: RenderPageContentOptions): Promise<React.JSX.Element> {
   let compiledContent: React.JSX.Element;
 
@@ -115,7 +123,14 @@ export async function renderPageContent({
           changelog,
           showTags,
         });
-        compiledContent = result;
+        compiledContent = scripts?.length ? (
+          <>
+            {result}
+            <PageScripts key={blob.path} srcs={scripts} />
+          </>
+        ) : (
+          result
+        );
       } else {
         // Process using next-mdx-remote-client (MDX renderer)
         const mdxOptions = getMdxOptions({
@@ -154,6 +169,7 @@ export async function renderPageContent({
               blob={blob}
               site={site}
               imageDimensions={imageDimensions}
+              scripts={scripts}
             />
           );
         }
