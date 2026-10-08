@@ -1,0 +1,14 @@
+/*
+  Self-hosted font fixture for e2e/specs/custom-fonts.spec.ts.
+  fonts/E2EBrand.woff2 is KaTeX_Typewriter-Regular.woff2 from KaTeX (MIT licence, https://github.com/KaTeX/KaTeX).
+  Keep this file scoped to the .e2e-brand-font class so other specs are unaffected.
+*/
+@font-face {
+  font-family: "E2E Brand";
+  src: url("/fonts/E2EBrand.woff2") format("woff2");
+  font-display: block;
+}
+
+.e2e-brand-font {
+  font-family: "E2E Brand", monospace;
+}

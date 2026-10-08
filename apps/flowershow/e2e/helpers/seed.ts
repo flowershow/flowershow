@@ -9,6 +9,7 @@ import {
 import {
   extractInlineTags,
   frontmatterTags,
+  getContentType,
   mergePageTags,
   tagIdentity,
 } from '@flowershow/core';
@@ -102,22 +103,6 @@ function getS3Client(): S3Client {
 const BUCKET = process.env.S3_BUCKET_NAME || 'flowershow';
 
 // --- Helpers ---
-
-function getContentType(ext: string): string {
-  const map: Record<string, string> = {
-    md: 'text/markdown',
-    mdx: 'text/markdown',
-    json: 'application/json',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    png: 'image/png',
-    gif: 'image/gif',
-    svg: 'image/svg+xml',
-    webp: 'image/webp',
-    avif: 'image/avif',
-  };
-  return map[ext] || 'application/octet-stream';
-}
 
 /** Recursively list all files in a directory */
 function listFiles(dir: string, base = ''): string[] {

@@ -75,6 +75,24 @@ To use a Google Font, add an `@import` at the top of `custom.css` before your `:
 }
 ```
 
+The `@import` must be the first thing in the file. Browsers silently ignore an `@import` that comes after any other rule.
+
+To use your own font files, publish them in a `fonts/` folder and declare them with `@font-face`, using a path that starts with `/`:
+
+```css
+@font-face {
+  font-family: "Brand";
+  src: url("/fonts/Brand-Regular.woff2") format("woff2");
+  font-display: swap;
+}
+
+:root {
+  --font-heading: "Brand", sans-serif;
+}
+```
+
+See the [Custom fonts guide](/docs/guides/custom-fonts) for weights, italics and troubleshooting.
+
 ### Increase readability
 
 Make body text slightly larger and give it more breathing room:
@@ -96,7 +114,7 @@ Flowershow exposes variables for border radius, callout colors, navbar height, a
 - [callouts.css](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/callouts.css) — callout color tokens
 
 > [!note]
-> Flowershow uses CSS cascade layers, so rules in `custom.css` automatically win over the default theme. You don't need `!important`.
+> `custom.css` loads after the default theme, so your rules win when their selectors are as specific as the theme's, or more. Overriding variables in `:root` is the most reliable approach, and you rarely need `!important`.
 
 ---
 

@@ -65,6 +65,8 @@ export default defineConfig({
         // Custom head is a Premium feature: this is the seeded Premium site.
         '**/custom-head.spec.ts',
         '**/annotations.spec.ts',
+        // Self-hosted fonts must resolve on custom domains too.
+        '**/custom-fonts.spec.ts',
       ],
       dependencies: ['setup'],
     },
