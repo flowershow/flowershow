@@ -47,7 +47,7 @@ For a step-by-step guide, including how to put HTML inside a Markdown page inste
 
 These files are served as-is, with a content type that matches the extension, so browsers and scripts handle them normally:
 
-- **CSS and JavaScript** (`.css`, `.js`, `.mjs`, `.cjs`) load in your HTML pages, including ES modules (`<script type="module">`).
+- **CSS and JavaScript** (`.css`, `.js`, `.mjs`, `.cjs`) load in your HTML pages, including ES modules (`<script type="module">`). On Premium sites, Markdown pages can load `.js` files with [page scripts](/docs/reference/page-scripts).
 - **Fonts and other web assets** (`.woff`, `.woff2`, `.ttf`, `.otf`, `.eot`, `.wasm`, `.webmanifest`) load from your pages too. To use your own fonts site-wide, see [Custom fonts](/docs/guides/custom-fonts).
 - **Data** (`.json`, `.jsonl`, `.ndjson`, `.geojson`, `.topojson`, `.csv`, `.tsv`, `.yaml`, `.toml`, `.xml`, `.txt`, `.parquet`, `.arrow`, `.sqlite`, `.db`, `.ipynb`) can be fetched with `fetch()` or downloaded. Files are served with `Access-Control-Allow-Origin: *`, so pages on other sites can fetch them too.
 - **Images** (`.png`, `.jpg`, `.gif`, `.svg`, `.webp`, `.avif`, `.bmp`, `.ico`) can be used in Markdown and HTML pages, and each one has its own URL.

@@ -3,6 +3,7 @@ import type { Blob } from '@prisma/client';
 import { hydrate, type SerializeResult } from 'next-mdx-remote-client/csr';
 import { ErrorBoundary } from 'react-error-boundary';
 import ErrorMessage from '@/components/public/error-message';
+import { PageScripts } from '@/components/public/page-scripts';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import type { SiteLookupResult, PageMetadata } from '@/server/api/types';
 import { mdxComponentsFactory } from './mdx/mdx-components-factory';
@@ -12,9 +13,17 @@ type Props = {
   blob: Blob;
   site: SiteLookupResult;
   imageDimensions?: ImageDimensionsMap;
+  /** Resolved page scripts, loaded after the MDX content is committed. */
+  scripts?: string[];
 };
 
-function MDXClientRenderer({ mdxSource, blob, site, imageDimensions }: Props) {
+function MDXClientRenderer({
+  mdxSource,
+  blob,
+  site,
+  imageDimensions,
+  scripts,
+}: Props) {
   if ('error' in mdxSource) {
     return (
       <ErrorMessage
@@ -53,8 +62,15 @@ function MDXClientRenderer({ mdxSource, blob, site, imageDimensions }: Props) {
       );
     }
 
+    // PageScripts is a later sibling of the content, so its effect runs once
+    // the MDX DOM exists. It sits inside the boundary: no scripts if MDX fails.
     return (
-      <ErrorBoundary FallbackComponent={Fallback}>{content}</ErrorBoundary>
+      <ErrorBoundary FallbackComponent={Fallback}>
+        {content}
+        {scripts?.length ? (
+          <PageScripts key={blob.path} srcs={scripts} />
+        ) : null}
+      </ErrorBoundary>
     );
   } catch (err: any) {
     return <ErrorMessage title="Error" message={err.message} />;

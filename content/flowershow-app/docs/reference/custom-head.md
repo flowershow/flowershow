@@ -38,6 +38,10 @@ For example, put Tally's loader script in Custom Head Code, then drop the form o
 
 Putting a loader script in Custom Head Code instead of in page content avoids loading it multiple times and keeps it working as you navigate between pages.
 
+## JavaScript for a single page
+
+Custom Head Code loads on every page. For JavaScript that only one page needs (a calculator, a toggle, a chart), use [page scripts](/docs/reference/page-scripts) instead: list the `.js` files in that page's frontmatter and they run each time the page is shown.
+
 ## Notes and security
 
 - The code runs on your **published site** for every visitor, so only add code you trust.

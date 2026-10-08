@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import PageAnnotations from '@/components/public/annotations/page-annotations';
 import CanvasEnhancer from '@/components/public/canvas-enhancer';
+import { PageScripts } from '@/components/public/page-scripts';
 import Comments from '@/components/public/comments';
 import Hero from '@/components/public/hero';
 import { BlogLayout } from '@/components/public/layouts/blog';
@@ -45,6 +46,7 @@ import { resolveChangelogContext } from '@/lib/changelog-context';
 import { hasVersionSections } from '@/lib/changelog-file';
 import { anonRobots } from '@/lib/anonymous-site';
 import { readingTime } from '@/lib/reading-time';
+import { resolvePageScripts } from '@/lib/page-scripts';
 import { renderPageContent } from '@/lib/render-page-content';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
@@ -415,6 +417,14 @@ export default async function SitePage(props: {
     />
   ) : null;
 
+  // Premium: per-page `scripts` frontmatter, gated and resolved server-side.
+  const pageScripts = isFeatureEnabled(Feature.PageScripts, site)
+    ? resolvePageScripts(metadata?.scripts, {
+        pagePath: blob.path,
+        siteFilePaths,
+      })
+    : [];
+
   const compiledContent = await renderPageContent({
     blob,
     site,
@@ -427,6 +437,7 @@ export default async function SitePage(props: {
     changelog:
       changelog?.kind === 'file' ? { title: metadata?.title } : undefined,
     showTags,
+    scripts: pageScripts,
   });
 
   const scopedCss = await generateScopedCss(pageContent ?? '', '#mdxpage');
@@ -592,7 +603,14 @@ export default async function SitePage(props: {
                   title={metadata?.title || 'Changelog'}
                   intro={
                     pageContent?.trim() ? (
-                      <div id="mdxpage">{compiledContent}</div>
+                      // Keyed by page number so `?page=` navigation remounts
+                      // the intro and re-runs its page scripts.
+                      <div
+                        id="mdxpage"
+                        key={`${blob.path}?page=${changelogPage}`}
+                      >
+                        {compiledContent}
+                      </div>
                     ) : undefined
                   }
                   renderMode={renderMode}
@@ -602,6 +620,15 @@ export default async function SitePage(props: {
                   imageDimensions={imageDimensions}
                   showTags={showTags}
                 />
+                {/* No intro (empty body), so compiledContent with its page
+                    scripts isn't rendered: load the scripts here instead.
+                    Keyed by page number so `?page=` navigation re-runs them. */}
+                {!pageContent?.trim() && pageScripts.length > 0 && (
+                  <PageScripts
+                    key={`${blob.path}?page=${changelogPage}`}
+                    srcs={pageScripts}
+                  />
+                )}
                 <CanvasEnhancer />
               </>
             ) : changelog?.kind === 'file' ? (

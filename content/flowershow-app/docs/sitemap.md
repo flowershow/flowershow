@@ -68,6 +68,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Obsidian Canvas](/docs/reference/obsidian-canvas) — Render Obsidian Canvas (.canvas) files as visual diagrams on your Flowershow site.
 - [Page authors](/docs/reference/page-authors) — Create dedicated profile pages for authors of your content and list them in page headers
 - [Page headers](/docs/reference/page-headers) — Configure page headers and SEO meta tags.
+- [Page scripts](/docs/reference/page-scripts) — Load your own JavaScript on a single page with the scripts frontmatter field. Runs on every visit, including when readers navigate within your site.
 - [Page title](/docs/reference/page-title) — Set the title of your page, both for display and for SEO
 - [Password protection](/docs/reference/password-protection) — Restrict access to your site with a password.
 - [URL Redirects](/docs/reference/redirects) — Configure URL redirects to maintain backwards compatibility when moving or renaming pages.
