@@ -440,8 +440,22 @@ test('syncTags - inserts all tags for a blob with none, folding to identity', as
 test('syncTags - republish reconciles: adds new, removes stale, upserts casing/source', async () => {
   const sql = createMockTagSql([
     // deterministic ids in place of generateId() for the seed rows
-    { id: 'x1', site_id: 's1', blob_id: 'b1', tag: 'book', identity: 'book', source: 'frontmatter' },
-    { id: 'x2', site_id: 's1', blob_id: 'b1', tag: 'old', identity: 'old', source: 'inline' },
+    {
+      id: 'x1',
+      site_id: 's1',
+      blob_id: 'b1',
+      tag: 'book',
+      identity: 'book',
+      source: 'frontmatter',
+    },
+    {
+      id: 'x2',
+      site_id: 's1',
+      blob_id: 'b1',
+      tag: 'old',
+      identity: 'old',
+      source: 'inline',
+    },
   ]);
   await syncTags(sql, 's1', 'b1', [
     { tag: 'Book', source: 'inline' }, // same identity → upsert casing + source
@@ -457,7 +471,14 @@ test('syncTags - republish reconciles: adds new, removes stale, upserts casing/s
 
 test('syncTags - never touches another blob’s rows', async () => {
   const sql = createMockTagSql([
-    { id: 'y1', site_id: 's1', blob_id: 'b2', tag: 'keep', identity: 'keep', source: 'frontmatter' },
+    {
+      id: 'y1',
+      site_id: 's1',
+      blob_id: 'b2',
+      tag: 'keep',
+      identity: 'keep',
+      source: 'frontmatter',
+    },
   ]);
   await syncTags(sql, 's1', 'b1', [{ tag: 'new', source: 'inline' }]);
   expect(sql.rows().find((r) => r.blob_id === 'b2')?.identity).toBe('keep');
@@ -471,7 +492,14 @@ test('syncTags - never touches another blob’s rows', async () => {
 
 test('syncTags - clearing all tags deletes the blob’s existing rows', async () => {
   const sql = createMockTagSql([
-    { id: 'z1', site_id: 's1', blob_id: 'b1', tag: 'gone', identity: 'gone', source: 'inline' },
+    {
+      id: 'z1',
+      site_id: 's1',
+      blob_id: 'b1',
+      tag: 'gone',
+      identity: 'gone',
+      source: 'inline',
+    },
   ]);
   await syncTags(sql, 's1', 'b1', []);
   expect(sql.rows().filter((r) => r.blob_id === 'b1')).toEqual([]);
@@ -568,12 +596,14 @@ test('parseMarkdown - treats whitespace-only description as missing', async () =
   expect(metadata.computed).toEqual(['description']);
 });
 
-test('computeAppPath - reserved root _footer.md has no app path', () => {
-  expect(computeAppPath('_footer.md')).toBeNull();
+test('computeAppPath - _footer.md is an ordinary markdown page', () => {
+  expect(computeAppPath('_footer.md')).toBe('/_footer');
+  expect(computeAppPath('notes/_footer.md')).toBe('/notes/_footer');
 });
 
-test('computeAppPath - _footer.md in a subfolder is a normal page', () => {
-  expect(computeAppPath('notes/_footer.md')).toBe('/notes/_footer');
+test('computeAppPath - html files, including the reserved _footer.html, have no app path', () => {
+  expect(computeAppPath('_footer.html')).toBeNull();
+  expect(computeAppPath('notes/page.html')).toBeNull();
 });
 
 test('computeAppPath - pages and assets are unchanged', () => {
@@ -583,17 +613,17 @@ test('computeAppPath - pages and assets are unchanged', () => {
   expect(computeAppPath('images/a.png')).toBeNull();
 });
 
-test('isMarkdownPage - markdown is processed as a page, reserved chrome files and assets are not', () => {
+test('isMarkdownPage - markdown is processed as a page, html and assets are not', () => {
   expect(isMarkdownPage('a.md')).toBe(true);
   expect(isMarkdownPage('a.MDX')).toBe(true);
-  expect(isMarkdownPage('notes/_footer.md')).toBe(true);
-  expect(isMarkdownPage('_footer.md')).toBe(false);
+  expect(isMarkdownPage('_footer.md')).toBe(true);
+  expect(isMarkdownPage('_footer.html')).toBe(false);
   expect(isMarkdownPage('custom.css')).toBe(false);
 });
 
-// handleMessage routing for the reserved root `_footer.md`: stored as a plain
-// blob (no app_path/metadata), never parsed as a page, and any page rows left
-// over from before it was reserved (links, tags, search doc) are removed.
+// handleMessage routing for the reserved root `_footer.html`: stored as a
+// plain blob (no app_path/metadata), never parsed as a page or indexed. A root
+// `_footer.md` is an ordinary markdown page.
 
 function createRecordingSql() {
   const queries = [];
@@ -648,14 +678,16 @@ function putMessage(path) {
   };
 }
 
-test('handleMessage - root _footer.md is a plain blob and clears legacy page rows', async () => {
+test('handleMessage - root _footer.html is a plain non-page blob', async () => {
   const { sql, queries } = createRecordingSql();
   const { typesense, calls } = createTypesenseMock();
-  const msg = putMessage('_footer.md');
+  const msg = putMessage('_footer.html');
 
   await handleMessage({
     msg,
-    storage: createR2Storage('---\ntags: [meta]\n---\nHello [[about]] #meta'),
+    storage: createR2Storage(
+      '<p class="text-sm">Made by <a href="/about">Acme</a> [[about]] #meta</p>',
+    ),
     sql,
     typesense,
     env: {},
@@ -665,32 +697,22 @@ test('handleMessage - root _footer.md is a plain blob and clears legacy page row
   const insert = queries.find((q) => q.text.startsWith('INSERT INTO "Blob"'));
   expect(insert).toBeDefined();
   // values: id, site_id, path, app_path, extension, sha, size, metadata, permalink, ...
-  expect(insert.values[2]).toBe('_footer.md');
+  expect(insert.values[2]).toBe('_footer.html');
   expect(insert.values[3]).toBeNull();
+  expect(insert.values[4]).toBe('html');
   expect(insert.values[7]).toBeNull();
   expect(insert.values[8]).toBeNull();
-  // No page processing: no link/tag inserts, no search indexing.
-  expect(queries.some((q) => q.text.startsWith('INSERT INTO "Link"'))).toBe(
-    false,
-  );
-  expect(queries.some((q) => q.text.startsWith('INSERT INTO "Tag"'))).toBe(
-    false,
-  );
+  // No page processing: no link/tag rows, no search indexing.
+  expect(queries.some((q) => q.text.includes('"Link"'))).toBe(false);
+  expect(queries.some((q) => q.text.includes('"Tag"'))).toBe(false);
   expect(calls.upsert).toBe(0);
-  // Legacy cleanup.
-  expect(
-    queries.find((q) => q.text.startsWith('DELETE FROM "Link"'))?.values,
-  ).toEqual(['blob-1']);
-  expect(
-    queries.find((q) => q.text.startsWith('DELETE FROM "Tag"'))?.values,
-  ).toEqual(['blob-1']);
-  expect(calls.deleted).toEqual([{ siteId: 'site-1', id: 'blob-1' }]);
+  expect(calls.deleted).toEqual([]);
 });
 
-test('handleMessage - a normal markdown page is still indexed and gets an app path', async () => {
+test('handleMessage - a root _footer.md is an ordinary indexed page', async () => {
   const { sql, queries } = createRecordingSql();
   const { typesense, calls } = createTypesenseMock();
-  const msg = putMessage('notes/_footer.md');
+  const msg = putMessage('_footer.md');
 
   await handleMessage({
     msg,
@@ -702,7 +724,7 @@ test('handleMessage - a normal markdown page is still indexed and gets an app pa
 
   expect(msg.ack).toHaveBeenCalled();
   const insert = queries.find((q) => q.text.startsWith('INSERT INTO "Blob"'));
-  expect(insert.values[3]).toBe('/notes/_footer');
+  expect(insert.values[3]).toBe('/_footer');
   expect(queries.some((q) => q.text.startsWith('INSERT INTO "Link"'))).toBe(
     true,
   );

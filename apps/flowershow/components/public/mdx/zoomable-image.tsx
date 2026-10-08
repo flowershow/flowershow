@@ -13,7 +13,7 @@ import { createPortal } from 'react-dom';
 
 /**
  * Images inside these keep their own interaction: links stay links, canvases
- * keep pan/zoom, and custom footer (`_footer.md`) logos/badges stay plain
+ * keep pan/zoom, and custom footer (`_footer.html`) logos/badges stay plain
  * images rather than adding a lightbox tab stop to every page.
  */
 const NON_ZOOMABLE_ANCESTORS = 'a, .canvas-container, .site-footer-custom';

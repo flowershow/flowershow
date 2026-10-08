@@ -181,8 +181,8 @@ export default async function PublicLayout(props: {
         siteId: site.id,
       })
       .catch(() => ({ version: null, usesGoogleFonts: false })),
-    // Premium: `_footer.md` replaces the default footer body (null otherwise).
-    loadCustomFooter({ site, siteConfig: siteConfigPromise }),
+    // Premium: `_footer.html` replaces the default footer body (null otherwise).
+    loadCustomFooter({ site }),
   ]);
 
   const usesGoogleFonts = customStylesheet?.usesGoogleFonts ?? false;

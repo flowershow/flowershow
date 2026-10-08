@@ -1,4 +1,4 @@
-import { getContentType } from '@flowershow/core';
+import { getContentType, isSiteChromeFile } from '@flowershow/core';
 import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
@@ -39,6 +39,12 @@ export async function GET(
 
   if (!path || path.length === 0) {
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
+  }
+
+  // Reserved site-chrome files (root `_footer.html`) are rendered into the
+  // site layout and never served at their own URL.
+  if (isSiteChromeFile(path.join('/'))) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
   const site =

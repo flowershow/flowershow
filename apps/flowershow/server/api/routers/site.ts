@@ -1,6 +1,7 @@
 import {
   isSiteChromeFile,
   matchLinkTarget,
+  SITE_CHROME_FILES,
   SITE_FOOTER_PATH,
   tagIdentity,
 } from '@flowershow/core';
@@ -970,7 +971,7 @@ export const siteRouter = createTRPCRouter({
     }),
 
   /**
-   * Raw markdown of the site's custom footer (`_footer.md` at the site root),
+   * Raw HTML of the site's custom footer (`_footer.html` at the site root),
    * or null if there is none. Plan gating happens in the layout.
    */
   getSiteFooter: publicProcedure
@@ -1007,7 +1008,7 @@ export const siteRouter = createTRPCRouter({
             return null;
           }
         },
-        ['site-footer'],
+        ['site-footer-html'],
         {
           revalidate: 60, // 1 minute
           tags: [`${input.siteId}`],
@@ -1297,6 +1298,8 @@ export const siteRouter = createTRPCRouter({
                 },
                 { extension: { in: ['canvas', 'html'] } },
               ],
+              // Reserved site-chrome files (`_footer.html`) are not pages.
+              path: { notIn: [...SITE_CHROME_FILES] },
             },
             select: {
               path: true,
@@ -1422,7 +1425,6 @@ export const siteRouter = createTRPCRouter({
                 AND "path" !~ ${dirIndexPattern}
                 AND "extension" IN ('md', 'mdx')
                 AND "app_path" IS NOT NULL
-                AND "path" <> ${SITE_FOOTER_PATH}
               ORDER BY
                 ("metadata"->>'date')::timestamp DESC NULLS LAST,
                 "metadata"->>'title' ASC NULLS LAST
@@ -1626,16 +1628,13 @@ export const siteRouter = createTRPCRouter({
           }
 
           // 3. First md/mdx page — sort by appPath, then path as tiebreaker.
-          //    Non-page markdown (the reserved `_footer.md`, including legacy
-          //    rows that still carry an appPath) is skipped so it can't
-          //    become the home page.
+          //    Non-page markdown (no appPath) is skipped.
           if (!blob && input.slug === '/') {
             blob = await ctx.db.blob.findFirst({
               where: {
                 siteId: input.siteId,
                 extension: { in: ['md', 'mdx'] },
                 appPath: { not: null },
-                path: { not: SITE_FOOTER_PATH },
               },
               orderBy: [
                 { appPath: { sort: 'asc', nulls: 'last' } },
@@ -1644,10 +1643,16 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          // 4. First html file — sort by path
+          // 4. First html file — sort by path. Reserved site-chrome files
+          //    (`_footer.html`) are never pages; `_` sorts before lowercase
+          //    letters, so without this the footer would win.
           if (!blob && input.slug === '/') {
             blob = await ctx.db.blob.findFirst({
-              where: { siteId: input.siteId, extension: 'html' },
+              where: {
+                siteId: input.siteId,
+                extension: 'html',
+                path: { notIn: [...SITE_CHROME_FILES] },
+              },
               orderBy: { path: 'asc' },
             });
           }
@@ -1659,9 +1664,8 @@ export const siteRouter = createTRPCRouter({
             include: { user: true },
           });
 
-          // Reserved site-chrome files (`_footer.md`) are never pages, even
-          // legacy rows that still carry an appPath from before the worker
-          // stored them as non-page blobs.
+          // Reserved site-chrome files (`_footer.html`) are never pages
+          // (defence in depth; the lookups above should not return them).
           if (!blob || !site || isSiteChromeFile(blob.path)) {
             throw new TRPCError({
               code: 'NOT_FOUND',

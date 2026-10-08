@@ -141,7 +141,7 @@ Supported `label` values: `bsky`, `bluesky`, `discord`, `mail`, `facebook`, `git
 **Type:** `object`  
 **Default:** —
 
-Footer configuration. Premium sites can instead replace the whole footer with a `_footer.md` file. [[footer|Learn more →]]
+Footer configuration. Premium sites can instead replace the whole footer with a `_footer.html` file. [[footer|Learn more →]]
 
 | Field        | Type                      | Description                     |
 | ------------ | ------------------------- | ------------------------------- |

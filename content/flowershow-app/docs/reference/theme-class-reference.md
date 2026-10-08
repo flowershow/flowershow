@@ -465,7 +465,7 @@ Search launch control, modal shell, result states, and hit content.
 
 ## Footer
 
-Publication identity, navigation groups, social links, and copyright, or a custom footer rendered from `_footer.md` (Premium).
+Publication identity, navigation groups, social links, and copyright, or a custom footer rendered from `_footer.html` (Premium).
 
 **DOM shape**
 
@@ -475,7 +475,7 @@ Publication identity, navigation groups, social links, and copyright, or a custo
    └─ .site-footer-content-grid
       ├─ .site-footer-publication-section
       └─ .site-footer-navigation-section
-.site-footer.site-footer--custom (_footer.md)
+.site-footer.site-footer--custom (_footer.html)
 └─ .site-footer-inner
    └─ .site-footer-custom
 ```

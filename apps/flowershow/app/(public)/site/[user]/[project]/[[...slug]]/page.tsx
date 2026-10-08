@@ -138,8 +138,8 @@ export async function generateMetadata(props: {
   if (metadata?.publish === false) {
     notFound();
   }
-  // Reserved site-chrome files (e.g. `_footer.md`) are never pages. The worker
-  // stores them without an app path; this also covers blobs created before.
+  // Reserved site-chrome files (`_footer.html`) are never pages (defence in
+  // depth: getBlob already skips them).
   if (blob && isSiteChromeFile(blob.path)) {
     notFound();
   }
