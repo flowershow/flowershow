@@ -216,7 +216,7 @@ test.describe('Custom navbar on Premium', () => {
       const subPanel = submenu.locator(':scope > ul');
       await expect(subPanel).toHaveCSS('position', 'static');
       await expect(subPanel).toHaveCSS('box-shadow', 'none');
-      const link = subPanel.getByRole('link', { name: 'Submenu: home' });
+      const link = subPanel.getByRole('link', { name: 'Submenu: syntax' });
       await expect(link).toBeVisible();
       const panelBox = (await panel.boundingBox())!;
       const linkBox = (await link.boundingBox())!;
