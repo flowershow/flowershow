@@ -23,12 +23,42 @@ function normalizePath(path: string): string {
 }
 
 /**
+ * Extensions that mark a link as a file (served raw, or by a route handler)
+ * rather than a page. Only these count: a dot alone doesn't, so page slugs
+ * like `/releases/v1.2` or `/2024.01.05-notes` still navigate client-side.
+ */
+const FILE_EXTENSIONS = new Set(
+  [
+    // Content and data
+    'md mdx markdown canvas base html htm txt xml rss atom json geojson',
+    'yaml yml toml csv tsv ics ipynb',
+    // Documents and archives
+    'pdf epub doc docx xls xlsx ppt pptx odt ods odp zip gz tgz tar 7z',
+    // Images, audio, video
+    'png jpg jpeg gif svg webp avif ico bmp tif tiff',
+    'mp3 wav ogg m4a flac mp4 webm mov m4v',
+    // Web assets
+    'css js mjs map wasm woff woff2 ttf otf',
+  ]
+    .join(' ')
+    .split(' '),
+);
+
+function hasFileExtension(path: string): boolean {
+  const lastSegment = path.split('/').pop() ?? '';
+  const dot = lastSegment.lastIndexOf('.');
+  return (
+    dot > 0 && FILE_EXTENSIONS.has(lastSegment.slice(dot + 1).toLowerCase())
+  );
+}
+
+/**
  * True when a link in the custom navbar (`_navbar.html`) is a same-site page
  * link that can be followed client-side with `next/link`: a root-relative
  * path (relative links are already resolved to root-relative ones by
- * `processHtmlFragment`), with no file extension in its last segment (so
+ * `processHtmlFragment`), not ending in a known file extension (so
  * `/notes.md`, `/rss.xml`, `/assets/report.pdf` or `/page.html` stay plain
- * anchors), and no `target` or `download`. External, protocol-relative and
+ * anchors, while `/releases/v1.2` doesn't), and no `target` or `download`. External, protocol-relative and
  * hash-only links are plain anchors too.
  */
 export function isClientNavigable({
@@ -41,8 +71,7 @@ export function isClientNavigable({
   if (path === null) return false;
   if (target && target !== '_self') return false;
   if (download !== undefined && download !== false) return false;
-  const lastSegment = path.split('/').pop() ?? '';
-  return !lastSegment.includes('.');
+  return !hasFileExtension(path);
 }
 
 /**

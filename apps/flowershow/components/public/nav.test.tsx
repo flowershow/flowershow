@@ -87,6 +87,32 @@ describe('CustomNavbar', () => {
     expect(details).not.toHaveAttribute('open');
   });
 
+  it('keeps the menu open on a modifier-click (open in new tab)', () => {
+    const { container } = render(<CustomNavbar content={menu} />);
+    const details = container.querySelector('details')!;
+    details.setAttribute('open', '');
+    const link = screen.getByRole('link', { name: 'About', hidden: true });
+    link.addEventListener('click', (e) => e.preventDefault());
+    for (const mod of ['metaKey', 'ctrlKey', 'shiftKey', 'altKey']) {
+      fireEvent.click(link, { [mod]: true });
+      expect(details).toHaveAttribute('open');
+    }
+  });
+
+  it('leaves an author-written <details open> open on mount', () => {
+    const { container } = render(
+      <CustomNavbar
+        content={
+          <details open>
+            <summary>Menu</summary>
+            <a href="/about">About</a>
+          </details>
+        }
+      />,
+    );
+    expect(container.querySelector('details')).toHaveAttribute('open');
+  });
+
   it('closes an open menu on Escape and returns focus to its summary', () => {
     const { container } = render(<CustomNavbar content={menu} />);
     const details = container.querySelector('details')!;

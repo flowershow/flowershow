@@ -20,12 +20,17 @@ import NavbarAnchor, {
 afterEach(cleanup);
 
 describe('isClientNavigable', () => {
-  it.each(['/', '/about', '/docs/getting-started', '/blog?page=2', '/a#b'])(
-    'is true for the same-site page link %s',
-    (href) => {
-      expect(isClientNavigable({ href })).toBe(true);
-    },
-  );
+  it.each([
+    '/',
+    '/about',
+    '/docs/getting-started',
+    '/blog?page=2',
+    '/a#b',
+    '/releases/v1.2',
+    '/2024.01.05-notes',
+  ])('is true for the same-site page link %s', (href) => {
+    expect(isClientNavigable({ href })).toBe(true);
+  });
 
   it.each([
     ['an external link', { href: 'https://example.com/about' }],
@@ -36,6 +41,7 @@ describe('isClientNavigable', () => {
     ['a pdf', { href: '/assets/report.pdf' }],
     ['the RSS feed', { href: '/rss.xml' }],
     ['an html file', { href: '/page.html' }],
+    ['an upper-case extension', { href: '/assets/Photo.JPG' }],
     ['a target=_blank link', { href: '/about', target: '_blank' }],
     ['a download link', { href: '/about', download: '' }],
     ['a link without href', { href: undefined }],

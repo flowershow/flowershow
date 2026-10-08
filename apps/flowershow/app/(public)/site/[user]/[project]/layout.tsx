@@ -227,11 +227,9 @@ export default async function PublicLayout(props: {
   const showDefaultNav =
     !!siteConfig?.nav || !!siteConfig?.enableSearch || !!siteConfig?.social;
   // A custom navbar shows even when the site configures no default navbar.
-  // (If it then fails to render, the error boundary falls back to no navbar
-  // while the layout still lacks `.no-nav`; acceptable for an error path.)
   const showNav = !!customNavbar || showDefaultNav;
 
-  const defaultNav = showDefaultNav ? (
+  const navElement = (
     <Nav
       logo={logo}
       url={sitePrefix || '/'}
@@ -243,7 +241,8 @@ export default async function PublicLayout(props: {
       showThemeSwitch={showThemeModeSwitch}
       cta={cta}
     />
-  ) : null;
+  );
+  const defaultNav = showDefaultNav ? navElement : null;
 
   return (
     <html
@@ -345,7 +344,10 @@ export default async function PublicLayout(props: {
                   />
                 )}
                 {customNavbar ? (
-                  <ChromeErrorBoundary label="navbar" fallback={defaultNav}>
+                  // If the custom navbar fails to render, fall back to the default
+                  // navbar, even on a site that configures none: the layout
+                  // has no `.no-nav` here, so a navbar must be shown.
+                  <ChromeErrorBoundary label="navbar" fallback={navElement}>
                     <CustomNavbar
                       content={customNavbar}
                       showSearch={showSearch}

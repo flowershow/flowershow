@@ -68,6 +68,19 @@ test.describe('Custom navbar on Premium', () => {
       await expect(nav.locator('.e2e-navbar-menu')).toBeHidden();
     });
 
+    await test.step('author classes beat the default link styles', async () => {
+      // A `bg-black text-white` button that is also the current page keeps
+      // its colours and weight: the defaults are `:where()`-wrapped.
+      const cta = nav.locator('.e2e-navbar-cta');
+      await expect(cta).toHaveAttribute('aria-current', 'page');
+      await expect(cta).toHaveCSS('color', 'rgb(255, 255, 255)');
+      await expect(cta).toHaveCSS('background-color', 'rgb(0, 0, 0)');
+      await expect(cta).toHaveCSS('font-weight', '400');
+      await cta.hover();
+      await expect(cta).toHaveCSS('color', 'rgb(255, 255, 255)');
+      await page.mouse.move(0, 400);
+    });
+
     await test.step('page links navigate client-side', async () => {
       await page.evaluate(() => {
         (window as MarkedWindow).__navbarMarker = true;
@@ -118,7 +131,7 @@ test.describe('Custom navbar on Premium', () => {
     await test.step('the desktop links are hidden, the menu is shown', async () => {
       await expect(nav).toContainText(NAVBAR_TEXT);
       await expect(nav.locator('.e2e-navbar-links')).toBeHidden();
-      await expect(menu.locator('summary')).toBeVisible();
+      await expect(menu.locator(':scope > summary')).toBeVisible();
     });
 
     await test.step('no page-level horizontal scroll', async () => {
@@ -129,12 +142,12 @@ test.describe('Custom navbar on Premium', () => {
     });
 
     await test.step('the menu opens below the bar without being clipped', async () => {
-      await menu.locator('summary').click();
+      await menu.locator(':scope > summary').click();
       await expect(menu).toHaveAttribute('open', '');
       const link = menu.getByRole('link', { name: 'Menu: basic syntax' });
       await expect(link).toBeVisible();
       const navBox = await nav.boundingBox();
-      const panelBox = await menu.locator('ul').boundingBox();
+      const panelBox = await menu.locator(':scope > ul').boundingBox();
       // The panel drops out of the bar: it extends below it, so the shell's
       // overflow-x: clip doesn't clip it vertically.
       expect(panelBox!.y + panelBox!.height).toBeGreaterThan(
@@ -156,6 +169,61 @@ test.describe('Custom navbar on Premium', () => {
       expect(
         await page.evaluate(() => (window as MarkedWindow).__navbarMarker),
       ).toBe(true);
+    });
+  });
+
+  test('menu panels: author direction classes win, submenus expand inline', async ({
+    page,
+    basePath,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(`${basePath}/docs/getting-started`);
+    const menu = page.locator('nav.site-navbar details.e2e-navbar-menu');
+    const panel = menu.locator(':scope > ul');
+    await menu.locator(':scope > summary').click();
+    await expect(menu).toHaveAttribute('open', '');
+
+    // getComputedStyle resolves left/right of a positioned box to px, so
+    // compare edges with the <details> instead.
+    const edges = async () => {
+      const m = (await menu.boundingBox())!;
+      const p = (await panel.boundingBox())!;
+      return {
+        rightAligned: Math.abs(p.x + p.width - (m.x + m.width)) < 1,
+        leftAligned: Math.abs(p.x - m.x) < 1,
+      };
+    };
+
+    await test.step('the last menu opens leftwards by default', async () => {
+      expect(await edges()).toMatchObject({ rightAligned: true });
+    });
+
+    await test.step('`left-0 right-auto` on the last panel wins', async () => {
+      await panel.evaluate((el) => el.classList.add('left-0', 'right-auto'));
+      expect(await edges()).toMatchObject({
+        leftAligned: true,
+        rightAligned: false,
+      });
+      await panel.evaluate((el) => el.classList.remove('left-0', 'right-auto'));
+    });
+
+    await test.step('a nested <details> expands inline in the panel', async () => {
+      const submenu = menu.locator('details.e2e-navbar-submenu');
+      await submenu.locator(':scope > summary').click();
+      await expect(submenu).toHaveAttribute('open', '');
+      // Opening the submenu keeps its parent menu open.
+      await expect(menu).toHaveAttribute('open', '');
+      const subPanel = submenu.locator(':scope > ul');
+      await expect(subPanel).toHaveCSS('position', 'static');
+      await expect(subPanel).toHaveCSS('box-shadow', 'none');
+      const link = subPanel.getByRole('link', { name: 'Submenu: home' });
+      await expect(link).toBeVisible();
+      const panelBox = (await panel.boundingBox())!;
+      const linkBox = (await link.boundingBox())!;
+      expect(linkBox.y).toBeGreaterThanOrEqual(panelBox.y);
+      expect(linkBox.y + linkBox.height).toBeLessThanOrEqual(
+        panelBox.y + panelBox.height,
+      );
     });
   });
 

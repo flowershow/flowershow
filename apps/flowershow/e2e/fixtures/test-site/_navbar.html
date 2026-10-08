@@ -1,14 +1,24 @@
-<span class="e2e-navbar-brand font-bold">E2E custom navbar</span>
+<!-- left-0 right-auto are here so the scoped CSS includes them; the e2e test moves them onto the menu panel. -->
+<span class="e2e-navbar-brand font-bold left-0 right-auto">E2E custom navbar</span>
 <ul class="e2e-navbar-links hidden md:flex">
   <li><a href="/">Home</a></li>
   <li><a href="basic-syntax">Basic syntax</a></li>
   <li><a href="/docs/getting-started">Getting started</a></li>
   <li><a href="/rss.xml">RSS feed</a></li>
+  <li><a href="/docs/getting-started" class="e2e-navbar-cta rounded bg-black px-3 py-1 text-white font-normal">Start here</a></li>
 </ul>
 <details class="e2e-navbar-menu ml-auto md:hidden">
   <summary aria-label="Open menu">Menu</summary>
   <ul>
     <li><a href="/basic-syntax">Menu: basic syntax</a></li>
     <li><a href="/docs/getting-started">Menu: getting started</a></li>
+    <li>
+      <details class="e2e-navbar-submenu">
+        <summary>Menu: more</summary>
+        <ul>
+          <li><a href="/">Submenu: home</a></li>
+        </ul>
+      </details>
+    </li>
   </ul>
 </details>

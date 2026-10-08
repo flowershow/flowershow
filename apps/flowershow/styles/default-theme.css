@@ -541,109 +541,120 @@
     gap: 1rem;
     font-size: var(--font-size-sm);
     line-height: var(--line-height-normal);
+  }
 
-    & p {
-      margin: 0;
-    }
+  /* Defaults for the author's markup. Every selector below is
+     `.site-navbar-custom :where(…)`, i.e. specificity (0,1,0): just enough to
+     beat Tailwind's preflight element rules, while any Tailwind class in
+     `_navbar.html` (scoped, so (0,2,0)) or a custom.css rule always wins. Keep
+     new rules in this form. */
+  .site-navbar-custom :where(p) {
+    margin: 0;
+  }
 
-    & a {
-      color: inherit;
-      text-decoration: none;
-      transition: color 0.15s ease-in-out;
+  .site-navbar-custom :where(a) {
+    color: inherit;
+    text-decoration: none;
+    transition: color 0.15s ease-in-out;
+  }
 
-      &:hover {
-        color: var(--color-foreground-900);
-      }
-    }
+  .site-navbar-custom :where(a:hover, a[aria-current='page']) {
+    color: var(--color-foreground-900);
+  }
 
-    & a[aria-current='page'] {
-      color: var(--color-foreground-900);
-      font-weight: var(--font-weight-semibold);
-    }
+  .site-navbar-custom :where(a[aria-current='page']) {
+    font-weight: var(--font-weight-semibold);
+  }
 
-    & a:focus-visible,
-    & summary:focus-visible {
-      outline: 2px solid currentColor;
-      outline-offset: 2px;
-      border-radius: 2px;
-    }
+  .site-navbar-custom :where(a:focus-visible, summary:focus-visible) {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
 
-    /* A logo always fits the bar; intrinsic width/height can't distort it. */
-    & img {
-      display: inline-block;
-      width: auto;
-      height: auto;
-      max-width: 100%;
-      max-height: calc(var(--navbar-height) - 1rem);
-    }
+  /* A logo always fits the bar. Only caps, so `width`/`height` attributes
+     and size classes still apply. */
+  .site-navbar-custom :where(img) {
+    display: inline-block;
+    max-width: 100%;
+    max-height: calc(var(--navbar-height) - 1rem);
+  }
 
-    /* A top-level list of links is a horizontal row. `list-style-type: ""`
-       (not `none`) keeps list semantics for VoiceOver in Safari. */
-    & > :is(ul, ol) {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      min-width: 0;
-      margin: 0;
-      padding: 0;
-      list-style-type: "";
-      white-space: nowrap;
+  /* A top-level list of links is a horizontal row. `list-style-type: ""`
+     (not `none`) keeps list semantics for VoiceOver in Safari. The row isn't
+     a scroll container (that would clip dropdowns inside it): on a narrow
+     screen whatever doesn't fit is cut off at the screen edge, so put long
+     link lists in a `<details>` mobile menu (or add `overflow-x-auto` to the
+     list if it holds no dropdowns). */
+  .site-navbar-custom > :where(ul, ol) {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    min-width: 0;
+    margin: 0;
+    padding: 0;
+    list-style-type: "";
+    white-space: nowrap;
+  }
 
-      & > li {
-        margin: 0;
-        padding: 0;
-        flex-shrink: 0;
-      }
-    }
+  .site-navbar-custom > :where(ul, ol) > :where(li) {
+    margin: 0;
+    padding: 0;
+    flex-shrink: 0;
+  }
 
-    /* On narrow screens such a row scrolls sideways rather than overflowing,
-       unless it holds a <details> menu (a scroll container would clip it). */
-    & > :is(ul, ol):not(:has(details)) {
-      overflow-x: auto;
-      scrollbar-width: none;
-    }
+  /* <details>/<summary>: the supported no-JS dropdown and mobile menu. */
+  .site-navbar-custom :where(details) {
+    position: relative;
+  }
 
-    /* <details>/<summary>: the supported no-JS dropdown and mobile menu. */
-    & details {
-      position: relative;
-    }
+  .site-navbar-custom :where(summary) {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    cursor: pointer;
+    list-style: none;
+  }
 
-    & summary {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      cursor: pointer;
-      list-style: none;
+  .site-navbar-custom :where(summary)::-webkit-details-marker {
+    display: none;
+  }
 
-      &::-webkit-details-marker {
-        display: none;
-      }
-    }
+  /* A top-level menu's panel floats below the bar. */
+  .site-navbar-custom :where(details:not(details details) > :not(summary)) {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    left: 0;
+    z-index: 50;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 12rem;
+    margin: 0;
+    padding: 0.5rem 1rem;
+    list-style-type: "";
+    white-space: nowrap;
+    background: var(--color-background);
+    border: 1px solid var(--color-foreground-100);
+    border-radius: var(--radius-md);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
 
-    & details > :not(summary) {
-      position: absolute;
-      top: calc(100% + 0.5rem);
-      left: 0;
-      z-index: 50;
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-      min-width: 12rem;
-      margin: 0;
-      padding: 0.5rem 1rem;
-      list-style-type: "";
-      white-space: nowrap;
-      background: var(--color-background);
-      border: 1px solid var(--color-foreground-100);
-      border-radius: var(--radius-md);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
+  /* The last menu in the bar (typically a mobile menu) opens leftwards.
+     Same specificity as the rule above, so it wins on source order. */
+  .site-navbar-custom > :where(details:last-child) > :where(:not(summary)) {
+    left: auto;
+    right: 0;
+  }
 
-    /* The last menu in the bar (typically a mobile menu) opens leftwards. */
-    & > details:last-child > :not(summary) {
-      left: auto;
-      right: 0;
-    }
+  /* A <details> inside a menu (a submenu) expands inline, as an accordion. */
+  .site-navbar-custom :where(details details > :not(summary)) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin: 0.25rem 0 0;
+    padding: 0 0 0 0.75rem;
+    list-style-type: "";
   }
 
   /* Mobile navigation */

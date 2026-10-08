@@ -284,8 +284,9 @@ export interface CustomNavbarProps {
  *
  * `<details>` elements are the supported no-JS dropdown / mobile menu. The
  * navbar lives in the layout and survives client navigation, so open menus
- * are closed on route change, on a link click inside them, on Escape and on a
- * click outside.
+ * are closed on route change, on a plain link click inside them, on Escape
+ * and on a click outside. Author-written `<details open>` is left open on
+ * first render.
  */
 export function CustomNavbar({
   content,
@@ -297,7 +298,12 @@ export function CustomNavbar({
   const pathname = usePathname();
   const contentRef = useRef<HTMLDivElement>(null);
 
+  // Close open menus on client navigation, but not on mount: a
+  // `<details open>` the author wrote stays open on first render.
+  const prevPathname = useRef(pathname);
   useEffect(() => {
+    if (prevPathname.current === pathname) return;
+    prevPathname.current = pathname;
     if (contentRef.current) closeDetailsMenus(contentRef.current);
   }, [pathname]);
 
@@ -311,6 +317,9 @@ export function CustomNavbar({
       if (e.key === 'Escape') closeDetailsMenus(container);
     };
     const onClick = (e: MouseEvent) => {
+      // Cmd/Ctrl/Shift/Alt-click opens a new tab or window: keep the menu.
+      if (e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey)
+        return;
       const link = (e.target as Element | null)?.closest?.('a');
       if (link?.closest('details[open]')) closeDetailsMenus(container);
     };

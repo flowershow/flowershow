@@ -129,7 +129,7 @@ This example has a logo, a row of links on wider screens and a menu button on ph
   <li><a href="/blog">Blog</a></li>
   <li><a href="/docs">Docs</a></li>
   <li>
-    <details>
+    <details name="nav">
       <summary>Products</summary>
       <ul>
         <li><a href="/products/notes">Notes</a></li>
@@ -142,7 +142,7 @@ This example has a logo, a row of links on wider screens and a menu button on ph
 
 <a href="/signup" class="ml-auto hidden md:inline-block rounded bg-black px-3 py-1.5 text-white">Sign up</a>
 
-<details class="ml-auto md:hidden">
+<details name="nav" class="ml-auto md:hidden">
   <summary aria-label="Menu">☰</summary>
   <ul>
     <li><a href="/blog">Blog</a></li>
@@ -157,9 +157,9 @@ How it works:
 
 - **It replaces the navbar content, not the bar.** The logo, nav title, nav links, dropdowns, social icons, CTA button and the built-in mobile menu are no longer shown. The bar itself stays: it is still sticky at the top of the page, still hidden by `showNavbar: false`, and its height is still set by `--navbar-height`.
 - **Search and the dark-mode toggle stay if you turn them on.** Both are off unless you enable full-text search (`enableSearch`) or the theme switch (`theme.showModeSwitch`) in [[config-file|config.json]]. When on, they sit at the end of the bar, after your content. To move them, set `order` on `.site-navbar-search-container` or `.site-navbar-theme-switch-container` in `custom.css` (your content is `.site-navbar-custom`, `order: 0`).
-- **Use `<details>` for dropdowns and the mobile menu.** A `<details>` with a `<summary>` opens a panel under the bar, with no JavaScript needed. Open menus close when a link is followed, when you click outside them, and when you press Escape. The last menu in the bar opens towards the left so it stays on screen; other menus open to the right (add `right-0 left-auto` to the panel to change that). Give an icon-only `<summary>` an `aria-label`.
-- **There is no built-in hamburger menu.** Use Tailwind's responsive prefixes to choose what shows at each width, as in the example: `hidden md:flex` for the desktop links and `md:hidden` for the menu. A top-level list of links that's too wide for a phone scrolls sideways instead of overflowing, unless it contains a `<details>` menu. The page itself never scrolls sideways because of the navbar.
-- **Page links are fast.** Links to pages on your site (`/blog`, `about`) navigate without a full page reload, like the default navbar. Links to files (`/rss.xml`, `/notes.md`, `/assets/guide.pdf`) and external links are ordinary links; external links open in a new tab.
+- **Use `<details>` for dropdowns and the mobile menu.** A `<details>` with a `<summary>` opens a panel under the bar, with no JavaScript needed. Open menus close when a link is followed, when you click outside them, when you press Escape and when you move to another page. Give your menus the same `name` (`<details name="nav">`, as in the example) so opening one closes the others, also from the keyboard. The last menu in the bar opens towards the left so it stays on screen; other menus open to the right. To change the direction, add `right-0 left-auto` or `left-0 right-auto` to the panel. A `<details>` inside a menu (a submenu) expands inline, as an accordion, rather than as a second floating panel. Give an icon-only `<summary>` an `aria-label`. A menu you write as `<details open>` starts open.
+- **There is no built-in hamburger menu.** Use Tailwind's responsive prefixes to choose what shows at each width, as in the example: `hidden md:flex` for the desktop links and `md:hidden` for the menu. Content too wide for the screen is cut off at the screen edge, so the page doesn't scroll sideways because of the navbar. The row itself doesn't scroll either, because a scrolling row would also clip any dropdown inside it. If a list of links has no dropdowns and you'd rather it scrolled sideways on phones, add `overflow-x-auto` to it.
+- **Page links are fast.** Links to pages on your site (`/blog`, `about`, `/releases/v1.2`) navigate without a full page reload, like the default navbar. Links ending in a file extension (`/rss.xml`, `/notes.md`, `/assets/guide.pdf`) and external links are ordinary links; external links open in a new tab. Write links to your own pages as paths (`/about`), not full URLs (`https://example.com/about`), which count as external.
 - **The current page is marked.** The link to the page being viewed gets `aria-current="page"` and is shown in bold. Style it with `.site-navbar-custom a[aria-current="page"]`.
 - **It is HTML, not Markdown,** and it is handled like the custom footer: Markdown syntax is shown as plain text, only `href` and `src` are rewritten, `<style>` blocks work, inline `<script>` tags run only on a full page load, and images in the navbar don't open in a lightbox.
 - **Need a taller bar?** Set `--navbar-height` in `custom.css`. The sidebar, table of contents and other sticky elements follow it. Images in the navbar are capped at the bar height minus `1rem`.
@@ -171,7 +171,7 @@ How it works:
 
 ### Styling the custom navbar
 
-Your content sits inside `nav.site-navbar.site-navbar--custom` and `.site-navbar-custom`, a flex row with a `1rem` gap. Only light defaults are applied: links inherit the text colour, a top-level list is a horizontal row without bullets, and `<details>` panels get a background, border and shadow. Add your own styles with Tailwind classes in `_navbar.html`, or in `custom.css`:
+Your content sits inside `nav.site-navbar.site-navbar--custom` and `.site-navbar-custom`, a flex row with a `1rem` gap. Only light defaults are applied: links inherit the text colour, a top-level list is a horizontal row without bullets, and `<details>` panels get a background, border and shadow. The defaults use a single class of specificity, so a Tailwind class in `_navbar.html` or a rule in `custom.css` always overrides them (a `bg-black text-white` button keeps its colours on hover and when it's the current page). Add your own styles with Tailwind classes in `_navbar.html`, or in `custom.css`:
 
 ```css
 .site-navbar-custom a:hover {
