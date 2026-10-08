@@ -80,6 +80,7 @@ export const PLANS: Record<PlanType, Plan> = {
       'Everything in Free',
       'Custom domain',
       'Custom head code',
+      'Custom footer',
       'Priority support',
       'Team collaboration',
       'Custom branding',

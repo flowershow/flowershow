@@ -69,8 +69,8 @@ const GROUPS = [
     id: 'footer',
     title: 'Footer',
     description:
-      'Publication identity, navigation groups, social links, and copyright.',
-    dom: `.site-footer\n└─ .site-footer-inner\n   └─ .site-footer-content-grid\n      ├─ .site-footer-publication-section\n      └─ .site-footer-navigation-section`,
+      'Publication identity, navigation groups, social links, and copyright, or a custom footer rendered from `_footer.md` (Premium).',
+    dom: `.site-footer\n└─ .site-footer-inner\n   └─ .site-footer-content-grid\n      ├─ .site-footer-publication-section\n      └─ .site-footer-navigation-section\n.site-footer.site-footer--custom (_footer.md)\n└─ .site-footer-inner\n   └─ .site-footer-custom`,
   },
   {
     id: 'page-actions',

@@ -10,10 +10,11 @@ import {
   extractInlineTags,
   frontmatterTags,
   getContentType,
+  isSiteChromeFile,
   mergePageTags,
   tagIdentity,
 } from '@flowershow/core';
-import { LinkType, Plan, PrismaClient } from '@prisma/client';
+import { LinkType, Plan, Prisma, PrismaClient } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import { filePathToSlug } from './file-path-to-slug';
 import { extractImageDimensions, parseMarkdown } from './processing-utils';
@@ -178,15 +179,21 @@ async function uploadFixturesForSite(
     const ext = path.extname(filePath).slice(1);
     const s3Key = `${siteId}/main/raw/${filePath}`;
 
-    const appPath = ['md', 'mdx', 'canvas'].includes(ext)
-      ? filePathToSlug(filePath)
-      : null;
+    // Reserved site-chrome files (e.g. `_footer.md`) are stored as non-page
+    // blobs, exactly as the Cloudflare worker does: no app path, metadata or
+    // tags (see isMarkdownPage/computeAppPath in queue-consumer.js).
+    const isChromeFile = isSiteChromeFile(filePath);
+    const isMarkdownPage = ['md', 'mdx'].includes(ext) && !isChromeFile;
+    const appPath =
+      ['md', 'mdx', 'canvas'].includes(ext) && !isChromeFile
+        ? filePathToSlug(filePath)
+        : null;
     let metadata: Record<string, unknown> = {};
     let permalink: string | null = null;
     let shouldPublish = true;
     let body = '';
 
-    if (['md', 'mdx'].includes(ext)) {
+    if (isMarkdownPage) {
       const parsed = await parseMarkdown({
         markdown: content.toString(),
         path: filePath,
@@ -215,6 +222,7 @@ async function uploadFixturesForSite(
     // Create Blob record
     const sha = crypto.createHash('sha1').update(content).digest('hex');
     const dimensions = extractImageDimensions(filePath, content);
+    const metadataValue = isChromeFile ? Prisma.DbNull : (metadata as any);
 
     const blob = await db.blob.upsert({
       where: {
@@ -230,7 +238,7 @@ async function uploadFixturesForSite(
         permalink,
         size: content.length,
         sha,
-        metadata: metadata as any,
+        metadata: metadataValue,
         extension: ext || null,
         width: dimensions.width,
         height: dimensions.height,
@@ -240,7 +248,7 @@ async function uploadFixturesForSite(
         permalink,
         size: content.length,
         sha,
-        metadata: metadata as any,
+        metadata: metadataValue,
         extension: ext || null,
         width: dimensions.width,
         height: dimensions.height,
@@ -250,7 +258,7 @@ async function uploadFixturesForSite(
     // Seed Tag rows faithfully — the union of frontmatter + inline body #tags,
     // exactly as the Cloudflare worker's syncTags does at publish time. This
     // powers /tags navigation and the unified Bases tag reads.
-    if (['md', 'mdx'].includes(ext)) {
+    if (isMarkdownPage) {
       const tags = mergePageTags(
         frontmatterTags(metadata),
         extractInlineTags(body),

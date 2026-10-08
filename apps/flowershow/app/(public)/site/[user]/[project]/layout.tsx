@@ -29,6 +29,7 @@ import type { SiteConfig } from '@/components/types';
 import { loadProtectedCardSource } from '@/lib/protected-card-source';
 import { getThemeUrl } from '@/lib/get-theme';
 import { resolveSiteName } from '@/lib/site-config';
+import { loadCustomFooter } from '@/lib/site-footer';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
 import { api } from '@/trpc/server';
@@ -174,6 +175,9 @@ export default async function PublicLayout(props: {
       siteId: site.id,
     })
     .catch(() => null);
+
+  // Premium: `_footer.md` replaces the default footer body (null otherwise).
+  const customFooter = await loadCustomFooter({ site, siteConfig });
 
   const usesGoogleFonts = customCss
     ? /fonts\.googleapis\.com/i.test(customCss)
@@ -326,6 +330,7 @@ export default async function PublicLayout(props: {
                   siteName={siteName}
                   social={social}
                   navigation={siteConfig?.footer?.navigation}
+                  customContent={customFooter}
                 />
                 {showBuiltWithButton && <BuiltWithFloatingButton />}
                 {site.privacyMode === 'PASSWORD' && (

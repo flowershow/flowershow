@@ -18,3 +18,29 @@ describe('isFeatureEnabled(Feature.PageScripts)', () => {
     ).toBe(false);
   });
 });
+
+describe('isFeatureEnabled(CustomFooter)', () => {
+  it('is enabled on Premium sites', () => {
+    expect(
+      isFeatureEnabled(Feature.CustomFooter, {
+        customDomain: null,
+        plan: 'PREMIUM',
+      }),
+    ).toBe(true);
+  });
+
+  it('is disabled on Free sites', () => {
+    expect(
+      isFeatureEnabled(Feature.CustomFooter, {
+        customDomain: null,
+        plan: 'FREE',
+      }),
+    ).toBe(false);
+  });
+
+  it('is disabled when the plan is unknown (e.g. withheld for protected sites)', () => {
+    expect(isFeatureEnabled(Feature.CustomFooter, { customDomain: null })).toBe(
+      false,
+    );
+  });
+});

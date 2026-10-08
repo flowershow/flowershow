@@ -1,4 +1,8 @@
-import { matchLinkTarget, tagIdentity } from '@flowershow/core';
+import {
+  matchLinkTarget,
+  SITE_FOOTER_PATH,
+  tagIdentity,
+} from '@flowershow/core';
 import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
@@ -947,6 +951,52 @@ export const siteRouter = createTRPCRouter({
         {
           revalidate: 60, // 1 minute
           tags: [`${input.siteId}`, `${input.siteId}-css`],
+        },
+      )(input);
+    }),
+
+  /**
+   * Raw markdown of the site's custom footer (`_footer.md` at the site root),
+   * or null if there is none. Plan gating happens in the layout.
+   */
+  getSiteFooter: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        include: {
+          user: true,
+        },
+      });
+
+      if (!site) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
+      return await unstable_cache(
+        async (_input) => {
+          try {
+            return await fetchFile({
+              projectId: site.id,
+              path: SITE_FOOTER_PATH,
+            });
+          } catch {
+            return null;
+          }
+        },
+        ['site-footer'],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.siteId}`],
         },
       )(input);
     }),

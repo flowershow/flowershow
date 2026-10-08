@@ -1,5 +1,6 @@
 import { GlobeIcon } from 'lucide-react';
 import Link from 'next/link';
+import type { ReactNode } from 'react';
 import { FooterNavigationGroup, SocialLink } from '@/components/types';
 import { socialIcons } from './social-icons';
 
@@ -7,13 +8,35 @@ interface FooterProps {
   siteName?: string;
   navigation?: FooterNavigationGroup[];
   social?: SocialLink[];
+  /**
+   * Rendered `_footer.md` (Premium). When set, it replaces the whole default
+   * footer body: site name, copyright, social links and footer navigation.
+   */
+  customContent?: ReactNode;
 }
 
 export default async function Footer({
   siteName,
   navigation,
   social,
+  customContent,
 }: FooterProps) {
+  if (customContent) {
+    return (
+      <footer
+        className="site-footer site-footer--custom"
+        aria-labelledby="footer"
+      >
+        <div className="site-footer-inner">
+          <p id="footer" className="sr-only">
+            Footer
+          </p>
+          <div className="site-footer-custom">{customContent}</div>
+        </div>
+      </footer>
+    );
+  }
+
   const currentYear = new Date().getFullYear();
 
   return (

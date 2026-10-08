@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **284 styled class selectors**:
-**282 stable semantic hooks** and **2 non-contract
+and currently documents **285 styled class selectors**:
+**283 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -464,7 +464,7 @@ Search launch control, modal shell, result states, and hit content.
 
 ## Footer
 
-Publication identity, navigation groups, social links, and copyright.
+Publication identity, navigation groups, social links, and copyright, or a custom footer rendered from `_footer.md` (Premium).
 
 **DOM shape**
 
@@ -474,6 +474,9 @@ Publication identity, navigation groups, social links, and copyright.
    └─ .site-footer-content-grid
       ├─ .site-footer-publication-section
       └─ .site-footer-navigation-section
+.site-footer.site-footer--custom (_footer.md)
+└─ .site-footer-inner
+   └─ .site-footer-custom
 ```
 
 | Class | Kind |
@@ -481,6 +484,7 @@ Publication identity, navigation groups, social links, and copyright.
 | <code>.site-footer</code> | Hook |
 | <code>.site-footer-content-grid</code> | Hook |
 | <code>.site-footer-copyright</code> | Hook |
+| <code>.site-footer-custom</code> | Hook |
 | <code>.site-footer-inner</code> | Hook |
 | <code>.site-footer-navigation-grid</code> | Hook |
 | <code>.site-footer-navigation-group</code> | Hook |

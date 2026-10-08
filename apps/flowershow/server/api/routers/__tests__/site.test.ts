@@ -44,6 +44,7 @@ vi.mock('@/lib/content-store', () => ({
 // ── Imports ───────────────────────────────────────────────────────
 
 import { tagIdentity } from '@flowershow/core';
+import { fetchFile } from '@/lib/content-store';
 import { appRouter } from '@/server/api/root';
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -997,6 +998,15 @@ describe('site read-path authorization', () => {
     ).rejects.toThrow('Site access required');
   });
 
+  it('getSiteFooter throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(
+      caller.site.getSiteFooter({ siteId: 'site-1' }),
+    ).rejects.toThrow('Site access required');
+  });
+
   it('getAuthors throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
     const db = createMockDb({ site: passwordSite(), blobs: blobs() });
     const caller = createCaller(db);
@@ -1454,5 +1464,42 @@ describe('site.getPagesByTag', () => {
     expect(
       await caller.site.getPagesByTag({ siteId: 'site-1', tag: 'missing' }),
     ).toEqual([]);
+  });
+});
+
+describe('site.getSiteFooter', () => {
+  beforeEach(() => {
+    vi.mocked(fetchFile).mockReset();
+  });
+
+  it('returns the content of the root _footer.md', async () => {
+    vi.mocked(fetchFile).mockResolvedValue('Footer **text**');
+    const caller = createCaller(createMockDb({}));
+
+    await expect(caller.site.getSiteFooter({ siteId: 'site-1' })).resolves.toBe(
+      'Footer **text**',
+    );
+    expect(fetchFile).toHaveBeenCalledWith({
+      projectId: 'site-1',
+      path: '_footer.md',
+    });
+  });
+
+  it('returns null when the site has no _footer.md', async () => {
+    vi.mocked(fetchFile).mockResolvedValue(null);
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getSiteFooter({ siteId: 'site-1' }),
+    ).resolves.toBeNull();
+  });
+
+  it('returns null when fetching the file fails', async () => {
+    vi.mocked(fetchFile).mockRejectedValue(new Error('S3 down'));
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getSiteFooter({ siteId: 'site-1' }),
+    ).resolves.toBeNull();
   });
 });
