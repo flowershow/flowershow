@@ -20,6 +20,14 @@ test('Blog List Component', async ({ page, basePath }) => {
     await expect(headlines.nth(2)).toHaveText('First Blog Post');
   });
 
+  await test.step('exposes stable theme hooks on headline links', async () => {
+    const headlineLinks = list.locator(
+      '.list-component-item-headline > a.list-component-item-headline-link',
+    );
+    await expect(headlineLinks).toHaveCount(3);
+    await expect(headlineLinks.first()).toHaveAttribute('href', /.+/);
+  });
+
   await test.step('displays descriptions in summary slot', async () => {
     const summaries = list.locator('.list-component-item-summary');
     await expect(summaries).toHaveCount(3);

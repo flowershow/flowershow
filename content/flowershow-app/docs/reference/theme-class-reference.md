@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **280 styled class selectors**:
-**278 stable semantic hooks** and **2 non-contract
+and currently documents **284 styled class selectors**:
+**282 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -258,7 +258,7 @@ The page ToC rail and recursively nested ToC items.
 
 ## Lists, cards, skeletons, and pagination
 
-Collection/blog listing cards, loading placeholders, and pagination controls.
+Collection/blog listing cards, empty and error states, loading placeholders, and pagination controls.
 
 **DOM shape**
 
@@ -266,22 +266,31 @@ Collection/blog listing cards, loading placeholders, and pagination controls.
 .list-component
 ├─ .list-component-item / .list-component-skeleton-item
 │  ├─ *-media
+│  │  └─ a.list-component-item-media-link (cards only)
 │  └─ *-content
+│     └─ .list-component-item-headline
+│        └─ a.list-component-item-headline-link
 └─ .list-component-pagination
    ├─ .list-component-pagination-nav
    └─ .list-component-pagination-pages
+.list-component-empty (no matching pages)
+.list-component-error (items failed to load)
 ```
 
 | Class | Kind |
 | --- | --- |
 | <code>.list-component</code> | Hook |
+| <code>.list-component-empty</code> | Hook |
+| <code>.list-component-error</code> | Hook |
 | <code>.list-component-item</code> | Hook |
 | <code>.list-component-item-content</code> | Hook |
 | <code>.list-component-item-eyebrow</code> | Hook |
 | <code>.list-component-item-footnote</code> | Hook |
 | <code>.list-component-item-headline</code> | Hook |
+| <code>.list-component-item-headline-link</code> | Hook |
 | <code>.list-component-item-media</code> | Hook |
 | <code>.list-component-item-media-img</code> | Hook |
+| <code>.list-component-item-media-link</code> | Hook |
 | <code>.list-component-item-summary</code> | Hook |
 | <code>.list-component-pagination</code> | Hook |
 | <code>.list-component-pagination-button</code> | Hook |

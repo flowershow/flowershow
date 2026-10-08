@@ -42,6 +42,13 @@ test('classifyClassName assigns representative hooks to stable UI areas', () => 
   assert.equal(classifyClassName('page-header-title'), 'content');
   assert.equal(classifyClassName('page-toc-container'), 'toc');
   assert.equal(classifyClassName('list-component-item'), 'listings');
+  assert.equal(classifyClassName('list-component-empty'), 'listings');
+  assert.equal(classifyClassName('list-component-error'), 'listings');
+  assert.equal(
+    classifyClassName('list-component-item-headline-link'),
+    'listings',
+  );
+  assert.equal(classifyClassName('tag-pill'), 'tags');
   assert.equal(classifyClassName('tag-index-item'), 'tags');
   assert.equal(classifyClassName('tags-page-title'), 'tags');
   assert.equal(classifyClassName('search-modal-input'), 'search');
@@ -66,6 +73,23 @@ test('every class in the default theme has an intentional group', async () => {
   );
 
   assert.deepEqual(unclassified, []);
+});
+
+test('default theme styles the documented List and tag hooks', async () => {
+  const css = await readFile(
+    'apps/flowershow/styles/default-theme.css',
+    'utf8',
+  );
+  const classNames = extractClassNames(css);
+  for (const hook of [
+    'list-component-empty',
+    'list-component-error',
+    'list-component-item-headline-link',
+    'list-component-item-media-link',
+    'tag-pill',
+  ]) {
+    assert.ok(classNames.includes(hook), `.${hook} should be a styled hook`);
+  }
 });
 
 test('generateReference documents structure, stability, and each class once', () => {

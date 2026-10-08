@@ -151,6 +151,25 @@
     --color-accent-darker: oklch(from var(--color-accent) calc(l + 0.15) c h);
   }
 
+  /* TAG PILLS (.tag-pill) — defaults are Tailwind pink-600 (light) and
+     pink-400 (dark). Declared inside :where() so they have zero specificity:
+     a site or theme `:root { --color-tag-pill-text: … }` wins in both modes,
+     and `:root[data-theme="dark"] { … }` wins for dark mode only. The dark
+     block must stay after the light block (equal specificity, source order
+     decides). */
+  :where(:root) {
+    --color-tag-pill-text: #db2777;
+    --color-tag-pill-bg: rgb(219 39 119 / 0.1);
+    --color-tag-pill-text-hover: #be185d;
+    --color-tag-pill-bg-hover: rgb(219 39 119 / 0.16);
+  }
+  :where(:root[data-theme="dark"]) {
+    --color-tag-pill-text: #f472b6;
+    --color-tag-pill-bg: rgb(244 114 182 / 0.12);
+    --color-tag-pill-text-hover: #f9a8d4;
+    --color-tag-pill-bg-hover: rgb(244 114 182 / 0.2);
+  }
+
   html {
     scroll-behavior: smooth;
     font-family: var(--font-body);
@@ -1363,6 +1382,24 @@
     background-color: oklch(from var(--color-background) calc(l + 0.025) c h);
   }
 
+  /* Links wrapping the card image and headline. Visually neutral (same as the
+     preflight `a` reset); the classes exist so themes can target them, e.g.
+     `.list-component-item-headline-link::after { content: ""; position: absolute; inset: 0; }`
+     makes the whole card clickable (.list-component-item is position: relative). */
+  .list-component-item-media-link,
+  .list-component-item-headline-link {
+    color: inherit;
+    text-decoration: inherit;
+  }
+
+  /* "No items found" and "Error loading items" states. Intentionally unstyled
+     (they look like surrounding text); the classes exist so themes can target
+     them. */
+  .list-component-empty,
+  .list-component-error {
+    display: block;
+  }
+
   .list-component-item-content {
     width: 100%;
     display: flex;
@@ -2145,14 +2182,15 @@
     text-transform: none;
   }
   /* A tag pill — used in the header row, inline in prose, and on the /tags pages.
-     Matches the dashboard's pink accent (Tailwind pink-600/pink-400): pink text
-     on a delicate translucent-pink background, in the heading font. */
+     Colours come from the --color-tag-pill-* tokens (defined with the other
+     design tokens above; default: the dashboard's pink accent), so sites and
+     themes can restyle every pill by setting variables. */
   .tag-pill {
     display: inline-flex;
     align-items: center;
     border-radius: 9999px;
-    background-color: rgb(219 39 119 / 0.1);
-    color: #db2777;
+    background-color: var(--color-tag-pill-bg);
+    color: var(--color-tag-pill-text);
     padding: 0.125rem 0.625rem;
     font-family: var(--font-heading);
     font-size: var(--font-size-sm);
@@ -2165,35 +2203,21 @@
       color 0.15s ease;
   }
   .tag-pill:hover {
-    background-color: rgb(219 39 119 / 0.16);
-    color: #be185d;
+    background-color: var(--color-tag-pill-bg-hover);
+    color: var(--color-tag-pill-text-hover);
     text-decoration: none;
-  }
-  :root[data-theme="dark"] .tag-pill {
-    background-color: rgb(244 114 182 / 0.12);
-    color: #f472b6;
-  }
-  :root[data-theme="dark"] .tag-pill:hover {
-    background-color: rgb(244 114 182 / 0.2);
-    color: #f9a8d4;
   }
   /* Inline tag pills sit inside rendered prose, whose `prose` anchor styles add
      an underline and their own link color; override both (higher specificity than
-     the prose `a` rule) so pills stay pink and underline-free — they read as
-     pills, not links. */
+     the prose `a` rule) so pills keep their tag colour and stay underline-free —
+     they read as pills, not links. */
   .rendered-mdx a.tag-pill {
-    color: #db2777;
+    color: var(--color-tag-pill-text);
     text-decoration: none;
   }
   .rendered-mdx a.tag-pill:hover {
-    color: #be185d;
+    color: var(--color-tag-pill-text-hover);
     text-decoration: none;
-  }
-  :root[data-theme="dark"] .rendered-mdx a.tag-pill {
-    color: #f472b6;
-  }
-  :root[data-theme="dark"] .rendered-mdx a.tag-pill:hover {
-    color: #f9a8d4;
   }
   /* Generated tag navigation pages (/tags and /tags/{tag}) — their own markup,
      not the Markdown content layout. */

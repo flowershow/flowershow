@@ -41,8 +41,8 @@ const GROUPS = [
     id: 'listings',
     title: 'Lists, cards, skeletons, and pagination',
     description:
-      'Collection/blog listing cards, loading placeholders, and pagination controls.',
-    dom: `.list-component\n├─ .list-component-item / .list-component-skeleton-item\n│  ├─ *-media\n│  └─ *-content\n└─ .list-component-pagination\n   ├─ .list-component-pagination-nav\n   └─ .list-component-pagination-pages`,
+      'Collection/blog listing cards, empty and error states, loading placeholders, and pagination controls.',
+    dom: `.list-component\n├─ .list-component-item / .list-component-skeleton-item\n│  ├─ *-media\n│  │  └─ a.list-component-item-media-link (cards only)\n│  └─ *-content\n│     └─ .list-component-item-headline\n│        └─ a.list-component-item-headline-link\n└─ .list-component-pagination\n   ├─ .list-component-pagination-nav\n   └─ .list-component-pagination-pages\n.list-component-empty (no matching pages)\n.list-component-error (items failed to load)`,
   },
   {
     id: 'tags',
