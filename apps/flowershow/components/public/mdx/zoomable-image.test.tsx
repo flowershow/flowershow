@@ -100,6 +100,12 @@ describe('FsImage click-to-enlarge', () => {
         <FsImage src="/badge.png" alt="Badge" />
       </div>,
     ],
+    [
+      'custom footer images',
+      <div key="f" className="site-footer-custom">
+        <FsImage src="/badge.png" alt="Badge" />
+      </div>,
+    ],
   ])('leaves %s alone', (_, content) => {
     render(content);
     const img = screen.getByAltText('Badge');

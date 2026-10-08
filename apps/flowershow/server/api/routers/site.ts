@@ -1,4 +1,9 @@
-import { matchLinkTarget, tagIdentity } from '@flowershow/core';
+import {
+  isSiteChromeFile,
+  matchLinkTarget,
+  SITE_FOOTER_PATH,
+  tagIdentity,
+} from '@flowershow/core';
 import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
@@ -951,6 +956,52 @@ export const siteRouter = createTRPCRouter({
       )(input);
     }),
 
+  /**
+   * Raw markdown of the site's custom footer (`_footer.md` at the site root),
+   * or null if there is none. Plan gating happens in the layout.
+   */
+  getSiteFooter: publicProcedure
+    .input(
+      z.object({
+        siteId: z.string().min(1),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        include: {
+          user: true,
+        },
+      });
+
+      if (!site) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Site not found',
+        });
+      }
+
+      await assertSiteAccess(site, input.siteId, ctx);
+
+      return await unstable_cache(
+        async (_input) => {
+          try {
+            return await fetchFile({
+              projectId: site.id,
+              path: SITE_FOOTER_PATH,
+            });
+          } catch {
+            return null;
+          }
+        },
+        ['site-footer'],
+        {
+          revalidate: 60, // 1 minute
+          tags: [`${input.siteId}`],
+        },
+      )(input);
+    }),
+
   // Ungated branding subset (title, logo, favicon) for the login page, which
   // renders before auth. Returns only presentation fields, never structure.
   getSiteBranding: publicProcedure
@@ -1357,6 +1408,8 @@ export const siteRouter = createTRPCRouter({
                 AND "path" !~ ${dirReadmePattern}
                 AND "path" !~ ${dirIndexPattern}
                 AND "extension" IN ('md', 'mdx')
+                AND "app_path" IS NOT NULL
+                AND "path" <> ${SITE_FOOTER_PATH}
               ORDER BY
                 ("metadata"->>'date')::timestamp DESC NULLS LAST,
                 "metadata"->>'title' ASC NULLS LAST
@@ -1559,12 +1612,17 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          // 3. First md/mdx — sort by appPath (nulls last), then path as tiebreaker
+          // 3. First md/mdx page — sort by appPath, then path as tiebreaker.
+          //    Non-page markdown (the reserved `_footer.md`, including legacy
+          //    rows that still carry an appPath) is skipped so it can't
+          //    become the home page.
           if (!blob && input.slug === '/') {
             blob = await ctx.db.blob.findFirst({
               where: {
                 siteId: input.siteId,
                 extension: { in: ['md', 'mdx'] },
+                appPath: { not: null },
+                path: { not: SITE_FOOTER_PATH },
               },
               orderBy: [
                 { appPath: { sort: 'asc', nulls: 'last' } },
@@ -1588,7 +1646,10 @@ export const siteRouter = createTRPCRouter({
             include: { user: true },
           });
 
-          if (!blob || !site) {
+          // Reserved site-chrome files (`_footer.md`) are never pages, even
+          // legacy rows that still carry an appPath from before the worker
+          // stored them as non-page blobs.
+          if (!blob || !site || isSiteChromeFile(blob.path)) {
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Page not found',

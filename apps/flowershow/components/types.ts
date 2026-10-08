@@ -57,6 +57,7 @@ export interface FooterNavigationGroup {
   links: NavLink[];
 }
 
+/** Footer settings. A Premium site can replace the whole footer with `_footer.md`. */
 export interface FooterConfig {
   navigation?: FooterNavigationGroup[];
 }
@@ -92,6 +93,16 @@ export interface SiteConfig {
    * Off by default; a page can override it with `showReadingTime` in frontmatter.
    */
   showReadingTime?: boolean;
+  /**
+   * `false` hides the site navbar on every page. A page can override it with
+   * `showNavbar` in frontmatter.
+   */
+  showNavbar?: boolean;
+  /**
+   * `false` hides the site footer on every page. A page can override it with
+   * `showFooter` in frontmatter.
+   */
+  showFooter?: boolean;
   showComments?: boolean;
   /**
    * Let anyone who can view a Markdown page select text and leave an

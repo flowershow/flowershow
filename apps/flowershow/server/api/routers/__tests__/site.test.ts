@@ -44,6 +44,7 @@ vi.mock('@/lib/content-store', () => ({
 // ── Imports ───────────────────────────────────────────────────────
 
 import { tagIdentity } from '@flowershow/core';
+import { fetchFile } from '@/lib/content-store';
 import { appRouter } from '@/server/api/root';
 
 // ── Helpers ───────────────────────────────────────────────────────
@@ -183,9 +184,23 @@ function createMockDb({
             if (w.permalink !== undefined && b.permalink !== w.permalink)
               return false;
             if (typeof w.path === 'string' && b.path !== w.path) return false;
-            if (w.appPath !== undefined && b.appPath !== w.appPath)
+            if (
+              w.path?.not !== undefined &&
+              typeof w.path.not === 'string' &&
+              b.path === w.path.not
+            )
               return false;
+            if (w.appPath !== undefined) {
+              const ap = w.appPath;
+              if (ap !== null && typeof ap === 'object' && 'not' in ap) {
+                if (ap.not === null && b.appPath === null) return false;
+              } else if (b.appPath !== ap) {
+                return false;
+              }
+            }
             if (w.extension?.in && !w.extension.in.includes(b.extension))
+              return false;
+            if (typeof w.extension === 'string' && b.extension !== w.extension)
               return false;
             if (w.updatedAt?.lt && !(b.updatedAt < w.updatedAt.lt))
               return false;
@@ -523,6 +538,38 @@ describe('site.getBlob', () => {
       expect(result.id).toBe('fallback-blob');
     });
 
+    it('skips the reserved _footer.md (even a legacy row with an appPath) and falls through to html', async () => {
+      const blobs = [
+        makeBlob({
+          id: 'footer-new',
+          path: '_footer.md',
+          appPath: null,
+          metadata: null,
+        }),
+        makeBlob({
+          id: 'footer-legacy',
+          path: '_footer.md',
+          appPath: '/_footer',
+          metadata: {},
+        }),
+        makeBlob({
+          id: 'html-blob',
+          path: 'page.html',
+          appPath: null,
+          extension: 'html',
+        }),
+      ];
+      const db = createMockDb({ blobs });
+      const caller = createCaller(db);
+
+      const result = await caller.site.getBlob({
+        siteId: 'site-1',
+        slug: '/',
+      });
+
+      expect(result.id).toBe('html-blob');
+    });
+
     it('throws NOT_FOUND when no blobs exist at all', async () => {
       const db = createMockDb({ blobs: [] });
       const caller = createCaller(db);
@@ -530,6 +577,43 @@ describe('site.getBlob', () => {
       await expect(
         caller.site.getBlob({ siteId: 'site-1', slug: '/' }),
       ).rejects.toThrow('Page not found');
+    });
+  });
+
+  describe('reserved site-chrome files', () => {
+    it('404s a legacy _footer.md row that still has appPath /_footer', async () => {
+      const blobs = [
+        makeBlob({
+          id: 'footer-legacy',
+          path: '_footer.md',
+          appPath: '/_footer',
+          metadata: {},
+        }),
+      ];
+      const db = createMockDb({ blobs });
+      const caller = createCaller(db);
+
+      await expect(
+        caller.site.getBlob({ siteId: 'site-1', slug: '/_footer' }),
+      ).rejects.toThrow('Page not found');
+    });
+
+    it('still serves notes/_footer.md as a normal page', async () => {
+      const blobs = [
+        makeBlob({
+          id: 'nested-footer',
+          path: 'notes/_footer.md',
+          appPath: '/notes/_footer',
+        }),
+      ];
+      const db = createMockDb({ blobs });
+      const caller = createCaller(db);
+
+      const result = await caller.site.getBlob({
+        siteId: 'site-1',
+        slug: '/notes/_footer',
+      });
+      expect(result.id).toBe('nested-footer');
     });
   });
 
@@ -635,6 +719,39 @@ describe('site.getBlob', () => {
         caller.site.getBlob({ siteId: 'site-1', slug: '/history' }),
       ).rejects.toThrow('Page not found');
     });
+  });
+});
+
+describe('site.getListComponentItems', () => {
+  it('excludes non-page markdown (null app_path, reserved _footer.md) from the query', async () => {
+    const db = createMockDb({ blobs: [] }) as ReturnType<
+      typeof createMockDb
+    > & { $queryRaw: ReturnType<typeof vi.fn> };
+    db.$queryRaw = vi.fn(async () => [
+      {
+        path: 'a.md',
+        app_path: '/a',
+        permalink: null,
+        metadata: { title: 'A' },
+      },
+    ]);
+    const caller = createCaller(db);
+
+    const result = await caller.site.getListComponentItems({
+      siteId: 'site-1',
+      dir: '/',
+      slots: {},
+    });
+
+    expect(result.items).toEqual([{ url: '/a', metadata: { title: 'A' } }]);
+    const [strings, ...values] = db.$queryRaw.mock.calls[0] as [
+      TemplateStringsArray,
+      ...unknown[],
+    ];
+    const text = strings.join('?').replace(/\s+/g, ' ');
+    expect(text).toContain('"app_path" IS NOT NULL');
+    expect(text).toContain('"path" <> ?');
+    expect(values).toContain('_footer.md');
   });
 });
 
@@ -994,6 +1111,15 @@ describe('site read-path authorization', () => {
 
     await expect(
       caller.site.getCustomStyles({ siteId: 'site-1' }),
+    ).rejects.toThrow('Site access required');
+  });
+
+  it('getSiteFooter throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+    const db = createMockDb({ site: passwordSite(), blobs: blobs() });
+    const caller = createCaller(db);
+
+    await expect(
+      caller.site.getSiteFooter({ siteId: 'site-1' }),
     ).rejects.toThrow('Site access required');
   });
 
@@ -1454,5 +1580,42 @@ describe('site.getPagesByTag', () => {
     expect(
       await caller.site.getPagesByTag({ siteId: 'site-1', tag: 'missing' }),
     ).toEqual([]);
+  });
+});
+
+describe('site.getSiteFooter', () => {
+  beforeEach(() => {
+    vi.mocked(fetchFile).mockReset();
+  });
+
+  it('returns the content of the root _footer.md', async () => {
+    vi.mocked(fetchFile).mockResolvedValue('Footer **text**');
+    const caller = createCaller(createMockDb({}));
+
+    await expect(caller.site.getSiteFooter({ siteId: 'site-1' })).resolves.toBe(
+      'Footer **text**',
+    );
+    expect(fetchFile).toHaveBeenCalledWith({
+      projectId: 'site-1',
+      path: '_footer.md',
+    });
+  });
+
+  it('returns null when the site has no _footer.md', async () => {
+    vi.mocked(fetchFile).mockResolvedValue(null);
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getSiteFooter({ siteId: 'site-1' }),
+    ).resolves.toBeNull();
+  });
+
+  it('returns null when fetching the file fails', async () => {
+    vi.mocked(fetchFile).mockRejectedValue(new Error('S3 down'));
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getSiteFooter({ siteId: 'site-1' }),
+    ).resolves.toBeNull();
   });
 });

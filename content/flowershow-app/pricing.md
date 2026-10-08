@@ -139,6 +139,7 @@ showEditLink: false
             <tr><td>Removed Flowershow branding</td><td><span className="no">–</span></td><td className="col-fs"><span className="yes">✓</span></td></tr>
             <tr><td>Custom domain</td><td><span className="no">–</span></td><td className="col-fs"><span className="yes">✓</span></td></tr>
             <tr><td>Custom favicon</td><td><span className="no">–</span></td><td className="col-fs"><span className="yes">✓</span></td></tr>
+            <tr><td>Custom footer</td><td><span className="no">–</span></td><td className="col-fs"><span className="yes">✓</span></td></tr>
             <tr><td>Custom social-share image</td><td><span className="no">–</span></td><td className="col-fs"><span className="yes">✓</span></td></tr>
             <tr><td>Full-text search</td><td><span className="no">–</span></td><td className="col-fs"><span className="yes">✓</span></td></tr>
             <tr className="cmp-group"><td colSpan={3}>Limits</td></tr>

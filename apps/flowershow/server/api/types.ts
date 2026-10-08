@@ -149,6 +149,10 @@ export interface PageMetadata {
       };
   showEditLink?: boolean;
   showReadingTime?: boolean;
+  /** `false` hides the site navbar on this page (overrides site config). */
+  showNavbar?: boolean;
+  /** `false` hides the site footer on this page (overrides site config). */
+  showFooter?: boolean;
   showComments?: boolean;
   annotations?: boolean;
   /** Premium: JS files/URLs to load on this page (see `resolvePageScripts`). Untrusted. */

@@ -1236,6 +1236,67 @@
     }
   }
 
+  /* Custom footer: rendered `_footer.md` (Premium). Deliberately not
+     `.rendered-mdx`/prose, so only light defaults; style the rest in
+     custom.css. */
+  .site-footer-custom {
+    font-size: var(--font-size-sm);
+    line-height: var(--line-height-normal);
+    color: var(--color-foreground-500);
+
+    & > :first-child {
+      margin-top: 0;
+    }
+
+    & > :last-child {
+      margin-bottom: 0;
+    }
+
+    & p,
+    & ul,
+    & ol {
+      margin: 0.75rem 0;
+    }
+
+    & a {
+      color: var(--color-foreground-700);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+      transition: color 0.15s ease-in-out;
+
+      &:hover {
+        color: var(--color-foreground-900);
+      }
+    }
+
+    & img {
+      display: inline-block;
+      max-width: 100%;
+    }
+  }
+
+  /* ────────────────────────────────────────────────────
+   Per-page chrome opt-out (`showNavbar: false` / `showFooter: false`)
+   ──────────────────────────────────────────────────── */
+  /* The page renders a hidden [data-page-chrome] marker (page-chrome-marker.tsx);
+     the navbar and footer live in the layout, so :has() bridges the two.
+     `!important` inside a layer beats unlayered theme and custom.css rules,
+     so an explicit author opt-out always wins. This relies on no Suspense
+     boundary (e.g. loading.tsx) between the layout and the page; adding one
+     would make the navbar flash before the marker streams in. */
+  :root:has([data-page-chrome][data-hide-navbar]) {
+    /* Pull every sticky offset that depends on the navbar up to the top. */
+    --navbar-height: 0px !important;
+  }
+
+  .site-layout:has([data-page-chrome][data-hide-navbar]) .site-navbar {
+    display: none !important;
+  }
+
+  .site-layout:has([data-page-chrome][data-hide-footer]) .site-footer {
+    display: none !important;
+  }
+
   /* ────────────────────────────────────────────────────
    ToC
    ──────────────────────────────────────────────────── */

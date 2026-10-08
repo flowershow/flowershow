@@ -18,6 +18,8 @@ Go to **Settings → Content → Content Include** and enter an array of paths t
 
 Leave this field empty to include all files by default. If set, only the listed paths are published — no other files or directories will be included.
 
+`config.json` and `custom.css` are always published. A [[footer#custom-footer|custom footer]] (`_footer.md`) is not: if you use Content Include, add `_footer.md` to the list.
+
 ## Exclude paths
 
 Go to **Settings → Content → Content Exclude** and enter an array of paths to exclude from your published site:

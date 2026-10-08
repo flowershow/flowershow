@@ -4,6 +4,7 @@ import {
   extractInlineTags,
   filePathToSlug,
   frontmatterTags,
+  isSiteChromeFile,
   mergePageTags,
   PAGE_FILE_EXTENSIONS,
   tagIdentity,
@@ -44,11 +45,12 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
     const key = `${siteId}/${branch}/raw/${path}`;
     const publishId = await getPublishIdFromMetadata(storage, key);
 
-    if (!path.match(/\.(md|mdx)$/i)) {
+    if (!isMarkdownPage(path)) {
       try {
         await processNonMarkdownFile({
           storage,
           sql,
+          typesense,
           siteId,
           branch,
           path,
@@ -106,6 +108,24 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
   }
 }
 
+/**
+ * Markdown files are parsed as pages (metadata, links, tags, search index).
+ * Reserved site-chrome files such as the root `_footer.md` are markdown but
+ * not pages: they are stored as plain blobs and rendered by the app layout.
+ */
+export function isMarkdownPage(path) {
+  return /\.(md|mdx)$/i.test(path) && !isSiteChromeFile(path);
+}
+
+/** URL path for a blob, or null when the file is not a routable page. */
+export function computeAppPath(path) {
+  if (isSiteChromeFile(path)) return null;
+  const extension = path.split('.').pop()?.toLowerCase() ?? '';
+  return PAGE_FILE_EXTENSIONS.has(extension)
+    ? encodeSlug(filePathToSlug(path))
+    : null;
+}
+
 async function upsertBlob(
   sql,
   siteId,
@@ -113,9 +133,7 @@ async function upsertBlob(
   { sha, size, metadata, permalink, width, height },
 ) {
   const extension = path.split('.').pop()?.toLowerCase() ?? '';
-  const appPath = PAGE_FILE_EXTENSIONS.has(extension)
-    ? encodeSlug(filePathToSlug(path))
-    : null;
+  const appPath = computeAppPath(path);
   const rows = await sql`
     INSERT INTO "Blob" (id, site_id, path, app_path, extension, sha, size, metadata, permalink, width, height, updated_at)
     VALUES (
@@ -136,6 +154,22 @@ async function upsertBlob(
     RETURNING id
   `;
   return rows[0].id;
+}
+
+/**
+ * Remove the page-only rows (outgoing links, tags, search document) of a blob
+ * that is no longer a page. Makes re-syncing a legacy root `_footer.md` (which
+ * used to be processed as a page) self-healing.
+ */
+export async function clearPageArtifacts({ sql, typesense, siteId, blobId }) {
+  await sql`DELETE FROM "Link" WHERE source_blob_id = ${blobId}`;
+  await sql`DELETE FROM "Tag" WHERE blob_id = ${blobId}`;
+  if (!typesense) return;
+  try {
+    await typesense.collections(siteId).documents(`${blobId}`).delete();
+  } catch (_) {
+    // Document usually doesn't exist (never indexed or already removed).
+  }
 }
 
 async function updatePublishFile(sql, publishId, path, status, errorMsg) {
@@ -219,6 +253,7 @@ async function processMarkdownFile({
 async function processNonMarkdownFile({
   storage,
   sql,
+  typesense,
   siteId,
   branch,
   path,
@@ -243,7 +278,15 @@ async function processNonMarkdownFile({
       }
     }
 
-    await upsertBlob(sql, siteId, path, { sha, size, width, height });
+    const blobId = await upsertBlob(sql, siteId, path, {
+      sha,
+      size,
+      width,
+      height,
+    });
+    if (isSiteChromeFile(path)) {
+      await clearPageArtifacts({ sql, typesense, siteId, blobId });
+    }
     await updatePublishFile(sql, publishId, path, 'success');
   } catch (e) {
     await updatePublishFile(sql, publishId, path, 'error', e.message);

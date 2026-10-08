@@ -1,4 +1,8 @@
-import { frontmatterTags, tagFromHref } from '@flowershow/core';
+import {
+  frontmatterTags,
+  isSiteChromeFile,
+  tagFromHref,
+} from '@flowershow/core';
 import type { GiscusProps } from '@giscus/react';
 import clsx from 'clsx';
 import { CodeIcon, EditIcon } from 'lucide-react';
@@ -9,6 +13,7 @@ import CanvasEnhancer from '@/components/public/canvas-enhancer';
 import { PageScripts } from '@/components/public/page-scripts';
 import Comments from '@/components/public/comments';
 import Hero from '@/components/public/hero';
+import { PageChromeMarker } from '@/components/public/page-chrome-marker';
 import { BlogLayout } from '@/components/public/layouts/blog';
 import { SidebarDesktop, SidebarMobileNav } from '@/components/public/sidebar';
 import TableOfContents from '@/components/public/table-of-contents';
@@ -31,6 +36,7 @@ import { loadProtectedCardSource } from '@/lib/protected-card-source';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSite } from '@/lib/get-site';
 import { getSiteUrl } from '@/lib/get-site-url';
+import { resolvePageChrome } from '@/lib/page-chrome';
 import { displayDescription } from '@/lib/page-description';
 import { resolveHeroConfig } from '@/lib/hero-config';
 import type { ImageDimensionsMap } from '@/lib/image-dimensions';
@@ -129,6 +135,11 @@ export async function generateMetadata(props: {
   // it's needed atm as Inngest sync function doesn't parse frontmatter, and so it uploads to R2
   // and creates a basic Blob record for every single file (parsing is done later in Cloudflare Queues, but not worth removing them there at least for no)
   if (metadata?.publish === false) {
+    notFound();
+  }
+  // Reserved site-chrome files (e.g. `_footer.md`) are never pages. The worker
+  // stores them without an app path; this also covers blobs created before.
+  if (blob && isSiteChromeFile(blob.path)) {
     notFound();
   }
 
@@ -277,6 +288,18 @@ export default async function SitePage(props: {
     })
     .catch(() => null);
 
+  if (blob && isSiteChromeFile(blob.path)) {
+    notFound();
+  }
+
+  // Page-level `showNavbar`/`showFooter` (falling back to site config) hide
+  // the layout's navbar/footer via a marker + CSS :has() (default-theme.css).
+  const chromeMarker = (
+    <PageChromeMarker
+      {...resolvePageChrome(blob?.metadata as PageMetadata | null, siteConfig)}
+    />
+  );
+
   let changelog = await resolveChangelogContext({
     slug: decodedSlug,
     blob: blob
@@ -313,6 +336,7 @@ export default async function SitePage(props: {
       return (
         <>
           <UrlNormalizer />
+          {chromeMarker}
           <div className="layout-inner">
             <div className="layout-inner-center">
               <main className="page-main">
@@ -331,6 +355,7 @@ export default async function SitePage(props: {
       return (
         <>
           <UrlNormalizer />
+          {chromeMarker}
           <div className="layout-inner">
             <div className="layout-inner-center">
               <main className="page-main">
@@ -346,6 +371,7 @@ export default async function SitePage(props: {
     return (
       <>
         <UrlNormalizer />
+        {chromeMarker}
         <div className="layout-inner">
           <div className="layout-inner-center">
             <main className="page-main">
@@ -455,6 +481,7 @@ export default async function SitePage(props: {
           }}
         />
         <UrlNormalizer />
+        {chromeMarker}
         <div className="canvas-fullwidth">
           <div className="rendered-mdx is-canvas" id="mdxpage">
             {compiledContent}
@@ -475,6 +502,7 @@ export default async function SitePage(props: {
           }}
         />
         <UrlNormalizer />
+        {chromeMarker}
         {annotationsOverlay}
         <div className="rendered-mdx is-plain" id="mdxpage">
           {compiledContent}
@@ -564,6 +592,7 @@ export default async function SitePage(props: {
         }}
       />
       <UrlNormalizer />
+      {chromeMarker}
       {annotationsOverlay}
 
       {showSidebar && <SidebarMobileNav items={siteTree!} prefix={''} />}

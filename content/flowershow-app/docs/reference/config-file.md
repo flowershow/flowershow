@@ -141,7 +141,7 @@ Supported `label` values: `bsky`, `bluesky`, `discord`, `mail`, `facebook`, `git
 **Type:** `object`  
 **Default:** —
 
-Footer configuration. [[footer|Learn more →]]
+Footer configuration. Premium sites can instead replace the whole footer with a `_footer.md` file. [[footer|Learn more →]]
 
 | Field        | Type                      | Description                     |
 | ------------ | ------------------------- | ------------------------------- |
@@ -416,6 +416,32 @@ Show an estimated reading time (e.g. "8 min read") in the page header. Pages can
 
 ```json
 "showReadingTime": true
+```
+
+---
+
+### `showNavbar`
+
+**Type:** `boolean`  
+**Default:** `true`
+
+Set to `false` to hide the site navbar on every page. Pages can override it with `showNavbar` in frontmatter. [[navbar#hide-the-navbar-on-a-page|Learn more →]]
+
+```json
+"showNavbar": false
+```
+
+---
+
+### `showFooter`
+
+**Type:** `boolean`  
+**Default:** `true`
+
+Set to `false` to hide the site footer on every page. Pages can override it with `showFooter` in frontmatter. [[footer#hide-the-footer-on-a-page|Learn more →]]
+
+```json
+"showFooter": false
 ```
 
 ---
