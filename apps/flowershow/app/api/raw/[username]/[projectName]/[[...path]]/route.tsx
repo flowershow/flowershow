@@ -3,6 +3,13 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
+import {
+  CUSTOM_CSS_PATH,
+  customCssCacheControl,
+  customCssCdnCacheControl,
+  customCssVersion,
+  etagMatches,
+} from '@/lib/custom-css';
 import { hasSiteAccess, siteAccessSelect } from '@/lib/site-access';
 import { isSiteOwnHost, redirectToSiteOwnHost } from '@/lib/site-host';
 import prisma from '@/server/db';
@@ -113,6 +120,25 @@ export async function GET(
     }
   }
 
+  // The site's root custom.css, requested on the site's own host (the layout
+  // links it as a root-relative `/custom.css?v=<hash>`): proxy it with a 200
+  // rather than redirecting to storage, because `url()` in a stylesheet
+  // resolves against the sheet's final URL, so a redirect would break
+  // root-relative and relative font/image paths. Exact path match only; other
+  // .css files keep the storage redirect. On any other host (dashboard, app
+  // domains, another site) fall through to the storage redirect as before, so
+  // user CSS is never served same-origin with Flowershow's own pages.
+  if (
+    rawPath === CUSTOM_CSS_PATH &&
+    isSiteOwnHost(req.headers.get('host'), site)
+  ) {
+    return serveCustomCss({
+      req,
+      site,
+      headers: robotsHeaders,
+    });
+  }
+
   // Password-protected sites: short-lived presigned URL.
   // Images: presigned URL replaces cookie auth for the image optimizer.
   // Non-images: cookie already verified above; presigned URL still limits URL sharing.
@@ -149,4 +175,80 @@ export async function GET(
   res.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
   for (const [k, v] of Object.entries(robotsHeaders)) res.headers.set(k, v);
   return res;
+}
+
+async function serveCustomCss({
+  req,
+  site,
+  headers: extraHeaders,
+}: {
+  req: NextRequest;
+  site: {
+    id: string;
+    userId: string;
+    privacyMode: string;
+    isTemporary: boolean;
+    expiresAt: Date | null;
+  };
+  headers: Record<string, string>;
+}) {
+  // Neither error response may be cached: a missing file can be published
+  // later, and a storage error is transient (503, not "file deleted").
+  const noStore = { 'Cache-Control': 'no-store' };
+  let content: string | null;
+  try {
+    content = await fetchFile({ projectId: site.id, path: CUSTOM_CSS_PATH });
+  } catch (err) {
+    console.error('Failed to fetch custom.css', { siteId: site.id, err });
+    return NextResponse.json(
+      { error: 'Storage unavailable' },
+      { status: 503, headers: { ...noStore, ...extraHeaders } },
+    );
+  }
+  if (!content) {
+    return NextResponse.json(
+      { error: 'Not found' },
+      { status: 404, headers: { ...noStore, ...extraHeaders } },
+    );
+  }
+
+  // The ETag and the immutable decision both come from the bytes served, never
+  // from the requested `v`, so content is never cached under a key that does
+  // not describe it (e.g. a request racing a republish).
+  const version = customCssVersion(content);
+  const versionMatches = req.nextUrl.searchParams.get('v') === version;
+  // Password sites: browser cache only, never a shared cache.
+  const isPrivate = site.privacyMode === 'PASSWORD';
+  const headers: Record<string, string> = {
+    'Cache-Control': customCssCacheControl({
+      versionMatches,
+      isPrivate,
+      // Anonymous sites: never cached past their expiry.
+      expiresAt: site.isTemporary ? site.expiresAt : null,
+    }),
+    ETag: `"${version}"`,
+    ...extraHeaders,
+  };
+
+  if (etagMatches(req.headers.get('if-none-match'), version)) {
+    return new NextResponse(null, { status: 304, headers });
+  }
+
+  // Edge caching only on the 200 (a 304 is per-client and never edge-cached).
+  const cdnCacheControl = customCssCdnCacheControl({
+    versionMatches,
+    isPrivate,
+    // Anonymous (temporary) sites expire: never edge-cached.
+    isTemporary: site.isTemporary || site.userId === ANONYMOUS_USER_ID,
+  });
+
+  return new NextResponse(content, {
+    status: 200,
+    headers: {
+      ...headers,
+      ...(cdnCacheControl ? { 'CDN-Cache-Control': cdnCacheControl } : {}),
+      'Content-Type': 'text/css; charset=utf-8',
+      'X-Content-Type-Options': 'nosniff',
+    },
+  });
 }

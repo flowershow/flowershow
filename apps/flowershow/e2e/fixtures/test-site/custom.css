@@ -1,7 +1,7 @@
 /*
-  Self-hosted font fixture for e2e/specs/custom-fonts.spec.ts.
+  Fixture for e2e/specs/custom-fonts.spec.ts and custom-styles.spec.ts.
   fonts/E2EBrand.woff2 is KaTeX_Typewriter-Regular.woff2 from KaTeX (MIT licence, https://github.com/KaTeX/KaTeX).
-  Keep this file scoped to the .e2e-brand-font class so other specs are unaffected.
+  Keep every rule scoped to an .e2e-* class so other specs are unaffected.
 */
 @font-face {
   font-family: "E2E Brand";
@@ -9,6 +9,17 @@
   font-display: block;
 }
 
+/* Relative path: resolves against /custom.css, so the site root, on every page. */
+@font-face {
+  font-family: "E2E Brand Relative";
+  src: url("fonts/E2EBrand.woff2?relative") format("woff2");
+  font-display: block;
+}
+
 .e2e-brand-font {
   font-family: "E2E Brand", monospace;
+}
+
+.e2e-custom-css-marker {
+  color: rgb(1, 2, 3);
 }

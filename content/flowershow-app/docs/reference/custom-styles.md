@@ -150,10 +150,10 @@ Shape, padding and font are not variables. Style them with the `.tag-pill` class
 
 #### Fonts and other files referenced from custom.css
 
-- **Use paths that start with `/`.** `custom.css` is inlined into every page, so `url()` paths resolve against the page's URL. `url('/fonts/Brand.woff2')` works on every page. `url('fonts/Brand.woff2')` breaks on pages in subfolders.
+- **Paths resolve from your site root.** Every page loads `custom.css` as a stylesheet from `/custom.css`, so `url()` paths resolve against your site root, not the page's URL. `url('/fonts/Brand.woff2')` and `url('fonts/Brand.woff2')` both point to the `fonts` folder at your site root, on every page. We recommend starting paths with `/` because it's clearer.
 - **Put `@import` at the very top.** Only comments may come before it. An `@import` after any other rule is silently ignored. Don't add `layer(...)`: rules inside a cascade layer lose to the default theme.
 - **Publish the files.** Fonts (`.woff2`, `.woff`, `.ttf`, `.otf`) are served like any other site file. If you use `contentInclude`, include the folder that holds them.
-- **Don't embed fonts as base64 `data:` URLs.** They make `custom.css`, and so every page, much larger.
+- **Don't embed fonts as base64 `data:` URLs.** They bloat `custom.css`, so first visits to your site load slower. Separate font files load only when needed and are cached on their own.
 
 See the [Custom fonts guide](/docs/guides/custom-fonts) for a full example.
 

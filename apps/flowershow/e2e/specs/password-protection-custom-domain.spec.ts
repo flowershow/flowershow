@@ -52,4 +52,14 @@ test.describe('Password-protected site with a custom domain', () => {
     expect(url.host).toBe(PASSWORD_CUSTOM_DOMAIN_SITE_CUSTOM_DOMAIN);
     expect(url.pathname).toBe('/_login');
   });
+
+  test('custom.css on the custom domain is behind the login', async ({
+    page,
+  }) => {
+    await page.goto('/custom.css');
+
+    const url = new URL(page.url());
+    expect(url.host).toBe(PASSWORD_CUSTOM_DOMAIN_SITE_CUSTOM_DOMAIN);
+    expect(url.pathname).toBe('/_login');
+  });
 });

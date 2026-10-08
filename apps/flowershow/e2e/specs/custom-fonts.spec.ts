@@ -3,11 +3,13 @@ import { expect, test } from '../helpers/fixtures';
 
 // Self-hosted fonts (GH #1438). The fixture site publishes fonts/E2EBrand.woff2
 // and a custom.css with an @font-face rule that points at it with a
-// root-relative URL ('/fonts/E2EBrand.woff2'). custom.css is inlined into
-// every page, so url() resolves against the page URL: this spec loads a page in
-// a subfolder to prove the root-relative path still reaches the site's own
-// fonts/ folder, follows the raw-file redirect to storage, and passes the
-// cross-origin font check there (correct Content-Type plus CORS header).
+// root-relative URL ('/fonts/E2EBrand.woff2'), plus a second face with a
+// relative URL ('fonts/E2EBrand.woff2?relative'). custom.css is linked as a
+// same-origin stylesheet at /custom.css, so url() resolves against /custom.css,
+// i.e. the site root, whatever page links it. This spec loads a page in a
+// subfolder to prove both paths reach the site's own fonts/ folder, follow the
+// raw-file redirect to storage, and pass the cross-origin font check there
+// (correct Content-Type plus CORS header).
 //
 // In CI, storage is Adobe S3Mock (.github/workflows/e2e.yml), which sends
 // permissive CORS headers by default. So the CORS check here covers the browser
@@ -116,4 +118,31 @@ test('Self-hosted font from custom.css loads on a nested page', async ({
     expect(widths.branded).toBeGreaterThan(0);
     expect(widths.branded).not.toBeCloseTo(widths.fallback, 0);
   });
+});
+
+test('A relative font URL in custom.css resolves to the site root on a nested page', async ({
+  page,
+  basePath,
+}) => {
+  await page.goto(`${basePath}/subfolder/custom-font`);
+  await expect(page.locator('.e2e-brand-font')).toHaveText('Brand font sample');
+
+  // Only the relative face's URL carries `?relative`. Before custom.css was a
+  // linked stylesheet it was inlined, and this resolved to
+  // /subfolder/fonts/... (a 404) on this page.
+  // The site's hop (a redirect to storage) is the response for that URL.
+  const siteResponsePromise = page.waitForResponse(
+    (r) => new URL(r.url()).search === '?relative',
+  );
+  const loaded = await page.evaluate(async () => {
+    const faces = await document.fonts.load("16px 'E2E Brand Relative'");
+    return faces.length > 0 && faces.every((f) => f.status === 'loaded');
+  });
+  const siteResponse = await siteResponsePromise;
+
+  const url = new URL(siteResponse.url());
+  expect(url.origin).toBe(new URL(page.url()).origin);
+  expect(url.pathname).toBe(`/fonts/${FONT_FILE}`);
+  expect(siteResponse.status()).toBeLessThan(400);
+  expect(loaded).toBe(true);
 });
