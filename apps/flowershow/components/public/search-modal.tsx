@@ -1,4 +1,5 @@
 'use client';
+import { isSiteChromeFile } from '@flowershow/core';
 import FocusTrap from 'focus-trap-react';
 import { SearchIcon, XIcon } from 'lucide-react';
 import { AnimatePresence, motion } from 'motion/react';
@@ -16,6 +17,25 @@ import {
 import { resolveContentLink } from '@/lib/resolve-link';
 import { searchClient } from '@/lib/typesense-client';
 import { useSite } from './site-context';
+
+/**
+ * Map Typesense hits to renderable results: resolve each hit's file path to a
+ * page URL and drop reserved site-chrome files (`_footer.md`). Those are never
+ * pages, but a legacy search doc indexed before they were stored as non-page
+ * blobs would otherwise link to a 404.
+ */
+export function transformSearchHits<T extends Record<string, unknown>>(
+  items: T[],
+): T[] {
+  return items
+    .filter((item) => !isSiteChromeFile(String(item.path ?? '')))
+    .map((item) => ({
+      ...item,
+      path: resolveContentLink({
+        target: item.path as string,
+      }),
+    }));
+}
 
 interface SearchModalProps {
   indexId: string;
@@ -273,22 +293,17 @@ function SearchResults({
   const contentHide = site?.contentHide ?? [];
 
   const transformItems = useCallback(
-    (items) =>
-      items
-        // This seems to break the search (infinite requests and site becomes unresponsive)
-        // .filter((item) => {
-        //   if (contentHide.length === 0) return true;
-        //   const path = `/${item.path.replace(/^\//, '')}`;
-        //   return !contentHide.some(
-        //     (h) => path === h || path.startsWith(h.endsWith('/') ? h : `${h}/`),
-        //   );
-        // })
-        .map((item) => ({
-          ...item,
-          path: resolveContentLink({
-            target: item.path,
-          }),
-        })),
+    // A contentHide filter here seems to break the search (infinite requests
+    // and site becomes unresponsive):
+    // .filter((item) => {
+    //   if (contentHide.length === 0) return true;
+    //   const path = `/${item.path.replace(/^\//, '')}`;
+    //   return !contentHide.some(
+    //     (h) => path === h || path.startsWith(h.endsWith('/') ? h : `${h}/`),
+    //   );
+    // })
+    <T extends Record<string, unknown>>(items: T[]) =>
+      transformSearchHits(items),
     // [site, contentHide],
     [site],
   );

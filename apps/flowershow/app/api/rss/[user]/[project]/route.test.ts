@@ -104,3 +104,19 @@ describe('GET /api/rss — bound to the site own host', () => {
     expect(res.headers.get('x-content-type-options')).toBe('nosniff');
   });
 });
+
+describe('GET /api/rss — reserved site-chrome files', () => {
+  // A root `_footer.md` processed as a page before the worker stored it as a
+  // non-page blob still has metadata + app_path `/_footer`; it must not
+  // become a feed item linking to a 404.
+  it('excludes _footer.md from the feed blobs query', async () => {
+    findFirst.mockResolvedValue({ ...passwordSite, privacyMode: 'PUBLIC' });
+
+    await GET(makeReq(), makeParams());
+
+    const where = findFirst.mock.calls[0]![0].include.blobs.where;
+    expect(where.path).toEqual({
+      notIn: expect.arrayContaining(['_footer.md']),
+    });
+  });
+});

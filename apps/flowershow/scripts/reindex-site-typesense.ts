@@ -45,6 +45,7 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { isSiteChromeFile } from '@flowershow/core';
 import { PrismaClient } from '@prisma/client';
 import matter from 'gray-matter';
 import { Client as TypesenseClient } from 'typesense';
@@ -330,6 +331,14 @@ async function reindexSite(siteId: string, dryRun: boolean) {
     // Skip files inside _flowershow/ directory (matches worker behavior)
     if (filePath.includes('_flowershow/')) {
       console.log(`    [SKIP] ${filePath} — _flowershow/ directory`);
+      skipped++;
+      continue;
+    }
+
+    // Skip reserved site-chrome files (root `_footer.md`): not pages, never
+    // indexed (matches worker behavior)
+    if (isSiteChromeFile(filePath)) {
+      console.log(`    [SKIP] ${filePath} — reserved site-chrome file`);
       skipped++;
       continue;
     }

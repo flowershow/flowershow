@@ -7,8 +7,9 @@
   "scripts": {
     "dev": "wrangler dev --local --config wrangler.flowershow.toml --env dev",
     "lint": "biome lint .",
-    "deploy:staging": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env staging",
-    "deploy:production": "npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env production",
+    "build:core": "pnpm --filter @flowershow/core build",
+    "deploy:staging": "pnpm run build:core && npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env staging",
+    "deploy:production": "pnpm run build:core && npx wrangler deploy --config wrangler.flowershow.toml --keep-vars --env production",
     "test": "vitest run --config vitest.unit.config.js",
     "test:e2e": "vitest run --config vitest.e2e.config.js"
   },

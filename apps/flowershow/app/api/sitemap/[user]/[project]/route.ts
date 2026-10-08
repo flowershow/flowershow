@@ -1,4 +1,5 @@
 import { SitemapParamsSchema } from '@flowershow/api-contract';
+import { SITE_CHROME_FILES } from '@flowershow/core';
 import { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { getSiteUrl } from '@/lib/get-site-url';
@@ -37,6 +38,9 @@ export async function GET(
       blobs: {
         where: {
           OR: [{ path: { endsWith: '.md' } }, { path: { endsWith: '.mdx' } }],
+          // Reserved site-chrome files (`_footer.md`) are never pages, even a
+          // legacy row that was processed as one (metadata + appPath).
+          path: { notIn: [...SITE_CHROME_FILES] },
           metadata: { not: Prisma.AnyNull },
         },
         select: {
@@ -47,7 +51,13 @@ export async function GET(
       },
       // Only the `/tags` index is included in the sitemap (not per-tag pages) —
       // enough to make the tag overview indexable without flooding the sitemap.
-      _count: { select: { tags: true } },
+      _count: {
+        select: {
+          tags: {
+            where: { blob: { path: { notIn: [...SITE_CHROME_FILES] } } },
+          },
+        },
+      },
     },
   });
 

@@ -1,6 +1,7 @@
 import {
   isSiteChromeFile,
   matchLinkTarget,
+  SITE_CHROME_FILES,
   SITE_FOOTER_PATH,
   tagIdentity,
 } from '@flowershow/core';
@@ -1267,10 +1268,13 @@ export const siteRouter = createTRPCRouter({
             site.customDomain ??
             `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
-          // Get all blobs for the site
+          // Get all blobs for the site. Reserved site-chrome files
+          // (`_footer.md`) are never pages; a legacy row processed as a page
+          // (metadata + appPath) would otherwise show up as a 404 link.
           const blobs = (await ctx.db.blob.findMany({
             where: {
               siteId: site.id,
+              path: { notIn: [...SITE_CHROME_FILES] },
               OR: [
                 // Markdown pages: must be processed (metadata present) and
                 // not explicitly unpublished.
@@ -1409,7 +1413,7 @@ export const siteRouter = createTRPCRouter({
                 AND "path" !~ ${dirIndexPattern}
                 AND "extension" IN ('md', 'mdx')
                 AND "app_path" IS NOT NULL
-                AND "path" <> ${SITE_FOOTER_PATH}
+                AND "path" NOT IN (${Prisma.join([...SITE_CHROME_FILES])})
               ORDER BY
                 ("metadata"->>'date')::timestamp DESC NULLS LAST,
                 "metadata"->>'title' ASC NULLS LAST
@@ -1487,7 +1491,10 @@ export const siteRouter = createTRPCRouter({
           const rows = await ctx.db.blob.findMany({
             where: {
               siteId: input.siteId,
-              path: { startsWith: dir ? `${dir}/` : '' },
+              path: {
+                startsWith: dir ? `${dir}/` : '',
+                notIn: [...SITE_CHROME_FILES],
+              },
               extension: { in: ['md', 'mdx'] },
             },
             select: {
@@ -1622,7 +1629,7 @@ export const siteRouter = createTRPCRouter({
                 siteId: input.siteId,
                 extension: { in: ['md', 'mdx'] },
                 appPath: { not: null },
-                path: { not: SITE_FOOTER_PATH },
+                path: { notIn: [...SITE_CHROME_FILES] },
               },
               orderBy: [
                 { appPath: { sort: 'asc', nulls: 'last' } },
@@ -2445,7 +2452,12 @@ export const siteRouter = createTRPCRouter({
       return await unstable_cache(
         async (input) => {
           const links = await ctx.db.link.findMany({
-            where: { targetBlobId: input.blobId },
+            where: {
+              targetBlobId: input.blobId,
+              // A legacy chrome-file row (`_footer.md` processed as a page)
+              // may still have outgoing links; it is not a page to link back to.
+              sourceBlob: { path: { notIn: [...SITE_CHROME_FILES] } },
+            },
             distinct: ['sourceBlobId'],
             select: {
               sourceBlob: {
@@ -2489,7 +2501,11 @@ export const siteRouter = createTRPCRouter({
           if (!input.blobId) {
             const [blobs, links] = await Promise.all([
               ctx.db.blob.findMany({
-                where: { siteId: input.siteId, appPath: { not: null } },
+                where: {
+                  siteId: input.siteId,
+                  appPath: { not: null },
+                  path: { notIn: [...SITE_CHROME_FILES] },
+                },
                 select: { id: true, appPath: true, metadata: true },
               }),
               ctx.db.link.findMany({
@@ -2546,7 +2562,11 @@ export const siteRouter = createTRPCRouter({
 
           const [blobs, interLinks] = await Promise.all([
             ctx.db.blob.findMany({
-              where: { id: { in: neighborIdList }, appPath: { not: null } },
+              where: {
+                id: { in: neighborIdList },
+                appPath: { not: null },
+                path: { notIn: [...SITE_CHROME_FILES] },
+              },
               select: { id: true, appPath: true, metadata: true },
             }),
             ctx.db.link.findMany({
@@ -2623,7 +2643,11 @@ export const siteRouter = createTRPCRouter({
       return await unstable_cache(
         async (input) => {
           const rows = await ctx.db.tag.findMany({
-            where: { siteId: input.siteId },
+            where: {
+              siteId: input.siteId,
+              // Ignore tags left on legacy chrome-file rows (`_footer.md`).
+              blob: { path: { notIn: [...SITE_CHROME_FILES] } },
+            },
             select: { tag: true, identity: true, blobId: true },
           });
 
@@ -2681,6 +2705,7 @@ export const siteRouter = createTRPCRouter({
               // exact equality + descendant prefix — both use the B-tree index,
               // unlike the `mode:'insensitive'` ILIKE this replaced.
               OR: [{ identity: q }, { identity: { startsWith: `${q}/` } }],
+              blob: { path: { notIn: [...SITE_CHROME_FILES] } },
             },
             distinct: ['blobId'],
             select: {

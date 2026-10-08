@@ -190,6 +190,8 @@ function createMockDb({
               b.path === w.path.not
             )
               return false;
+            if (w.path?.notIn && (w.path.notIn as string[]).includes(b.path))
+              return false;
             if (w.appPath !== undefined) {
               const ap = w.appPath;
               if (ap !== null && typeof ap === 'object' && 'not' in ap) {
@@ -218,6 +220,8 @@ function createMockDb({
             w.path?.startsWith !== undefined &&
             !b.path.startsWith(w.path.startsWith)
           )
+            return false;
+          if (w.path?.notIn && (w.path.notIn as string[]).includes(b.path))
             return false;
           if (w.extension?.in && !w.extension.in.includes(b.extension))
             return false;
@@ -347,6 +351,12 @@ function createMockDb({
 
         let results = tags.filter((t) => {
           if (w.siteId && t.siteId !== w.siteId) return false;
+          // Relation filter on the tagged blob's path (chrome-file exclusion).
+          if (w.blob?.path?.notIn) {
+            const b = blobs.find((bl) => bl.id === t.blobId);
+            if (b && (w.blob.path.notIn as string[]).includes(b.path))
+              return false;
+          }
           // getPagesByTag: OR of exact identity + descendant prefix.
           if (w.OR) {
             return (w.OR as any[]).some((cond) => {
@@ -750,8 +760,12 @@ describe('site.getListComponentItems', () => {
     ];
     const text = strings.join('?').replace(/\s+/g, ' ');
     expect(text).toContain('"app_path" IS NOT NULL');
-    expect(text).toContain('"path" <> ?');
-    expect(values).toContain('_footer.md');
+    // Every reserved chrome file is excluded via `"path" NOT IN (...)`.
+    expect(text).toContain('"path" NOT IN (?)');
+    const notIn = values[strings.findIndex((x) => x.includes('NOT IN ('))] as {
+      values: unknown[];
+    };
+    expect(notIn.values).toContain('_footer.md');
   });
 });
 
@@ -1617,5 +1631,146 @@ describe('site.getSiteFooter', () => {
     await expect(
       caller.site.getSiteFooter({ siteId: 'site-1' }),
     ).resolves.toBeNull();
+  });
+});
+
+// A root `_footer.md` processed as a page (published before the worker stored
+// chrome files as non-page blobs, and not re-synced since) still has metadata,
+// app_path `/_footer`, links and tags. Every page listing must skip it, or it
+// shows up as a link to a 404.
+describe('reserved site-chrome files are excluded from page listings', () => {
+  const legacyFooter = () =>
+    makeBlob({
+      id: 'footer-legacy',
+      path: '_footer.md',
+      appPath: '/_footer',
+      metadata: { title: 'Footer' },
+    });
+  const page = () =>
+    makeBlob({
+      id: 'page',
+      path: 'about.md',
+      appPath: '/about',
+      metadata: { title: 'About' },
+    });
+
+  it('getSiteTree omits a legacy _footer.md page row', async () => {
+    const caller = createCaller(
+      createMockDb({ blobs: [legacyFooter(), page()] }),
+    );
+    const tree = await caller.site.getSiteTree({ siteId: 'site-1' });
+    const serialized = JSON.stringify(tree);
+    expect(serialized).toContain('about');
+    expect(serialized).not.toContain('_footer');
+  });
+
+  it('getSiteTree still lists a nested notes/_footer.md page', async () => {
+    const caller = createCaller(
+      createMockDb({
+        blobs: [
+          makeBlob({
+            id: 'nested',
+            path: 'notes/_footer.md',
+            appPath: '/notes/_footer',
+          }),
+        ],
+      }),
+    );
+    const tree = await caller.site.getSiteTree({ siteId: 'site-1' });
+    expect(JSON.stringify(tree)).toContain('/notes/_footer');
+  });
+
+  it('getGraphData (global) omits a legacy _footer.md node', async () => {
+    const caller = createCaller(
+      createMockDb({
+        blobs: [legacyFooter(), page()],
+        links: [
+          makeLink({ sourceBlobId: 'footer-legacy', targetBlobId: 'page' }),
+        ],
+      }),
+    );
+    const result = await caller.site.getGraphData({ siteId: 'site-1' });
+    expect(result.nodes.map((n) => n.id)).toEqual(['page']);
+    expect(result.links).toEqual([]);
+  });
+
+  it('getGraphData (local) omits a legacy _footer.md neighbour', async () => {
+    const caller = createCaller(
+      createMockDb({
+        blobs: [legacyFooter(), page()],
+        links: [
+          makeLink({ sourceBlobId: 'footer-legacy', targetBlobId: 'page' }),
+        ],
+      }),
+    );
+    const result = await caller.site.getGraphData({
+      siteId: 'site-1',
+      blobId: 'page',
+    });
+    expect(result.nodes.map((n) => n.id)).toEqual(['page']);
+  });
+
+  it('getBacklinks skips links from a legacy _footer.md row', async () => {
+    const db = createMockDb({ blobs: [legacyFooter(), page()] });
+    const caller = createCaller(db);
+    await caller.site.getBacklinks({ siteId: 'site-1', blobId: 'page' });
+    const where = (db.link.findMany.mock.calls[0] as any[])[0].where;
+    expect(where.sourceBlob).toEqual({
+      path: { notIn: expect.arrayContaining(['_footer.md']) },
+    });
+  });
+
+  it('getTagIndex ignores tags on a legacy _footer.md row', async () => {
+    const caller = createCaller(
+      createMockDb({
+        blobs: [legacyFooter(), page()],
+        tags: [
+          makeTag({ blobId: 'footer-legacy', tag: 'chrome' }),
+          makeTag({ blobId: 'page', tag: 'book' }),
+        ],
+      }),
+    );
+    expect(await caller.site.getTagIndex({ siteId: 'site-1' })).toEqual([
+      { tag: 'book', count: 1 },
+    ]);
+  });
+
+  it('getPagesByTag ignores a legacy _footer.md row', async () => {
+    const caller = createCaller(
+      createMockDb({
+        blobs: [legacyFooter(), page()],
+        tags: [
+          makeTag({ blobId: 'footer-legacy', tag: 'book' }),
+          makeTag({ blobId: 'page', tag: 'book' }),
+        ],
+      }),
+    );
+    const result = await caller.site.getPagesByTag({
+      siteId: 'site-1',
+      tag: 'book',
+    });
+    expect(result.map((p) => p.href)).toEqual(['/about']);
+  });
+
+  it('getChangelogEntries for the root folder skips _footer.md', async () => {
+    const caller = createCaller(
+      createMockDb({
+        blobs: [
+          legacyFooter(),
+          makeBlob({
+            id: 'footer-new',
+            path: '_footer.md',
+            appPath: null,
+            metadata: null,
+          }),
+          page(),
+        ],
+      }),
+    );
+    const { entries } = await caller.site.getChangelogEntries({
+      siteId: 'site-1',
+      dir: '/',
+    });
+    expect(entries.map((e) => e.id)).toEqual(['page']);
   });
 });

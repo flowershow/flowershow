@@ -1,4 +1,5 @@
 import { RssParamsSchema } from '@flowershow/api-contract';
+import { SITE_CHROME_FILES } from '@flowershow/core';
 import type { NextRequest } from 'next/server';
 import type { SiteConfig } from '@/components/types';
 import { fetchFile } from '@/lib/content-store';
@@ -40,6 +41,9 @@ export async function GET(
       blobs: {
         where: {
           OR: [{ path: { endsWith: '.md' } }, { path: { endsWith: '.mdx' } }],
+          // Reserved site-chrome files (`_footer.md`) are never pages, even a
+          // legacy row that was processed as one (metadata + appPath).
+          path: { notIn: [...SITE_CHROME_FILES] },
           metadata: {
             not: Prisma.AnyNull,
           },

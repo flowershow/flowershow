@@ -126,3 +126,24 @@ describe('GET /api/sitemap — bound to the site own host', () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe('GET /api/sitemap — reserved site-chrome files', () => {
+  const publicSite = { ...passwordSite, privacyMode: 'PUBLIC' };
+
+  // A root `_footer.md` processed as a page before the worker stored it as a
+  // non-page blob still has metadata + app_path `/_footer`; it must not be
+  // listed as a (404) URL, and its tags must not switch on the /tags entry.
+  it('excludes _footer.md from the page blobs and the tag count', async () => {
+    findFirst.mockResolvedValue(publicSite);
+
+    await GET(makeReq(), makeParams());
+
+    const include = findFirst.mock.calls[0]![0].include;
+    expect(include.blobs.where.path).toEqual({
+      notIn: expect.arrayContaining(['_footer.md']),
+    });
+    expect(include._count.select.tags.where.blob.path).toEqual({
+      notIn: expect.arrayContaining(['_footer.md']),
+    });
+  });
+});

@@ -4,7 +4,7 @@ A Cloudflare Worker that drives the Flowershow publish pipeline. It combines:
 
 - **`GitHubSyncWorkflow`** — orchestrates GitHub-triggered publishes: fetches the GitHub tree, diffs against stored `Blob` records, creates `Publish`/`PublishFile` records, and uploads files to R2.
 - **`PublishFinalizerWorkflow`** — shared by all publish paths. Polls until all `PublishFile` rows reach a terminal state, then sets `Publish.completedAt` and revalidates Next.js cache tags.
-- A **Queue consumer** that fires on every R2 event: on **PUT**, parses frontmatter, extracts image dimensions, upserts `Blob` records, and indexes in Typesense; on **DELETE**, removes the `Blob` record and Typesense document. The reserved root `_footer.md` (custom footer) is stored as a plain, non-page `Blob` (no `app_path`, metadata, links, tags or search index); see `isSiteChromeFile` in `@flowershow/core`.
+- A **Queue consumer** that fires on every R2 event: on **PUT**, parses frontmatter, extracts image dimensions, upserts `Blob` records, and indexes in Typesense; on **DELETE**, removes the `Blob` record and Typesense document. The reserved root `_footer.md` (custom footer) is stored as a plain, non-page `Blob` (no `app_path`, metadata, links, tags or search index); see `SITE_CHROME_FILES` and `isSiteChromeFile` in `@flowershow/core`.
 - **HTTP endpoints** for triggering workflows and a dev-mode adapter for MinIO webhook events.
 - A **daily cron** that purges deleted sites from storage, database, and Typesense.
 
@@ -197,6 +197,8 @@ Workflows are registered automatically by Wrangler on first deploy.
 npm run deploy:staging     # staging environment
 npm run deploy:production  # production environment
 ```
+
+Both deploy scripts first rebuild `@flowershow/core` (`pnpm run build:core`) and only then run `wrangler deploy`. Wrangler bundles the worker's `@flowershow/core` dependency from the deployer's local `packages/core/dist`, which is gitignored, so a stale build would silently ship old logic (for example a missing reserved site-chrome file in `SITE_CHROME_FILES`). Run `pnpm install` at the repo root first so the workspace is linked. If you ever call `wrangler deploy` directly, run `pnpm --filter @flowershow/core build` immediately before it.
 
 The production account ID is pinned in `wrangler.flowershow.toml`. If you keep several wrangler logins (profiles), make sure the one in use can see the Datopian account. Older wrangler versions ignore profiles and read the default login. If a deploy says the account isn't accessible, run `npx wrangler@latest whoami` to check which login is active.
 
