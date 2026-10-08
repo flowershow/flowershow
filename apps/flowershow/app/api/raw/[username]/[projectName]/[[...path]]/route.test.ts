@@ -349,18 +349,17 @@ describe('GET /api/raw — HTML is bound to the site own host', () => {
     expect(fetchFileMock).not.toHaveBeenCalled();
   });
 
-  it('ignores a custom domain on a reserved Flowershow domain', async () => {
+  it('serves HTML on a Flowershow-owned custom domain (e.g. the home site)', async () => {
     findFirst.mockResolvedValue({
       ...publicSite,
-      customDomain: 'someone-else.test.localhost',
+      customDomain: 'home.test.localhost',
     });
     const res = await GET(
-      makeReq('x.html', 'someone-else.test.localhost'),
+      makeReq('x.html', 'home.test.localhost'),
       makeParams('x.html'),
     );
-    expect(res.status).toBe(302);
-    expect(res.headers.get('location')).toBe(`http://${SITE_HOST}/x.html`);
-    expect(fetchFileMock).not.toHaveBeenCalled();
+    expect(res.status).toBe(200);
+    expect(fetchFileMock).toHaveBeenCalled();
   });
 
   it('only trusts the Host header', async () => {

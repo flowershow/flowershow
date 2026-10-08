@@ -1,5 +1,4 @@
 import { env } from '@/env.mjs';
-import { isReservedDomain } from '@/lib/domains';
 
 type SiteHostFields = {
   subdomain: string;
@@ -28,15 +27,13 @@ export function isAppHost(host: string | null | undefined): boolean {
 }
 
 /**
- * The site's custom domain, normalized, if it can act as one of the site's own
- * hosts. A custom domain that is a Flowershow app host or on a domain
- * Flowershow operates (see `isReservedDomain`) is ignored.
+ * The site's custom domain, normalized. Custom domains are unique and checked
+ * against reserved domains when saved, so an exact match is the site's own
+ * host. Flowershow's own sites (e.g. the home domain) use reserved domains.
  */
 function usableCustomDomain(site: SiteHostFields): string | null {
   if (!site.customDomain) return null;
-  const d = normalizeHost(site.customDomain);
-  if (!d || isAppHost(d) || isReservedDomain(d)) return null;
-  return d;
+  return normalizeHost(site.customDomain) || null;
 }
 
 function subdomainHost(site: SiteHostFields): string | null {
@@ -47,15 +44,14 @@ function subdomainHost(site: SiteHostFields): string | null {
 
 /**
  * True when `host` (the request's Host header) is one of the site's own hosts:
- * its `<subdomain>.<NEXT_PUBLIC_SITE_DOMAIN>` host or its custom domain.
- * Flowershow's own app hosts never qualify.
+ * its custom domain or its `<subdomain>.<NEXT_PUBLIC_SITE_DOMAIN>` host.
  */
 export function isSiteOwnHost(
   host: string | null | undefined,
   site: SiteHostFields,
 ): boolean {
   const h = normalizeHost(host);
-  if (!h || isAppHost(h)) return false;
+  if (!h) return false;
   return h === usableCustomDomain(site) || h === subdomainHost(site);
 }
 
