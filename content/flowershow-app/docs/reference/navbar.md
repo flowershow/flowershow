@@ -115,6 +115,8 @@ If you want to version-control your configuration, or have your editor's AI agen
 > [!note]
 > The custom navbar is a ⭐️ Premium feature.
 
+For a step-by-step walkthrough with a complete example, see [[custom-navbar-and-footer|Give your site a custom navbar and footer]].
+
 To replace the navbar content with your own, add a file called `_navbar.html` at the root of your site (next to `config.json` and `custom.css`). It holds an HTML fragment: just what goes inside the bar, with no `<html>`, `<head>` or `<body>`, and no `<nav>` of its own (the navbar is already a `<nav>`). It works like the [[footer#custom-footer|custom footer]]: Tailwind classes work, relative links and images resolve from your site root, and a pasted full HTML document is reduced to its `<body>`.
 
 This example has a logo, a row of links on wider screens and a menu button on phones:

@@ -88,6 +88,8 @@ If you want to version-control your configuration, or have your editor's AI agen
 > [!note]
 > The custom footer is a ⭐️ Premium feature.
 
+For a step-by-step walkthrough with a complete example, see [[custom-navbar-and-footer|Give your site a custom navbar and footer]].
+
 To replace the default footer with your own content, add a file called `_footer.html` at the root of your site (next to `config.json` and `custom.css`). It holds an HTML fragment: just the footer's content, with no `<html>`, `<head>` or `<body>`. If you paste a full HTML document anyway, only what's inside `<body>` is used (plus any `<style>` and `<link rel="stylesheet">`), and `<title>`, `<meta>` and `<base>` are dropped so they can't change your pages. Tailwind classes work, and relative links and images resolve from your site root.
 
 ```html

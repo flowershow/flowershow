@@ -16,7 +16,7 @@ Your site can now look even more like the rest of your brand. Add a `_footer.htm
 - **Custom navbar (Premium):** write `_navbar.html` the same way to replace the navbar content (logo, links, dropdowns, CTA) with your own. The bar stays sticky and keeps search and the dark-mode toggle if you've turned them on. Page links navigate instantly, the current page is marked, and a `<details>` element gives you a dropdown or a mobile menu with no JavaScript.
 - **Hide the navbar or footer on a page (all plans):** set `showNavbar: false` and/or `showFooter: false` in a page's frontmatter. Pair them with `layout: plain` for a fully bespoke landing page. You can also set them in `config.json` to hide the navbar or footer site-wide.
 
-See [[footer|Footer configuration]] and [[navbar|Navbar configuration]] for details.
+Follow the step-by-step guide [[custom-navbar-and-footer|Give your site a custom navbar and footer]], or see [[footer|Footer configuration]] and [[navbar|Navbar configuration]] for details.
 
 **More ways to style your site**
 

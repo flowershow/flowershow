@@ -25,6 +25,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Content Catalogs and Listing Pages](/docs/guides/content-catalogs) — Flowershow's new List component makes it super easy to create blog index pages and other kind of listing pages for tutorials, recipes, and more.
 - [Custom collection cards](/docs/guides/custom-collection-cards) — Render custom cards for a collection of pages using normal HTML in the page body.
 - [Custom Fonts](/docs/guides/custom-fonts) — Use Google Fonts or your own font files on your site
+- [Give your site a custom navbar and footer](/docs/guides/custom-navbar-and-footer) — Make your site look like your brand with your own navbar, footer, colors and fonts, using three small files.
 - [Styling your site](/docs/guides/custom-styles) — Customize your site's appearance — colors, fonts, and more — using CSS variables and a single custom.css file.
 - [Debugging 404 pages](/docs/guides/debug-404s) — Troubleshoot and fix 404 errors on your Flowershow site.
 - [Debugging MDX Errors](/docs/guides/debug-mdx-errors) — Struggling with MDX errors? This guide explains the most common MDX parsing issues, how to avoid them, and how to fix them fast.
