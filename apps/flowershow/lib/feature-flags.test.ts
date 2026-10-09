@@ -44,3 +44,23 @@ describe('isFeatureEnabled(CustomFooter)', () => {
     );
   });
 });
+
+describe('isFeatureEnabled(CustomNavbar)', () => {
+  it('is enabled on Premium sites only', () => {
+    expect(
+      isFeatureEnabled(Feature.CustomNavbar, {
+        customDomain: null,
+        plan: 'PREMIUM',
+      }),
+    ).toBe(true);
+    expect(
+      isFeatureEnabled(Feature.CustomNavbar, {
+        customDomain: null,
+        plan: 'FREE',
+      }),
+    ).toBe(false);
+    expect(isFeatureEnabled(Feature.CustomNavbar, { customDomain: null })).toBe(
+      false,
+    );
+  });
+});

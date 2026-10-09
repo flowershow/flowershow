@@ -3,6 +3,7 @@ import {
   isSiteChromeFile,
   SITE_CHROME_FILES,
   SITE_FOOTER_PATH,
+  SITE_NAVBAR_PATH,
 } from './site-files';
 
 describe('SITE_CHROME_FILES', () => {
@@ -10,9 +11,12 @@ describe('SITE_CHROME_FILES', () => {
     expect(SITE_FOOTER_PATH).toBe('_footer.html');
   });
 
-  it('is a non-empty list that includes the footer', () => {
-    expect(SITE_CHROME_FILES.length).toBeGreaterThan(0);
-    expect(SITE_CHROME_FILES).toContain(SITE_FOOTER_PATH);
+  it('exposes the navbar path constant as an html file', () => {
+    expect(SITE_NAVBAR_PATH).toBe('_navbar.html');
+  });
+
+  it('includes the footer and the navbar', () => {
+    expect(SITE_CHROME_FILES).toEqual([SITE_FOOTER_PATH, SITE_NAVBAR_PATH]);
   });
 
   it('lists only root-level .html paths without a leading slash', () => {
@@ -27,7 +31,12 @@ describe('SITE_CHROME_FILES', () => {
 });
 
 describe('isSiteChromeFile', () => {
-  it.each(['_footer.html', '/_footer.html'])('matches %s', (path) => {
+  it.each([
+    '_footer.html',
+    '/_footer.html',
+    '_navbar.html',
+    '/_navbar.html',
+  ])('matches %s', (path) => {
     expect(isSiteChromeFile(path)).toBe(true);
   });
 
@@ -41,6 +50,12 @@ describe('isSiteChromeFile', () => {
     '_footer.htm',
     'footer.html',
     '_footer',
+    '_navbar.md',
+    '_Navbar.html',
+    'docs/_navbar.html',
+    '_nav.html',
+    '_header.html',
+    'navbar.html',
     '',
   ])('does not match %s', (path) => {
     expect(isSiteChromeFile(path)).toBe(false);

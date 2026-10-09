@@ -697,6 +697,12 @@ describe('GET /api/raw — reserved site-chrome files', () => {
     expect(fetchFileMock).not.toHaveBeenCalled();
   });
 
+  it('404s the root _navbar.html without fetching it', async () => {
+    const res = await GET(makeReq('_navbar.html'), makeParams('_navbar.html'));
+    expect(res.status).toBe(404);
+    expect(fetchFileMock).not.toHaveBeenCalled();
+  });
+
   it('404s the root _footer.html on a password site too', async () => {
     findFirst.mockResolvedValue(passwordSite);
     const res = await GET(makeReq('_footer.html'), makeParams('_footer.html'));

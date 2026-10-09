@@ -109,9 +109,10 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
 /**
  * Markdown files are parsed as pages (metadata, links, tags, search index).
  * Everything else, including `.html` files such as the reserved site-chrome
- * file `_footer.html` (see `SITE_CHROME_FILES` in `@flowershow/core`), is
- * stored as a plain blob with no app path, metadata, links, tags or search
- * document.
+ * files `_footer.html` and `_navbar.html` (see `SITE_CHROME_FILES` in
+ * `@flowershow/core`), is stored as a plain blob with no app path, metadata,
+ * links, tags or search document. This is decided by extension alone, so a
+ * new site-chrome file needs no worker change.
  */
 export function isMarkdownPage(path) {
   return /\.(md|mdx)$/i.test(path);

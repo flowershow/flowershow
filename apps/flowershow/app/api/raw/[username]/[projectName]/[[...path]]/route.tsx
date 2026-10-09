@@ -41,7 +41,7 @@ export async function GET(
     return NextResponse.json({ error: 'Invalid request' }, { status: 400 });
   }
 
-  // Reserved site-chrome files (root `_footer.html`) are rendered into the
+  // Reserved site-chrome files (root `_footer.html`, `_navbar.html`) are rendered into the
   // site layout and never served at their own URL.
   if (isSiteChromeFile(path.join('/'))) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 });

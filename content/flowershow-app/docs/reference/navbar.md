@@ -1,12 +1,12 @@
 ---
 title: Navbar configuration
-description: Set logo, title, links and socials in your navigation bar.
+description: Set logo, title, links and socials in your navigation bar, replace its content with your own HTML, or hide it on a page.
 ---
 
 Configure your site's navigation bar from the **Flowershow dashboard**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
 > [!note]
-> The navbar is only displayed if at least one of the following is configured: nav title, nav links, CTA, social links, or full text search.
+> The navbar is only displayed if at least one of the following is configured: nav title, nav links, CTA, social links, or full text search, or if your Premium site has a [custom navbar](#custom-navbar).
 
 ## Logo and title
 
@@ -110,6 +110,102 @@ If you want to version-control your configuration, or have your editor's AI agen
 - `nav.title`: Text displayed as your site title
 - `nav.links`: Array of navigation link objects (same format as the dashboard JSON editor)
 
+## Custom navbar
+
+> [!note]
+> The custom navbar is a ⭐️ Premium feature.
+
+To replace the navbar content with your own, add a file called `_navbar.html` at the root of your site (next to `config.json` and `custom.css`). It holds an HTML fragment: just what goes inside the bar, with no `<html>`, `<head>` or `<body>`, and no `<nav>` of its own (the navbar is already a `<nav>`). It works like the [[footer#custom-footer|custom footer]]: Tailwind classes work, relative links and images resolve from your site root, and a pasted full HTML document is reduced to its `<body>`.
+
+This example has a logo, a row of links on wider screens and a menu button on phones:
+
+```html
+<a href="/" class="flex items-center gap-2 font-bold">
+  <img src="/assets/logo.svg" alt="" width="28" height="28">
+  Acme
+</a>
+
+<ul class="hidden md:flex">
+  <li><a href="/blog">Blog</a></li>
+  <li><a href="/docs">Docs</a></li>
+  <li>
+    <details name="nav">
+      <summary>Products</summary>
+      <ul>
+        <li><a href="/products/notes">Notes</a></li>
+        <li><a href="/products/sync">Sync</a></li>
+      </ul>
+    </details>
+  </li>
+  <li><a href="/about">About</a></li>
+</ul>
+
+<a href="/signup" class="ml-auto hidden md:inline-block rounded bg-black px-3 py-1.5 text-white">Sign up</a>
+
+<details name="nav" class="ml-auto md:hidden">
+  <summary aria-label="Menu">☰</summary>
+  <ul>
+    <li><a href="/blog">Blog</a></li>
+    <li><a href="/docs">Docs</a></li>
+    <li><a href="/about">About</a></li>
+    <li><a href="/signup">Sign up</a></li>
+  </ul>
+</details>
+```
+
+How it works:
+
+- **It replaces the navbar content, not the bar.** The logo, nav title, nav links, dropdowns, social icons, CTA button and the built-in mobile menu are no longer shown. The bar itself stays: it is still sticky at the top of the page, still hidden by `showNavbar: false`, and its height is still set by `--navbar-height`.
+- **Search and the dark-mode toggle stay if you turn them on.** Both are off unless you enable full-text search (`enableSearch`) or the theme switch (`theme.showModeSwitch`) in [[config-file|config.json]]. When on, they sit at the end of the bar, after your content. To move them, set `order` on `.site-navbar-search-container` or `.site-navbar-theme-switch-container` in `custom.css` (your content is `.site-navbar-custom`, `order: 0`).
+- **Use `<details>` for dropdowns and the mobile menu.** A `<details>` with a `<summary>` opens a panel under the bar, with no JavaScript needed. Open menus close when a link is followed, when you click outside them, when you press Escape and when you move to another page. Give your menus the same `name` (`<details name="nav">`, as in the example) so opening one closes the others, also from the keyboard. The last menu in the bar opens towards the left so it stays on screen; other menus open to the right. To change the direction, add `right-0 left-auto` or `left-0 right-auto` to the panel. A `<details>` inside a menu (a submenu) expands inline, as an accordion, rather than as a second floating panel. Give an icon-only `<summary>` an `aria-label`. A menu you write as `<details open>` starts open.
+- **There is no built-in hamburger menu.** Use Tailwind's responsive prefixes to choose what shows at each width, as in the example: `hidden md:flex` for the desktop links and `md:hidden` for the menu. Content too wide for the screen is cut off at the screen edge, so the page doesn't scroll sideways because of the navbar. The row itself doesn't scroll either, because a scrolling row would also clip any dropdown inside it. If a list of links has no dropdowns and you'd rather it scrolled sideways on phones, add `overflow-x-auto` to it.
+- **Page links are fast.** Links to pages on your site (`/blog`, `about`, `/releases/v1.2`) navigate without a full page reload, like the default navbar. Links ending in a file extension (`/rss.xml`, `/notes.md`, `/assets/guide.pdf`) and external links are ordinary links; external links open in a new tab. Write links to your own pages as paths (`/about`), not full URLs (`https://example.com/about`), which count as external.
+- **The current page is marked.** The link to the page being viewed gets `aria-current="page"` and is shown in bold. Style it with `.site-navbar-custom a[aria-current="page"]`.
+- **It is HTML, not Markdown,** and it is handled like the custom footer: Markdown syntax is shown as plain text, only `href` and `src` are rewritten, `<style>` blocks work, inline `<script>` tags run only on a full page load, and images in the navbar don't open in a lightbox.
+- **Need a taller bar?** Set `--navbar-height` in `custom.css`. The sidebar, table of contents and other sticky elements follow it. Images in the navbar are capped at the bar height minus `1rem`.
+- **It is not a page.** `_navbar.html` is not served at `/_navbar.html` and doesn't appear in the sidebar, the sitemap or as your home page. Its content is shown on every page, so don't put anything private in it.
+- **An empty file keeps the default navbar.** So does a file with only whitespace or HTML comments. If it fails to render, the default navbar is shown instead.
+- **Only the root file counts.** The name is exact and case-sensitive: `_Navbar.html` or `docs/_navbar.html` are ordinary HTML files. A `_navbar.md` is an ordinary Markdown page.
+- **It follows your content filters.** If you use `contentInclude`, add `_navbar.html` to it.
+- **Free plan:** `_navbar.html` is ignored and the default navbar is shown. It is still never served as a page.
+
+### Styling the custom navbar
+
+Your content sits inside `nav.site-navbar.site-navbar--custom` and `.site-navbar-custom`, a flex row with a `1rem` gap. Only light defaults are applied: links inherit the text colour, a top-level list is a horizontal row without bullets, and `<details>` panels get a background, border and shadow. The defaults use a single class of specificity, so a Tailwind class in `_navbar.html` or a rule in `custom.css` always overrides them (a `bg-black text-white` button keeps its colours on hover and when it's the current page). Add your own styles with Tailwind classes in `_navbar.html`, or in `custom.css`:
+
+```css
+.site-navbar-custom a:hover {
+  color: var(--color-accent);
+}
+/* Put search before your content */
+.site-navbar--custom .site-navbar-search-container {
+  order: -1;
+}
+```
+
+Tailwind's `dark:` prefix doesn't work in `_navbar.html`, because Flowershow switches themes with a `data-theme` attribute rather than a `dark` class. To show a different logo in dark mode, add both images with classes and switch them in `custom.css`:
+
+```html
+<a href="/">
+  <img class="logo-light" src="/assets/logo.svg" alt="Acme">
+  <img class="logo-dark" src="/assets/logo-white.svg" alt="Acme">
+</a>
+```
+
+```css
+.site-navbar-custom .logo-dark {
+  display: none;
+}
+:root[data-theme="dark"] .site-navbar-custom .logo-light {
+  display: none;
+}
+:root[data-theme="dark"] .site-navbar-custom .logo-dark {
+  display: inline-block;
+}
+```
+
+See [[custom-styles]] and the [[theme-class-reference|theme class reference]].
+
 ## Hide the navbar on a page
 
 Set `showNavbar: false` in a page's frontmatter to hide the site navbar on that page. This works on all plans. Combine it with `showFooter: false` and `layout: plain` for a fully bespoke landing page that draws its own header:
@@ -138,3 +234,10 @@ Common issues and solutions:
 2. **Social icons not showing**
    - Confirm you're using supported platform labels
    - Check that the `label` value matches exactly (case-sensitive)
+   - If you have a `_navbar.html`, it replaces the navbar's social icons on Premium sites
+
+3. **Custom navbar (`_navbar.html`) not showing**
+   - Check the site is on the Premium plan
+   - Make sure the file is at the root of your site (inside your root directory, if you set one) and named exactly `_navbar.html` (not `_navbar.md`)
+   - If you use `contentInclude`, add `_navbar.html` to it
+   - Republish after editing; changes can take up to a minute to appear

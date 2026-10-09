@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **286 styled class selectors**:
-**284 stable semantic hooks** and **2 non-contract
+and currently documents **288 styled class selectors**:
+**286 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -94,6 +94,11 @@ Desktop navbar, dropdowns, mobile navigation, theme switch, and visitor controls
 │  │  └─ .site-navbar-dropdown
 │  └─ .site-navbar-mobile-nav-button
 └─ .mobile-nav
+.site-navbar.site-navbar--custom (_navbar.html)
+└─ .site-navbar-inner
+   ├─ .site-navbar-custom
+   ├─ .site-navbar-search-container (optional)
+   └─ .site-navbar-theme-switch-container (optional)
 ```
 
 | Class | Kind |
@@ -115,7 +120,9 @@ Desktop navbar, dropdowns, mobile navigation, theme switch, and visitor controls
 | <code>.mobile-nav-tree-item-icon</code> | Hook |
 | <code>.mobile-nav-tree-item-self</code> | Hook |
 | <code>.site-navbar</code> | Hook |
+| <code>.site-navbar--custom</code> | Variant |
 | <code>.site-navbar-cta-button</code> | Hook |
+| <code>.site-navbar-custom</code> | Hook |
 | <code>.site-navbar-dropdown</code> | Hook |
 | <code>.site-navbar-dropdown-icon</code> | Hook |
 | <code>.site-navbar-dropdown-item</code> | Hook |

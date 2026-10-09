@@ -143,6 +143,8 @@ Supported `label` values: `bsky`, `bluesky`, `discord`, `mail`, `facebook`, `git
 
 Footer configuration. Premium sites can instead replace the whole footer with a `_footer.html` file. [[footer|Learn more →]]
 
+The navbar works the same way: Premium sites can replace the navbar content with a `_navbar.html` file. [[navbar#custom-navbar|Learn more →]]
+
 | Field        | Type                      | Description                     |
 | ------------ | ------------------------- | ------------------------------- |
 | `navigation` | `FooterNavigationGroup[]` | Link groups shown in the footer |

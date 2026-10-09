@@ -42,6 +42,10 @@ export function isNavDropdown(item: NavItem): item is NavDropdown {
   return 'links' in item && !('href' in item);
 }
 
+/**
+ * Navbar settings. A Premium site can replace the navbar content (logo, title,
+ * links, social links, CTA) with `_navbar.html`.
+ */
 export interface NavConfig {
   title?: string;
   links?: NavItem[];

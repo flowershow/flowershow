@@ -63,7 +63,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [List component](/docs/reference/list-component) — Create organized lists and content catalogs by automatically listing files in a specified directory.
 - [Math equations](/docs/reference/math) — Write math equations with LaTeX syntax.
 - [Mermaid diagrams](/docs/reference/mermaid) — Create diagrams and visualizations using a popular, text-based syntax.
-- [Navbar configuration](/docs/reference/navbar) — Set logo, title, links and socials in your navigation bar.
+- [Navbar configuration](/docs/reference/navbar) — Set logo, title, links and socials in your navigation bar, replace its content with your own HTML, or hide it on a page.
 - [Obsidian Bases Syntax (Beta)](/docs/reference/obsidian-bases) — Detailed reference for Obsidian Bases syntax, including filters, formulas, and view types.
 - [Obsidian Canvas](/docs/reference/obsidian-canvas) — Render Obsidian Canvas (.canvas) files as visual diagrams on your Flowershow site.
 - [Page authors](/docs/reference/page-authors) — Create dedicated profile pages for authors of your content and list them in page headers

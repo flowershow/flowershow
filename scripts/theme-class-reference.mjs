@@ -15,7 +15,7 @@ const GROUPS = [
     title: 'Navbar and mobile navigation',
     description:
       'Desktop navbar, dropdowns, mobile navigation, theme switch, and visitor controls.',
-    dom: `.site-navbar\n├─ .site-navbar-inner\n│  ├─ .site-navbar-site-name\n│  ├─ .site-navbar-links-container\n│  │  ├─ .site-navbar-link\n│  │  └─ .site-navbar-dropdown\n│  └─ .site-navbar-mobile-nav-button\n└─ .mobile-nav`,
+    dom: `.site-navbar\n├─ .site-navbar-inner\n│  ├─ .site-navbar-site-name\n│  ├─ .site-navbar-links-container\n│  │  ├─ .site-navbar-link\n│  │  └─ .site-navbar-dropdown\n│  └─ .site-navbar-mobile-nav-button\n└─ .mobile-nav\n.site-navbar.site-navbar--custom (_navbar.html)\n└─ .site-navbar-inner\n   ├─ .site-navbar-custom\n   ├─ .site-navbar-search-container (optional)\n   └─ .site-navbar-theme-switch-container (optional)`,
   },
   {
     id: 'sidebar',

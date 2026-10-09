@@ -543,12 +543,19 @@ describe('site.getBlob', () => {
       expect(result.id).toBe('fallback-blob');
     });
 
-    it('skips the reserved _footer.html in the first-html fallback', async () => {
-      // `_footer.html` sorts before lowercase names, so it is listed first.
+    it('skips the reserved _footer.html and _navbar.html in the first-html fallback', async () => {
+      // Reserved files sort before lowercase names, so they are listed first.
       const blobs = [
         makeBlob({
           id: 'footer',
           path: '_footer.html',
+          appPath: null,
+          metadata: null,
+          extension: 'html',
+        }),
+        makeBlob({
+          id: 'navbar',
+          path: '_navbar.html',
           appPath: null,
           metadata: null,
           extension: 'html',
@@ -1052,11 +1059,18 @@ describe('site.getSiteTree', () => {
     expect(names).toContain('blog');
   });
 
-  it('omits the reserved root _footer.html but keeps other html and _footer.md', async () => {
+  it('omits the reserved root _footer.html and _navbar.html but keeps other html and _footer.md', async () => {
     const blobs = [
       makeBlob({
         id: 'footer',
         path: '_footer.html',
+        appPath: null,
+        metadata: null,
+        extension: 'html',
+      }),
+      makeBlob({
+        id: 'navbar',
+        path: '_navbar.html',
         appPath: null,
         metadata: null,
         extension: 'html',
@@ -1083,6 +1097,7 @@ describe('site.getSiteTree', () => {
     const serialized = JSON.stringify(tree);
 
     expect(serialized).not.toContain('"path":"_footer.html"');
+    expect(serialized).not.toContain('"path":"_navbar.html"');
     expect(serialized).toContain('"path":"notes/_footer.html"');
     expect(serialized).toContain('"path":"landing.html"');
     expect(serialized).toContain('"path":"_footer.md"');
@@ -1159,12 +1174,12 @@ describe('site read-path authorization', () => {
     ).rejects.toThrow('Site access required');
   });
 
-  it('getSiteFooter throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
+  it('getSiteChromeFile throws UNAUTHORIZED for a PASSWORD site with no token', async () => {
     const db = createMockDb({ site: passwordSite(), blobs: blobs() });
     const caller = createCaller(db);
 
     await expect(
-      caller.site.getSiteFooter({ siteId: 'site-1' }),
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_footer.html' }),
     ).rejects.toThrow('Site access required');
   });
 
@@ -1684,7 +1699,7 @@ describe('site.getCustomStylesheet', () => {
   });
 });
 
-describe('site.getSiteFooter', () => {
+describe('site.getSiteChromeFile', () => {
   beforeEach(() => {
     vi.mocked(fetchFile).mockReset();
   });
@@ -1693,13 +1708,38 @@ describe('site.getSiteFooter', () => {
     vi.mocked(fetchFile).mockResolvedValue('<p>Footer <b>text</b></p>');
     const caller = createCaller(createMockDb({}));
 
-    await expect(caller.site.getSiteFooter({ siteId: 'site-1' })).resolves.toBe(
-      '<p>Footer <b>text</b></p>',
-    );
+    await expect(
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_footer.html' }),
+    ).resolves.toBe('<p>Footer <b>text</b></p>');
     expect(fetchFile).toHaveBeenCalledWith({
       projectId: 'site-1',
       path: '_footer.html',
     });
+  });
+
+  it('returns the content of the root _navbar.html', async () => {
+    vi.mocked(fetchFile).mockResolvedValue('<a href="/">Home</a>');
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_navbar.html' }),
+    ).resolves.toBe('<a href="/">Home</a>');
+    expect(fetchFile).toHaveBeenCalledWith({
+      projectId: 'site-1',
+      path: '_navbar.html',
+    });
+  });
+
+  it('rejects paths that are not reserved site-chrome files', async () => {
+    const caller = createCaller(createMockDb({}));
+
+    await expect(
+      caller.site.getSiteChromeFile({
+        siteId: 'site-1',
+        path: 'secret/notes.md' as any,
+      }),
+    ).rejects.toThrow();
+    expect(fetchFile).not.toHaveBeenCalled();
   });
 
   it('returns null when the site has no _footer.html', async () => {
@@ -1707,7 +1747,7 @@ describe('site.getSiteFooter', () => {
     const caller = createCaller(createMockDb({}));
 
     await expect(
-      caller.site.getSiteFooter({ siteId: 'site-1' }),
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_footer.html' }),
     ).resolves.toBeNull();
   });
 
@@ -1716,7 +1756,7 @@ describe('site.getSiteFooter', () => {
     const caller = createCaller(createMockDb({}));
 
     await expect(
-      caller.site.getSiteFooter({ siteId: 'site-1' }),
+      caller.site.getSiteChromeFile({ siteId: 'site-1', path: '_footer.html' }),
     ).resolves.toBeNull();
   });
 });

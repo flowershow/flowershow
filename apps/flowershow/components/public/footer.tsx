@@ -2,7 +2,7 @@ import { GlobeIcon } from 'lucide-react';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { FooterNavigationGroup, SocialLink } from '@/components/types';
-import { FooterErrorBoundary } from './footer-error-boundary';
+import { ChromeErrorBoundary } from './chrome-error-boundary';
 import { socialIcons } from './social-icons';
 
 interface FooterProps {
@@ -32,7 +32,7 @@ export default async function Footer({
 
   if (customContent) {
     return (
-      <FooterErrorBoundary fallback={defaultFooter}>
+      <ChromeErrorBoundary fallback={defaultFooter} label="footer">
         <footer
           className="site-footer site-footer--custom"
           aria-labelledby="footer"
@@ -44,7 +44,7 @@ export default async function Footer({
             <div className="site-footer-custom">{customContent}</div>
           </div>
         </footer>
-      </FooterErrorBoundary>
+      </ChromeErrorBoundary>
     );
   }
 
