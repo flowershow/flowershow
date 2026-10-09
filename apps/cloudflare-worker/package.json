@@ -19,12 +19,12 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260621.1",
     "vitest": "catalog:",
-    "wrangler": "^4.1.0"
+    "wrangler": "^4.149.0"
   },
   "type": "module",
   "dependencies": {
-    "@flowershow/core": "workspace:*",
     "@aws-sdk/client-s3": "^3.0.0",
+    "@flowershow/core": "workspace:*",
     "gray-matter": "^4.0.3",
     "image-size": "^2.0.2",
     "postgres": "^3.4.4",
