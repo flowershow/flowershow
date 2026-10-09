@@ -1,7 +1,6 @@
 import { GoogleTagManager } from '@next/third-parties/google';
 import clsx from 'clsx';
 import { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { SessionRecording } from '@/components/dashboard/session-recording';
 import { env } from '@/env.mjs';
 import { getConfig } from '@/lib/app-config';
@@ -93,7 +92,7 @@ export default async function CloudRootLayout({
         />
       </head>
       <body>
-        <TRPCReactProvider headers={await headers()}>
+        <TRPCReactProvider>
           <Providers>
             {children}
             <SessionRecording />

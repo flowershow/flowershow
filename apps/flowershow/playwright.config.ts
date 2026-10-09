@@ -75,6 +75,7 @@ export default defineConfig({
         '**/custom-fonts.spec.ts',
         // custom.css is a same-origin stylesheet on custom domains too.
         '**/custom-styles.spec.ts',
+        '**/trpc-provider-props.spec.ts',
       ],
       dependencies: ['setup'],
     },

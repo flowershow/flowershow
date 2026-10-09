@@ -1,7 +1,6 @@
 import { GoogleAnalytics } from '@next/third-parties/google';
 import clsx from 'clsx';
 import type { Metadata } from 'next';
-import { headers } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import Script from 'next/script';
 import { cache, type ReactNode } from 'react';
@@ -318,7 +317,7 @@ export default async function PublicLayout(props: {
         {siteConfig?.analytics && (
           <GoogleAnalytics gaId={siteConfig.analytics} />
         )}
-        <TRPCReactProvider headers={await headers()}>
+        <TRPCReactProvider>
           <Providers>
             <SiteProvider
               value={{

@@ -11,10 +11,10 @@ import { getUrl, transformer } from './shared';
 
 export const api = createTRPCReact<AppRouter>();
 
-export function TRPCReactProvider(props: {
-  children: React.ReactNode;
-  headers: Headers;
-}) {
+// Never pass request headers (or anything else from the incoming request) into
+// this client component: its props are serialised into the page HTML. The
+// browser attaches its own cookies to same-origin tRPC requests.
+export function TRPCReactProvider(props: { children: React.ReactNode }) {
   const [queryClient] = useState(() => new QueryClient());
 
   const [trpcClient] = useState(() =>
@@ -29,9 +29,7 @@ export function TRPCReactProvider(props: {
         unstable_httpBatchStreamLink({
           url: getUrl(),
           headers() {
-            const heads = new Map(props.headers);
-            heads.set('x-trpc-source', 'react');
-            return Object.fromEntries(heads);
+            return { 'x-trpc-source': 'react' };
           },
         }),
       ],
