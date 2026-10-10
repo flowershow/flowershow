@@ -4,11 +4,12 @@ import { expect, test } from '../helpers/fixtures';
 const PAGE = '/annotations-demo';
 const PILL = /^Annotations on · \d+ notes? · select text to add one$/;
 
-// The page body can stream in after #mdxpage first appears, so keep looking
-// until the text is there instead of searching once.
+// The page body can stream in after <main> first appears, so keep looking
+// until the text is there instead of searching once. <main> (#page-main) is the
+// annotation root: page header (title, description) plus the Markdown body.
 async function selectText(page: Page, needle: string) {
   await page.waitForFunction((text) => {
-    const root = document.getElementById('mdxpage');
+    const root = document.getElementById('page-main');
     if (!root) return false;
     const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
     for (let node = walker.nextNode(); node; node = walker.nextNode()) {
@@ -99,6 +100,16 @@ test('A visitor annotates; another visitor sees it; the page is noindex', async 
     await expect(
       page.getByRole('complementary', { name: 'Annotations' }),
     ).toBeVisible();
+  });
+
+  await test.step('a phrase in the page description can be annotated', async () => {
+    await selectText(page, 'Header text counts');
+    await page.getByRole('button', { name: 'Annotate', exact: true }).click();
+    await expect(
+      page.locator('form.fs-annotations-form .fs-annotations-quote'),
+    ).toHaveText('Header text counts');
+    await page.getByRole('button', { name: 'Cancel' }).click();
+    await page.keyboard.press('Escape');
   });
 
   await test.step('a different visitor sees it after a fresh load', async () => {

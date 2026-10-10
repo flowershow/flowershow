@@ -426,23 +426,27 @@ export default async function SitePage(props: {
 
   // Annotations: Markdown pages only (the rule also excludes .canvas/.html).
   // Same rule as noindex and the API, so every eligible page gets the overlay.
-  const annotationsOverlay = isAnnotationsEnabled({
-    site,
-    siteConfig,
-    pageMetadata: metadata,
-    pagePath: blob.path,
-  }) ? (
-    <PageAnnotations
-      siteId={site.id}
-      pagePath={blob.path}
-      manageUrl={`${
-        env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
-        env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
-          ? 'https'
-          : 'http'
-      }://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${site.id}/annotations`}
-    />
-  ) : null;
+  // `rootId` is the element whose text can be annotated: on layout pages that is
+  // <main>, so the title and description in the page header are included.
+  const annotationsOverlay = (rootId: string) =>
+    isAnnotationsEnabled({
+      site,
+      siteConfig,
+      pageMetadata: metadata,
+      pagePath: blob.path,
+    }) ? (
+      <PageAnnotations
+        rootId={rootId}
+        siteId={site.id}
+        pagePath={blob.path}
+        manageUrl={`${
+          env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+          env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+            ? 'https'
+            : 'http'
+        }://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${site.id}/annotations`}
+      />
+    ) : null;
 
   // Premium: per-page `scripts` frontmatter, gated and resolved server-side.
   const pageScripts = isFeatureEnabled(Feature.PageScripts, site)
@@ -504,7 +508,7 @@ export default async function SitePage(props: {
         />
         <UrlNormalizer />
         {chromeMarker}
-        {annotationsOverlay}
+        {annotationsOverlay('mdxpage')}
         <div className="rendered-mdx is-plain" id="mdxpage">
           {compiledContent}
         </div>
@@ -612,7 +616,7 @@ export default async function SitePage(props: {
       />
       <UrlNormalizer />
       {chromeMarker}
-      {annotationsOverlay}
+      {annotationsOverlay('page-main')}
 
       {showSidebar && <SidebarMobileNav items={siteTree!} prefix={''} />}
 
@@ -641,7 +645,7 @@ export default async function SitePage(props: {
         )}
 
         <div className="layout-inner-center">
-          <main className="page-main">
+          <main className="page-main" id="page-main">
             {changelog?.kind === 'index' ? (
               <>
                 <ChangelogIndexPage
