@@ -21,8 +21,15 @@ import remarkMath from 'remark-math';
 import remarkParse from 'remark-parse';
 import remarkRehype from 'remark-rehype';
 import remarkSmartypants from 'remark-smartypants';
-import { type Pluggable, unified } from 'unified';
+import { type Pluggable, type Plugin, unified } from 'unified';
+import { visit } from 'unist-util-visit';
 import FsImage from '@/components/public/mdx/fs-image';
+import { Iframe } from '@/components/public/mdx/iframe';
+import {
+  Mermaid,
+  ObsidianBasesViews,
+} from '@/components/public/mdx/mdx-client-components';
+import Pre from '@/components/public/mdx/pre';
 import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import remarkYouTubeAutoEmbed from '@/lib/remark-youtube-auto-embed';
 import type { ImageDimensionsMap } from './image-dimensions';
@@ -109,9 +116,18 @@ export async function processMarkdown(
     .use(remarkSmartypants, { quotes: false, dashes: 'oldschool' })
     .use(remarkMath)
     .use(remarkCallout)
+    // mdx-mermaid's typings don't match unified's Plugin signature
+    .use(mdxMermaid as Plugin<[object?]>, {})
     .use(remarkMark)
     // `showTags === false` disables inline `#tag` pills, leaving them as text.
     .use(options.showTags === false ? () => undefined : remarkTags)
+    // ```base blocks need a site to query
+    .use(options.siteId ? remarkObsidianBases : () => undefined, {
+      siteId: options.siteId!,
+      siteHostname,
+      rootDir: options.rootDir,
+    })
+    .use(remarkMdxJsxToElement)
     // Last remark plugin: it restructures the whole tree
     .use(
       options.changelog ? remarkChangelog : () => undefined,
@@ -137,12 +153,41 @@ export async function processMarkdown(
       dimensions: options.imageDimensions ?? {},
     })
     .use(rehypeToReact, {
+      // Same as the MDX components, so code blocks get a copy button and
+      // ```mermaid blocks render as diagrams in .md pages too.
       components: {
         img: FsImage,
+        pre: Pre,
+        mermaid: Mermaid,
+        iframe: Iframe,
+        obsidianbasesviews: ObsidianBasesViews,
       },
     });
 
   return (await processor.process(content)).result as ReactElement;
+}
+
+/**
+ * Some remark plugins shared with the MDX pipeline (e.g. remark-obsidian-bases)
+ * emit MDX JSX elements, which remark-rehype drops. Turn them into plain hast
+ * elements named after the component, with their string attributes as
+ * properties, so `components` can map them to React components. The name is
+ * lowercased because rehype-raw (HTML parsing) lowercases tag names anyway.
+ */
+function remarkMdxJsxToElement() {
+  return (tree: any) => {
+    visit(tree, 'mdxJsxFlowElement', (node: any) => {
+      node.data = {
+        ...node.data,
+        hName: node.name.toLowerCase(),
+        hProperties: Object.fromEntries(
+          node.attributes
+            .filter((attr: any) => typeof attr.value === 'string')
+            .map((attr: any) => [attr.name, attr.value]),
+        ),
+      };
+    });
+  };
 }
 
 // Elements that only make sense in a document `<head>`. React 19 hoists
