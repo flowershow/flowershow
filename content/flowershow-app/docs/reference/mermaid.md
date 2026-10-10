@@ -3,9 +3,6 @@ title: Mermaid diagrams
 description: Create diagrams and visualizations using a popular, text-based syntax.
 ---
 
-> [!note]
-> Mermaid diagrams currently only work with MDX rendering. See how to enable it globally or per page: https://flowershow.app/blog/announcing-syntax-mode-configuration
-
 ## How to use
 
 To create a mermaid diagram you embed inside a special code block with the type of `mermaid` i.e.

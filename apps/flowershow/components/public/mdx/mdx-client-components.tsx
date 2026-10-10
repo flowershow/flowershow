@@ -31,6 +31,11 @@ const ObsidianBasesViews = dynamic(() =>
 const Plotly = dynamic(() => import('./plotly').then((mod) => mod.Plotly), {
   ssr: false,
 });
+// react-pdf (pdf.js) needs browser APIs such as DOMMatrix at import time
+const PdfViewer = dynamic(
+  () => import('./pdf-viewer').then((mod) => mod.PdfViewer),
+  { ssr: false },
+);
 const Vega = dynamic(() => import('./vega').then((mod) => mod.Vega), {
   ssr: false,
 });
@@ -46,6 +51,7 @@ export {
   ObsidianBasesViews,
   Plotly,
   PlotlyBarChart,
+  PdfViewer,
   PlotlyLineChart,
   Vega,
   CustomHtml,

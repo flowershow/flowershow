@@ -10,6 +10,7 @@ import type { SiteLookupResult } from '@/server/api/types';
 import type { CustomHtmlProps } from './custom-html';
 import type { FlatUiTableProps } from './flatui-table';
 import FsImage from './fs-image';
+import { Iframe } from './iframe';
 import type { LineChartProps } from './line-chart';
 import type { ListProps } from './list';
 import List from './list';
@@ -25,7 +26,6 @@ import {
   Vega,
 } from './mdx-client-components';
 import type { ObsidianBasesViewsProps } from './obsidian-bases-views';
-import { PdfViewer } from './pdf-viewer';
 import type { PlotlyBarChartProps } from './plotly-bar-chart';
 import type { PlotlyLineChartProps } from './plotly-line-chart';
 import Pre from './pre';
@@ -59,18 +59,7 @@ export const mdxComponentsFactory = ({
     // HTML <img> in .md files.
     [JSX_IMAGE_COMPONENT]: (props: any) => <FsImage {...props} />,
     pre: (props: any) => <Pre {...props} />,
-    iframe: (props) => {
-      const src = props.src ?? '';
-
-      const isPdf =
-        typeof src === 'string' && src.split('#')[0]?.endsWith('.pdf');
-
-      if (isPdf) {
-        return <PdfViewer src={src} />;
-      }
-
-      return <iframe {...props} />;
-    },
+    iframe: (props) => <Iframe {...props} />,
     CustomHtml: withErrorBoundary((props: CustomHtmlProps) => {
       return <CustomHtml {...props} />;
     }, 'CustomHtml'),
