@@ -36,7 +36,7 @@ annotations: false
 ---
 ```
 
-Annotations work on Markdown pages (`.md` and `.mdx`), in the page body. They aren't available on HTML pages, canvases or changelog timelines. Sites published without an account (`fl --anon`) can't use annotations yet; sign in and publish with `fl login` first.
+Annotations work on Markdown pages (`.md` and `.mdx`): the page body, plus the title and description in the page header. They aren't available on HTML pages, canvases or changelog timelines. Sites published without an account (`fl --anon`) can't use annotations yet; sign in and publish with `fl login` first.
 
 ## Leaving an annotation
 
