@@ -769,6 +769,26 @@ describe('site.getListComponentItems', () => {
     expect(text).toContain('"app_path" IS NOT NULL');
     expect(values).not.toContain('_footer.md');
   });
+
+  it('excludes pages with publish: false in SQL', async () => {
+    const db = createMockDb({ blobs: [] }) as ReturnType<
+      typeof createMockDb
+    > & { $queryRaw: ReturnType<typeof vi.fn> };
+    db.$queryRaw = vi.fn(async () => []);
+    const caller = createCaller(db);
+    await caller.site.getListComponentItems({
+      siteId: 'site-1',
+      dir: '/blog',
+      slots: {},
+    });
+    const [strings] = db.$queryRaw.mock.calls[0] as [
+      TemplateStringsArray,
+      ...unknown[],
+    ];
+    expect(strings.join('?').replace(/\s+/g, ' ')).toContain(
+      `("metadata"->>'publish') IS DISTINCT FROM 'false'`,
+    );
+  });
 });
 
 describe('site.getLatestPublishState', () => {
