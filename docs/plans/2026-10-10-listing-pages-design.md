@@ -1,6 +1,6 @@
 # Listing pages in Flowershow: design
 
-Status: proposal v2, 2026-10-10, revised after independent review (`listing-design-review.md`) and against `docs/plans/2026-10-10-listing-pages-consolidation.md`. File paths are relative to `apps/flowershow/` unless stated otherwise. Closes the design question in beads `flowershow-sgw` / GH #924, #1120, #1008, #923.
+Status: proposal v3, 2026-10-10 (v3 adds the zero-config blog folder, section 4.10, and makes the Markdown-only rule explicit), revised after independent review (`listing-design-review.md`) and against `docs/plans/2026-10-10-listing-pages-consolidation.md`. File paths are relative to `apps/flowershow/` unless stated otherwise. Closes the design question in beads `flowershow-sgw` / GH #924, #1120, #1008, #923.
 
 ## 1. Purpose and vision
 
@@ -8,7 +8,7 @@ A listing page is the front door of a collection. For most Flowershow sites that
 
 The vision: **any folder is a collection, and any page can list it in plain Markdown with one line.** A blog index, a projects grid, a people directory, a podcast archive and "latest three posts" on the home page are all the same thing: a folder of pages with frontmatter, shown in one of a few good-looking views, with the right defaults so that the author does not have to think about sorting, dates, authors, drafts or pagination.
 
-One-line pitch: *Put `layout: list` in your folder's README, or a ```` ```blog ```` block anywhere, and Flowershow renders a beautiful, themeable, paginated listing from your frontmatter. Works in `.md`. Nothing to learn.*
+One-line pitch: *Put your posts in a `blog/` folder and `/blog` is a paginated, themeable blog index, with nothing else to write. Want it elsewhere or shaped differently? A ```` ```blog ```` or ```` ```list ```` block anywhere, or `layout: list` in a folder's README. Works in `.md`. No MDX, no components, nothing to learn.*
 
 Who it serves, in priority order:
 
@@ -21,6 +21,8 @@ Who it serves, in priority order:
 ## 2. Principles
 
 - **Zero config is the headline.** `layout: list` in a folder index page, nothing else, must produce a page that a maintainer would happily screenshot for the changelog. Every default is chosen for a blog: newest first, title, description, date, authors with names and links, image if there is one, 20 per page.
+- **Doing nothing is a feature.** Like the changelog (a `changelog/` folder just works), a `blog/` or `posts/` folder gets a good index page with no file at all, and a `blog/README.md` that is only prose gets the listing beneath it (section 4.10).
+- **Fenced blocks and frontmatter only; never an MDX component.** The complete author-facing syntax is ```` ```list ````/```` ```blog ```` fences and frontmatter keys (`layout: list`, `list:`, `draft:`). No page ever needs JSX, an `.mdx` extension or `syntaxMode: mdx` to get a listing. The one React component involved (`ListingImage`, section 6) is an internal rendering detail that authors never write, see or configure. This is the Obsidian Bases authoring model (a fenced YAML block), not the `<List />` model.
 - **Markdown first.** The syntax is a fenced code block and frontmatter, both legal in `.md`, in `.mdx` and in Obsidian (which shows the block as a code block and nothing breaks). There is exactly one implementation, a remark plugin registered in both pipelines, so there is no "works in MDX but not in MD" class of bug.
 - **AI-writable.** Flat YAML, one level of nesting at most, no expressions, no quoting rules, no JSX. Seven keys. Unknown keys and bad values produce an inline error card that names the key and suggests the fix. The most likely wrong guesses (`dir`, `folder`) are accepted silently. The whole reference fits in one screen of `llms.txt`.
 - **Progressive disclosure.** The ladder is: ```` ```blog ```` or `layout: list` (zero config) → ```` ```list ```` with `from:` (any folder, anywhere) → `view:`, `limit:`, `pageSize:` (shape) → `sort:`, `where:`, `show:` (data) → Bases (full query language) → custom CSS on semantic classes (look). Each rung adds one idea.
@@ -69,6 +71,10 @@ Renders at `/blog`: the page header (title, description if any), the intro parag
 │            ← Newer   1 … 2 3 [4] 5 6 … 12   Older →                  │
 └────────────────────────────────────────────────────────────────────┘
 ```
+
+### 3.1a A blog with no index file at all
+
+A folder `blog/` (or `posts/`) full of posts and no `README.md`/`index.md`. `/blog` renders exactly the page in 3.1, titled "Blog" from the folder name, with pagination. Add a `blog/README.md` with just a paragraph of prose and the listing appears beneath the prose. Section 4.10 has the rules.
 
 ### 3.2 The same blog, as a block (the #1008 ask)
 
@@ -214,6 +220,7 @@ A folder with no matching pages renders "Nothing here yet." (`.list-component-em
 
 - **Folder index page**: `layout: list` in the frontmatter of `README.md`/`index.md`. The page body renders as the intro; the listing of that folder is appended. Options go in a `list:` map in the same frontmatter and use exactly the block schema. This mirrors `layout: changelog` (`lib/changelog-context.ts`, `lib/changelog.ts:isChangelogDir`). On a non-index page (`blog.md`, the Obsidian "folder note" pattern), `from` defaults to a sibling folder with the same name (`blog/`) if one exists; otherwise the error card says "add `list: { from: … }`".
 - **Inline block**: a ```` ```list ```` or ```` ```blog ```` fence anywhere in any `.md` or `.mdx` page, including inside a `layout: list` page for a second list. `from` is required for ```` ```list ```` (no implicit folder, so nobody lists the whole site by accident) and defaults to `blog` for ```` ```blog ````.
+- **Zero-config blog folder** (section 4.10): a README-less `blog/`/`posts/` folder gets a generated listing page; a prose-only README in such a folder gets the listing appended.
 - **Precedence with the changelog**: `lib/changelog.ts:isChangelogDir` already treats any `layout` other than `changelog` on the folder index as opting out, so `layout: list` on `changelog/README.md` renders a plain listing, not the timeline. Stated in the docs.
 
 ### 4.2 Options (the complete schema)
@@ -290,7 +297,34 @@ Not in v1: `or`, `not`, comparisons, dates. Those are Bases territory today and 
 - `cards`: responsive grid (`repeat(auto-fill, minmax(var(--list-card-min), 1fr))`), image on top with a fixed aspect ratio, title, summary, meta below. Whole card clickable (the `.list-component-item-headline-link::after` recipe from `reference/list-component.md`, applied by default in cards only).
 - `compact`: one line per item, date in a fixed-width column then title; no image, no summary unless explicitly in `show`. Suited to archives, notes and sidebars. Cheap enough to keep in v1; first to cut if the PR grows.
 
+### 4.10 Zero-config blog folders
+
+Modelled on the README-less changelog folder (`app/(public)/site/[user]/[project]/[[...slug]]/page.tsx`, the `isChangelogDirName` fallback around line 106, and `lib/changelog-context.ts`).
+
+**Which folders.** A folder whose last path segment is `blog` or `posts`, compared case-insensitively, at any depth (`/blog`, `/Blog`, `/notes/posts`). The slug must match the folder's real case, as for the changelog. Why these two: `blog` is the literal ask (#1008, #1120) and the name every guide uses; `posts` is the convention of Jekyll (`_posts`), Hugo and Astro (`content/posts`) and common in Obsidian vaults, so migrants get it for free. `articles`, `news`, `notes` and `writing` are left out on purpose: they are as often reference material or a digital garden as a dated feed, and `notes` in particular would hijack gardens. Others can opt in with `layout: list`.
+
+**Case 1: no `README.md`/`index.md` in the folder.** If at least one `.md`/`.mdx` page exists anywhere under the folder, its URL renders a generated page: the page header with the folder name as the title ("Blog", "Posts", via `entryTitleFromPath`), then the default listing exactly as `layout: list` with no options would render it (list view, 20 per page, newest first). Everything else mirrors the changelog fallback: no sidebar, no ToC, no breadcrumbs, no hero; `<title>` is `Blog · <site name>` via `buildPageTitle`; the description is the site description; canonical is the bare URL, or the self-canonical for `?page=N > 1` (4.8). An empty folder still 404s, like the changelog. A real page at the same URL always wins (a `blog.md` with a permalink, a folder note), as do tag pages and the changelog.
+
+**Case 2: a `README.md`/`index.md` exists in such a folder** with **no `layout`** and **no listing of its own**. "No listing of its own" means the body has no ```` ```list ````, ```` ```blog ```` or ```` ```base ```` fence (backticks or tildes) and no `<List` tag. Then the page renders as usual (header, body as the intro, ToC if on) and the default listing is appended, as if it had `layout: list`. A `list:` map in its frontmatter is honoured.
+
+**Opt-out.** `list: false` in the README frontmatter, or any `layout` (`layout: plain`, `layout: changelog`, `layout: list`, which already decides). A site that wants nothing at `/blog` keeps a README there with `list: false`.
+
+**Back-compat, stated plainly.** Unchanged:
+- every README that already lists posts with `<List />`, a list block or a Bases block (flowershow.app's own `blog/README.mdx` uses `<List />`);
+- every README with any `layout`;
+- every folder not named `blog`/`posts`.
+
+What changes on deploy:
+- a README-less `blog/` or `posts/` folder that used to 404 now has an index page;
+- a prose-only `blog/README.md` or `posts/README.md` gains a listing under its prose.
+
+The second case also hits a README that lists posts by hand with ordinary links: it will show both. The changelog entry calls this out with the one-line opt-out, and the docs repeat it. This is the intended default ("a blog page that just works"); it is a visible change, not a silent one.
+
 ## 5. Relationship to `<List />`, Bases, the changelog and #1222
+
+### 5.0 The list block is the simple Bases
+
+```` ```list ```` is deliberately Bases-shaped: the same authoring model (a fenced YAML block in a Markdown page, harmless in Obsidian), the same idea of a query over the vault's frontmatter, and `where`/`sort` defined as a strict subset of Bases semantics (4.6), so anything a list block means, Bases means too. What it adds is on the render side: `view: list | cards | compact`, blog-aware defaults (dates, authors with avatars, images, drafts), pagination and a stable theme contract. Bases keeps the full query language (formulas, `or`/`not`, comparisons, tables). The direction of travel is one renderer: Bases views will render through `lib/listing/render.ts` too (deferred item 4), so Bases gains the same views, pagination and theming, and the two differ only in how much query language you write.
 
 ### 5.1 Why a new simple engine and not "compile to Bases"
 
@@ -300,6 +334,7 @@ Not in v1: `or`, `not`, comparisons, dates. Those are Bases territory today and 
 
 | Thing | Verdict | Detail |
 | --- | --- | --- |
+| A `blog/`/`posts/` folder, no index or a prose-only README | **New, the zero-config path** | Section 4.10. Generated page or appended listing; opt out with `list: false`. |
 | ```` ```list ```` / ```` ```blog ```` + `layout: list` | **New, the recommended path** | `list` is the general form, `blog` is the preset (answers the open question in `flowershow-sgw`). All docs and guides (`content/flowershow-app/docs/guides/publish-blog.md`, `content-catalogs.md`, `turn-obsidian-vault-into-a-blog.md`, `reference/list-component.md`, `uses/blogs.md`) switch their examples to it. |
 | `<List dir="/blog" slots={{…}} pageSize={5} />` | **Kept, legacy, on its own query in v1** | Still works in MDX exactly as today; no site changes on deploy. Two small fixes ship separately from the engine PR: the one-line `publish: false` filter in its SQL, and the collapsed-ellipsis fix in `list-pagination.tsx` (#1120's "number of paginated pages"). Deprecation path in 5.3. |
 | `.list-component-*` CSS classes | **Kept and extended** | The new engine emits the same class family so themes and `custom.css` written against `<List />` apply unchanged. New modifiers and custom properties are additive (section 6). |
@@ -450,6 +485,7 @@ Untouched apart from two isolated fixes in their own small PR: `getListComponent
 ### v1 (the engine PR)
 
 - `lib/listing/*`, `lib/remark-listing.ts`, `lib/rehype-listing-headings.ts`, `components/public/mdx/listing-image.tsx`; registered in both pipelines; ToC selector and autolink test updated.
+- Zero-config blog folders (4.10): generated page for README-less `blog/`/`posts/`, listing appended to a prose-only README there, `list: false` opt-out.
 - ```` ```list ```` and ```` ```blog ```` blocks with the seven keys in 4.2 (plus `dir`/`folder` aliases); `layout: list` with the `list:` frontmatter map and the sibling-folder rule for folder notes.
 - Views `list` and `cards`; `compact` if the PR stays small.
 - Item rules (4.3: own-index-only exclusion, nested index as item, `publish: false`, `draft: true`); frontmatter mapping (4.4); default and custom-field sorting (4.5); `where` map (4.6).
@@ -469,11 +505,11 @@ Untouched apart from two isolated fixes in their own small PR: `getListComponent
 1. `<List />` shims in `.md` and MDX (5.3 steps 2 and 3), then removal (step 4).
 2. `group: year` (and `group: <field>`) with `h2` group headings; the classic blog archive.
 3. `where` as a string expression evaluated with the Bases engine (`lib/bases-expr.ts`/`lib/bases-parse.ts`); the Dataview bridge without a new language, drop-in because 4.6 is already a Bases subset.
-4. Bases `cards` view rendered through `lib/listing/render.ts` (semantic classes instead of MUI; fixes #1198's sizing class of bug), and Bases `limit` honoured.
+4. Bases views rendered through `lib/listing/render.ts`: Bases `cards` and `list` views use the listing renderer (semantic classes instead of MUI; fixes #1198's sizing class of bug), Bases gains `view: compact`, pagination and author resolution, and Bases `limit` is honoured. This is how Bases "gains the views" (5.0).
 5. Tag pages rendered through the listing renderer in `compact` view.
 6. Changelog helpers relocated to `lib/listing/` and the changelog index rendered through the same item query (pure refactor, after both are stable).
 7. `table` view (columns from `show`).
-8. Virtual folder index: a folder with no `README.md`/`index.md` gets a generated `layout: list` page at its URL, like the README-less changelog folder (`page.tsx` line 106). Needs a product decision on sidebar and breadcrumbs.
+8. Virtual folder index for any folder (beyond `blog`/`posts`, which are in v1 per 4.10): a generated `layout: list` page at any README-less folder URL. Needs a product decision on sidebar and breadcrumbs for arbitrary folders, and on folders of reference notes that should not look like a feed.
 9. A `template:` key naming a Markdown partial for bespoke item markup (the #950/#952/#1222 need), only if demand persists after CSS-on-semantic-classes has been tried.
 10. `dateFormat`/locale option; `image: <field>` override; `recursive: false`; custom empty text.
 11. `draft: true` honoured by search and `noindex`; block errors surfaced in publish logs and the CLI.
@@ -490,6 +526,7 @@ Untouched apart from two isolated fixes in their own small PR: `getListComponent
 - **`draft: true` semantics.** Listing-and-feed exclusion while the URL stays reachable is a new convention. The alternative, treating `draft` exactly like `publish: false`, would surprise users whose vaults already carry `draft` for other reasons. Open question for the maintainer; the design errs on "unlisted but reachable".
 - **Default `pageSize: 20` for index pages versus the changelog's 10.** Changelog entries show full bodies; list items are a few lines. Open to tuning after seeing real sites.
 - **`blog` as a fence name.** It is exactly the #1008 ask, and an unknown fence language is harmless in every renderer, but a site that already has a code sample with ```` ```blog ```` (unlikely) would see it transformed. No namespacing, per the recorded #924 decision.
+- **Zero-config listing on existing blogs.** A prose-only `blog/README.md` that lists posts by hand will show both its own links and the generated listing after deploy. Mitigation: only folders named `blog`/`posts`, only READMEs with no `layout` and no listing fence/`<List`, a one-line opt-out (`list: false`), called out in the changelog entry.
 - **Non-string frontmatter.** User YAML is untyped (`title: 1984` is a number; see the coercion notes in `getPagesByTag` and `lib/site-config.ts:buildPageTitle`). `render.ts` coerces every displayed value and never throws; this is the most common class of 500 in the current listings and is covered by unit tests.
 - **Author matching change in `getAuthors`.** Anchoring the match strictly reduces false positives, but a site that relied on a loose suffix match (`authors: [jane]` resolving `mary-jane.md`) would see that author unlinked. Judged a bug fix; noted in the changelog entry.
 
@@ -503,3 +540,9 @@ Adopted every item from `listing-design-review.md`:
 - B4: v1 no longer re-points `getListComponentItems` or moves changelog helpers; legacy `<List />` gets only the `publish: false` and ellipsis fixes in a separate small PR (5.2, 7.5, 8).
 - R1: inner key renamed `view` (4.2). R2: ```` ```blog ```` preset with `from: blog` default; `dir`/`folder` accepted as silent aliases; `collection`/`pages` aliases dropped (3.2, 4.2). R3: "Why not compile to Bases" section and `where` defined as a Bases subset (5.1, 4.6). R4: four-step `<List />` deprecation path and the ellipsis bug fixed now (5.3). R5: self-canonical for `page > 1`, `?page=abc` → 1, public-URL links, other params dropped, disabled-state ends (4.8). R6: `.is-disabled` spans, inline SVG icons, avatar sizing, element changes noted, all six themes audited (section 6). R7: RSS skips drafts in v1 (4.3). R8: #1222 superseded explicitly, tutorial removed with redirect, #950/#952 gap acknowledged (5.2). R9: inline blocks unpaginated by default, index pages 20; #892 cited (4.2). R10: anchored, batched author matching with `people/` preference (4.7).
 - Nits: script path corrected; hast property names; frontmatter wiki links resolved by the plugin with the page's `files`/`permalinks`; folder query cached separately from the page slice; `layout: list` on a folder note defaults to the sibling folder; changelog precedence stated; image-less list view collapses the media column; error card public with CLI surfacing deferred; per-listing RSS deferred; `llms.txt` and agent skill in v1 docs; `limit` + `pageSize` reported; `recursive` and `empty` cut (seven keys).
+
+## Changes in v3 (user requirement, 2026-10-10)
+
+- Author-facing syntax is fenced blocks and frontmatter only; no MDX component is ever required (section 2).
+- Zero-config blog folders pulled into v1 for `blog` and `posts` (4.10, 3.1a), with the back-compat behaviour and opt-out spelled out; generic virtual folder index stays deferred (item 8).
+- "The list block is the simple Bases" (5.0); deferred item 4 widened so Bases views render through the listing renderer.

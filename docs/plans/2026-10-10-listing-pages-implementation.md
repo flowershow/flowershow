@@ -20,6 +20,8 @@ All paths below are relative to `apps/flowershow/` unless they start with `conte
 - Defaults: `sort: date desc`; `show: [image, date, title, description, authors]` (`compact`: `[date, title]`); `pageSize: 20` on `layout: list` pages, none for inline blocks; ```` ```blog ```` means `from: blog`.
 - Item rules: under `from` at any depth; `.md`/`.mdx` with an `appPath`; not the listed folder's own `README`/`index` (any case); nested indexes are items; not the page containing the list; not `publish: false`; not `draft: true`.
 - Page N is `?page=N` on the page's public URL; page 1 is the bare URL; other params dropped; `?page=abc|0|-1` render page 1; one paginated listing per page; at most 10 listings per page (the rest get an error card).
+- Author-facing syntax is fenced blocks (```` ```list ````/```` ```blog ````) and frontmatter only; no MDX component is ever required. `ListingImage` is internal.
+- Zero-config (design 4.10): a README-less `blog/`/`posts/` folder (last segment, case-insensitive) renders a generated listing page like the README-less changelog folder; a README there with no `layout`, no `list: false` and no ```` ```list ````/```` ```blog ````/```` ```base ```` fence or `<List` gets the default listing appended.
 - `limit` with an explicit `pageSize` renders the list (using `limit`) with an inline note (`p.list-component-note`), not an error card.
 - Every `hProperties` value emitted by the renderer is a string (md/mdx parity).
 - Emitted classes: the existing `.list-component-*` family unchanged plus additive modifiers/classes listed in design section 6. No existing CSS rule in `styles/default-theme.css` is modified.
@@ -45,7 +47,7 @@ Hand each phase to a separate agent, in order. Task IDs (A1, B1, …) are stable
 | --- | --- | --- | --- |
 | **1. PR A: legacy fixes** | A1, A2, A3 | Worktree `/Users/rgrp/src/flowershow/flowershow-listings` created on `fix/legacy-list-publish-ellipsis` off a fresh `origin/main`; `pnpm install`; `prisma generate`; type-error baseline recorded | PR A open; `Unit Tests`, `Lint`, `E2E Tests` green in CI; bead updated |
 | **2. PR B core** | B1, B2, B3, B4, B5, B6, B7 (two commits), B8, B9, B10, B11, B13, B14 | Phase 1 exit; in the same worktree `git switch -c feat/listing-pages fix/legacy-list-publish-ellipsis` (or off `origin/main` if A has merged) | All listed unit tests and the parity test (`lib/markdown-listing.test.tsx`) pass; `pnpm lint` and `pnpm test` green; no new type errors; every task committed; nothing pushed yet is fine |
-| **3. PR B presentation** | B16, B12, B15, B24, B25, B26 (draft PR), B17, B18, B19 | Phase 2 exit | Storybook project passes; mockup PNGs committed under `docs/pr-assets/listings/`; draft PR open with source + screenshots in the body; CI `E2E Tests` green including the `listings` project; CI time noted; opt-in screenshot workflow triggered once |
+| **3. PR B presentation** | B16, B12, B15, B27 (zero-config blog folders), B24, B25, B26 (draft PR), B17, B18, B19 | Phase 2 exit | `lib/listing/auto.test.ts` passes; Storybook project passes (including the zero-config stories); mockup PNGs committed under `docs/pr-assets/listings/`; draft PR open with source + screenshots in the body; CI `E2E Tests` green including the `listings` project; CI time noted; opt-in screenshot workflow triggered once |
 | **4. PR B finish** | B20, B21, B22, B23 | Phase 3 exit (draft PR green) | Security notes in the PR body; reference docs, `llms.txt`, legacy banner and changelog entry committed (frontmatter parses); all local and CI gates green; PR marked ready; issues commented; follow-up beads filed |
 | **5. Cross-repo and docs PR** | C1 (themes), D1 (skills), E1 (guides docs PR) | PR B ready for review (C1, E1) and deployed (D1 opens only once the docs URL resolves; C1 merges only after B deploys) | Three PRs open with screenshots/notes; E1 merged the same day as B |
 
@@ -2517,6 +2519,205 @@ and pass `listing` into `renderPageContent`. Imports: `pageFromSearchParam` from
 - [ ] **Step 5:** `npx vitest run --project=unit lib/changelog-context.test.ts lib/listing` and `npx tsc --noEmit -p tsconfig.json | tail -1` (no new errors).
 - [ ] **Step 6: Commit** `feat(listing): wire listing context and self-canonical into the page route`
 
+### Task B27: zero-config blog folders (design 4.10)
+
+**Files:**
+- Create: `lib/listing/auto.ts`, `lib/listing/auto.test.ts`
+- Create: `components/public/listing/virtual-listing-page.tsx`
+- Modify: `app/(public)/site/[user]/[project]/[[...slug]]/page.tsx` (`generateMetadata` catch + title; `SitePage` `!blob` branch; the `listing` context from Task B15)
+
+**Interfaces:**
+- Consumes: `normalizeDir`, `dirOf`, `isFolderIndexPath`, `entryTitleFromPath` (`@/lib/changelog`); `ListingRenderContext` (B10); `listingCanonical`, `pageFromSearchParam` (B6); `processMarkdown` (B13).
+- Produces:
+
+```ts
+export const AUTO_LISTING_DIR_NAMES = ['blog', 'posts'] as const;
+export function isAutoListingDirName(dir: string): boolean;                 // last segment, case-insensitive
+export function virtualListingDir(slug: string, siteFilePaths: string[]): string | null; // README-less folder with ≥1 page under it
+export function hasExplicitListing(content: string): boolean;               // ```list/```blog/```base (or ~~~) fence, or <List
+export function autoListingFor(args: { blobPath: string; metadata: Record<string, unknown> | null; content: string }): { options: unknown; defaultFrom: string } | null;
+```
+
+- [ ] **Step 1: Failing tests** (`lib/listing/auto.test.ts`)
+
+```ts
+import { describe, expect, it } from 'vitest';
+import { autoListingFor, hasExplicitListing, isAutoListingDirName, virtualListingDir } from './auto';
+
+describe('isAutoListingDirName', () => {
+  it('blog and posts, any case, any depth; nothing else', () => {
+    for (const d of ['blog', 'Blog', 'POSTS', 'notes/blog', '/blog/']) expect(isAutoListingDirName(d)).toBe(true);
+    for (const d of ['', 'articles', 'news', 'notes', 'blogs', 'blog/2026', 'myblog']) expect(isAutoListingDirName(d)).toBe(false);
+  });
+});
+
+describe('virtualListingDir (README-less folder)', () => {
+  const files = ['/blog/a.md', '/blog/2026/b.md', '/Posts/x.md', '/posts-old/y.md', '/empty/blog/pic.png', '/withreadme/blog/README.md', '/withreadme/blog/c.md'];
+  it('needs a page somewhere under the folder and no index', () => {
+    expect(virtualListingDir('/blog', files)).toBe('blog');
+    expect(virtualListingDir('/Posts', files)).toBe('Posts');
+    expect(virtualListingDir('/posts', files)).toBeNull(); // slug must match the real case, like the changelog
+    expect(virtualListingDir('/empty/blog', files)).toBeNull(); // no pages
+    expect(virtualListingDir('/withreadme/blog', files)).toBeNull(); // has an index: a real page renders
+    expect(virtualListingDir('/articles', ['/articles/a.md'])).toBeNull();
+    expect(virtualListingDir('/', files)).toBeNull();
+  });
+});
+
+describe('hasExplicitListing', () => {
+  it('detects fences and <List, not prose mentions', () => {
+    expect(hasExplicitListing('Intro\n\n```blog\nlimit: 3\n```')).toBe(true);
+    expect(hasExplicitListing('~~~list\nfrom: x\n~~~')).toBe(true);
+    expect(hasExplicitListing('```base\nviews: []\n```')).toBe(true);
+    expect(hasExplicitListing('<List dir="/blog" />')).toBe(true);
+    expect(hasExplicitListing('  ```  blog\n```')).toBe(true);
+    expect(hasExplicitListing('I keep a blog. A list of posts follows.\n\n- [One](one.md)')).toBe(false);
+    expect(hasExplicitListing('```js\nconst blog = 1;\n```')).toBe(false);
+    expect(hasExplicitListing('<Listing />')).toBe(false);
+  });
+});
+
+describe('autoListingFor (README in a blog/posts folder)', () => {
+  const prose = 'Notes on building things.';
+  it('appends the default listing to a prose-only README', () => {
+    expect(autoListingFor({ blobPath: 'blog/README.md', metadata: { title: 'Blog' }, content: prose })).toEqual({ options: undefined, defaultFrom: 'blog' });
+    expect(autoListingFor({ blobPath: 'notes/posts/index.mdx', metadata: {}, content: prose })).toEqual({ options: undefined, defaultFrom: 'notes/posts' });
+  });
+  it('honours a list: map', () => {
+    expect(autoListingFor({ blobPath: 'blog/README.md', metadata: { list: { view: 'cards' } }, content: prose })?.options).toEqual({ view: 'cards' });
+  });
+  it('back-compat: any layout, list: false, an existing listing, other folders, non-index pages are untouched', () => {
+    expect(autoListingFor({ blobPath: 'blog/README.md', metadata: { layout: 'plain' }, content: prose })).toBeNull();
+    expect(autoListingFor({ blobPath: 'blog/README.md', metadata: { layout: 'list' }, content: prose })).toBeNull(); // layout: list is handled by B15 already
+    expect(autoListingFor({ blobPath: 'blog/README.md', metadata: { list: false }, content: prose })).toBeNull();
+    expect(autoListingFor({ blobPath: 'blog/README.md', metadata: { list: 'false' }, content: prose })).toBeNull();
+    expect(autoListingFor({ blobPath: 'blog/README.mdx', metadata: {}, content: '<List dir="/blog" />' })).toBeNull();
+    expect(autoListingFor({ blobPath: 'blog/index.md', metadata: {}, content: '```blog\n```' })).toBeNull();
+    expect(autoListingFor({ blobPath: 'articles/README.md', metadata: {}, content: prose })).toBeNull();
+    expect(autoListingFor({ blobPath: 'blog/first-post.md', metadata: {}, content: prose })).toBeNull();
+  });
+});
+```
+
+- [ ] **Step 2: Run, expect FAIL**: `npx vitest run --project=unit lib/listing/auto.test.ts`
+- [ ] **Step 3: Implement** (`lib/listing/auto.ts`)
+
+```ts
+import { dirOf, isFolderIndexPath, normalizeDir } from '@/lib/changelog';
+
+/** Folder names that list themselves with no configuration (design 4.10). */
+export const AUTO_LISTING_DIR_NAMES = ['blog', 'posts'] as const;
+const MARKDOWN_RE = /\.mdx?$/i;
+const LISTING_FENCE_RE = /^[ \t]{0,3}(?:`{3,}|~{3,})[ \t]*(?:list|blog|base)\b/im;
+const LEGACY_LIST_RE = /<List[\s/>]/;
+
+export function isAutoListingDirName(dir: string): boolean {
+  const last = normalizeDir(dir).split('/').pop() ?? '';
+  return (AUTO_LISTING_DIR_NAMES as readonly string[]).includes(last.toLowerCase());
+}
+
+/** The folder a README-less blog/posts URL lists, or null (mirrors resolveChangelogContext's !blob branch). */
+export function virtualListingDir(slug: string, siteFilePaths: string[]): string | null {
+  const dir = normalizeDir(slug);
+  if (!dir || !isAutoListingDirName(dir)) return null;
+  const paths = siteFilePaths.map((p) => p.replace(/^\/+/, ''));
+  if (paths.some((p) => dirOf(p) === dir && isFolderIndexPath(p))) return null;
+  return paths.some((p) => p.startsWith(`${dir}/`) && MARKDOWN_RE.test(p)) ? dir : null;
+}
+
+export function hasExplicitListing(content: string): boolean {
+  return LISTING_FENCE_RE.test(content) || LEGACY_LIST_RE.test(content);
+}
+
+export function autoListingFor({ blobPath, metadata, content }: { blobPath: string; metadata: Record<string, unknown> | null; content: string }): { options: unknown; defaultFrom: string } | null {
+  const path = blobPath.replace(/^\/+/, '');
+  if (!isFolderIndexPath(path)) return null;
+  const dir = dirOf(path);
+  if (!isAutoListingDirName(dir)) return null;
+  if (metadata?.layout) return null;
+  if (metadata?.list === false || metadata?.list === 'false') return null;
+  if (hasExplicitListing(content)) return null;
+  return { options: metadata?.list, defaultFrom: dir };
+}
+```
+
+- [ ] **Step 4: Run, expect PASS**
+- [ ] **Step 5: Case 2, prose-only README.** In `SitePage`, where Task B15 builds `listing.implicit`, extend it:
+
+```ts
+    implicit:
+      metadata?.layout === 'list'
+        ? { options: metadata?.list, defaultFrom: implicitListingFrom(blob.path, siteFilePaths) }
+        : (autoListingFor({ blobPath: blob.path, metadata: metadata as Record<string, unknown> | null, content: pageContent ?? '' }) ?? undefined),
+```
+
+`generateMetadata` gets the same self-canonical for these pages: compute `const auto = blob && metadata?.layout !== 'list' && isFolderIndexPath(blob.path) && isAutoListingDirName(dirOf(blob.path)) && metadata?.list !== false && metadata?.list !== 'false';` and pass `auto ? 'list' : metadata?.layout` to `listingCanonical`. (It cannot see the body cheaply, so a README with its own block also gets the self-canonical on `?page=N`; harmless, since only one listing per page paginates.)
+
+- [ ] **Step 6: Case 1, generated page.** `components/public/listing/virtual-listing-page.tsx` (server component):
+
+```tsx
+import { BlogLayout } from '@/components/public/layouts/blog';
+import { entryTitleFromPath } from '@/lib/changelog';
+import { processMarkdown } from '@/lib/markdown';
+
+export async function VirtualListingPage(props: { siteId: string; rootDir?: string; dir: string; page: number; siteHostname: string; siteFilePaths: string[]; permalinksMapping: Record<string, string>; showTags: boolean }) {
+  const title = entryTitleFromPath(props.dir);
+  const content = await processMarkdown('', {
+    filePath: `${props.dir}/README.md`, // virtual: never matches a real item, so self-exclusion is a no-op
+    files: props.siteFilePaths,
+    siteHostname: props.siteHostname,
+    siteId: props.siteId,
+    rootDir: props.rootDir,
+    permalinks: props.permalinksMapping,
+    showTags: props.showTags,
+    listing: { page: props.page, publicUrl: `/${props.dir}`, pageTitle: title, implicit: { options: undefined, defaultFrom: props.dir } },
+  });
+  return (
+    <BlogLayout title={title}>
+      <div className="rendered-mdx" id="mdxpage" key={`${props.dir}?page=${props.page}`}>
+        {content}
+      </div>
+    </BlogLayout>
+  );
+}
+```
+
+In `SitePage`'s `if (!blob)` branch, after the tag-page checks and before `if (changelog?.kind !== 'index') notFound();`, add (changelog keeps precedence because `resolveChangelogContext` ran first):
+
+```tsx
+    const autoDir = changelog ? null : virtualListingDir(decodedSlug, siteFilePaths);
+    if (autoDir !== null) {
+      return (
+        <>
+          <UrlNormalizer />
+          {chromeMarker}
+          <div className="layout-inner">
+            <div className="layout-inner-center">
+              <main className="page-main">
+                <VirtualListingPage
+                  siteId={site.id}
+                  rootDir={site.rootDir ?? undefined}
+                  dir={autoDir}
+                  page={pageFromSearchParam((await props.searchParams).page)}
+                  siteHostname={siteHostname}
+                  siteFilePaths={siteFilePaths}
+                  permalinksMapping={permalinksMapping}
+                  showTags={showTags}
+                />
+              </main>
+            </div>
+          </div>
+        </>
+      );
+    }
+```
+
+This mirrors the changelog fallback exactly: same shell, no sidebar, no ToC, no breadcrumbs, no hero.
+
+- [ ] **Step 7: Metadata for case 1.** In `generateMetadata`'s `getBlob(...).catch`, before `notFound()`: `if (isAutoListingDirName(decodedSlug)) return null;` (as for README-less changelog folders; an empty folder then 404s in `SitePage`). Compute `const isAutoListingFallback = !blob && !isChangelogFallback && isAutoListingDirName(decodedSlug);`, use `entryTitleFromPath(normalizeDir(decodedSlug))` as the title fallback in the `buildPageTitle(...)` chain (after `'Changelog'`), and pass `isAutoListingFallback ? 'list' : …` to `listingCanonical` so `?page=2` self-canonicalises. Description falls back to the site description, as today.
+- [ ] **Step 8: Verify locally**: `npx vitest run --project=unit lib/listing lib/changelog-context.test.ts` and `npx tsc --noEmit -p tsconfig.json 2>&1 | tail -1` (no new errors). Real-page behaviour is covered by the fixture (B17) and e2e (B18) in CI.
+- [ ] **Step 9: Commit** `feat(listing): zero-config blog and posts folders`
+
 ### Task B24: Storybook mockup (primary visual review)
 
 **Files:**
@@ -2645,6 +2846,7 @@ For `implicit` stories (`layout: list`), the spec above is exactly what `parseLi
 ```tsx
 import type { Decorator, Meta, StoryObj } from '@storybook/nextjs-vite';
 import { useEffect } from 'react';
+import { BlogLayout } from '@/components/public/layouts/blog';
 import { ListingFromMarkdown, manyPosts, people, projects, realPosts } from '@/stories/__fixtures__/listing';
 import '@/styles/default-theme.css';
 
@@ -2679,6 +2881,16 @@ export default meta;
 type Story = StoryObj<typeof ListingFromMarkdown>;
 
 export const BlogIndexPage1: Story = { args: { implicit: true, markdown: '---\ntitle: Blog\nlayout: list\n---\n', items: manyPosts(240), page: 1 } };
+/** Design 4.10 case 1: a blog/ folder with no README. Source shown in the PR: "(no file: blog/ contains only posts)". */
+export const ZeroConfigBlogFolder: Story = {
+  args: { implicit: true, markdown: '', items: manyPosts(28), page: 1 },
+  decorators: [(Story) => <BlogLayout title="Blog"><div className="rendered-mdx"><Story /></div></BlogLayout>],
+};
+/** Design 4.10 case 2: blog/README.md with only prose; the listing is appended. */
+export const ProseReadmeAutoListing: Story = {
+  args: { implicit: true, markdown: '---\ntitle: Blog\n---\n\nNotes on building things, roughly weekly.\n', items: realPosts, page: 1 },
+  decorators: [(Story) => <BlogLayout title="Blog"><div className="rendered-mdx"><p>Notes on building things, roughly weekly.</p><Story /></div></BlogLayout>],
+};
 export const BlogIndexPage2: Story = { args: { implicit: true, markdown: '---\ntitle: Blog\nlayout: list\n---\n', items: manyPosts(28), page: 2 } };
 export const BlogIndexMiddlePage: Story = { args: { implicit: true, markdown: '---\ntitle: Blog\nlayout: list\n---\n', items: manyPosts(240), page: 6 } };
 export const LatestThree: Story = { args: { markdown: '## Latest posts\n\n```blog\nlimit: 3\n```\n', items: realPosts, publicUrl: '/' } };
@@ -2730,6 +2942,8 @@ mkdirSync(out, { recursive: true });
 
 const shots = [
   ['before-legacy-list', 'other-list--with-pagination'],
+  ['zero-config-blog', 'other-listing--zero-config-blog-folder'],
+  ['prose-readme-auto-listing', 'other-listing--prose-readme-auto-listing'],
   ['list-view', 'other-listing--blog-index-page-1'],
   ['list-view-page-2', 'other-listing--blog-index-page-2'],
   ['pagination-ellipsis', 'other-listing--blog-index-middle-page', 'nav.list-component-pagination'],
@@ -2781,7 +2995,7 @@ Entry: B1 to B16, B24 and B25 committed; `pnpm lint`, `pnpm test`, the parity te
 - [ ] **Step 1:** `git push -u origin feat/listing-pages`
 - [ ] **Step 2:** `gh pr create --draft --title "feat: list blocks and layout: list (listing pages v1)" --body-file <file>`, where the body (write it to the scratchpad first) has:
   - Summary and link to `docs/plans/2026-10-10-listing-pages-design.md`.
-  - "Mockup": for each screenshot, the Markdown source in a fenced block directly above the image, image via `https://raw.githubusercontent.com/flowershow/flowershow/feat/listing-pages/docs/pr-assets/listings/<name>.png`. Start with the before/after pair (`before-legacy-list.png` with its `<List dir="/blog" pageSize={10} />` MDX source vs `list-view.png` with its `layout: list` frontmatter). State: "Screenshots live in `docs/pr-assets/listings/` on this branch so they render here; they can be dropped before merge."
+  - "Mockup": for each screenshot, the Markdown source in a fenced block directly above the image, image via `https://raw.githubusercontent.com/flowershow/flowershow/feat/listing-pages/docs/pr-assets/listings/<name>.png`. Lead with the zero-config pair: `zero-config-blog.png` captioned "no file at all: `blog/` contains only posts" and `prose-readme-auto-listing.png` with its prose-only `blog/README.md`, plus the back-compat note (READMEs with any `layout`, `list: false`, a list/blog/base fence or `<List` are unchanged). Then the before/after pair (`before-legacy-list.png` with its `<List dir="/blog" pageSize={10} />` MDX source vs `list-view.png` with its `layout: list` frontmatter). State: "Screenshots live in `docs/pr-assets/listings/` on this branch so they render here; they can be dropped before merge."
   - "How to try it": `pnpm storybook` → Other/Listing; real pages are exercised by the CI e2e job (`listings` project).
   - "Separately revertable": the `getAuthors` delegation commit (`refactor(site): getAuthors delegates…`), and what it changes (anchored author matching on every post).
   - "Depends on": PR A.
@@ -2835,16 +3049,23 @@ view: compact
 ```
 ````
 
-`blog/README.md`:
+No `blog/README.md`: `/blog` is the zero-config generated page (design 4.10, case 1). Explicit `layout: list` stays covered by `projects/README.md` and `podcast.md` below.
+
+`posts/README.md` (zero-config case 2, prose only, no `layout`):
 
 ```markdown
 ---
-title: Blog
-layout: list
+title: Posts
 ---
 
-Notes on building things, roughly weekly.
+Shorter notes, collected here. The list below appears without any configuration.
 ```
+
+with `posts/first-note.md` (`title: First note`, `date: 2026-05-01`), `posts/second-note.md` (`title: Second note`, `date: 2026-06-01`, `image: "[[sapiens.jpg]]"`), `posts/third-note.md` (`title: Third note`, `date: 2026-07-01`, `authors: [grace]`).
+
+`notes/blog/README.md` (opt-out): frontmatter `title: Old blog` and `list: false`, body `Nothing is listed here on purpose.`; plus `notes/blog/hello.md` (`title: Hello`). Nested `blog` folders count, so this pins the opt-out.
+
+`notes/posts/one.md` (`title: Nested posts item`) with no README: pins the generated page for a nested `posts` folder at `/notes/posts`.
 
 `projects/README.md`:
 
@@ -2951,7 +3172,7 @@ node "$SCRATCH/gen-posts.mjs" $D/blog
 - `blog/draft-post.md`: `title: Draft post`, `date: 2026-09-05`, `draft: true`.
 - `blog/unpublished.md`: `title: Unpublished post`, `publish: false` (the seed skips it, as the worker deletes such files; kept to document the rule).
 
-Listed in `/blog`: 25 + 3 = 28 items, so 20 on page 1 and 8 on page 2.
+Listed in `/blog`: 25 + 3 = 28 items, so 20 on page 1 and 8 on page 2 (`notes/blog/` and `posts/` are separate folders and are not included).
 
 - [ ] **Step 3: Seed it as its own site.** In `e2e/helpers/seed.ts`:
 
@@ -3001,8 +3222,11 @@ import { expect, test } from '../helpers/fixtures';
 
 const items = (page: import('@playwright/test').Page, root = 'section.list-component') => page.locator(`${root} > article.list-component-item`);
 
-test('layout: list blog index, page 1', async ({ page }) => {
+test('zero-config blog folder (no README), page 1', async ({ page }) => {
   await page.goto('/blog');
+  await expect(page).toHaveTitle(/^Blog/);
+  await expect(page.locator('main h1').first()).toHaveText('Blog');
+  await expect(page.locator('.layout-inner-left')).toHaveCount(0); // no sidebar, like the changelog fallback
   const list = page.locator('section.list-component.list-component--list');
   await expect(items(page)).toHaveCount(20);
   await expect(list.locator('.list-component-item-headline a').first()).toHaveText('Filename only post');
@@ -3010,7 +3234,6 @@ test('layout: list blog index, page 1', async ({ page }) => {
   await expect(page.getByText('Unpublished post')).toHaveCount(0);
   await expect(list.locator('.heading-link')).toHaveCount(0);
   await expect(list.locator('h3[id]')).toHaveCount(0);
-  await expect(page.locator('.page-toc-container')).not.toContainText('Filename only post');
   const thumb = list.locator('img.list-component-item-media-img').first();
   await expect(thumb).toHaveAttribute('sizes', /16rem/);
   await expect(thumb).toHaveAttribute('loading', 'lazy');
@@ -3019,7 +3242,7 @@ test('layout: list blog index, page 1', async ({ page }) => {
   await expect(list.locator('[aria-current="page"]')).toHaveText('1');
 });
 
-test('layout: list blog index, page 2, canonical and junk params', async ({ page }) => {
+test('zero-config blog folder, page 2, canonical and junk params', async ({ page }) => {
   await page.goto('/blog?page=2&utm_source=x');
   await expect(items(page)).toHaveCount(8);
   await expect(page.locator('.list-component-item-headline a').last()).toHaveText('1984');
@@ -3084,6 +3307,23 @@ test('error cards are isolated and specific', async ({ page }) => {
   await expect(page.locator('.list-component-error--block')).toContainText('Only one list per page can paginate');
 });
 
+test('prose-only posts/README gets the listing appended; ToC ignores items', async ({ page }) => {
+  await page.goto('/posts');
+  await expect(page.locator('#mdxpage')).toContainText('Shorter notes, collected here.');
+  await expect(items(page)).toHaveCount(3);
+  await expect(page.locator('.list-component-item-headline a').first()).toHaveText('Third note');
+  await expect(page.locator('#mdxpage > :last-child')).toHaveClass(/list-component/); // after the prose
+  await expect(page.locator('.page-toc-container')).not.toContainText('Third note');
+});
+
+test('opt-out and nested zero-config folders', async ({ page }) => {
+  await page.goto('/notes/blog');
+  await expect(page.locator('#mdxpage')).toContainText('Nothing is listed here on purpose.');
+  await expect(page.locator('section.list-component')).toHaveCount(0);
+  await page.goto('/notes/posts');
+  await expect(items(page)).toHaveCount(1);
+});
+
 test('paths with spaces and non-ASCII link to the encoded appPath (Review Focus 3)', async ({ page }) => {
   await page.goto('/blog');
   const href = encodeSlug(filePathToSlug('blog/2026/nested post ü.md'));
@@ -3116,6 +3356,7 @@ test('RSS excludes drafts', async ({ request }) => {
 
 If an assertion fails, fix the fixture data or the code, never the assertion: every literal above is derived from the fixture in Task B17 (e.g. `nobody` is post 20 so that it is on page 1). Add `limit-note.md` to the fixture: ```` ```blog ```` with `limit: 2` and `pageSize: 5`.
 
+- [ ] **Step 1b: Back-compat on the free site.** Add to `e2e/specs/blog.spec.ts` (its `blog/index.mdx` uses `<List dir="/blog" />`, so the zero-config rule must not add a second list): in the first test, `await expect(page.locator('.list-component')).toHaveCount(1);`.
 - [ ] **Step 2: Local**: `npx tsc --noEmit -p e2e/tsconfig.json`. **CI**: push, then `gh pr checks --watch` (or `gh run watch`) on the draft PR. Expected: `E2E Tests` green, including the existing `blog`, `changelog`, `tags`, `bases` specs (legacy `<List />`, changelog and tag pages untouched).
 - [ ] **Step 3: CI time**: compare the `E2E Tests` job duration with the last run on `main` (`gh run list --workflow e2e.yml --branch main -L 1 --json databaseId,updatedAt,createdAt`). The job runs serially under `timeout 20m`; if the new site pushes it past ~15 min, report it in the PR.
 - [ ] **Step 4: Commit** `test(listing): e2e for list blocks and layout: list`
@@ -3138,8 +3379,9 @@ test.use({ viewport: { width: 1440, height: 900 } });
 
 const OUT = 'test-results/listing-screenshots';
 const shots: Array<[string, string, string?]> = [
-  ['list-view', '/blog'],
+  ['zero-config-blog', '/blog'],
   ['list-view-page-2', '/blog?page=2'],
+  ['prose-readme-auto-listing', '/posts'],
   ['cards-view', '/projects'],
   ['people-cards', '/people'],
   ['compact-archive-pagination', '/archive?page=5'],
@@ -3256,6 +3498,7 @@ The guide rewrites and the tutorial removal are docs PR E (Task E1), opened afte
 
   13. "Styling": the semantic classes and the `--list-*` custom properties table from design section 6, link `[[theme-class-reference|Theme class reference]]`.
   14. Precedence note: `layout: list` on a `changelog/` README renders a plain listing, not the timeline.
+  14a. "A blog with nothing to write" (put this first, before section 2): design 4.10 in user terms, the `blog`/`posts` names, the prose-README behaviour, the `list: false` opt-out, and which existing pages are unchanged. Also state in the intro: everything on this page is fenced blocks and frontmatter; no MDX or components are needed.
   15. Small print: relative `image:` paths resolve against the item's own file (unlike `<List />`, which resolved them against the site root; add this as a row in the translation table too); with a site `rootDir`, a `from` that starts with the root folder's name has it stripped (`from: Public/blog` = `from: blog` when the root is `Public`); at most 10 lists per page; `limit` + `pageSize` shows a note and uses `limit`.
 - [ ] **Step 2:** `docs/reference/list-component.md`: replace the opening `[!important]` callout with `> [!note] Legacy component\n> Use a [[listings|list block]] instead: it works in plain Markdown, renders on the server and resolves authors. The table in [[listings#coming-from-list|Coming from <List />]] translates every prop.` Keep the rest.
 - [ ] **Step 3 (moved to Task E1):** guide rewrites. Leave them alone here.
@@ -3293,6 +3536,7 @@ You can now list the pages of any folder without MDX or components. Add `layout:
 - **Cards and compact views** for projects, people and archives, with `sort`, `where` and `show`.
 - **Drafts**: `draft: true` keeps a page reachable but out of lists and the RSS feed.
 - **Clear errors**: a wrong key shows a card that names it and suggests the fix.
+- **A `blog/` or `posts/` folder lists itself**: with no README, `/blog` is a paginated index; a README with only prose gets the list underneath. If your `blog/README.md` already links to posts by hand, add `list: false` to its frontmatter to keep it as it was.
 
 See [[listings|Listing pages]]. The `<List />` component keeps working; the docs show how to switch.
 
@@ -3379,6 +3623,7 @@ Entry: PR B is open (draft is fine) so the reference page exists to link to; bra
 | Author matching change | Sites relying on loose suffix match | B7 router test; separate revertable commit; changelog Fixes bullet |
 | `draft` semantics surprise | Vaults already using `draft` | Docs (B21); RSS test (B3); open question kept in design |
 | `next/image` unoptimised outside production | No `srcset` locally/CI | B11 checks props; e2e checks `sizes`/`loading`; post-deploy checklist item in PR B |
+| Zero-config listing on existing blogs | A prose-only `blog/README.md` that lists posts by hand shows both after deploy | Narrow rule (names, no `layout`, no listing fence or `<List`), `list: false` opt-out; unit table in B27; e2e opt-out and back-compat cases (B18, `blog.spec.ts`); changelog entry says it |
 | Cache staleness | New post missing for up to 60 s; stale e2e data | Site tag revalidated on publish; seed revalidates the listings site id (B17) |
 | No local e2e (no Docker on this machine) | e2e regressions found late | CI `E2E Tests` is the gate on every push of the draft PR; Storybook covers visuals locally; parity + unit tests cover the pipeline |
 | Seed vs worker `appPath` shape | Encoded-URL bugs invisible in e2e | Listings site seeds `encodeSlug(filePathToSlug())` like the worker (B17); e2e asserts the encoded href resolves (B18) |
@@ -3415,3 +3660,4 @@ These are the places where the design was ambiguous or did not match the code. E
 24. **Additions beyond the design** (from review): at most 10 listings per page; author lookups cached and tagged by site like legacy `getAuthors`; `protectWikiLinkAliases`' U+E000 divider undone inside blocks; hrefs never protocol-relative (`//evil.com` → `/evil.com`; ingestion's `normalizePermalink` already strips leading slashes); `--list-gap` wired for the list view too.
 25. **Mockup and e2e environment.** Storybook (no database) is the primary mockup and the local visual gate; e2e runs in CI only, with an opt-in screenshot artifact. The listings e2e site stores `appPath` encoded like the worker; the existing fixture sites keep the seed's unencoded shape.
 26. **PR split.** Guide rewrites and the tutorial removal move to docs PR E; the `getAuthors` delegation is a separately revertable commit inside B.
+27. **Zero-config blog folders (design v3, 4.10; Task B27).** Pulled into v1 for `blog` and `posts` only (`articles`/`news`/`notes` excluded as too often non-feed content). Case 1 mirrors the changelog fallback (shell, title, metadata, no sidebar/ToC/breadcrumbs, empty folder 404s, slug must match the folder's real case); case 2 appends the default listing to a prose-only README. Detection reads the raw body with a fence/`<List` regex rather than parsing, which is cheap and errs towards "already has a listing" (a fenced block quoted inside another code block would also count; acceptable). The e2e `/blog` page is now zero-config; explicit `layout: list` is covered by `projects/` and `podcast.md`.
