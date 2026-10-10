@@ -2,6 +2,7 @@
 
 import { ArrowLeftIcon, ArrowRightIcon } from 'lucide-react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { pageWindow } from '@/lib/page-window';
 
 export default function ListComponentPagination({
   totalPages,
@@ -46,34 +47,29 @@ export default function ListComponentPagination({
         </button>
       </div>
       <div className="list-component-pagination-pages">
-        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-          if (
-            page === 1 ||
-            page === totalPages ||
-            (page >= currentPage - 2 && page <= currentPage + 2)
-          ) {
-            return (
-              <button
-                key={page}
-                onClick={() => goToPage(page)}
-                aria-current={currentPage === page ? 'page' : undefined}
-                className={`list-component-pagination-page-button ${
-                  currentPage === page
-                    ? 'list-component-pagination-page-button--current'
-                    : 'list-component-pagination-page-button--other'
-                }`}
-              >
-                {page}
-              </button>
-            );
-          } else {
-            return (
-              <span key={page} className="list-component-pagination-ellipsis">
-                ...
-              </span>
-            );
-          }
-        })}
+        {pageWindow(currentPage, totalPages).map((entry, i) =>
+          entry === 'ellipsis' ? (
+            <span
+              key={`ellipsis-${i}`}
+              className="list-component-pagination-ellipsis"
+            >
+              ...
+            </span>
+          ) : (
+            <button
+              key={entry}
+              onClick={() => goToPage(entry)}
+              aria-current={currentPage === entry ? 'page' : undefined}
+              className={`list-component-pagination-page-button ${
+                currentPage === entry
+                  ? 'list-component-pagination-page-button--current'
+                  : 'list-component-pagination-page-button--other'
+              }`}
+            >
+              {entry}
+            </button>
+          ),
+        )}
       </div>
       <div className="list-component-pagination-nav list-component-pagination-nav--end">
         <button
