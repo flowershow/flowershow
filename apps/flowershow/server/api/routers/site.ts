@@ -1427,6 +1427,7 @@ export const siteRouter = createTRPCRouter({
                 AND "path" !~ ${dirIndexPattern}
                 AND "extension" IN ('md', 'mdx')
                 AND "app_path" IS NOT NULL
+                AND ("metadata"->>'publish') IS DISTINCT FROM 'false'
               ORDER BY
                 ("metadata"->>'date')::timestamp DESC NULLS LAST,
                 "metadata"->>'title' ASC NULLS LAST
