@@ -9,6 +9,9 @@ module.exports = {
     './components/**/*.{js,ts,jsx,tsx,mdx}',
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './providers/**/*.{js,ts,jsx,tsx,mdx}',
+    // List blocks render their markup from lib (mdast), not components: keep their
+    // @layer components rules from being purged.
+    './lib/listing/**/*.{ts,tsx}',
   ],
   theme: {
     extend: {

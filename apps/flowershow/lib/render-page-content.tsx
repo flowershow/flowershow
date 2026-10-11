@@ -10,9 +10,11 @@ import {
   protectNonMathDollars,
   protectWikiLinkAliases,
 } from '@/lib/markdown';
+import { rendersAsMdx } from '@/lib/listing/route';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import type { RemarkChangelogOptions } from '@/lib/remark-changelog';
+import type { ListingRenderContext } from '@/lib/remark-listing';
 import type { PageMetadata, SiteLookupResult } from '@/server/api/types';
 import { api } from '@/trpc/server';
 
@@ -35,6 +37,8 @@ export type RenderPageContentOptions = {
    * embedded or listed content.
    */
   scripts?: string[];
+  /** Inline list blocks: page number, public URL, locale, whether a page-level listing claimed pagination. */
+  listing?: Omit<ListingRenderContext, 'implicit'>;
 };
 
 /**
@@ -53,6 +57,7 @@ export async function renderPageContent({
   changelog,
   showTags,
   scripts,
+  listing,
 }: RenderPageContentOptions): Promise<React.JSX.Element> {
   let compiledContent: React.JSX.Element;
 
@@ -100,9 +105,8 @@ export async function renderPageContent({
         siteFilePaths,
       );
 
-      // Determine whether to use MD or MDX rendering based on config and file extension
-      const useMdRendering =
-        renderMode === 'md' || (renderMode === 'auto' && isMarkdown);
+      // MD or MDX by config and file extension; listing detection uses the same rule
+      const useMdRendering = !rendersAsMdx(blob.path, renderMode);
 
       if (useMdRendering) {
         const preprocessedContent = content
@@ -122,6 +126,7 @@ export async function renderPageContent({
           canvasNodeFiles,
           changelog,
           showTags,
+          listing,
         });
         compiledContent = scripts?.length ? (
           <>
@@ -144,6 +149,7 @@ export async function renderPageContent({
           canvasNodeFiles,
           changelog,
           showTags,
+          listing,
         }) as any;
 
         const mdxSource = await serialize<PageMetadata>({

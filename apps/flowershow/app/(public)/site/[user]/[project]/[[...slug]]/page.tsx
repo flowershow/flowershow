@@ -55,6 +55,23 @@ import { pageHeaderBreadcrumbs } from '@/lib/breadcrumbs';
 import { readingTime } from '@/lib/reading-time';
 import { resolvePageScripts } from '@/lib/page-scripts';
 import { renderPageContent } from '@/lib/render-page-content';
+import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
+import { resolveLocale } from '@/lib/listing/dates';
+import {
+  isListingPageOutOfRange,
+  listingPaginatesByPage,
+  renderPageListing,
+  resolveMetadataListingRoute,
+} from '@/lib/listing/page-listing';
+import { listingCanonical, pageFromSearchParam } from '@/lib/listing/paginate';
+import {
+  hasTocHeadings,
+  isAutoListingDirName,
+  type ListingRoute,
+  mayBeListingRoute,
+  resolveListingRoute,
+} from '@/lib/listing/route';
+import { isDraft } from '@/lib/listing/rules';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
 import { ensureLeadingSlash, normalizeAuthors } from '@/lib/utils';
@@ -74,6 +91,7 @@ interface RouteParams {
 
 export async function generateMetadata(props: {
   params: Promise<RouteParams>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await props.params;
   const projectName = decodeURIComponent(params.project);
@@ -105,6 +123,10 @@ export async function generateMetadata(props: {
       }
       // README-less changelog folders render a generated index page
       if (isChangelogDirName(decodedSlug)) {
+        return null;
+      }
+      // README-less blog/posts folders render a generated listing page
+      if (isAutoListingDirName(decodedSlug)) {
         return null;
       }
       // Virtual tag pages have no Blob — let them render their own metadata,
@@ -144,6 +166,56 @@ export async function generateMetadata(props: {
     notFound();
   }
 
+  // Page-level listings (layout: list, zero-config): self-canonical per page and
+  // noindex past the last page. The body is loaded only for an auto listing (a
+  // README with its own block is not one), so SitePage and this agree. Ordinary
+  // pages skip the site path query (mayBeListingRoute is false for them).
+  const listingCandidate = mayBeListingRoute({
+    slug: decodedSlug,
+    blobPath: blob?.path ?? null,
+    metadata: (metadata as Record<string, unknown> | null) ?? null,
+  });
+  const siteFilePaths = listingCandidate
+    ? ((await api.site.getAllBlobPaths
+        .query({ siteId: site.id })
+        .catch(() => null)) ?? [])
+    : [];
+  const listingRoute: ListingRoute = !listingCandidate
+    ? { kind: 'none' }
+    : await resolveMetadataListingRoute(
+        {
+          slug: decodedSlug,
+          blob: blob ? { path: blob.path } : null,
+          metadata: (metadata as Record<string, unknown> | null) ?? null,
+          siteFilePaths,
+          changelogKind: isChangelogFallback ? 'index' : null,
+          renderMode: metadata?.syntaxMode ?? siteConfig?.syntaxMode,
+        },
+        async () =>
+          blob
+            ? await api.site.getBlobContent
+                .query({ id: blob.id })
+                .catch(() => null)
+            : null,
+      );
+  const pageLevelListing = listingRoute.kind !== 'none';
+  const pageParam = (await props.searchParams)?.page;
+  const noindex =
+    isDraft(metadata as Record<string, unknown> | null) ||
+    (pageLevelListing &&
+      (await isListingPageOutOfRange({
+        siteId: site.id,
+        rootDir: site.rootDir,
+        filePath:
+          blob?.path ??
+          (listingRoute.kind === 'virtual'
+            ? `${listingRoute.dir}/index.md`
+            : ''),
+        siteFilePaths,
+        route: listingRoute,
+        page: pageFromSearchParam(pageParam),
+      })));
+
   const siteName = resolveSiteName(siteConfig, site.projectName);
   const tagListingTitle = isTagListingRoute
     ? `#${tagFromHref(decodedSlug.slice('/tags/'.length))}`
@@ -154,7 +226,10 @@ export async function generateMetadata(props: {
         ? 'Changelog'
         : isTagIndexRoute
           ? 'Tags'
-          : tagListingTitle),
+          : (tagListingTitle ??
+            (listingRoute.kind === 'virtual'
+              ? listingRoute.title
+              : undefined))),
     siteName,
   );
   const description = metadata?.description ?? siteConfig?.description;
@@ -206,7 +281,11 @@ export async function generateMetadata(props: {
       image,
     }),
     alternates: {
-      canonical: url,
+      canonical: listingCanonical(
+        url,
+        listingPaginatesByPage(listingRoute),
+        pageParam,
+      ),
       ...(siteConfig?.enableRss && {
         types: {
           'application/rss+xml': `${siteUrl}/rss.xml`,
@@ -215,7 +294,10 @@ export async function generateMetadata(props: {
     },
     // metadataBase: new URL(siteUrl),
     // Open review pages stay out of search results.
-    ...(annotationsOn ? { robots: { index: false, follow: false } } : {}),
+    // Drafts and out-of-range listing pages too.
+    ...(annotationsOn || noindex
+      ? { robots: { index: false, follow: false } }
+      : {}),
     // Last, so nothing can override it: anonymous sites are never indexed.
     ...anonRobots(site),
   };
@@ -326,6 +408,14 @@ export default async function SitePage(props: {
     notFound();
   }
 
+  const listingPageNumber = pageFromSearchParam(
+    (await props.searchParams).page,
+  );
+  const locale = resolveLocale(
+    (blob?.metadata as PageMetadata | null)?.locale,
+    siteConfig?.locale,
+  );
+
   // A changelog folder without a README/index still gets its timeline page
   if (!blob) {
     // Tag pages are virtual fallbacks rendered only when no Blob exists at the
@@ -361,6 +451,45 @@ export default async function SitePage(props: {
             <div className="layout-inner-center">
               <main className="page-main">
                 <TagListingPage siteId={site.id} tag={tag} />
+              </main>
+            </div>
+          </div>
+        </>
+      );
+    }
+
+    const virtualRoute = resolveListingRoute({
+      slug: decodedSlug,
+      blob: null,
+      metadata: null,
+      content: '',
+      siteFilePaths,
+      changelogKind: changelog?.kind ?? null,
+    });
+    if (virtualRoute.kind === 'virtual') {
+      const listing = await renderPageListing({
+        site,
+        filePath: `${virtualRoute.dir}/index.md`,
+        siteHostname,
+        siteFilePaths,
+        permalinks: permalinksMapping,
+        route: virtualRoute,
+        page: listingPageNumber,
+        publicUrl: decodedSlug,
+        locale,
+      });
+      return (
+        <>
+          <UrlNormalizer />
+          {chromeMarker}
+          <div className="layout-inner">
+            <div className="layout-inner-center">
+              <main className="page-main">
+                <VirtualListingPage
+                  title={virtualRoute.title}
+                  listing={listing}
+                  view="list"
+                />
               </main>
             </div>
           </div>
@@ -452,6 +581,23 @@ export default async function SitePage(props: {
       })
     : [];
 
+  // Page-level listings (layout: list, zero-config) render outside the page's
+  // MDX tree through the .md pipeline, so they are server-rendered (tech M6).
+  const listingRoute = resolveListingRoute({
+    slug: decodedSlug,
+    blob: { path: blob.path },
+    metadata: (metadata as Record<string, unknown> | null) ?? null,
+    content: pageContent ?? '',
+    siteFilePaths,
+    changelogKind: changelog?.kind ?? null,
+    renderMode,
+  });
+  const pageLevelRoute =
+    listingRoute.kind === 'page' && !changelog ? listingRoute : null;
+  const listingPublicUrl = ensureLeadingSlash(
+    blob.permalink || blob.appPath || blob.path,
+  );
+
   const compiledContent = await renderPageContent({
     blob,
     site,
@@ -465,7 +611,27 @@ export default async function SitePage(props: {
       changelog?.kind === 'file' ? { title: metadata?.title } : undefined,
     showTags,
     scripts: pageScripts,
+    listing: {
+      page: listingPageNumber,
+      publicUrl: listingPublicUrl,
+      locale,
+      paginationClaimed: pageLevelRoute?.pageSize != null,
+    },
   });
+  const pageListing = pageLevelRoute
+    ? await renderPageListing({
+        site,
+        filePath: blob.path,
+        siteHostname,
+        siteFilePaths,
+        permalinks: permalinksMapping,
+        route: pageLevelRoute,
+        page: listingPageNumber,
+        publicUrl: listingPublicUrl,
+        pageTitle: metadata?.title,
+        locale,
+      })
+    : null;
 
   const scopedCss = await generateScopedCss(pageContent ?? '', '#mdxpage');
 
@@ -556,8 +722,14 @@ export default async function SitePage(props: {
   // A changelog timeline TOC would list every entry's subheadings, so it's off there
   const isChangelogTimeline =
     changelog?.kind === 'index' || changelog?.kind === 'file';
+  // A page-level listing's item headings never enter the ToC, so without
+  // headings of its own the column would be empty (and narrow the grid)
+  const emptyListingToc =
+    pageLevelRoute != null && !hasTocHeadings(pageContent ?? '');
   const showToc =
-    !isChangelogTimeline && (metadata?.showToc ?? siteConfig?.showToc);
+    !isChangelogTimeline &&
+    !emptyListingToc &&
+    (metadata?.showToc ?? siteConfig?.showToc);
   const showKnowledgeGraph =
     metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false;
   const showRightColumn = showToc || showKnowledgeGraph;
@@ -697,27 +869,30 @@ export default async function SitePage(props: {
                 <CanvasEnhancer />
               </ChangelogEntryPage>
             ) : (
-              <BlogLayout
-                title={metadata?.title ?? ''}
-                description={displayDescription(metadata) ?? ''}
-                date={metadata?.date}
-                readingTime={pageReadingTime}
-                breadcrumbs={breadcrumbs}
-                showHero={heroConfig.showHero}
-                authors={authors}
-                tags={
-                  showTags
-                    ? frontmatterTags(
-                        metadata as Record<string, unknown> | null,
-                      )
-                    : undefined
-                }
-              >
-                <div className="rendered-mdx" id="mdxpage">
-                  {compiledContent}
-                </div>
-                <CanvasEnhancer />
-              </BlogLayout>
+              <ListingPageWrapper view={pageLevelRoute?.view}>
+                <BlogLayout
+                  title={metadata?.title ?? ''}
+                  description={displayDescription(metadata) ?? ''}
+                  date={metadata?.date}
+                  readingTime={pageReadingTime}
+                  breadcrumbs={breadcrumbs}
+                  showHero={heroConfig.showHero}
+                  authors={authors}
+                  tags={
+                    showTags
+                      ? frontmatterTags(
+                          metadata as Record<string, unknown> | null,
+                        )
+                      : undefined
+                  }
+                >
+                  <div className="rendered-mdx" id="mdxpage">
+                    {compiledContent}
+                    {pageListing}
+                  </div>
+                  <CanvasEnhancer />
+                </BlogLayout>
+              </ListingPageWrapper>
             )}
           </main>
 
@@ -777,5 +952,21 @@ export default async function SitePage(props: {
         )}
       </div>
     </>
+  );
+}
+
+/** `.listing-page[data-view]` constrains page-level list pages to one column (default-theme.css). */
+function ListingPageWrapper({
+  view,
+  children,
+}: {
+  view?: string;
+  children: React.ReactNode;
+}) {
+  if (!view) return <>{children}</>;
+  return (
+    <div className="listing-page" data-view={view}>
+      {children}
+    </div>
   );
 }

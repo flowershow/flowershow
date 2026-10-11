@@ -81,3 +81,6 @@ packages/obsidian-plugin/main.js
 # Flowershow CLI local metadata (pins publish target)
 .flowershow
 .gstack/
+
+# Static listing preview (apps/flowershow/scripts/listing-preview)
+apps/flowershow/.listing-preview/

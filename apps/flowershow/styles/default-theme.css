@@ -558,11 +558,11 @@
     transition: color 0.15s ease-in-out;
   }
 
-  .site-navbar-custom :where(a:hover, a[aria-current='page']) {
+  .site-navbar-custom :where(a:hover, a[aria-current="page"]) {
     color: var(--color-foreground-900);
   }
 
-  .site-navbar-custom :where(a[aria-current='page']) {
+  .site-navbar-custom :where(a[aria-current="page"]) {
     font-weight: var(--font-weight-semibold);
   }
 
@@ -1616,6 +1616,316 @@
     color: var(--color-foreground-900);
     border-top-width: 1px;
     font-weight: var(--font-weight-semibold);
+  }
+
+  /* ────────────────────────────────────────────────────
+   List blocks and page-level listings (lib/listing/render.ts)
+   All selectors are :where() so themes always win. Custom properties:
+     --list-max-width, --list-gap, --list-card-min, --list-card-radius,
+     --list-card-border, --list-card-bg, --list-card-hover-bg,
+     --list-media-ratio, --list-media-placeholder, --list-monogram-color,
+     --list-thumb-width, --list-thumb-order,
+     --list-avatar-shape, --list-meta-color, --list-eyebrow-color,
+     --list-rule-color, --list-compact-meta-width
+   ──────────────────────────────────────────────────── */
+
+  /* Page-level list/compact pages share one column (header, intro, listing) */
+  :where(.listing-page[data-view="list"], .listing-page[data-view="compact"]) {
+    max-width: var(--list-max-width, 44rem);
+    margin-inline: auto;
+  }
+
+  /* Image ratio: settable from :root through --list-media-ratio */
+  :where(.list-component[data-view]) {
+    --_list-ratio: var(--list-media-ratio, 3 / 2);
+  }
+  :where(.list-component[data-ratio="16-9"]) {
+    --_list-ratio: var(--list-media-ratio, 16 / 9);
+  }
+  :where(.list-component[data-ratio="3-2"]) {
+    --_list-ratio: var(--list-media-ratio, 3 / 2);
+  }
+  :where(.list-component[data-ratio="4-3"]) {
+    --_list-ratio: var(--list-media-ratio, 4 / 3);
+  }
+  :where(.list-component[data-ratio="1-1"]) {
+    --_list-ratio: var(--list-media-ratio, 1 / 1);
+  }
+  :where(.list-component[data-ratio="3-4"]) {
+    --_list-ratio: var(--list-media-ratio, 3 / 4);
+  }
+
+  /* Shared slots */
+  :where(.list-component[data-view]) .list-component-item-eyebrow {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 0.5rem;
+    margin: 0 0 0.375rem;
+    font-size: 0.8125rem;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: var(--list-eyebrow-color, var(--color-foreground-500));
+  }
+  :where(.list-component-item-eyebrow > * + *)::before {
+    content: "·";
+    margin-right: 0.5rem;
+  }
+  /* Wrap-friendly separators (eyebrow and meta line): each segment carries its
+     leading "·" in a --_list-sep slot; the row is pulled left by one slot and
+     that strip is clipped, so whichever segment starts a line (the first one, or
+     one that wrapped) hides its separator and no line begins with "·". */
+  /* (the eyebrow selector matches the eyebrow rule's one class, so its margin wins) */
+  :where(.list-component[data-view]) .list-component-item-eyebrow,
+  :where(.list-component-item-meta) {
+    --_list-sep: 1.125rem;
+    column-gap: 0;
+    margin-left: calc(-1 * var(--_list-sep));
+    clip-path: inset(-0.5rem -0.5rem -0.5rem calc(var(--_list-sep) - 4px));
+  }
+  :where(
+      .list-component[data-view] .list-component-item-eyebrow,
+      .list-component-item-meta
+    )
+    > *::before {
+    content: "·";
+    display: inline-block;
+    width: var(--_list-sep);
+    margin: 0;
+    text-align: center;
+  }
+  /* Titles are never clamped (UX m-2) */
+  :where(.list-component[data-view]) .list-component-item-headline {
+    margin: 0 0 0.375rem;
+    overflow-wrap: anywhere;
+    font-size: 1.25rem;
+    line-height: 1.35;
+  }
+  :where(.list-component[data-view]) .list-component-item-summary {
+    margin: 0 0 0.5rem;
+    -webkit-line-clamp: 2;
+    color: var(--color-foreground-600);
+  }
+  :where(.list-component-item-meta) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    row-gap: 0.125rem;
+    font-size: 0.875rem;
+    color: var(--list-meta-color, var(--color-foreground-500));
+  }
+  /* Segments never break internally; separators: see the eyebrow rule above */
+  :where(.list-component-item-meta) > * {
+    white-space: nowrap;
+  }
+  :where(.list-component-item-authors) {
+    display: inline-flex;
+    align-items: center;
+  }
+  :where(.list-component-item-author + .list-component-item-author)::before {
+    content: ",\00a0";
+  }
+  :where(.list-component-item-authors-more) {
+    margin-left: 0.3em;
+  }
+  :where(.list-component-item-author) {
+    color: inherit;
+    text-decoration: none;
+  }
+  :where(.list-component-item-avatars) {
+    display: inline-flex;
+    margin-right: 0.375rem;
+  }
+  :where(.list-component-item-avatars > * + *) {
+    margin-left: -6px;
+  }
+  /* One avatar size, here and in ListingImage (20px). img: so preflight's
+     img { height: auto } cannot stretch non-square photos; still one element + :where. */
+  img:where(.list-component-item-author-avatar) {
+    width: 20px;
+    height: 20px;
+    flex-shrink: 0;
+    border-radius: var(--list-avatar-shape, 50%);
+    object-fit: cover;
+    box-shadow: 0 0 0 2px var(--color-background);
+  }
+  /* Hairline ring so white screenshots do not melt into the page (moodboard: Linear, Vercel) */
+  :where(.list-component[data-view]) .list-component-item-media {
+    aspect-ratio: var(--_list-ratio);
+    border-radius: var(--list-card-radius, 0.5rem);
+    box-shadow: 0 0 0 1px var(--color-foreground-100);
+  }
+  :where(.list-component[data-view]) .list-component-item-media-img {
+    border-radius: var(--list-card-radius, 0.5rem);
+  }
+  /* Grid cards without an image (in a grid where others have one): a tile tinted
+     with the theme accent, carrying the title's first letter, so rows stay
+     aligned and the card reads as deliberate rather than a broken image.
+     Decorative (aria-hidden). Themes: --list-media-placeholder, --list-monogram-color. */
+  :where(.list-component-item-media--placeholder) {
+    display: grid;
+    place-items: center;
+    border-radius: var(--list-card-radius, 0.5rem);
+    background: var(
+      --list-media-placeholder,
+      linear-gradient(
+        135deg,
+        color-mix(in oklch, var(--color-accent) 7%, var(--color-background)),
+        color-mix(in oklch, var(--color-accent) 16%, var(--color-background))
+      )
+    );
+  }
+  :where(.list-component-item-monogram) {
+    font-family: var(--font-heading);
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+    color: var(
+      --list-monogram-color,
+      color-mix(in oklch, var(--color-accent) 70%, var(--color-background))
+    );
+    user-select: none;
+  }
+  /* list: thumbnail left (default) or right (media: thumb right →
+     data-media-side="right", or --list-thumb-order: 2 from a theme); the
+     image comes first in the DOM but is aria-hidden and out of the tab order,
+     so the title is the first thing read. A row without an image is text only. */
+  :where(.list-component--list) .list-component-item {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 1.25rem;
+    padding: 1.5rem 0;
+    border-color: var(--list-rule-color, var(--color-foreground-100));
+  }
+  :where(.list-component--list) .list-component-item-content {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+  :where(.list-component--list[data-media="thumb"]) {
+    --_list-thumb: var(--list-thumb-width, 160px);
+    @media (max-width: 639px) {
+      --_list-thumb: var(--list-thumb-width, 88px);
+    }
+  }
+  :where(.list-component--list[data-media="thumb"]) .list-component-item-media {
+    order: var(--list-thumb-order, 0);
+    flex: 0 0 auto;
+    width: var(--_list-thumb);
+  }
+  :where(.list-component--list[data-media-side="right"]) {
+    --list-thumb-order: 2;
+  }
+  /* In a mixed list the text of a row without an image lines up with the
+     text of the rows that have one (thumbnail on the left only) */
+  :where(.list-component--list[data-media="thumb"][data-media-side="left"])
+    .list-component-item:not(:has(> .list-component-item-media))
+    .list-component-item-content {
+    padding-inline-start: calc(var(--_list-thumb) + 1.25rem);
+  }
+  :where(.list-component--list[data-media="cover"]) .list-component-item {
+    flex-direction: column;
+  }
+  :where(.list-component--list[data-media="cover"]) .list-component-item-media {
+    width: 100%;
+  }
+
+  /* grid (design 4.9): 3 / 2 / 1 columns from the container width; never the measure */
+  /* One class (like the legacy .list-component root rule it must beat), still at most one class so themes win */
+  .list-component:where(.list-component--grid) {
+    display: grid;
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(min(100%, var(--list-card-min, 17.5rem)), 1fr)
+      );
+    gap: var(--list-gap, 2rem);
+    @media (max-width: 639px) {
+      gap: var(--list-gap, 1.5rem);
+    }
+  }
+  :where(.list-component--grid)
+    > :is(
+      .list-component-pagination,
+      .list-component-empty,
+      .list-component-group-heading
+    ) {
+    grid-column: 1 / -1;
+  }
+  :where(.list-component--grid) .list-component-item {
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0;
+    border: var(--list-card-border, none);
+    border-radius: var(--list-card-radius, 0.5rem);
+    background: var(--list-card-bg, transparent);
+  }
+  :where(.list-component--grid) .list-component-item:hover {
+    background: var(--list-card-hover-bg, var(--list-card-bg, transparent));
+  }
+  :where(.list-component--grid) .list-component-item-media {
+    width: 100%;
+  }
+  /* One column: monogram tiles only align rows, so drop them */
+  @media (max-width: 639px) {
+    :where(.list-component--grid) .list-component-item-media--placeholder {
+      display: none;
+    }
+  }
+  :where(.list-component--grid) .list-component-item-summary {
+    font-size: 0.9375rem;
+    -webkit-line-clamp: 3;
+  }
+  /* Whole card clickable; links inside it stay above the overlay (UX m-4).
+     The overlay's box is the card, so the headline must not be positioned:
+     .rendered-mdx :is(h1, …, h6) sets position: relative for heading links,
+     and autoprefixer's :-webkit-any() copy of it counts as (0,2,0) in Chrome,
+     later in the file: hence three classes here, not :where(). */
+  .list-component.list-component--grid .list-component-item-headline {
+    position: static;
+  }
+  :where(.list-component--grid) .list-component-item-headline-link::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+  }
+  :where(.list-component--grid)
+    :is(
+      .list-component-item-author,
+      .list-component-item-meta-value a,
+      .list-component-item-eyebrow a
+    ) {
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Pagination, errors */
+  :where(
+    a.list-component-pagination-button,
+    a.list-component-pagination-page-button
+  ) {
+    text-decoration: none;
+  }
+  /* <a>/<span> cannot match :disabled; mirrors the :disabled rule above. */
+  :where(.list-component-pagination-button.is-disabled) {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  :where(.list-component-error--block) {
+    padding: 1rem 1.25rem;
+    border: 1px solid var(--color-foreground-200);
+    border-radius: var(--radius-lg);
+    font-size: var(--font-size-sm);
+  }
+  :where(.list-component-error-title) {
+    font-weight: var(--font-weight-semibold);
+  }
+  :where(.list-component-error-list) {
+    margin: 0.5rem 0;
+    padding-left: 1.25rem;
+    list-style: disc;
+  }
+  :where(.list-component-error-keys) {
+    color: var(--color-foreground-500);
   }
 
   /* List component skeleton */

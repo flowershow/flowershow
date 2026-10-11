@@ -3,6 +3,9 @@ title: "List component"
 description: Create organized lists and content catalogs by automatically listing files in a specified directory.
 ---
 
+> [!note] Legacy component
+> Use a [[listings|list block]] instead: it works in plain Markdown, renders on the server and resolves authors. The table in [[listings#coming-from-the-list-component|Coming from the List component]] translates every prop.
+
 > [!important]
 > Using the `List` component requires MDX rendering, since it uses JSX (like `<List />`).
 > Make sure to switch to MDX rendering for this page by changing its extension to `.mdx` (if you're using "auto" syntax mode) or by adding `syntaxMode: mdx` in the frontmatter.

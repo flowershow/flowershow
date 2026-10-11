@@ -7,6 +7,7 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import {
+  encodeSlug,
   extractInlineTags,
   frontmatterTags,
   getContentType,
@@ -21,6 +22,7 @@ import { extractImageDimensions, parseMarkdown } from './processing-utils';
 // --- Config ---
 
 const TEST_SITE_DIR = path.resolve(__dirname, '../fixtures/test-site');
+const LISTINGS_SITE_DIR = path.resolve(__dirname, '../fixtures/listings-demo');
 
 export const TEST_USER = {
   id: 'e2e-test-user-id',
@@ -74,6 +76,15 @@ export const PASSWORD_CUSTOM_DOMAIN_SITE = {
 export const PASSWORD_CUSTOM_DOMAIN_SITE_PASSWORD = 'test-password-123';
 export const PASSWORD_CUSTOM_DOMAIN_SITE_SUBDOMAIN = `${PASSWORD_CUSTOM_DOMAIN_SITE.projectName}-${TEST_USER.username}`;
 export const PASSWORD_CUSTOM_DOMAIN_SITE_BASE_URL = `http://${PASSWORD_CUSTOM_DOMAIN_SITE_SUBDOMAIN}.${process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3000'}`;
+
+// List blocks and layout: list (e2e/specs/listings*.spec.ts): its own site, so
+// its blog/, posts/ and projects/ folders do not change the other specs' pages.
+export const LISTINGS_SITE = {
+  id: 'e2e-listings-site-id',
+  projectName: 'e2e-listings',
+};
+export const LISTINGS_SITE_SUBDOMAIN = `${LISTINGS_SITE.projectName}-${TEST_USER.username}`;
+export const LISTINGS_SITE_BASE_URL = `http://${LISTINGS_SITE_SUBDOMAIN}.${process.env.NEXT_PUBLIC_SITE_DOMAIN || 'localhost:3000'}`;
 
 // --- Prisma ---
 
@@ -169,17 +180,25 @@ async function uploadFixturesForSite(
   siteId: string,
   db: PrismaClient,
   s3: S3Client,
+  opts: { dir?: string; encodeAppPath?: boolean } = {},
 ): Promise<void> {
-  const files = listFiles(TEST_SITE_DIR);
+  const dir = opts.dir ?? TEST_SITE_DIR;
+  const files = listFiles(dir);
 
   for (const filePath of files) {
-    const fullPath = path.join(TEST_SITE_DIR, filePath);
+    const fullPath = path.join(dir, filePath);
     const content = fs.readFileSync(fullPath);
     const ext = path.extname(filePath).slice(1);
     const s3Key = `${siteId}/main/raw/${filePath}`;
 
+    // encodeAppPath matches the worker (computeAppPath in
+    // apps/cloudflare-worker/src/queue-consumer.js); only the listings site uses
+    // it, so the other sites' specs (e.g. `docs/some graph.canvas`) are untouched.
+    const slug = filePathToSlug(filePath);
     const appPath = ['md', 'mdx', 'canvas'].includes(ext)
-      ? filePathToSlug(filePath)
+      ? opts.encodeAppPath
+        ? encodeSlug(slug)
+        : slug
       : null;
     let metadata: Record<string, unknown> = {};
     let permalink: string | null = null;
@@ -372,6 +391,7 @@ async function revalidateCache(): Promise<void> {
         PREMIUM_SITE.id,
         PASSWORD_SITE.id,
         PASSWORD_CUSTOM_DOMAIN_SITE.id,
+        LISTINGS_SITE.id,
       ],
     }),
   });
@@ -498,11 +518,32 @@ export async function seed(): Promise<void> {
     },
   });
 
+  // 5b. Upsert the listings demo site (e2e/fixtures/listings-demo)
+  await db.site.upsert({
+    where: { id: LISTINGS_SITE.id },
+    create: {
+      id: LISTINGS_SITE.id,
+      projectName: LISTINGS_SITE.projectName,
+      subdomain: LISTINGS_SITE_SUBDOMAIN,
+      userId: TEST_USER.id,
+      enableRss: true,
+    },
+    update: {
+      projectName: LISTINGS_SITE.projectName,
+      subdomain: LISTINGS_SITE_SUBDOMAIN,
+      enableRss: true,
+    },
+  });
+
   // 6. Upload fixtures to MinIO and create Blob records for all sites
   await uploadFixturesForSite(FREE_SITE.id, db, s3);
   await uploadFixturesForSite(PREMIUM_SITE.id, db, s3);
   await uploadFixturesForSite(PASSWORD_SITE.id, db, s3);
   await uploadFixturesForSite(PASSWORD_CUSTOM_DOMAIN_SITE.id, db, s3);
+  await uploadFixturesForSite(LISTINGS_SITE.id, db, s3, {
+    dir: LISTINGS_SITE_DIR,
+    encodeAppPath: true,
+  });
 
   // 7. Seed backlink Link records for backlinks e2e tests
   await seedBacklinksForSite(FREE_SITE.id, db);

@@ -43,6 +43,7 @@ test('classifyClassName assigns representative hooks to stable UI areas', () => 
   assert.equal(classifyClassName('page-toc-container'), 'toc');
   assert.equal(classifyClassName('list-component-item'), 'listings');
   assert.equal(classifyClassName('list-component-empty'), 'listings');
+  assert.equal(classifyClassName('listing-page'), 'listings');
   assert.equal(classifyClassName('list-component-error'), 'listings');
   assert.equal(
     classifyClassName('list-component-item-headline-link'),
@@ -172,4 +173,17 @@ test('runCli writes deterministic output and detects drift', async () => {
 
   await writeFile(outputPath, `${firstOutput}\nstale\n`);
   assert.equal(await runCli(['--check'], io), 1);
+});
+
+test('generateReference names the owner of .is-disabled and the new listing DOM', () => {
+  const output = generateReference(
+    '.list-component-pagination-button.is-disabled { opacity: 0.5; }',
+  );
+
+  assert.match(
+    output,
+    /<code>\.is-disabled<\/code> \| State \| \.list-component-pagination-button/,
+  );
+  assert.match(output, /div\.listing-page\[data-view\]/);
+  assert.match(output, /section\.list-component\[\.list-component--list/);
 });

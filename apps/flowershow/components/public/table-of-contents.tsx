@@ -46,6 +46,11 @@ function TocItems({
   );
 }
 
+/** Listing item and group headings carry data-toc-ignore (lib/listing/render.ts). */
+export const TOC_HEADING_SELECTOR = ['h2', 'h3', 'h4', 'h5', 'h6']
+  .map((h) => `#mdxpage ${h}:not([data-toc-ignore])`)
+  .join(', ');
+
 export default function TableOfContents({
   className = '',
 }: {
@@ -58,9 +63,7 @@ export default function TableOfContents({
   useEffect(() => {
     const updateToc = () => {
       const headingNodes: NodeListOf<HTMLHeadingElement> =
-        document.querySelectorAll(
-          '#mdxpage h2, #mdxpage h3, #mdxpage h4, #mdxpage h5, #mdxpage h6',
-        );
+        document.querySelectorAll(TOC_HEADING_SELECTOR);
       const toc = collectHeadings(headingNodes);
       setTableOfContents(toc ?? []);
     };

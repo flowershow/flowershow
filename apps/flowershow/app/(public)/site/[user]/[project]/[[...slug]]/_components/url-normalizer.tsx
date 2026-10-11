@@ -9,7 +9,7 @@ const UrlNormalizer = () => {
   useEffect(() => {
     const normalizedPath = path.replace(/%20/g, '+');
     if (normalizedPath !== path) {
-      router.replace(normalizedPath);
+      router.replace(normalizedPath + window.location.search);
     }
   }, [path]);
 

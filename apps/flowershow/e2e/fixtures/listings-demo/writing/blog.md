@@ -1,0 +1,5 @@
+---
+title: Writing
+---
+
+Essays, collected.

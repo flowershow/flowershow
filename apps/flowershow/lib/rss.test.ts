@@ -34,6 +34,16 @@ describe('filterRssBlobs', () => {
     ...overrides,
   });
 
+  it('excludes drafts', () => {
+    const blobs = [
+      makeBlob({ metadata: { title: 'A', date: '2025-06-01', draft: true } }),
+      makeBlob({ metadata: { title: 'B', date: '2025-06-02' } }),
+    ];
+    expect(
+      filterRssBlobs(blobs).map((b) => (b.metadata as { title: string }).title),
+    ).toEqual(['B']);
+  });
+
   it('includes blobs with a date field', () => {
     const blobs = [makeBlob({ metadata: { title: 'A', date: '2025-06-01' } })];
     expect(filterRssBlobs(blobs)).toHaveLength(1);
@@ -159,6 +169,32 @@ describe('buildRssItem', () => {
     const item = buildRssItem(blob, 'https://example.com');
 
     expect(item).toContain('<author>Alice, Bob</author>');
+  });
+
+  it('malformed frontmatter never throws: scalar authors, objects, numeric title and description (Review Focus 2)', () => {
+    const item = (metadata: Record<string, unknown>) =>
+      buildRssItem(
+        {
+          appPath: '/post',
+          updatedAt: new Date('2025-01-01'),
+          permalink: null,
+          metadata,
+        },
+        'https://example.com',
+      );
+    expect(
+      item({ title: 'P', date: '2025-01-01', authors: '[[ada]]' }),
+    ).toContain('<author>ada</author>');
+    const odd = item({
+      title: 1984,
+      date: 'TBD',
+      description: 42,
+      authors: [{ name: 'x' }, 'Bob'],
+    });
+    expect(odd).toContain('<title>1984</title>');
+    expect(odd).toContain('<description>42</description>');
+    expect(odd).toContain('<author>Bob</author>');
+    expect(odd).not.toContain('[object Object]');
   });
 
   it('omits author tag when authors is empty', () => {

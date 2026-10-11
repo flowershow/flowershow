@@ -126,6 +126,12 @@ export interface PageMetadata {
   /** Fields filled in at ingestion rather than written by the author. */
   computed?: Array<'title' | 'description'>;
   layout?: 'plain' | 'changelog' | (string & {});
+  /** `true` keeps the page reachable by URL but out of listings, RSS and the sitemap, and noindex. */
+  draft?: boolean;
+  /** Options for page-level listings (same keys as a ```list block), or `false` to opt out of zero-config. Untrusted. */
+  list?: unknown;
+  /** BCP 47 tag for dates on this page (overrides the site `locale`). Untrusted. */
+  locale?: string;
   version?: string;
   image?: string;
   authors?: string[];
