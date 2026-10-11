@@ -116,6 +116,87 @@ export const ASSETS: Array<[from: string, to: string]> = [
 
 const img = (f: string) => `[[assets/changelog-${f}.webp]]`;
 
+/** The blog/ post that carries `featured: true` (the featured: 1 hero). */
+const FEATURED_POST = '2026-10-03-publish-from-claude-and-chatgpt';
+function categoryFor(name: string): string {
+  if (/publish|account|claude|email|sign-in/.test(name)) return 'Publishing';
+  if (/theme|footer|customize|breadcrumb|social|head|script|reading/.test(name))
+    return 'Customization';
+  if (/markdown|mermaid|bases|math|prose|currency|tags|file|image/.test(name))
+    return 'Markdown';
+  return 'Product';
+}
+
+/** Team pages: the three local photos plus people without one (initials). */
+const TEAM: Array<[string, Record<string, unknown>]> = [
+  [
+    'rufus-pollock',
+    {
+      title: 'Rufus Pollock',
+      role: 'Founder',
+      team: 'Leadership',
+      avatar: '[[people/rufuspollock.jpeg]]',
+      bio: 'Founder of Open Knowledge Foundation and Datopian.',
+    },
+  ],
+  [
+    'ola-rubaj',
+    {
+      title: 'Ola Rubaj',
+      role: 'Developer',
+      team: 'Engineering',
+      avatar: '[[people/olayway.jpeg]]',
+      bio: 'Makes Flowershow easy for people with no technical background.',
+    },
+  ],
+  [
+    'abeelha',
+    {
+      title: 'Abeelha',
+      role: 'Developer',
+      team: 'Engineering',
+      avatar: '[[people/abeelha.jpg]]',
+      bio: 'Builds Flowershow, and loves bees.',
+    },
+  ],
+  [
+    'grace-hopper',
+    {
+      title: 'Grace Hopper',
+      role: 'Compilers',
+      team: 'Engineering',
+      bio: 'Wrote the first compiler and popularised machine-independent languages.',
+    },
+  ],
+  [
+    'ada-lovelace',
+    {
+      title: 'Ada Lovelace',
+      role: 'Analytical engines',
+      team: 'Research',
+      bio: 'Published the first algorithm intended for a machine.',
+    },
+  ],
+  [
+    'katherine-johnson',
+    {
+      title: 'Katherine Johnson',
+      role: 'Orbital mechanics',
+      team: 'Research',
+      bio: 'Calculated the trajectories for the first American crewed flights.',
+    },
+  ],
+  [
+    'alan-turing',
+    {
+      title: 'Alan Turing',
+      role: 'Computation',
+      team: 'Research',
+      bio: 'Defined what it means for a machine to compute.',
+    },
+  ],
+];
+
 export function buildSite(): { rows: Row[]; files: string[] } {
   nextId = 1;
   const real = realEntries();
@@ -123,9 +204,15 @@ export function buildSite(): { rows: Row[]; files: string[] } {
   const copy = (folder: string) =>
     real.map((e) => row(`${folder}/${e.name}.md`, { ...e.data }));
 
-  // blog/: zero-config, no README (case 1); 28 posts = 2 pages of 20
+  // blog/: zero-config, no README (case 1); 28 posts = 2 pages of 20.
+  // A category for eyebrows/columns/grouping, and one featured: true post.
   rows.push(
-    ...copy('blog'),
+    ...copy('blog').map((r) => {
+      const name = r.path.slice('blog/'.length);
+      r.metadata.category = categoryFor(name);
+      if (name.startsWith(FEATURED_POST)) r.metadata.featured = true;
+      return r;
+    }),
     ...olderPosts('blog', 28 - real.length, '2026-09-19'),
   );
   // posts/: prose-only README (case 2)
@@ -270,6 +357,26 @@ export function buildSite(): { rows: Row[]; files: string[] } {
       title: 'Abeelha',
       avatar: '[[people/abeelha.jpg]]',
     }),
+  );
+  // journal/: ~4 years of monthly posts for the compact archive (year groups)
+  rows.push(row('journal/README.md', { title: 'Journal', layout: 'list' }));
+  for (let i = 0; i < 44; i++) {
+    const [title] = OLDER_TOPICS[i % OLDER_TOPICS.length]!;
+    const date = new Date(Date.parse('2026-10-04T00:00:00Z') - i * 33 * DAY)
+      .toISOString()
+      .slice(0, 10);
+    rows.push(
+      row(`journal/${date}-entry.md`, {
+        title: i % 3 === 1 ? `Notes: ${title.toLowerCase()}` : title,
+        date,
+        category: ['Product', 'Engineering', 'Community'][i % 3],
+      }),
+    );
+  }
+  // team/: one page per person; some with photos, some without (initials)
+  rows.push(
+    row('team/README.md', { title: 'Team', layout: 'list' }),
+    ...TEAM.map(([file, data]) => row(`team/${file}.md`, data)),
   );
   rows.push(row('README.md', { title: 'Home' }));
 
