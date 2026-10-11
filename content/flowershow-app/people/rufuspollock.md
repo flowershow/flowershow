@@ -3,6 +3,10 @@ title: Rufus Pollock
 avatar: https://avatars.githubusercontent.com/rufuspollock
 showEditLink: false
 showComments: false
+role: Founder
+bio: Entrepreneur and technologist, twenty years on data platforms and open knowledge. Founder of Open Knowledge Foundation and Datopian.
+order: 1
+core: true
 ---
 
 <img src="/people/rufuspollock.jpeg" alt="Author" className="h-[10rem]"/>

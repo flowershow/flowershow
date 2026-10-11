@@ -3,6 +3,10 @@ title: Ola Rubaj
 avatar: https://avatars.githubusercontent.com/olayway
 showEditLink: false
 showComments: false
+role: Product engineer
+bio: Core builder behind Flowershow, from the app and publishing flows to the tooling, docs and community support.
+order: 2
+core: true
 ---
 
 <img src="/people/olayway.jpeg" alt="Author" className="h-[10rem]"/>

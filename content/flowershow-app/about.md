@@ -60,17 +60,15 @@ This connects to the broader mission: Flowershow is one part of what a healthy, 
 
 ## The team
 
-### Rufus Pollock
+```list
+from: people
+view: people
+where:
+  core: true
+sort: order
+```
 
-<img className="h-20 w-20 rounded-full lg:w-24 lg:h-24 mt-4" src="https://www.gravatar.com/avatar/36661def37f62e4130670ab75e06465a?s=300" alt="Rufus Pollock" />
-
-Rufus is an entrepreneur and technologist who has spent twenty years working on data platforms, open knowledge, and the infrastructure of how ideas flow. He is the founder of the Open Knowledge Foundation and Datopian, and has worked with governments, businesses, and nonprofits across the world. He studied Mathematics at Cambridge and holds a PhD in Economics. He started Flowershow because publishing markdown should be as easy as sending a tweet.
-
-### Ola Rubaj
-
-<img className="h-20 w-20 rounded-full lg:w-24 lg:h-24 mt-4" src="https://secure.gravatar.com/avatar/d7dc90fd29be2f58ccaee994cf2b841a?s=300" alt="Ola Rubaj" />
-
-Ola is a product engineer and core builder behind Flowershow. She has built much of what makes Flowershow work and feel the way it does — from the app experience and publishing flows to the tooling, infrastructure, documentation, and community support around it. Her work is focused on making Markdown publishing feel simple, reliable, and approachable for everyone.
+See [everyone who builds and writes for Flowershow](/people).
 
 ---
 
