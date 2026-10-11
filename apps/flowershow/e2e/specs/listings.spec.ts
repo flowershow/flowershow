@@ -514,6 +514,34 @@ test('magazine = grid + featured: the featured: true post is the hero, once', as
   await expect(page.locator('.list-component-item--featured')).toHaveCount(1);
 });
 
+test('an inline featured block keeps its hero on ?page=2 of its page', async ({
+  page,
+}) => {
+  await page.goto('/magazine?page=2');
+  const hero = page.locator('.list-component-item--featured');
+  await expect(hero).toHaveCount(1);
+  await expect(hero.locator('.list-component-item-headline a')).toHaveText(
+    /^Post 10:/,
+  );
+  await expect(hero.locator('.list-component-item-media img')).toHaveAttribute(
+    'loading',
+    'eager',
+  );
+});
+
+test('people view on an .mdx page', async ({ page }) => {
+  await page.goto('/mdx-people');
+  const cards = page.locator('section.list-component--people > article');
+  await expect(cards.locator('.list-component-item-headline a')).toHaveText([
+    'Ada Lovelace',
+    'Grace Hopper',
+    'Katherine Johnson',
+  ]);
+  await expect(
+    cards.nth(2).locator('.list-component-item-initials'),
+  ).toHaveText('KJ');
+});
+
 test('featured without a featured: true item promotes the latest; no image gives a text hero', async ({
   page,
 }) => {

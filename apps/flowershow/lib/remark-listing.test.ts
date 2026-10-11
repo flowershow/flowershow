@@ -243,6 +243,38 @@ describe('[B2] featured and grouping in the plugin', () => {
     await run('```blog\nview: grid\nfeatured: 1\nlimit: 3\n```');
     expect(fetchRowsByIds.mock.calls[0]![2]).toEqual(['r7', 'r0', 'r1']);
   });
+  it('an inline limit block keeps its hero on ?page=2 of the host page; a paginated one shows it on its page 1 only', async () => {
+    const heroes = (tree: any) =>
+      (JSON.stringify(tree).match(/list-component-item--featured/g) ?? [])
+        .length;
+    const teaser = await run(
+      '```blog\nview: grid\nfeatured: 1\nlimit: 3\n```',
+      {
+        page: 2,
+      },
+    );
+    expect(heroes(teaser)).toBe(1);
+    expect(fetchRowsByIds.mock.calls[0]![2]).toEqual(['r7', 'r0', 'r1']);
+    const paged = '```blog\nview: grid\nfeatured: 1\npageSize: 5\n```';
+    expect(heroes(await run(paged, { page: 1 }))).toBe(1);
+    expect(heroes(await run(paged, { page: 2 }))).toBe(0);
+  });
+  it('only the first hero on the page gets fetchPriority high', async () => {
+    const withImages = rows.map((r) => ({
+      ...r,
+      metadata: { ...r.metadata, image: 'https://img.example/x.png' },
+    }));
+    fetchRowsByIds.mockImplementation(async (_d, _s, ids) =>
+      ids.map((id) => withImages.find((r) => r.id === id)!),
+    );
+    const block = '```blog\nview: grid\nfeatured: 1\nlimit: 3\n```';
+    const json = JSON.stringify(await run(`${block}\n\n${block}`));
+    fetchRowsByIds.mockImplementation(async (_d, _s, ids) =>
+      ids.map((id) => rows.find((r) => r.id === id)!),
+    );
+    expect(json.match(/"name":"fetchPriority"/g)).toHaveLength(1);
+    expect(json.match(/"name":"loading","value":"eager"/g)).toHaveLength(2);
+  });
   it('group labels come from the index keys and the locale', async () => {
     queryListingIndex.mockResolvedValueOnce(
       index(rows.slice(0, 2), ['2026-09', '2026-08']),

@@ -67,6 +67,7 @@ const URLS: Array<[name: string, slug: string, page?: number]> = [
   ['case', '/case'],
   ['nested', '/nested'],
   ['mdx-page', '/mdx-page'],
+  ['mdx-people', '/mdx-people'],
   ['thumb-right', '/thumb-right'],
   ['default-image', '/default-image'],
   ['no-monogram', '/no-monogram'],
@@ -77,6 +78,7 @@ const URLS: Array<[name: string, slug: string, page?: number]> = [
   ['team', '/team'],
   ['team-file', '/team-file'],
   ['magazine', '/magazine'],
+  ['magazine-page-2', '/magazine', 2],
   ['latest-hero', '/latest-hero'],
 ];
 

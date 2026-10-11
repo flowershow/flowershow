@@ -18,6 +18,8 @@ export type Scenario = {
   path: string | null;
   markdown: string;
   page?: number;
+  /** Date and month-name locale (default en-US). */
+  locale?: string;
   about?: string;
   /** Render the legacy MDX <List /> with these props instead (theme back-compat). */
   legacy?: {
@@ -283,6 +285,20 @@ export const SCENARIOS: Scenario[] = [
       { file: 'compact-archive-mobile', width: 390 },
       { file: 'dark-compact', dark: true },
       ...themeShots('compact', [['letterpress', 390]]),
+    ],
+  },
+  {
+    name: 'compact-archive-pt',
+    title: 'compact page in pt-BR: long locale dates stay clear of the titles',
+    slug: '/journal',
+    path: 'journal/README.md',
+    locale: 'pt-BR',
+    markdown: page(
+      'title: Journal\nlayout: list\nlist:\n  view: compact\n  pageSize: 50',
+    ),
+    shots: [
+      { file: 'compact-archive-pt' },
+      { file: 'compact-archive-pt-mobile', width: 390 },
     ],
   },
   {

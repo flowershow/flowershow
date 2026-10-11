@@ -400,6 +400,27 @@ describe('[B2] compact, people, featured, group', () => {
       '"featured" is ignored in the compact view.',
     ]);
   });
+  it('compact drops summary and authors, even when asked for', () => {
+    const r = blog({
+      view: 'compact',
+      fields: { summary: 'description', authors: 'authors' },
+    });
+    expect(r.ok && r.spec.fields).toMatchObject({
+      summary: null,
+      authors: null,
+    });
+    expect(notes(r)).toEqual([
+      '"fields.summary" and "fields.authors" are ignored in the compact view.',
+    ]);
+    const list = blog({
+      view: 'compact',
+      fields: ['title', 'date', 'authors'],
+    });
+    expect(list.ok && list.spec.fields.authors).toBeNull();
+    expect(notes(list)).toEqual([
+      '"fields.authors" is ignored in the compact view.',
+    ]);
+  });
 });
 
 describe('implicitListingFrom', () => {

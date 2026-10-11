@@ -572,6 +572,14 @@ export function parseListingSpec(
         '"defaultImage" must be an image path or [[wikilink]], e.g. "defaultImage: [[cover.png]]".',
       );
   }
+  if (view === 'compact' && (fields.summary || fields.authors)) {
+    // One line per item: no summary or author column, even when asked for
+    notes.push(
+      `"fields.${fields.summary ? 'summary' : 'authors'}"${fields.summary && fields.authors ? ' and "fields.authors"' : ''} ${fields.summary && fields.authors ? 'are' : 'is'} ignored in the compact view.`,
+    );
+    fields.summary = null;
+    fields.authors = null;
+  }
   if (view === 'compact' && media !== 'none') {
     if (values.media != null)
       notes.push('"media" is ignored in the compact view.');

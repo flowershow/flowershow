@@ -1936,25 +1936,34 @@
   /* compact (Bear, Gwern, Anthropic newsroom): date column, optional fixed
      column for the first meta value (or the eyebrow), title with a hanging
      indent; no images, no summaries */
+  /* One grid for the whole list, rows on its subgrid: the date column is as
+     wide as the longest date in the list (pt-BR "30 de set. de 2026"), at
+     least 7em, and every title starts at the same x */
+  .list-component:where(.list-component--compact) {
+    display: grid;
+    grid-template-columns: minmax(7em, max-content) minmax(0, 1fr);
+    column-gap: 1.25rem;
+  }
+  .list-component:where(
+    .list-component--compact:has(
+      .list-component-item-meta-value,
+      .list-component-item-eyebrow
+    )
+  ) {
+    grid-template-columns:
+      minmax(7em, max-content) var(--list-compact-meta-width, 9em)
+      minmax(0, 1fr);
+  }
+  :where(.list-component--compact) > * {
+    grid-column: 1 / -1;
+  }
   :where(.list-component--compact) .list-component-item {
     display: grid;
-    grid-template-columns: 7em minmax(0, 1fr);
+    grid-template-columns: subgrid;
     align-items: baseline;
     gap: 0 1.25rem;
     padding: 0.25rem 0;
     border-bottom-width: 0;
-  }
-  :where(
-      .list-component--compact:has(
-        .list-component-item-meta-value,
-        .list-component-item-eyebrow
-      )
-    )
-    .list-component-item {
-    grid-template-columns: 7em var(--list-compact-meta-width, 9em) minmax(
-        0,
-        1fr
-      );
   }
   :where(.list-component--compact)
     :is(.list-component-item-content, .list-component-item-meta) {
@@ -2023,15 +2032,17 @@
     margin-top: 1.5rem;
   }
   @media (max-width: 639px) {
-    :where(.list-component--compact) .list-component-item,
-    :where(
+    .list-component:where(.list-component--compact),
+    .list-component:where(
         .list-component--compact:has(
           .list-component-item-meta-value,
           .list-component-item-eyebrow
         )
-      )
-      .list-component-item {
-      grid-template-columns: 6.25em minmax(0, 1fr);
+      ) {
+      grid-template-columns: minmax(6.25em, max-content) minmax(0, 1fr);
+      column-gap: 0.75rem;
+    }
+    :where(.list-component--compact) .list-component-item {
       gap: 0 0.75rem;
     }
     :where(.list-component--compact)

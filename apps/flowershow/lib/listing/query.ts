@@ -1,6 +1,11 @@
 import { unstable_cache } from 'next/cache';
 import prisma from '@/server/db';
-import { groupKey, type ListingRow, selectListingRows } from './items';
+import {
+  canonicalGroupKeys,
+  groupKey,
+  type ListingRow,
+  selectListingRows,
+} from './items';
 import type { ListingSpec } from './spec';
 
 export type ListingDb = {
@@ -57,7 +62,9 @@ export function buildIndex(
     groups:
       spec.group.by === 'none'
         ? null
-        : rows.map((r) => groupKey(r, spec) ?? ''),
+        : spec.group.by === 'field' || spec.group.by === 'folder'
+          ? canonicalGroupKeys(rows.map((r) => groupKey(r, spec) ?? ''))
+          : rows.map((r) => groupKey(r, spec) ?? ''),
   };
 }
 

@@ -137,7 +137,7 @@ async function renderScenario(s: Scenario): Promise<string> {
     siteFilePaths: site.files,
     permalinks: {},
     page: pageNo,
-    locale: LOCALE,
+    locale: s.locale ?? LOCALE,
   };
   let body: React.ReactElement;
   if (route.kind === 'virtual') {
@@ -164,7 +164,7 @@ async function renderScenario(s: Scenario): Promise<string> {
       listing: {
         page: pageNo,
         publicUrl: s.slug,
-        locale: LOCALE,
+        locale: s.locale ?? LOCALE,
         paginationClaimed: route.kind === 'page' && route.pageSize != null,
       },
     });

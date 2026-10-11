@@ -96,6 +96,22 @@ describe('buildIndex and queryListingIndex', () => {
       }).groups,
     ).toEqual(['2026']);
   });
+  it('field groups that differ only in case share one key', () => {
+    const r = (id: string, team: string) => ({
+      id,
+      path: `t/${id}.md`,
+      appPath: `/t/${id}`,
+      permalink: null,
+      metadata: { team },
+    });
+    expect(
+      buildIndex([r('1', 'design'), r('2', 'Design'), r('3', 'Design')], {
+        from: 't',
+        group: { by: 'field', field: 'team' },
+        fields: DEFAULT_FIELDS.list,
+      }).groups,
+    ).toEqual(['Design', 'Design', 'Design']);
+  });
   it('a 5,000-item folder with heavy frontmatter caches well under 1 MB, with no metadata (tech M7)', () => {
     const rows = Array.from({ length: 5000 }, (_, i) => ({
       id: `cm${String(i).padStart(23, '0')}`,

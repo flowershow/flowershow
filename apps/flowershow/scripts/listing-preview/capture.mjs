@@ -12,9 +12,7 @@ import { chromium } from '@playwright/test';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const preview = path.resolve(here, '../../.listing-preview');
-const out = path.resolve(
-  process.argv[2] ?? path.join(preview, 'shots'),
-);
+const out = path.resolve(process.argv[2] ?? path.join(preview, 'shots'));
 const only = process.argv[3] ? new RegExp(process.argv[3]) : null;
 const MAX_BYTES = 300 * 1024;
 mkdirSync(out, { recursive: true });
@@ -175,6 +173,57 @@ async function open(name, opts = {}) {
   );
   await page.close();
 }
+// Long locale dates (pt-BR "30 de set. de 2026") never run under the title,
+// and every row's title starts at the same x
+for (const name of [
+  'compact-archive',
+  'compact-archive-pt',
+  'compact-category',
+])
+  for (const width of [1440, 390]) {
+    const page = await open(name, { width });
+    const { overlaps, starts } = await page.$$eval(
+      'section.list-component--compact > article',
+      (rows) => {
+        // Text boxes: the date can spill out of its cell (nowrap) and the
+        // headline box is wider than its text; meta cells clip
+        const box = (r, sel) => {
+          const el = r.querySelector(sel);
+          if (!el || /meta-value|eyebrow/.test(sel))
+            return el?.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return range.getBoundingClientRect();
+        };
+        const visible = (b) => b && b.width > 0;
+        let overlaps = 0;
+        const starts = new Set();
+        for (const r of rows) {
+          const h = box(r, '.list-component-item-headline');
+          starts.add(Math.round(h.x));
+          for (const sel of [
+            '.list-component-item-date',
+            '.list-component-item-meta-value',
+            '.list-component-item-eyebrow',
+          ]) {
+            const b = box(r, sel);
+            if (visible(b) && b.right > h.left + 0.5) overlaps++;
+          }
+        }
+        return { overlaps, starts: [...starts] };
+      },
+    );
+    if (overlaps)
+      failures.push(
+        `${name} @${width}: ${overlaps} date/meta cells overlap the title`,
+      );
+    if (starts.length !== 1)
+      failures.push(`${name} @${width}: titles start at ${starts.join(', ')}`);
+    console.log(
+      `check ${name} @${width}: ${overlaps} overlaps, titles at x ${starts.join('/')}`,
+    );
+    await page.close();
+  }
 {
   const page = await open('compact-teaser');
   const headings = await page.$$eval(
