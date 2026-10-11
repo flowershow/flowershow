@@ -38,6 +38,8 @@ import { sendEmail } from '@/lib/email';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
+import { resolveAuthors } from '@/lib/listing/authors';
+import type { ListingDb } from '@/lib/listing/query';
 import {
   type ChangelogBlobRow,
   dirOf,
@@ -59,7 +61,7 @@ import {
 } from '@/lib/site-config';
 import { buildSubdomain, ensureUniqueSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
-import { ensureLeadingSlash, extractWikiLinkTarget } from '@/lib/utils';
+import { extractWikiLinkTarget } from '@/lib/utils';
 import {
   SITE_NAME_MAX_LENGTH,
   validateSiteName,
@@ -1899,74 +1901,18 @@ export const siteRouter = createTRPCRouter({
               site.customDomain ??
               `${site.subdomain}.${env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
-            const siteFilePaths = (
+            const files = (
               await ctx.db.blob.findMany({
-                where: {
-                  siteId: input.siteId,
-                },
-                select: {
-                  path: true,
-                },
+                where: { siteId: input.siteId },
+                select: { path: true },
               })
             ).map((b) => b.path);
-            const siteFiles = siteFilePaths.map((p) => ({ path: p }));
-
-            const authorsPromises = input.authors.map(
-              async (author: string) => {
-                let authorPath = author;
-                authorPath = extractWikiLinkTarget(authorPath) ?? authorPath;
-                const authorBlob = await ctx.db.blob.findFirst({
-                  where: {
-                    siteId: input.siteId,
-                    OR: [
-                      { path: { endsWith: authorPath + '.md' } },
-                      { path: { endsWith: authorPath + '.mdx' } },
-                    ],
-                  },
-                });
-
-                if (!authorBlob) {
-                  // Return author with name but no URL if no profile page exists
-                  return {
-                    key: author,
-                    name: author,
-                    url: null,
-                  };
-                }
-
-                const metadata = authorBlob.metadata as PageMetadata | null;
-
-                // Use permalink if available, otherwise use appPath
-                const authorUrl = ensureLeadingSlash(
-                  authorBlob.permalink || authorBlob.appPath || '',
-                );
-
-                if (metadata?.avatar) {
-                  let value = metadata.avatar;
-                  const wikiTarget = extractWikiLinkTarget(value);
-                  if (wikiTarget !== null) {
-                    value =
-                      matchLinkTarget(wikiTarget, siteFiles)?.path ??
-                      wikiTarget;
-                  }
-                  metadata.avatar = resolveContentLink({
-                    target: value,
-                    siteHostname,
-                  });
-                }
-
-                return {
-                  key: authorBlob.id,
-                  name: metadata?.title ?? author,
-                  avatar: metadata?.avatar,
-                  url: authorUrl,
-                };
-              },
-            );
-
-            const authors = await Promise.all(authorsPromises);
-
-            return authors;
+            return resolveAuthors(ctx.db as unknown as ListingDb, {
+              siteId: input.siteId,
+              handles: input.authors,
+              siteHostname,
+              files,
+            });
           },
           undefined,
           {

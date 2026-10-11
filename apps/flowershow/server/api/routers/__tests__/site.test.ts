@@ -1780,3 +1780,67 @@ describe('site.getSiteChromeFile', () => {
     ).resolves.toBeNull();
   });
 });
+
+describe('site.getAuthors', () => {
+  /** A db whose blob queries honour `OR` of exact/`endsWith` paths, for both the legacy and current lookups. */
+  function authorDb(rows: ReturnType<typeof makeBlob>[]) {
+    const db = createMockDb({ blobs: rows }) as any;
+    const matches = (w: any, b: ReturnType<typeof makeBlob>) =>
+      (!w?.siteId || b.siteId === w.siteId) &&
+      (!w?.OR ||
+        (w.OR as any[]).some((c) =>
+          typeof c.path === 'string'
+            ? b.path === c.path
+            : b.path.endsWith(c.path.endsWith),
+        ));
+    db.blob.findFirst = vi.fn(
+      async (args: any) => rows.find((b) => matches(args?.where, b)) ?? null,
+    );
+    db.blob.findMany = vi.fn(async (args: any) =>
+      rows
+        .filter((b) => matches(args?.where, b))
+        .map((b) =>
+          args?.select?.metadata
+            ? {
+                id: b.id,
+                path: b.path,
+                appPath: b.appPath,
+                permalink: b.permalink,
+                metadata: b.metadata,
+              }
+            : { path: b.path },
+        ),
+    );
+    return db;
+  }
+
+  it('uses anchored matching (jane does not resolve mary-jane.md)', async () => {
+    const db = authorDb([
+      makeBlob({
+        id: 'b-mj',
+        path: 'people/mary-jane.md',
+        appPath: '/people/mary-jane',
+        metadata: { title: 'Mary Jane' },
+      }),
+    ]);
+    const caller = createCaller(db);
+    expect(
+      await caller.site.getAuthors({ siteId: 'site-1', authors: ['jane'] }),
+    ).toEqual([{ key: 'jane', name: 'jane', url: null }]);
+  });
+
+  it('still resolves an exact author page', async () => {
+    const db = authorDb([
+      makeBlob({
+        id: 'b-j',
+        path: 'people/jane.md',
+        appPath: '/people/jane',
+        metadata: { title: 'Jane Doe' },
+      }),
+    ]);
+    const caller = createCaller(db);
+    expect(
+      await caller.site.getAuthors({ siteId: 'site-1', authors: ['jane'] }),
+    ).toEqual([{ key: 'b-j', name: 'Jane Doe', url: '/people/jane' }]);
+  });
+});
