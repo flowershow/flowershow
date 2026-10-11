@@ -4,6 +4,7 @@ import type { Code, Html } from 'mdast';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
+import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import {
   dirOf,
   entryTitleFromPath,
@@ -22,6 +23,9 @@ const MARKDOWN_RE = /\.mdx?$/i;
 /** Ingestion's index rule (packages/core filePathToSlug): exact README/index. */
 const INGESTION_INDEX_RE = /(?:^|\/)(?:README|index)\.mdx?$/;
 const LISTING_LANGS = new Set(['list', 'blog', 'base']);
+/** A listing fence line, for fences MDX parses inside JSX but remark-parse leaves in an html node. */
+const FENCE_IN_HTML_RE =
+  /^[ \t]*(?:`{3,}|~{3,})[ \t]*(?:list|blog|base)[ \t]*$/m;
 
 export type ListingRoute =
   | { kind: 'none' }
@@ -42,24 +46,58 @@ export function isAutoListingDirName(dir: string): boolean {
   );
 }
 
-/** Same AST the plugin sees, so detection and rendering never disagree (tech minor 1). */
-export function hasExplicitListing(content: string): boolean {
+/**
+ * Same AST the plugin sees, so detection and rendering never disagree (tech
+ * minor 1): Obsidian `%% comments %%` are stripped first, as in both pipelines.
+ * With `mdx`, a listing fence inside a JSX element counts too (MDX parses JSX
+ * children as Markdown; remark-parse keeps them in an html node).
+ */
+export function hasExplicitListing(
+  content: string,
+  { mdx = false }: { mdx?: boolean } = {},
+): boolean {
   let body = content;
   try {
     body = matter(content).content;
   } catch {
     // malformed frontmatter: scan the raw text
   }
-  const tree = unified().use(remarkParse).parse(body);
+  const processor = unified().use(remarkParse).use(remarkObsidianComments);
+  const tree = processor.runSync(processor.parse(body));
   let found = false;
   visit(tree, (node) => {
     if (found) return;
     if (node.type === 'code' && LISTING_LANGS.has((node as Code).lang ?? ''))
       found = true;
-    else if (node.type === 'html' && /<List[\s/>]/.test((node as Html).value))
-      found = true;
+    else if (node.type === 'html') {
+      const value = (node as Html).value;
+      if (/<List[\s/>]/.test(value) || (mdx && FENCE_IN_HTML_RE.test(value)))
+        found = true;
+    }
   });
   return found;
+}
+
+/**
+ * Cheap pre-check (no site paths, no body): false means resolveListingRoute
+ * returns `none` for this page whatever the site contains, so generateMetadata
+ * can skip the site path query on ordinary pages.
+ */
+export function mayBeListingRoute({
+  slug,
+  blobPath,
+  metadata,
+}: {
+  slug: string;
+  blobPath: string | null;
+  metadata: Record<string, unknown> | null;
+}): boolean {
+  if (blobPath === null) return isAutoListingDirName(slug);
+  if (metadata?.layout === 'list') return true;
+  const path = blobPath.replace(/^\/+/, '');
+  return isFolderIndexPath(path)
+    ? isAutoListingDirName(dirOf(path))
+    : isAutoListingDirName(path.replace(MARKDOWN_RE, ''));
 }
 
 const plain = (files: string[]) => files.map((f) => f.replace(/^\/+/, ''));
@@ -103,20 +141,14 @@ export function autoListingFor({
   const path = blobPath.replace(/^\/+/, '');
   let dir: string | null = null;
   if (isFolderIndexPath(path)) dir = dirOf(path);
-  else {
-    const sibling = path.replace(MARKDOWN_RE, '');
-    if (
-      isAutoListingDirName(sibling) &&
-      implicitListingFrom(path, siteFilePaths) === sibling
-    )
-      dir = sibling; // folder note (case 3)
-  }
+  else if (isAutoListingDirName(path.replace(MARKDOWN_RE, '')))
+    dir = implicitListingFrom(path, siteFilePaths); // folder note (case 3), any folder case
   if (dir === null || !isAutoListingDirName(dir)) return null;
   // A folder of attachments only would render the "no folder with pages" card on a published page
   if (!folderHasPages(dir, siteFilePaths)) return null;
   if (metadata?.layout) return null;
   if (metadata?.list === false || metadata?.list === 'false') return null;
-  if (hasExplicitListing(content)) return null;
+  if (hasExplicitListing(content, { mdx: /\.mdx$/i.test(path) })) return null;
   return { options: metadata?.list, defaultFrom: dir };
 }
 

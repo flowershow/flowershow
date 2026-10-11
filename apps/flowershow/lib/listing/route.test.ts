@@ -3,6 +3,7 @@ import {
   autoListingFor,
   hasExplicitListing,
   isAutoListingDirName,
+  mayBeListingRoute,
   resolveListingRoute,
   virtualListingDir,
 } from './route';
@@ -24,6 +25,8 @@ const files = [
   '/podcast/ep.md',
   '/fn/blog.md',
   '/fn/blog/z.md',
+  '/vault/blog.md',
+  '/vault/Blog/w.md',
 ];
 const route = (o: Partial<Parameters<typeof resolveListingRoute>[0]>) =>
   resolveListingRoute({
@@ -68,6 +71,24 @@ describe('names and detection', () => {
     expect(hasExplicitListing('```Blog\n```')).toBe(false); // the plugin is case-sensitive too, so this renders nothing and is not a listing
     expect(hasExplicitListing('Use `<List />` in MDX.')).toBe(false); // inline code, not an element
   });
+  it('Obsidian %% comments %% hide a fence from detection, as they do from rendering', () => {
+    expect(hasExplicitListing('Prose.\n\n%%\n```blog\nlimit: 3\n```\n%%')).toBe(
+      false,
+    );
+    expect(hasExplicitListing('%% a note to self %%\n\n```blog\n```')).toBe(
+      true,
+    );
+  });
+  it('MDX: a fence inside a JSX element (no blank lines) counts; in .md it is raw HTML and does not', () => {
+    const jsx = '<div className="x">\n```blog\nlimit: 3\n```\n</div>';
+    expect(hasExplicitListing(jsx, { mdx: true })).toBe(true);
+    expect(hasExplicitListing(jsx)).toBe(false);
+    expect(
+      hasExplicitListing('<div>\n```js\nconst blog = 1;\n```\n</div>', {
+        mdx: true,
+      }),
+    ).toBe(false);
+  });
 });
 
 describe('virtualListingDir (case 1)', () => {
@@ -102,6 +123,15 @@ describe('autoListingFor (cases 2 and 3)', () => {
         siteFilePaths: files,
       }),
     ).toEqual({ options: undefined, defaultFrom: 'fn/blog' });
+    // Obsidian capitalises folders: blog.md beside Blog/ (Review Focus 1)
+    expect(
+      autoListingFor({
+        blobPath: 'vault/blog.md',
+        metadata: {},
+        content: prose,
+        siteFilePaths: files,
+      }),
+    ).toEqual({ options: undefined, defaultFrom: 'vault/Blog' });
     expect(
       autoListingFor({
         blobPath: 'blog/README.md',
@@ -128,6 +158,11 @@ describe('autoListingFor (cases 2 and 3)', () => {
     none('notes.md', {}); // notes is not an auto folder name
     none('blog/first-post.md', {});
     none('podcast.md', {}); // folder note, but podcast is not an auto folder name
+    none(
+      'blog/README.mdx',
+      {},
+      'Intro.\n\n<section>\n```blog\nlimit: 3\n```\n</section>',
+    ); // MDX parses the fence inside JSX: no second listing
   });
   it('a folder note beside an attachments-only folder gets no listing (no error card on a published page)', () => {
     expect(
@@ -201,5 +236,89 @@ describe('resolveListingRoute (precedence table)', () => {
         metadata: { layout: 'list', list: { veiw: 'x' } },
       }),
     ).toMatchObject({ kind: 'page', view: 'list' });
+  });
+});
+
+describe('mayBeListingRoute (skip the site path query on ordinary pages)', () => {
+  const cases: Array<Parameters<typeof resolveListingRoute>[0]> = [
+    {
+      slug: '/blog',
+      blob: null,
+      metadata: null,
+      content: '',
+      siteFilePaths: files,
+      changelogKind: null,
+    },
+    {
+      slug: '/My+Blog/posts',
+      blob: null,
+      metadata: null,
+      content: '',
+      siteFilePaths: files,
+      changelogKind: null,
+    },
+    {
+      slug: '/blog',
+      blob: { path: 'blog/README.md' },
+      metadata: {},
+      content: 'Hi.',
+      siteFilePaths: files,
+      changelogKind: null,
+    },
+    {
+      slug: '/fn/blog',
+      blob: { path: 'fn/blog.md' },
+      metadata: {},
+      content: 'Hi.',
+      siteFilePaths: files,
+      changelogKind: null,
+    },
+    {
+      slug: '/vault/blog',
+      blob: { path: 'vault/blog.md' },
+      metadata: {},
+      content: 'Hi.',
+      siteFilePaths: files,
+      changelogKind: null,
+    },
+    {
+      slug: '/podcast',
+      blob: { path: 'podcast.md' },
+      metadata: { layout: 'list' },
+      content: '',
+      siteFilePaths: files,
+      changelogKind: null,
+    },
+    {
+      slug: '/notes',
+      blob: { path: 'notes.md' },
+      metadata: { layout: 'list' },
+      content: '',
+      siteFilePaths: files,
+      changelogKind: null,
+    },
+  ];
+  it('is true for every page the resolver makes a listing (sound)', () => {
+    for (const c of cases) {
+      expect(resolveListingRoute(c).kind, c.slug).not.toBe('none');
+      expect(
+        mayBeListingRoute({
+          slug: c.slug,
+          blobPath: c.blob?.path ?? null,
+          metadata: c.metadata,
+        }),
+        c.slug,
+      ).toBe(true);
+    }
+  });
+  it('is false for ordinary pages, so they never load the site paths for listings', () => {
+    for (const [slug, blobPath, metadata] of [
+      ['/about', 'about.md', { title: 'About' }],
+      ['/blog/first-post', 'blog/first-post.md', {}],
+      ['/notes', 'notes/README.md', { layout: 'plain' }],
+      ['/', 'README.md', {}],
+      ['/articles', null, null],
+    ] as const)
+      expect(mayBeListingRoute({ slug, blobPath, metadata }), slug).toBe(false);
   });
 });

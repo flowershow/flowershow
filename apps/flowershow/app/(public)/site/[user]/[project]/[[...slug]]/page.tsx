@@ -64,7 +64,12 @@ import {
   resolveMetadataListingRoute,
 } from '@/lib/listing/page-listing';
 import { listingCanonical, pageFromSearchParam } from '@/lib/listing/paginate';
-import { isAutoListingDirName, resolveListingRoute } from '@/lib/listing/route';
+import {
+  isAutoListingDirName,
+  type ListingRoute,
+  mayBeListingRoute,
+  resolveListingRoute,
+} from '@/lib/listing/route';
 import { isDraft } from '@/lib/listing/rules';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
@@ -162,24 +167,35 @@ export async function generateMetadata(props: {
 
   // Page-level listings (layout: list, zero-config): self-canonical per page and
   // noindex past the last page. The body is loaded only for an auto listing (a
-  // README with its own block is not one), so SitePage and this agree.
-  const siteFilePaths =
-    (await api.site.getAllBlobPaths
-      .query({ siteId: site.id })
-      .catch(() => null)) ?? [];
-  const listingRoute = await resolveMetadataListingRoute(
-    {
-      slug: decodedSlug,
-      blob: blob ? { path: blob.path } : null,
-      metadata: (metadata as Record<string, unknown> | null) ?? null,
-      siteFilePaths,
-      changelogKind: isChangelogFallback ? 'index' : null,
-    },
-    async () =>
-      blob
-        ? await api.site.getBlobContent.query({ id: blob.id }).catch(() => null)
-        : null,
-  );
+  // README with its own block is not one), so SitePage and this agree. Ordinary
+  // pages skip the site path query (mayBeListingRoute is false for them).
+  const listingCandidate = mayBeListingRoute({
+    slug: decodedSlug,
+    blobPath: blob?.path ?? null,
+    metadata: (metadata as Record<string, unknown> | null) ?? null,
+  });
+  const siteFilePaths = listingCandidate
+    ? ((await api.site.getAllBlobPaths
+        .query({ siteId: site.id })
+        .catch(() => null)) ?? [])
+    : [];
+  const listingRoute: ListingRoute = !listingCandidate
+    ? { kind: 'none' }
+    : await resolveMetadataListingRoute(
+        {
+          slug: decodedSlug,
+          blob: blob ? { path: blob.path } : null,
+          metadata: (metadata as Record<string, unknown> | null) ?? null,
+          siteFilePaths,
+          changelogKind: isChangelogFallback ? 'index' : null,
+        },
+        async () =>
+          blob
+            ? await api.site.getBlobContent
+                .query({ id: blob.id })
+                .catch(() => null)
+            : null,
+      );
   const pageLevelListing = listingRoute.kind !== 'none';
   const pageParam = (await props.searchParams)?.page;
   const noindex =

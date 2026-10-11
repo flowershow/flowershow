@@ -622,7 +622,10 @@ export function implicitListingFrom(
   const p = blobPath.replace(/^\/+/, '');
   if (isFolderIndexPath(p)) return dirOf(p);
   const sibling = p.replace(/\.mdx?$/i, '');
-  return files.some((f) => f.replace(/^\/+/, '').startsWith(`${sibling}/`))
-    ? sibling
-    : null;
+  const plain = files.map((f) => f.replace(/^\/+/, ''));
+  if (plain.some((f) => f.startsWith(`${sibling}/`))) return sibling;
+  // Obsidian folder notes keep their own case: blog.md beside Blog/ (Review Focus 1)
+  const lower = `${sibling.toLowerCase()}/`;
+  const hit = plain.find((f) => f.toLowerCase().startsWith(lower));
+  return hit ? hit.slice(0, sibling.length) : null;
 }
