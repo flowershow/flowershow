@@ -1,3 +1,4 @@
+import { isDraft } from '@/lib/listing/rules';
 import { safeDate } from './utils';
 
 export interface RssBlob {
@@ -25,7 +26,7 @@ export function escapeXml(str: string): string {
 export function filterRssBlobs(blobs: RssBlob[]): RssBlob[] {
   return blobs.filter((blob) => {
     const metadata = blob.metadata;
-    return metadata?.publish !== false && metadata?.date;
+    return metadata?.publish !== false && !isDraft(metadata) && metadata?.date;
   });
 }
 

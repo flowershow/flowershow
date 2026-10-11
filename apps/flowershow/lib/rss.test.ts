@@ -34,6 +34,16 @@ describe('filterRssBlobs', () => {
     ...overrides,
   });
 
+  it('excludes drafts', () => {
+    const blobs = [
+      makeBlob({ metadata: { title: 'A', date: '2025-06-01', draft: true } }),
+      makeBlob({ metadata: { title: 'B', date: '2025-06-02' } }),
+    ];
+    expect(
+      filterRssBlobs(blobs).map((b) => (b.metadata as { title: string }).title),
+    ).toEqual(['B']);
+  });
+
   it('includes blobs with a date field', () => {
     const blobs = [makeBlob({ metadata: { title: 'A', date: '2025-06-01' } })];
     expect(filterRssBlobs(blobs)).toHaveLength(1);

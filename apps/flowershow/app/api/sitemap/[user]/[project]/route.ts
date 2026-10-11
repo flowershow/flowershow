@@ -2,6 +2,7 @@ import { SitemapParamsSchema } from '@flowershow/api-contract';
 import { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { getSiteUrl } from '@/lib/get-site-url';
+import { isDraft } from '@/lib/listing/rules';
 import { escapeXml } from '@/lib/rss';
 import { hasSiteAccess } from '@/lib/site-access';
 import { isSiteOwnHost, redirectToSiteOwnHost } from '@/lib/site-host';
@@ -43,6 +44,7 @@ export async function GET(
           appPath: true,
           updatedAt: true,
           permalink: true,
+          metadata: true,
         },
       },
       // Only the `/tags` index is included in the sitemap (not per-tag pages) —
@@ -74,7 +76,11 @@ export async function GET(
   const loc = (url: string) => `<loc>${escapeXml(url)}</loc>`;
 
   // Create XML sitemap
-  const xmlItems = site.blobs.map((blob) => {
+  // `draft: true` pages stay reachable by URL but are not advertised.
+  const listedBlobs = site.blobs.filter(
+    (b) => !isDraft(b.metadata as Record<string, unknown> | null),
+  );
+  const xmlItems = listedBlobs.map((blob) => {
     if (blob.appPath === '/') return '';
     const permalink = (blob.permalink ?? blob.appPath)?.replace(/^\//, '');
     return `<url>

@@ -126,3 +126,31 @@ describe('GET /api/sitemap — bound to the site own host', () => {
     expect(res.status).toBe(200);
   });
 });
+
+describe('GET /api/sitemap — drafts', () => {
+  it('lists published pages and leaves out draft: true pages', async () => {
+    findFirst.mockResolvedValue({
+      ...passwordSite,
+      privacyMode: 'PUBLIC',
+      blobs: [
+        {
+          appPath: '/a',
+          updatedAt: new Date(0),
+          permalink: null,
+          metadata: { title: 'A' },
+        },
+        {
+          appPath: '/d',
+          updatedAt: new Date(0),
+          permalink: null,
+          metadata: { title: 'D', draft: true },
+        },
+      ],
+    });
+
+    const body = await (await GET(makeReq(), makeParams())).text();
+
+    expect(body).toContain('<loc>http://site.test/a</loc>');
+    expect(body).not.toContain('http://site.test/d<');
+  });
+});
