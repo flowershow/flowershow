@@ -14,6 +14,7 @@ import { Iframe } from './iframe';
 import type { LineChartProps } from './line-chart';
 import type { ListProps } from './list';
 import List from './list';
+import ListingImage from './listing-image';
 import {
   CustomHtml,
   FlatUiTable,
@@ -179,6 +180,7 @@ export const mdxComponentsFactory = ({
     ObsidianBasesViews: withErrorBoundary((props: ObsidianBasesViewsProps) => {
       return <ObsidianBasesViews {...props} />;
     }, 'ObsidianBasesViews'),
+    ListingImage: withErrorBoundary(ListingImage, 'ListingImage'),
   };
 
   return components;

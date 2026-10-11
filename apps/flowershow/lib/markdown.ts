@@ -25,6 +25,7 @@ import { type Pluggable, type Plugin, unified } from 'unified';
 import { visit } from 'unist-util-visit';
 import FsImage from '@/components/public/mdx/fs-image';
 import { Iframe } from '@/components/public/mdx/iframe';
+import ListingImage from '@/components/public/mdx/listing-image';
 import {
   Mermaid,
   ObsidianBasesViews,
@@ -45,6 +46,7 @@ import remarkChangelog, {
   type RemarkChangelogOptions,
 } from './remark-changelog';
 import remarkCommonMarkLink from './remark-commonmark-link';
+import remarkListing, { type ListingRenderContext } from './remark-listing';
 import remarkObsidianBases from './remark-obsidian-bases';
 import remarkTags from './remark-tags';
 import { resolveContentLink } from './resolve-link';
@@ -67,6 +69,8 @@ interface MarkdownOptions {
    * (the site's `showTags` config) to leave `#tags` as plain text.
    */
   showTags?: boolean;
+  /** Request context for ```list / ```blog blocks and page-level listings. */
+  listing?: ListingRenderContext;
 }
 
 // Private Use Area char used as a temporary alias divider so GFM table block-parsing
@@ -127,6 +131,16 @@ export async function processMarkdown(
       siteHostname,
       rootDir: options.rootDir,
     })
+    // ```list / ```blog blocks and layout: list (needs a site to query)
+    .use(options.siteId ? remarkListing : () => undefined, {
+      siteId: options.siteId!,
+      siteHostname,
+      rootDir: options.rootDir,
+      filePath,
+      files,
+      permalinks,
+      ...options.listing,
+    })
     .use(remarkMdxJsxToElement)
     // Last remark plugin: it restructures the whole tree
     .use(
@@ -161,6 +175,7 @@ export async function processMarkdown(
         mermaid: Mermaid,
         iframe: Iframe,
         obsidianbasesviews: ObsidianBasesViews,
+        listingimage: ListingImage,
       },
     });
 
@@ -300,6 +315,7 @@ export const getMdxOptions = ({
   canvasNodeFiles,
   changelog,
   showTags,
+  listing,
 }: {
   filePath: string;
   files: string[];
@@ -312,6 +328,8 @@ export const getMdxOptions = ({
   canvasNodeFiles?: Record<string, string>;
   changelog?: RemarkChangelogOptions;
   showTags?: boolean;
+  /** Request context for ```list / ```blog blocks. */
+  listing?: ListingRenderContext;
 }): EvaluateOptions => {
   return {
     parseFrontmatter,
@@ -340,6 +358,22 @@ export const getMdxOptions = ({
         // `showTags === false` disables inline `#tag` pills, leaving them as text.
         ...(showTags === false ? [] : [remarkTags]),
         [remarkObsidianBases, { siteHostname, siteId, rootDir }],
+        ...(siteId
+          ? [
+              [
+                remarkListing,
+                {
+                  siteId,
+                  siteHostname,
+                  rootDir,
+                  filePath,
+                  files,
+                  permalinks,
+                  ...listing,
+                },
+              ] as Pluggable,
+            ]
+          : []),
         // Last remark plugin: it restructures the whole tree
         ...(changelog ? [[remarkChangelog, changelog] as Pluggable] : []),
       ],
