@@ -129,7 +129,11 @@ test('projects grid: nested indexes, cards without images have no media, whole c
     cards.nth(2).locator('.list-component-item-media img'),
   ).toBeVisible();
   await expect(page.locator('.listing-page[data-view="grid"]')).toBeVisible();
-  await cards.nth(2).locator('.list-component-item-summary').click();
+  // A real click on the card's summary text: the card link's overlay takes it
+  const summary = cards.nth(2).locator('.list-component-item-summary');
+  await summary.scrollIntoViewIfNeeded();
+  const box = (await summary.boundingBox())!;
+  await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
   await expect(page).toHaveURL(/\/projects\/alpha$/);
 });
 
