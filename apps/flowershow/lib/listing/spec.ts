@@ -16,14 +16,14 @@ export const ALL_LISTING_KEYS = [
   'group',
 ] as const;
 export type ListingKey = (typeof ALL_LISTING_KEYS)[number];
-/** PR B: no featured/group. Task G1 (PR B2): ALL_LISTING_KEYS. */
-export const LISTING_KEYS: readonly ListingKey[] = ALL_LISTING_KEYS.filter(
-  (k) => k !== 'featured' && k !== 'group',
-);
+export const LISTING_KEYS: readonly ListingKey[] = ALL_LISTING_KEYS;
 export type ListingView = 'list' | 'grid' | 'compact' | 'people';
-const ALL_VIEWS: readonly ListingView[] = ['list', 'grid', 'compact', 'people'];
-/** PR B: list and grid. Task G1 (PR B2): all four. */
-export const LISTING_VIEWS: readonly ListingView[] = ['list', 'grid'];
+export const LISTING_VIEWS: readonly ListingView[] = [
+  'list',
+  'grid',
+  'compact',
+  'people',
+];
 export type ListingSort = { field: string; direction: 'asc' | 'desc' };
 export type ListingFields = {
   eyebrow: string[];
@@ -398,10 +398,6 @@ export function parseListingSpec(
       errors.push(unknownKeyMessage(key, value));
       continue;
     }
-    if (k !== 'sortDirection' && !LISTING_KEYS.includes(k)) {
-      errors.push(`"${k}" is not available yet.`);
-      continue;
-    }
     if (k === 'from') {
       if (fromKey !== null) {
         const alias = FROM_ALIASES.has(canon(key)) ? key : fromKey;
@@ -434,11 +430,7 @@ export function parseListingSpec(
     const resolved = VIEW_ALIASES[v] ?? v;
     if ((LISTING_VIEWS as readonly string[]).includes(resolved))
       view = resolved as ListingView;
-    else if ((ALL_VIEWS as readonly string[]).includes(resolved))
-      errors.push(
-        `View "${resolved}" is not available yet; use "list" or "grid".`,
-      );
-    else if (v === 'magazine' && LISTING_KEYS.includes('featured'))
+    else if (v === 'magazine')
       errors.push(
         `Unknown view "${String(values.view)}". Use "view: grid" with "featured: 1".`,
       );

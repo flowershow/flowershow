@@ -131,15 +131,9 @@ describe('keys: case-insensitive, aliases, hints', () => {
     ]);
     expect(errs(blog({ zzz: 1 }))).toEqual(['Unknown key "zzz".']);
   });
-  it('PR B: B2 keys and views are "not available yet"', () => {
-    expect(errs(blog({ group: 'year' }))).toEqual([
-      '"group" is not available yet.',
-    ]);
-    expect(errs(blog({ view: 'compact' }))).toEqual([
-      'View "compact" is not available yet; use "list" or "grid".',
-    ]);
+  it('unknown views list all four', () => {
     expect(errs(blog({ view: 'masonry' }))).toEqual([
-      'Unknown view "masonry". Use list or grid.',
+      'Unknown view "masonry". Use list, grid, compact or people.',
     ]);
   });
   it('reports YAML that is not a map, or does not parse', () => {
@@ -365,7 +359,7 @@ describe('where and sort', () => {
   });
 });
 
-describe.skip('[B2] compact, people, featured, group', () => {
+describe('[B2] compact, people, featured, group', () => {
   it('views', () => {
     expect(ok(blog({ view: 'compact' }))).toMatchObject({
       view: 'compact',

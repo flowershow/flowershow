@@ -238,7 +238,7 @@ describe('remarkListing', () => {
   });
 });
 
-describe.skip('[B2] featured and grouping in the plugin', () => {
+describe('[B2] featured and grouping in the plugin', () => {
   it('featured: 1 promotes the first featured: true item to the front of page 1 only', async () => {
     await run('```blog\nview: grid\nfeatured: 1\nlimit: 3\n```');
     expect(fetchRowsByIds.mock.calls[0]![2]).toEqual(['r7', 'r0', 'r1']);

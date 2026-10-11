@@ -549,7 +549,7 @@ describe('renderListingError', () => {
   });
 });
 
-describe.skip('[B2] compact, people, featured, grouping', () => {
+describe('[B2] compact, people, featured, grouping', () => {
   it('compact: date + title, no media', async () => {
     const body = await html(
       renderListing(
