@@ -62,7 +62,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Home page](/docs/reference/home-page) — How Flowershow resolves which file to show at the root of your site.
 - [Knowledge Graph](/docs/reference/knowledge-graph) — Show an interactive graph of how your notes connect to each other.
 - [List component](/docs/reference/list-component) — Create organized lists and content catalogs by automatically listing files in a specified directory.
-- [Listing pages](/docs/reference/listings) — A blog index, a grid of projects or the latest posts on your home page, from any folder, in plain Markdown.
+- [Listing pages](/docs/reference/listings) — A blog index, a grid of projects, a compact archive, a team page or the latest posts on your home page, from any folder, in plain Markdown.
 - [Math equations](/docs/reference/math) — Write math equations with LaTeX syntax.
 - [Mermaid diagrams](/docs/reference/mermaid) — Create diagrams and visualizations using a popular, text-based syntax.
 - [Navbar configuration](/docs/reference/navbar) — Set logo, title, links and socials in your navigation bar, replace its content with your own HTML, or hide it on a page.
