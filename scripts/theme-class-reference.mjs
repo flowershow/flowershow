@@ -42,7 +42,7 @@ const GROUPS = [
     title: 'Lists, cards, skeletons, and pagination',
     description:
       'Collection/blog listing cards, empty and error states, loading placeholders, and pagination controls.',
-    dom: `.list-component\n├─ .list-component-item / .list-component-skeleton-item\n│  ├─ *-media\n│  │  └─ a.list-component-item-media-link (cards only)\n│  └─ *-content\n│     └─ .list-component-item-headline\n│        └─ a.list-component-item-headline-link\n└─ .list-component-pagination\n   ├─ .list-component-pagination-nav\n   └─ .list-component-pagination-pages\n.list-component-empty (no matching pages)\n.list-component-error (items failed to load)`,
+    dom: `div.listing-page[data-view] (page-level list/compact pages only)\nsection.list-component[.list-component--list | --grid | --compact | --people][data-view][data-media][data-ratio][data-listing-notes]   (div without data-view for legacy <List />)\n├─ h2.list-component-group-heading (optional, with group)\n├─ article.list-component-item[.list-component-item--featured] / .list-component-skeleton-item (legacy only)\n│  ├─ .list-component-item-media[.list-component-item-media--placeholder] > a.list-component-item-media-link > img.list-component-item-media-img | span.list-component-item-initials\n│  └─ .list-component-item-content\n│     ├─ .list-component-item-eyebrow > span\n│     ├─ .list-component-item-headline > a.list-component-item-headline-link\n│     ├─ .list-component-item-summary\n│     ├─ .list-component-item-meta\n│     │  ├─ time.list-component-item-date\n│     │  ├─ .list-component-item-authors > .list-component-item-avatars > img.list-component-item-author-avatar, .list-component-item-author, .list-component-item-authors-more\n│     │  └─ .list-component-item-meta-value[data-field]\n│     └─ .list-component-item-footnote (legacy only)\n└─ nav.list-component-pagination\n   ├─ .list-component-pagination-nav > .list-component-pagination-button[.is-disabled]\n   └─ .list-component-pagination-pages\n.list-component-empty (no matching pages)\n.list-component-error[.list-component-error--block] (items failed to load / invalid block)`,
   },
   {
     id: 'tags',
@@ -115,6 +115,7 @@ const STATE_OWNERS = {
   'has-sidebar': '.layout-inner',
   'has-sidebar-and-toc': '.layout-inner',
   'has-toc': '.layout-inner',
+  'is-disabled': '.list-component-pagination-button',
   'is-collapsible': '.site-tree-item-self / .mobile-nav-tree-item-self',
   'is-current': '.site-tree-item-self / .mobile-nav-tree-item-self',
   'is-open': 'navigation dropdowns and collapsible tree items',
@@ -145,7 +146,7 @@ export function classifyClassName(name) {
   if (/^(site-subnav|site-tree|site-sidebar|sidebar-drawer)/.test(name))
     return 'sidebar';
   if (/^(page-toc|toc(?:-|$))/.test(name)) return 'toc';
-  if (/^list-component/.test(name)) return 'listings';
+  if (/^list-component|^listing-page$/.test(name)) return 'listings';
   if (/^tags?-/.test(name)) return 'tags';
   if (/^changelog/.test(name)) return 'changelog';
   if (/^search/.test(name)) return 'search';
