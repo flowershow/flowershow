@@ -361,7 +361,7 @@ export function buildSite(): { rows: Row[]; files: string[] } {
   // journal/: ~4 years of monthly posts for the compact archive (year groups)
   rows.push(row('journal/README.md', { title: 'Journal', layout: 'list' }));
   for (let i = 0; i < 44; i++) {
-    const [title] = OLDER_TOPICS[i % OLDER_TOPICS.length]!;
+    const title = OLDER_TOPICS[i % OLDER_TOPICS.length]![0]!;
     const date = new Date(Date.parse('2026-10-04T00:00:00Z') - i * 33 * DAY)
       .toISOString()
       .slice(0, 10);

@@ -220,6 +220,7 @@ for (const [name, split] of [
   const page = await open(name);
   const share = await page.$eval('.list-component-item--featured', (a) => {
     const m = a.querySelector('.list-component-item-media');
+    if (!m) return 0;
     return Math.round(
       (m.getBoundingClientRect().width / a.getBoundingClientRect().width) * 100,
     );
