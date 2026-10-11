@@ -4,13 +4,36 @@
   "showToc": true,
   "showSidebar": false,
   "enableRss": true,
-  "theme": { "showModeSwitch": true },
+  "theme": {
+    "showModeSwitch": true
+  },
   "nav": {
     "title": "Listings demo",
     "links": [
-      { "href": "/blog", "name": "Blog" },
-      { "href": "/projects", "name": "Projects" },
-      { "href": "/archive", "name": "Archive" }
+      {
+        "href": "/blog",
+        "name": "Blog"
+      },
+      {
+        "href": "/projects",
+        "name": "Projects"
+      },
+      {
+        "href": "/archive",
+        "name": "Archive"
+      },
+      {
+        "href": "/people",
+        "name": "People"
+      },
+      {
+        "href": "/team",
+        "name": "Team"
+      },
+      {
+        "href": "/magazine",
+        "name": "Magazine"
+      }
     ]
   }
 }

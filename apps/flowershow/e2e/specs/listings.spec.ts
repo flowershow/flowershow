@@ -229,8 +229,27 @@ test('folder note with where, and wiki-linked custom fields', async ({
   ).toBeVisible();
 });
 
-test('archive: one ellipsis per gap', async ({ page }) => {
+test('compact archive: page-level, grouped by year, one ellipsis per gap', async ({
+  page,
+}) => {
   await page.goto('/archive');
+  const root = page.locator('section.list-component--compact');
+  await expect(root).toHaveAttribute('data-view', 'compact');
+  await expect(root.locator('> h2.list-component-group-heading')).toHaveText([
+    '2026',
+  ]);
+  await expect(page.locator('h2.list-component-group-heading[id]')).toHaveCount(
+    0,
+  );
+  await expect(
+    page.locator('.listing-page[data-view="compact"]'),
+  ).toBeVisible();
+  // date column + title, no images or summaries
+  const rows = items(page);
+  await expect(rows).toHaveCount(3);
+  await expect(rows.first().locator('time')).toHaveText('Sep 1, 2026');
+  await expect(root.locator('.list-component-item-media')).toHaveCount(0);
+  await expect(root.locator('.list-component-item-summary')).toHaveCount(0);
   await expect(page.locator('.list-component-pagination-ellipsis')).toHaveCount(
     1,
   );
@@ -384,4 +403,128 @@ test('RSS excludes drafts', async ({ request }) => {
   const xml = await (await request.get('/rss.xml')).text();
   expect(xml).toContain('Post 25');
   expect(xml).not.toContain('Draft post');
+});
+
+test('compact inline teaser: no year headings, a category column', async ({
+  page,
+}) => {
+  await page.goto('/compact-teaser');
+  const root = page.locator('section.list-component--compact');
+  await expect(root.locator('> article')).toHaveCount(3);
+  await expect(root.locator('.list-component-group-heading')).toHaveCount(0);
+  await expect(
+    root.locator('.list-component-item-meta-value[data-field="category"]'),
+  ).toHaveText(['Gardening']);
+  // the date and the title share a row (a grid, not stacked lines)
+  const row = root.locator('> article').first();
+  const date = (await row.locator('time').boundingBox())!;
+  const title = (await row
+    .locator('.list-component-item-headline a')
+    .boundingBox())!;
+  expect(title.x).toBeGreaterThan(date.x + date.width);
+  expect(Math.abs(title.y - date.y)).toBeLessThan(12);
+});
+
+test('grouping: by month, out of the ToC; each team heading once', async ({
+  page,
+}) => {
+  await page.goto('/by-month');
+  await expect(page.locator('h2.list-component-group-heading')).toHaveText([
+    'September 2026',
+    'August 2026',
+    'July 2026',
+    'June 2026',
+  ]);
+  await expect(
+    page.locator('.page-toc-container', { hasText: '2026' }),
+  ).toHaveCount(0);
+  await page.goto('/team');
+  await expect(page.locator('h2.list-component-group-heading')).toHaveText([
+    'Design',
+    'Eng',
+  ]);
+  // grouped first, then by name within the group
+  await expect(
+    page.locator(
+      'section.list-component--people > article .list-component-item-headline a',
+    ),
+  ).toHaveText(['Bob Baker', 'Ann Archer', 'Cat Cole']);
+});
+
+test('people view: portraits, initials without one, role, title sort; a file in from is an error', async ({
+  page,
+}) => {
+  await page.goto('/people');
+  const root = page.locator('section.list-component--people');
+  await expect(root).toHaveAttribute('data-ratio', '1-1');
+  const cards = root.locator('> article');
+  await expect(cards.locator('.list-component-item-headline a')).toHaveText([
+    'Ada Lovelace',
+    'Grace Hopper',
+    'Katherine Johnson',
+  ]);
+  await expect(
+    cards.nth(0).locator('.list-component-item-meta-value[data-field="role"]'),
+  ).toHaveText('Mathematician');
+  await expect(
+    cards.nth(0).locator('.list-component-item-media img'),
+  ).toBeVisible();
+  await expect(
+    cards
+      .nth(2)
+      .locator(
+        '.list-component-item-media--placeholder[aria-hidden="true"] .list-component-item-initials',
+      ),
+  ).toHaveText('KJ');
+  // the initials tile is the same size as a portrait
+  const photo = (await cards
+    .nth(0)
+    .locator('.list-component-item-media')
+    .boundingBox())!;
+  const tile = (await cards
+    .nth(2)
+    .locator('.list-component-item-media')
+    .boundingBox())!;
+  expect(Math.round(tile.width)).toBe(Math.round(photo.width));
+  expect(Math.round(tile.height)).toBe(Math.round(photo.height));
+  await page.goto('/team-file');
+  await expect(page.locator('.list-component-error--block')).toContainText(
+    '"from" must be a folder',
+  );
+});
+
+test('magazine = grid + featured: the featured: true post is the hero, once', async ({
+  page,
+}) => {
+  await page.goto('/magazine');
+  const cards = page.locator('section.list-component--grid > article');
+  await expect(cards).toHaveCount(7);
+  const hero = cards.first();
+  await expect(hero).toHaveClass(/list-component-item--featured/);
+  await expect(hero.locator('.list-component-item-headline a')).toHaveText(
+    /^Post 10:/,
+  );
+  await expect(hero.locator('.list-component-item-eyebrow')).toHaveText(
+    'Compilers',
+  );
+  await expect(hero.locator('.list-component-item-monogram')).toHaveCount(0);
+  await expect(
+    page.locator('.list-component-item-headline a', { hasText: /^Post 10:/ }),
+  ).toHaveCount(1);
+  await expect(page.locator('.list-component-item--featured')).toHaveCount(1);
+});
+
+test('featured without a featured: true item promotes the latest; no image gives a text hero', async ({
+  page,
+}) => {
+  await page.goto('/latest-hero');
+  const rows = items(page);
+  await expect(rows.locator('.list-component-item-headline a')).toHaveText([
+    'Episode 2',
+    'Episode 1',
+  ]);
+  await expect(rows.first()).toHaveClass(/list-component-item--featured/);
+  await expect(rows.first().locator('.list-component-item-media')).toHaveCount(
+    0,
+  );
 });
