@@ -65,6 +65,7 @@ import {
 } from '@/lib/listing/page-listing';
 import { listingCanonical, pageFromSearchParam } from '@/lib/listing/paginate';
 import {
+  hasTocHeadings,
   isAutoListingDirName,
   type ListingRoute,
   mayBeListingRoute,
@@ -719,8 +720,14 @@ export default async function SitePage(props: {
   // A changelog timeline TOC would list every entry's subheadings, so it's off there
   const isChangelogTimeline =
     changelog?.kind === 'index' || changelog?.kind === 'file';
+  // A page-level listing's item headings never enter the ToC, so without
+  // headings of its own the column would be empty (and narrow the grid)
+  const emptyListingToc =
+    pageLevelRoute != null && !hasTocHeadings(pageContent ?? '');
   const showToc =
-    !isChangelogTimeline && (metadata?.showToc ?? siteConfig?.showToc);
+    !isChangelogTimeline &&
+    !emptyListingToc &&
+    (metadata?.showToc ?? siteConfig?.showToc);
   const showKnowledgeGraph =
     metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false;
   const showRightColumn = showToc || showKnowledgeGraph;

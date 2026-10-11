@@ -9,3 +9,7 @@ list:
     meta: [duration, guests]
   pageSize: 25
 ---
+
+## About the show
+
+Conversations with people who changed computing.

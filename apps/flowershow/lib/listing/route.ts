@@ -1,6 +1,6 @@
 import { encodeSlug, filePathToSlug } from '@flowershow/core';
 import matter from 'gray-matter';
-import type { Code, Html } from 'mdast';
+import type { Code, Heading, Html } from 'mdast';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
@@ -56,14 +56,7 @@ export function hasExplicitListing(
   content: string,
   { mdx = false }: { mdx?: boolean } = {},
 ): boolean {
-  let body = content;
-  try {
-    body = matter(content).content;
-  } catch {
-    // malformed frontmatter: scan the raw text
-  }
-  const processor = unified().use(remarkParse).use(remarkObsidianComments);
-  const tree = processor.runSync(processor.parse(body));
+  const tree = parseBody(content);
   let found = false;
   visit(tree, (node) => {
     if (found) return;
@@ -74,6 +67,34 @@ export function hasExplicitListing(
       if (/<List[\s/>]/.test(value) || (mdx && FENCE_IN_HTML_RE.test(value)))
         found = true;
     }
+  });
+  return found;
+}
+
+/** The page body as mdast (frontmatter and Obsidian `%% comments %%` removed), as both pipelines see it. */
+function parseBody(content: string) {
+  let body = content;
+  try {
+    body = matter(content).content;
+  } catch {
+    // malformed frontmatter: scan the raw text
+  }
+  const processor = unified().use(remarkParse).use(remarkObsidianComments);
+  return processor.runSync(processor.parse(body));
+}
+
+/**
+ * Whether the page's own content has a heading the ToC lists (h2-h6; listing
+ * item headings are data-toc-ignore). A page-level listing without one hides
+ * its ToC column, which would otherwise be empty and narrow the grid.
+ */
+export function hasTocHeadings(content: string): boolean {
+  let found = false;
+  visit(parseBody(content), (node) => {
+    if (found) return;
+    if (node.type === 'heading' && (node as Heading).depth >= 2) found = true;
+    else if (node.type === 'html' && /<h[2-6][\s>]/i.test((node as Html).value))
+      found = true;
   });
   return found;
 }

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hasTocHeadings,
   autoListingFor,
   hasExplicitListing,
   isAutoListingDirName,
@@ -320,5 +321,22 @@ describe('mayBeListingRoute (skip the site path query on ordinary pages)', () =>
       ['/articles', null, null],
     ] as const)
       expect(mayBeListingRoute({ slug, blobPath, metadata }), slug).toBe(false);
+  });
+});
+
+describe('hasTocHeadings (a page-level listing hides an empty ToC)', () => {
+  it('true only for h2-h6 the ToC would list, from the page itself', () => {
+    expect(hasTocHeadings('---\ntitle: Projects\nlayout: list\n---\n')).toBe(
+      false,
+    );
+    expect(hasTocHeadings('Some intro.\n\n# Title only')).toBe(false);
+    expect(hasTocHeadings('Intro\n\n## About the show\n')).toBe(true);
+    expect(hasTocHeadings('Intro\n\nAbout\n-----\n')).toBe(true);
+    expect(hasTocHeadings('<h3>Raw</h3>')).toBe(true);
+  });
+  it('ignores headings inside fences, a listing block and %% comments %%', () => {
+    expect(hasTocHeadings('```list\nfrom: blog\n```')).toBe(false);
+    expect(hasTocHeadings('```md\n## not a heading\n```')).toBe(false);
+    expect(hasTocHeadings('%%\n## hidden\n%%')).toBe(false);
   });
 });
