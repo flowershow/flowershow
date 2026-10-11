@@ -54,8 +54,12 @@ export type ListingSpec = {
   /** Where a list thumbnail sits (media: thumb left|right); left by default. */
   mediaSide: MediaSide;
   ratio: Ratio;
-  /** Image (path or [[wikilink]]) for items without one; resolved against the listing page. */
-  defaultImage: string | null;
+  /**
+   * Image (path or [[wikilink]]) for items without one, resolved against the
+   * listing page; `false` (`defaultImage: none`) turns grid monogram tiles off;
+   * null (unset) keeps them.
+   */
+  defaultImage: string | false | null;
   featured: 0 | 1;
   group: ListingGroup;
 };
@@ -555,8 +559,10 @@ export function parseListingSpec(
       if (side === 'left' || side === 'right') mediaSide = side;
     }
   }
-  let defaultImage: string | null = null;
-  if (values.defaultImage != null) {
+  let defaultImage: string | false | null = null;
+  if (values.defaultImage != null && isNone(values.defaultImage))
+    defaultImage = false;
+  else if (values.defaultImage != null) {
     // unquoted [[cover.png]] parses as a nested list
     const v = values.defaultImage;
     const nested =

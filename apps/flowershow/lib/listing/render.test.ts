@@ -281,23 +281,84 @@ describe('grid view and the no-image rule (UX M-2)', () => {
         .getAttribute('sizes'),
     ).toBe('(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw');
   });
-  it('mixed grid: a card without an image has no media block at all (no placeholder)', async () => {
+  it('mixed grid: a card without an image gets a decorative monogram tile (all-or-nothing media)', async () => {
     const body = await html(
       renderListing(
         input({
           spec: grid,
-          page: page([item(), item({ url: '/b', image: null })]),
+          page: page([item(), item({ url: '/b', image: null, title: 'beta' })]),
         }),
       ),
     );
     const cards = body.querySelectorAll('section > article');
+    expect(cards[0]!.querySelector('listing-image')).not.toBeNull();
+    const tile = cards[1]!.querySelector(
+      '.list-component-item-media.list-component-item-media--placeholder',
+    )!;
+    expect(tile.getAttribute('aria-hidden')).toBe('true');
+    expect(tile.querySelector('listing-image, img')).toBeNull();
     expect(
-      cards[0]!.querySelector('.list-component-item-media'),
-    ).not.toBeNull();
-    expect(cards[1]!.querySelector('.list-component-item-media')).toBeNull();
+      tile.querySelector('.list-component-item-monogram')!.textContent,
+    ).toBe('B');
+  });
+  it('a monogram is the first letter or digit of the title; none if the title has neither', async () => {
+    const body = await html(
+      renderListing(
+        input({
+          spec: grid,
+          page: page([
+            item(),
+            item({ url: '/b', image: null, title: 'économie notes' }),
+            item({ url: '/c', image: null, title: '“1984”, again' }),
+            item({ url: '/d', image: null, title: '***' }),
+          ]),
+        }),
+      ),
+    );
+    expect(
+      [
+        ...body.querySelectorAll(
+          '.list-component-item-media--placeholder .list-component-item-monogram',
+        ),
+      ].map((e) => e.textContent),
+    ).toEqual(['É', '1']);
     expect(
       body.querySelectorAll('.list-component-item-media--placeholder'),
-    ).toHaveLength(0);
+    ).toHaveLength(3); // no letter: the tinted tile alone
+  });
+  it('no monograms with defaultImage: none, in the list view, or for a featured card', async () => {
+    const mixed = page([item(), item({ url: '/b', image: null })]);
+    const count = async (o: Partial<ListingSpec>, featuredFirst = false) =>
+      (
+        await html(
+          renderListing(input({ spec: spec(o), page: mixed, featuredFirst })),
+        )
+      ).querySelectorAll('.list-component-item-monogram').length;
+    const g = {
+      view: 'grid' as const,
+      media: 'cover' as const,
+      ratio: '16/9' as const,
+    };
+    expect(await count(g)).toBe(1);
+    expect(await count({ ...g, defaultImage: false })).toBe(0);
+    expect(await count({})).toBe(0); // list view: text-only rows
+    const featuredFirstNoImage = page([
+      item({ image: null }),
+      item({ url: '/b' }),
+    ]);
+    expect(
+      (
+        await html(
+          renderListing(
+            input({
+              spec: spec(g),
+              page: featuredFirstNoImage,
+              featuredFirst: true,
+            }),
+          ),
+        )
+      ).querySelectorAll('.list-component-item-monogram').length,
+    ).toBe(0);
   });
   it('list thumbnails: data-media-side left by default, right on request; only for thumb', async () => {
     const side = async (o: Partial<ListingSpec>) =>

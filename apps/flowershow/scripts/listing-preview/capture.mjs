@@ -73,6 +73,29 @@ async function open(name, opts = {}) {
   await page.close();
 }
 {
+  // Page-level grid (no ToC column) reaches 3 columns at 1280; monogram tiles line up with image media
+  const page = await open('grid-projects', { width: 1280 });
+  const { cols, heights } = await page.$eval(
+    'section.list-component--grid',
+    (g) => ({
+      cols: getComputedStyle(g).gridTemplateColumns.split(' ').length,
+      heights: [...g.querySelectorAll('.list-component-item-media')].map(
+        (m) => Math.round(m.getBoundingClientRect().height),
+      ),
+    }),
+  );
+  if (cols !== 3)
+    failures.push(`grid-projects @1280: expected 3 grid columns, got ${cols}`);
+  if (heights.length < 2 || new Set(heights).size !== 1)
+    failures.push(
+      `grid-projects: media and monogram tiles differ in height (${heights.join(', ')})`,
+    );
+  console.log(
+    `check grid-projects @1280: ${cols} columns, media heights ${heights.join(', ')}`,
+  );
+  await page.close();
+}
+{
   // Whole grid card clickable (UX m-4): the summary's centre must hit the headline link's overlay
   const page = await open('grid-projects');
   const hit = await page.$eval(

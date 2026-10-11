@@ -69,6 +69,8 @@ const URLS: Array<[name: string, slug: string, page?: number]> = [
   ['mdx-page', '/mdx-page'],
   ['thumb-right', '/thumb-right'],
   ['default-image', '/default-image'],
+  ['no-monogram', '/no-monogram'],
+  ['text-grid', '/text-grid'],
 ];
 
 it('renders the e2e listings fixture', async () => {

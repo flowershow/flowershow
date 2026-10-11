@@ -92,6 +92,11 @@ function initials(name: string): string {
     .join('');
 }
 
+/** First letter or digit of a title, for a grid card without an image ('' if none). */
+function monogram(title: string): string {
+  return title.match(/[\p{L}\p{N}]/u)?.[0]?.toLocaleUpperCase() ?? '';
+}
+
 function renderAuthors(
   handles: string[],
   authors: Map<string, ResolvedAuthor>,
@@ -144,6 +149,8 @@ type ItemCtx = {
   authors: Map<string, ResolvedAuthor>;
   featured: boolean;
   showMedia: boolean;
+  /** Grid with at least one image: cards without one get a monogram tile. */
+  monogram: boolean;
   locale: string;
 };
 
@@ -187,7 +194,20 @@ function renderMedia(
       ],
       { ariaHidden: 'true' },
     );
-  // No image and no defaultImage: no media block (no placeholder box)
+  if (ctx.monogram && !ctx.featured) {
+    // A tinted tile with the title's first letter keeps grid rows aligned
+    // without looking like a broken image; decorative, so aria-hidden
+    const letter = monogram(item.title);
+    return el(
+      'div',
+      ['list-component-item-media', 'list-component-item-media--placeholder'],
+      letter
+        ? [el('span', ['list-component-item-monogram'], [text(letter)])]
+        : [],
+      { ariaHidden: 'true' },
+    );
+  }
+  // List rows (and grids with defaultImage: none) without an image: no media block
   return null;
 }
 
@@ -344,6 +364,9 @@ export function renderListing({
   const anyImage = page.items.some((i) => i.image);
   const showMedia =
     spec.media !== 'none' && (anyImage || spec.view === 'people');
+  // All-or-nothing grid media: if any card has an image, the rest get a monogram
+  const monogramTiles =
+    spec.view === 'grid' && showMedia && spec.defaultImage !== false;
   const children: RootContent[] = [];
   if (page.items.length === 0) children.push(empty);
   let lastGroup: string | null = null;
@@ -363,6 +386,7 @@ export function renderListing({
         authors,
         featured,
         showMedia,
+        monogram: monogramTiles,
         locale,
       }),
     );

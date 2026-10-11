@@ -1623,7 +1623,8 @@
    All selectors are :where() so themes always win. Custom properties:
      --list-max-width, --list-gap, --list-card-min, --list-card-radius,
      --list-card-border, --list-card-bg, --list-card-hover-bg,
-     --list-media-ratio, --list-thumb-width, --list-thumb-order,
+     --list-media-ratio, --list-media-placeholder, --list-monogram-color,
+     --list-thumb-width, --list-thumb-order,
      --list-avatar-shape, --list-meta-color, --list-eyebrow-color,
      --list-rule-color, --list-compact-meta-width
    ──────────────────────────────────────────────────── */
@@ -1757,6 +1758,34 @@
   :where(.list-component[data-view]) .list-component-item-media-img {
     border-radius: var(--list-card-radius, 0.5rem);
   }
+  /* Grid cards without an image (in a grid where others have one): a tile tinted
+     with the theme accent, carrying the title's first letter, so rows stay
+     aligned and the card reads as deliberate rather than a broken image.
+     Decorative (aria-hidden). Themes: --list-media-placeholder, --list-monogram-color. */
+  :where(.list-component-item-media--placeholder) {
+    display: grid;
+    place-items: center;
+    border-radius: var(--list-card-radius, 0.5rem);
+    background: var(
+      --list-media-placeholder,
+      linear-gradient(
+        135deg,
+        color-mix(in oklch, var(--color-accent) 7%, var(--color-background)),
+        color-mix(in oklch, var(--color-accent) 16%, var(--color-background))
+      )
+    );
+  }
+  :where(.list-component-item-monogram) {
+    font-family: var(--font-heading);
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+    color: var(
+      --list-monogram-color,
+      color-mix(in oklch, var(--color-accent) 70%, var(--color-background))
+    );
+    user-select: none;
+  }
   /* list: thumbnail left (default) or right (media: thumb right →
      data-media-side="right", or --list-thumb-order: 2 from a theme); the
      image comes first in the DOM but is aria-hidden and out of the tab order,
@@ -1834,6 +1863,12 @@
   }
   :where(.list-component--grid) .list-component-item-media {
     width: 100%;
+  }
+  /* One column: monogram tiles only align rows, so drop them */
+  @media (max-width: 639px) {
+    :where(.list-component--grid) .list-component-item-media--placeholder {
+      display: none;
+    }
   }
   :where(.list-component--grid) .list-component-item-summary {
     font-size: 0.9375rem;

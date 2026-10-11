@@ -123,8 +123,13 @@ test('projects grid: nested indexes, cards without images have no media, whole c
       .locator('.list-component-item-meta-value[data-field="status"]'),
   ).toHaveText('Shipped');
   await expect(cards.locator('time')).toHaveCount(0); // fields.date: none
-  // Beta and Gamma have no image: no media block at all (no placeholder), Alpha has one
-  await expect(cards.locator('.list-component-item-media')).toHaveCount(1);
+  // Alpha has an image, so Beta and Gamma get a decorative monogram tile (all-or-nothing media)
+  await expect(cards.locator('.list-component-item-media')).toHaveCount(3);
+  await expect(
+    cards.locator(
+      '.list-component-item-media--placeholder[aria-hidden="true"] .list-component-item-monogram',
+    ),
+  ).toHaveText(['B', 'G']);
   await expect(
     cards.nth(2).locator('.list-component-item-media img'),
   ).toBeVisible();
@@ -171,6 +176,40 @@ test('defaultImage fills cards without an image', async ({ page }) => {
     'src',
     /alpha-cover\.jpg$/,
   ); // Beta, via defaultImage
+});
+
+test('grid without monograms: defaultImage none, or no item with an image', async ({
+  page,
+}) => {
+  await page.goto('/no-monogram');
+  const cards = page.locator('section.list-component--grid > article');
+  await expect(cards).toHaveCount(3);
+  await expect(cards.locator('.list-component-item-media')).toHaveCount(1);
+  await expect(page.locator('.list-component-item-monogram')).toHaveCount(0);
+  await page.goto('/text-grid');
+  await expect(
+    page.locator('section.list-component--grid[data-media="none"] > article'),
+  ).toHaveCount(3);
+  await expect(page.locator('.list-component-item-media')).toHaveCount(0);
+});
+
+test('page-level listing: no empty ToC column, so the grid has 3 columns at 1280px; a page with its own headings keeps the ToC', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/projects');
+  await expect(page.locator('section.list-component--grid')).toBeVisible();
+  await expect(page.locator('.page-toc-container')).toHaveCount(0);
+  const tops = await page
+    .locator('section.list-component--grid > article')
+    .evaluateAll((els) =>
+      els.map((e) => Math.round(e.getBoundingClientRect().top)),
+    );
+  expect(new Set(tops).size).toBe(1); // Beta, Gamma, Alpha side by side
+  await page.goto('/podcast');
+  await expect(
+    page.locator('.page-toc-container', { hasText: 'About the show' }),
+  ).toBeVisible();
 });
 
 test('folder note with where, and wiki-linked custom fields', async ({

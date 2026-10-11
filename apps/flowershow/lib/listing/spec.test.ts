@@ -321,6 +321,14 @@ describe('media and ratio', () => {
       ok(blog({ defaultImage: 'a.png', fields: { image: 'cover' } })),
     ).toMatchObject({ defaultImage: 'a.png', fields: { image: 'cover' } });
   });
+  it('defaultImage: none (or false) turns monogram tiles off; no "ignored" note', () => {
+    expect(ok(blog({ defaultImage: 'none' })).defaultImage).toBe(false);
+    expect(ok(blog({ defaultImage: 'None' })).defaultImage).toBe(false);
+    expect(
+      ok(parseListingBlock('blog', 'defaultImage: false')).defaultImage,
+    ).toBe(false);
+    expect(notes(blog({ defaultImage: 'none', media: 'none' }))).toEqual([]);
+  });
   it('grid shows thumb as cover, with a note', () => {
     const r = blog({ view: 'grid', media: 'thumb' });
     expect(r.ok && r.spec.media).toBe('cover');

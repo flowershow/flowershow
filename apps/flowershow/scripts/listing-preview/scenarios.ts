@@ -219,7 +219,7 @@ export const SCENARIOS: Scenario[] = [
   {
     name: 'grid-projects',
     title:
-      'grid page: projects, ratio 4/3, no dates, status meta (one project without an image: no media block)',
+      'grid page: projects, ratio 4/3, no dates, status meta (one project without an image: monogram tile)',
     slug: '/projects',
     path: 'projects/README.md',
     markdown: page(
@@ -238,6 +238,26 @@ export const SCENARIOS: Scenario[] = [
       '```list\nfrom: projects\nview: grid\nsort: title\ndefaultImage: "[[assets/changelog-click-to-enlarge-images.webp]]"\nfields:\n  date: none\n```',
     ),
     shots: [{ file: 'grid-default-image' }],
+  },
+  {
+    name: 'grid-monogram-off',
+    title:
+      'grid: defaultImage: none (no monogram tiles; the Themes card is text only)',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Home',
+      '```list\nfrom: projects\nview: grid\nsort: title\ndefaultImage: none\nfields:\n  date: none\n```',
+    ),
+    shots: [{ file: 'grid-monogram-off' }],
+  },
+  {
+    name: 'grid-text-only',
+    title: 'grid: no item has an image (text-only cards, no media block)',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline('Notes', '```list\nfrom: notes\nview: grid\n```'),
+    shots: [{ file: 'grid-text-only' }],
   },
   {
     name: 'grid-square',
