@@ -4,6 +4,7 @@
   "showToc": true,
   "showSidebar": false,
   "enableRss": true,
+  "theme": { "showModeSwitch": true },
   "nav": {
     "title": "Listings demo",
     "links": [
