@@ -23,6 +23,15 @@ export function escapeXml(str: string): string {
     .replace(/'/g, '&apos;');
 }
 
+/** A frontmatter scalar as text; objects and arrays are not text. */
+function textOf(value: unknown): string {
+  return typeof value === 'string' ||
+    typeof value === 'number' ||
+    typeof value === 'boolean'
+    ? String(value).trim()
+    : '';
+}
+
 export function filterRssBlobs(blobs: RssBlob[]): RssBlob[] {
   return blobs.filter((blob) => {
     const metadata = blob.metadata;
@@ -34,15 +43,22 @@ export function buildRssItem(blob: RssBlob, siteUrl: string): string {
   const metadata = blob.metadata as Record<string, unknown>;
   const permalink = (blob.permalink ?? blob.appPath)?.replace(/^\//, '');
   const link = escapeXml(`${siteUrl}/${permalink}`);
-  const title = escapeXml(
-    (metadata.title as string) || permalink || 'Untitled',
-  );
-  const description = metadata.description
-    ? escapeXml(metadata.description as string)
-    : '';
+  const title = escapeXml(textOf(metadata.title) || permalink || 'Untitled');
+  const descriptionText = textOf(metadata.description);
+  const description = descriptionText ? escapeXml(descriptionText) : '';
   const pubDate = (safeDate(metadata.date) ?? blob.updatedAt).toUTCString();
-  const authors = metadata.authors as string[] | undefined;
-  const author = authors?.length ? escapeXml(authors.join(', ')) : '';
+  // Frontmatter is untrusted: `authors: "[[ada]]"` (a scalar) or objects must not throw
+  const raw = metadata.authors;
+  const authors = (Array.isArray(raw) ? raw : raw == null ? [] : [raw])
+    .map(textOf)
+    .map((a) =>
+      a.replace(
+        /^\[\[([^\]|]+)(?:\|([^\]]+))?\]\]$/,
+        (_, t, alias) => alias ?? t,
+      ),
+    )
+    .filter(Boolean);
+  const author = authors.length ? escapeXml(authors.join(', ')) : '';
 
   return `    <item>
       <title>${title}</title>

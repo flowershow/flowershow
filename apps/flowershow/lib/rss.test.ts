@@ -171,6 +171,32 @@ describe('buildRssItem', () => {
     expect(item).toContain('<author>Alice, Bob</author>');
   });
 
+  it('malformed frontmatter never throws: scalar authors, objects, numeric title and description (Review Focus 2)', () => {
+    const item = (metadata: Record<string, unknown>) =>
+      buildRssItem(
+        {
+          appPath: '/post',
+          updatedAt: new Date('2025-01-01'),
+          permalink: null,
+          metadata,
+        },
+        'https://example.com',
+      );
+    expect(
+      item({ title: 'P', date: '2025-01-01', authors: '[[ada]]' }),
+    ).toContain('<author>ada</author>');
+    const odd = item({
+      title: 1984,
+      date: 'TBD',
+      description: 42,
+      authors: [{ name: 'x' }, 'Bob'],
+    });
+    expect(odd).toContain('<title>1984</title>');
+    expect(odd).toContain('<description>42</description>');
+    expect(odd).toContain('<author>Bob</author>');
+    expect(odd).not.toContain('[object Object]');
+  });
+
   it('omits author tag when authors is empty', () => {
     const blob: RssBlob = {
       appPath: '/post',
