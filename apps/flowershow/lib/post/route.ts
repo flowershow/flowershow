@@ -5,6 +5,7 @@
  * with `layout: post`. Pure: the route reads the host pages' frontmatter
  * (postHostPaths) in one query and passes it in.
  */
+import { encodeSlug, filePathToSlug } from '@flowershow/core';
 import { dirOf, isFolderIndexPath } from '@/lib/changelog';
 import { resolveFolderCase } from '@/lib/listing/items';
 import { isAutoListingDirName } from '@/lib/listing/route';
@@ -175,4 +176,21 @@ export function resolvePostRoute({
   // post: ancestors start above a folder index, and the route checks
   // resolveListingRoute before this.
   return collection ? { kind: 'post', collection } : { kind: 'none' };
+}
+
+/**
+ * The eyebrow is the breadcrumb trail above the post. A README-less blog
+ * folder is not a page in the site tree, so its crumb has no link; point it
+ * at the folder's generated listing page (the same URL as the virtual route).
+ */
+export function linkCollectionCrumb<
+  T extends { label: string; href: string | null },
+>(crumbs: T[], collection: PostCollection | null, section?: unknown): T[] {
+  if (!collection || (typeof section === 'string' && section.trim()))
+    return crumbs;
+  const i = collection.dir.split('/').length - 1;
+  const crumb = crumbs[i];
+  if (!crumb || crumb.href) return crumbs;
+  const href = encodeSlug(filePathToSlug(`${collection.dir}/index.md`));
+  return crumbs.map((c, j) => (j === i ? { ...c, href } : c));
 }

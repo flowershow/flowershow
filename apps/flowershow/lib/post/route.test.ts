@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { mayBePost, postHostPaths, resolvePostRoute } from './route';
+import {
+  linkCollectionCrumb,
+  mayBePost,
+  postHostPaths,
+  resolvePostRoute,
+} from './route';
 
 const files = [
   '/README.md',
@@ -234,5 +239,43 @@ describe('resolvePostRoute', () => {
         },
       ),
     ).toMatchObject({ collection: { dir: 'projects', source: 'layout' } });
+  });
+});
+
+describe('linkCollectionCrumb', () => {
+  const col = (dir: string) => ({
+    dir,
+    options: undefined,
+    source: 'auto' as const,
+    hostPath: null,
+  });
+  it('links a README-less collection folder to its generated listing page', () => {
+    expect(
+      linkCollectionCrumb(
+        [
+          { label: 'Post demo', href: null },
+          { label: 'Blog', href: null },
+          { label: 'Alpha', href: null },
+        ],
+        col('post-demo/blog'),
+      ),
+    ).toEqual([
+      { label: 'Post demo', href: null },
+      { label: 'Blog', href: '/post-demo/blog' },
+      { label: 'Alpha', href: null },
+    ]);
+  });
+  it('keeps existing links, sections and pages outside collections as they are', () => {
+    const crumbs = [
+      { label: 'Blog', href: '/blog' },
+      { label: 'A', href: null },
+    ];
+    expect(linkCollectionCrumb(crumbs, col('blog'))).toBe(crumbs);
+    const sec = [
+      { label: 'Writing', href: null },
+      { label: 'A', href: null },
+    ];
+    expect(linkCollectionCrumb(sec, col('blog'), 'Writing')).toBe(sec);
+    expect(linkCollectionCrumb(sec, null)).toBe(sec);
   });
 });

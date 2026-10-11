@@ -78,6 +78,7 @@ import { isDraft } from '@/lib/listing/rules';
 import { resolvePostHero } from '@/lib/post/hero';
 import { loadPostHosts } from '@/lib/post/hosts';
 import {
+  linkCollectionCrumb,
   mayBePost,
   type PostRoute,
   postHostPaths,
@@ -928,7 +929,11 @@ export default async function SitePage(props: {
               <PostLayout
                 title={metadata?.title ?? ''}
                 description={displayDescription(metadata) ?? ''}
-                eyebrow={breadcrumbs?.slice(0, -1)}
+                eyebrow={linkCollectionCrumb(
+                  breadcrumbs?.slice(0, -1) ?? [],
+                  postRoute.kind === 'post' ? postRoute.collection : null,
+                  metadata?.section,
+                )}
                 authors={authors}
                 date={metadata?.date}
                 locale={locale}
