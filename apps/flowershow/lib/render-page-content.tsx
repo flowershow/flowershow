@@ -10,6 +10,7 @@ import {
   protectNonMathDollars,
   protectWikiLinkAliases,
 } from '@/lib/markdown';
+import { rendersAsMdx } from '@/lib/listing/route';
 import { preprocessMdxForgiving } from '@/lib/preprocess-mdx';
 import { processCanvas } from '@/lib/process-canvas';
 import type { RemarkChangelogOptions } from '@/lib/remark-changelog';
@@ -104,9 +105,8 @@ export async function renderPageContent({
         siteFilePaths,
       );
 
-      // Determine whether to use MD or MDX rendering based on config and file extension
-      const useMdRendering =
-        renderMode === 'md' || (renderMode === 'auto' && isMarkdown);
+      // MD or MDX by config and file extension; listing detection uses the same rule
+      const useMdRendering = !rendersAsMdx(blob.path, renderMode);
 
       if (useMdRendering) {
         const preprocessedContent = content

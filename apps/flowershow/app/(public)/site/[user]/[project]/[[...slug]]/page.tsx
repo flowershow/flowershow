@@ -189,6 +189,7 @@ export async function generateMetadata(props: {
           metadata: (metadata as Record<string, unknown> | null) ?? null,
           siteFilePaths,
           changelogKind: isChangelogFallback ? 'index' : null,
+          renderMode: metadata?.syntaxMode ?? siteConfig?.syntaxMode,
         },
         async () =>
           blob
@@ -589,6 +590,7 @@ export default async function SitePage(props: {
     content: pageContent ?? '',
     siteFilePaths,
     changelogKind: changelog?.kind ?? null,
+    renderMode,
   });
   const pageLevelRoute =
     listingRoute.kind === 'page' && !changelog ? listingRoute : null;

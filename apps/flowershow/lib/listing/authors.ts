@@ -25,6 +25,13 @@ const clean = (h: string) =>
     .replace(/^\/+/, '')
     .replace(/\.mdx?$/i, '');
 
+/** The display text of `[[target|Alias]]`, which wins over the page title or handle. */
+const aliasOf = (h: string) =>
+  h
+    .trim()
+    .match(/^\[\[[^|]+?\|(.+?)\]\]$/)?.[1]
+    ?.trim() || null;
+
 export function authorPathMatches(handle: string, path: string): boolean {
   const h = clean(handle);
   return [`${h}.md`, `${h}.mdx`].some(
@@ -109,7 +116,9 @@ function toResolvedAuthors(
   const siteFiles = files.map((p) => ({ path: p.replace(/^\/+/, '') }));
   return handles.map((handle) => {
     const row = pickAuthorBlob(handle, rows);
-    if (!row) return { key: handle, name: clean(handle) || handle, url: null };
+    const alias = aliasOf(handle);
+    if (!row)
+      return { key: handle, name: alias || clean(handle) || handle, url: null };
     let avatar: string | undefined;
     if (row.avatar) {
       const wiki = extractWikiLinkTarget(row.avatar);
@@ -121,7 +130,7 @@ function toResolvedAuthors(
     }
     return {
       key: row.id,
-      name: row.title || clean(handle),
+      name: alias || row.title || clean(handle),
       url: ensureLeadingSlash(row.permalink || row.appPath || ''),
       ...(avatar ? { avatar } : {}),
     };

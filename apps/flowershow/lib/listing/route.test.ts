@@ -5,6 +5,7 @@ import {
   hasExplicitListing,
   isAutoListingDirName,
   mayBeListingRoute,
+  rendersAsMdx,
   resolveListingRoute,
   virtualListingDir,
 } from './route';
@@ -71,6 +72,19 @@ describe('names and detection', () => {
     expect(hasExplicitListing('```js\nconst blog = 1;\n```')).toBe(false);
     expect(hasExplicitListing('```Blog\n```')).toBe(false); // the plugin is case-sensitive too, so this renders nothing and is not a listing
     expect(hasExplicitListing('Use `<List />` in MDX.')).toBe(false); // inline code, not an element
+  });
+  it('Obsidian Bases embeds and <ObsidianBasesViews> count as listings', () => {
+    expect(hasExplicitListing('My posts:\n\n![[Posts.base]]')).toBe(true);
+    expect(hasExplicitListing('![[blog/Posts.base#Table]]')).toBe(true);
+    expect(hasExplicitListing('See ![[Posts.base|All posts]] below.')).toBe(
+      true,
+    );
+    expect(
+      hasExplicitListing('<ObsidianBasesViews views="[]" />', { mdx: true }),
+    ).toBe(true);
+    expect(hasExplicitListing('![[photo.png]] and [[Posts.base]]')).toBe(false); // a link, not an embed
+    expect(hasExplicitListing('Write `![[Posts.base]]` to embed.')).toBe(false);
+    expect(hasExplicitListing('![[database notes]]')).toBe(false);
   });
   it('Obsidian %% comments %% hide a fence from detection, as they do from rendering', () => {
     expect(hasExplicitListing('Prose.\n\n%%\n```blog\nlimit: 3\n```\n%%')).toBe(
@@ -156,6 +170,8 @@ describe('autoListingFor (cases 2 and 3)', () => {
     none('blog/README.md', { list: 'false' });
     none('blog/README.mdx', {}, '<List dir="/blog" />');
     none('blog/index.md', {}, '> ```blog\n> ```');
+    none('blog/README.md', {}, 'All posts:\n\n![[Posts.base#Table]]');
+    none('blog/README.mdx', {}, '<ObsidianBasesViews views="[]" />');
     none('notes.md', {}); // notes is not an auto folder name
     none('blog/first-post.md', {});
     none('podcast.md', {}); // folder note, but podcast is not an auto folder name
@@ -164,6 +180,23 @@ describe('autoListingFor (cases 2 and 3)', () => {
       {},
       'Intro.\n\n<section>\n```blog\nlimit: 3\n```\n</section>',
     ); // MDX parses the fence inside JSX: no second listing
+  });
+  it('detection parses the body as the page renders it (syntaxMode)', () => {
+    const jsx = 'Intro.\n\n<section>\n```blog\nlimit: 3\n```\n</section>';
+    const auto = (renderMode?: string) =>
+      autoListingFor({
+        blobPath: 'blog/README.md',
+        metadata: {},
+        content: jsx,
+        siteFilePaths: files,
+        renderMode,
+      });
+    expect(auto()).not.toBeNull(); // .md renders as Markdown: the fence stays raw HTML
+    expect(auto('auto')).not.toBeNull();
+    expect(auto('md')).not.toBeNull();
+    expect(auto('mdx')).toBeNull(); // MDX parses the fence inside JSX: it renders
+    expect(rendersAsMdx('blog/README.mdx', 'md')).toBe(false);
+    expect(rendersAsMdx('blog/README.mdx', undefined)).toBe(true);
   });
   it('a folder note beside an attachments-only folder gets no listing (no error card on a published page)', () => {
     expect(

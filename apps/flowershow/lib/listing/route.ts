@@ -1,6 +1,6 @@
 import { encodeSlug, filePathToSlug } from '@flowershow/core';
 import matter from 'gray-matter';
-import type { Code, Heading, Html } from 'mdast';
+import type { Code, Heading, Html, Text } from 'mdast';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
@@ -27,6 +27,10 @@ const LISTING_LANGS = new Set(['list', 'blog', 'base']);
 const FENCE_IN_HTML_RE =
   /^[ \t]*(?:`{3,}|~{3,})[ \t]*(?:list|blog|base)[ \t]*$/m;
 
+/** An Obsidian Bases embed, `![[Posts.base]]` or `![[Posts.base#View|alias]]`. */
+const BASE_EMBED_RE = /!\[\[[^\]|#]+\.base(?:[#|][^\]]*)?\]\]/i;
+const LISTING_HTML_RE = /<(?:List|ObsidianBasesViews)[\s/>]/;
+
 export type ListingRoute =
   | { kind: 'none' }
   | { kind: 'virtual'; dir: string; title: string }
@@ -49,6 +53,7 @@ export function isAutoListingDirName(dir: string): boolean {
 /**
  * Same AST the plugin sees, so detection and rendering never disagree (tech
  * minor 1): Obsidian `%% comments %%` are stripped first, as in both pipelines.
+ * Obsidian Bases embeds (`![[x.base]]`) and `<ObsidianBasesViews>` count as listings.
  * With `mdx`, a listing fence inside a JSX element counts too (MDX parses JSX
  * children as Markdown; remark-parse keeps them in an html node).
  */
@@ -62,9 +67,11 @@ export function hasExplicitListing(
     if (found) return;
     if (node.type === 'code' && LISTING_LANGS.has((node as Code).lang ?? ''))
       found = true;
-    else if (node.type === 'html') {
+    else if (node.type === 'text') {
+      if (BASE_EMBED_RE.test((node as Text).value)) found = true;
+    } else if (node.type === 'html') {
       const value = (node as Html).value;
-      if (/<List[\s/>]/.test(value) || (mdx && FENCE_IN_HTML_RE.test(value)))
+      if (LISTING_HTML_RE.test(value) || (mdx && FENCE_IN_HTML_RE.test(value)))
         found = true;
     }
   });
@@ -148,16 +155,29 @@ export function virtualListingDir(
   return null;
 }
 
+/**
+ * Whether the page body goes through the MDX pipeline, by the same rule as
+ * renderPageContent (which calls it): `syntaxMode` (page frontmatter, then
+ * site config) wins, and `auto` (the default) uses MDX for anything but `.md`.
+ */
+export function rendersAsMdx(path: string, renderMode?: string): boolean {
+  const mode = renderMode ?? 'auto';
+  return !(mode === 'md' || (mode === 'auto' && path.endsWith('.md')));
+}
+
 export function autoListingFor({
   blobPath,
   metadata,
   content,
   siteFilePaths,
+  renderMode,
 }: {
   blobPath: string;
   metadata: Record<string, unknown> | null;
   content: string;
   siteFilePaths: string[];
+  /** The effective `syntaxMode`, so detection parses the body as rendering will. */
+  renderMode?: string;
 }): { options: unknown; defaultFrom: string } | null {
   const path = blobPath.replace(/^\/+/, '');
   let dir: string | null = null;
@@ -169,7 +189,8 @@ export function autoListingFor({
   if (!folderHasPages(dir, siteFilePaths)) return null;
   if (metadata?.layout) return null;
   if (metadata?.list === false || metadata?.list === 'false') return null;
-  if (hasExplicitListing(content, { mdx: /\.mdx$/i.test(path) })) return null;
+  if (hasExplicitListing(content, { mdx: rendersAsMdx(path, renderMode) }))
+    return null;
   return { options: metadata?.list, defaultFrom: dir };
 }
 
@@ -196,6 +217,7 @@ export function resolveListingRoute({
   content,
   siteFilePaths,
   changelogKind,
+  renderMode,
 }: {
   slug: string;
   blob: { path: string } | null;
@@ -203,6 +225,7 @@ export function resolveListingRoute({
   content: string;
   siteFilePaths: string[];
   changelogKind: 'index' | 'entry' | 'file' | null;
+  renderMode?: string;
 }): ListingRoute {
   if (!blob) {
     if (changelogKind) return { kind: 'none' };
@@ -224,6 +247,7 @@ export function resolveListingRoute({
     metadata,
     content,
     siteFilePaths,
+    renderMode,
   });
   return auto
     ? pageRoute(auto.options, auto.defaultFrom, 'auto')

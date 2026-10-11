@@ -7,7 +7,12 @@ export type ListingPage<T> = {
   pageCount: number;
   total: number;
   paginated: boolean;
+  /** Set when a list with neither `limit` nor `pageSize` was cut to MAX_UNPAGINATED_ITEMS. */
+  capped?: boolean;
 };
+
+/** A list with neither `limit` nor `pageSize` renders at most this many items, so one block cannot fetch a whole large folder on every request. */
+export const MAX_UNPAGINATED_ITEMS = 200;
 
 export function sliceListing<T>(
   items: T[],
@@ -24,11 +29,12 @@ export function sliceListing<T>(
     };
   if (spec.pageSize == null)
     return {
-      items,
+      items: items.slice(0, MAX_UNPAGINATED_ITEMS),
       page: 1,
       pageCount: 1,
       total: items.length,
       paginated: false,
+      ...(items.length > MAX_UNPAGINATED_ITEMS ? { capped: true } : {}),
     };
   const pageCount = Math.max(1, Math.ceil(items.length / spec.pageSize));
   const p =

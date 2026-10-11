@@ -193,6 +193,28 @@ describe('remarkListing', () => {
       '"pageSize" is ignored',
     );
   });
+  it('a list with neither limit nor pageSize fetches at most 200 rows and says so', async () => {
+    const many = Array.from({ length: 250 }, (_, i) => ({
+      ...rows[0]!,
+      id: `m${i}`,
+      path: `blog/m${i}.md`,
+    }));
+    queryListingIndex.mockResolvedValue(index(many));
+    fetchRowsByIds.mockImplementationOnce(async (_d, _s, ids) =>
+      ids.map((id) => many.find((r) => r.id === id)!),
+    );
+    const tree = await run('```blog\n```');
+    expect(fetchRowsByIds.mock.calls[0]![2]).toHaveLength(200);
+    expect(tree.children[0].data.hProperties.dataListingNotes).toContain(
+      'Showing the first 200 of 250 items',
+    );
+  });
+  it('a page-level listing fetches only its page window', async () => {
+    await run('', {
+      implicit: { options: undefined, defaultFrom: 'blog', pageTitle: 'Blog' },
+    });
+    expect(fetchRowsByIds.mock.calls[0]![2]).toHaveLength(20);
+  });
   it('a page-level listing (implicit) is appended with the page title as label and paginates at 20', async () => {
     const tree = await run('', {
       implicit: { options: undefined, defaultFrom: 'blog', pageTitle: 'Blog' },

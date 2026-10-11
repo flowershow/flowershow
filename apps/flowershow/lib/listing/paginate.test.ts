@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   listingCanonical,
+  MAX_UNPAGINATED_ITEMS,
   pageFromSearchParam,
   pageHref,
   sliceListing,
@@ -22,6 +23,24 @@ describe('sliceListing', () => {
     expect(
       sliceListing(items, { limit: null, pageSize: null }, 2).items,
     ).toHaveLength(45);
+  });
+  it('caps a list with neither limit nor pageSize', () => {
+    const many = Array.from(
+      { length: MAX_UNPAGINATED_ITEMS + 50 },
+      (_, i) => i,
+    );
+    const out = sliceListing(many, { limit: null, pageSize: null }, 1);
+    expect(out.items).toHaveLength(MAX_UNPAGINATED_ITEMS);
+    expect(out).toMatchObject({
+      total: MAX_UNPAGINATED_ITEMS + 50,
+      capped: true,
+    });
+    expect(
+      sliceListing(items, { limit: null, pageSize: null }, 1).capped,
+    ).toBeUndefined();
+    expect(
+      sliceListing(many, { limit: 500, pageSize: null }, 1).items,
+    ).toHaveLength(MAX_UNPAGINATED_ITEMS + 50);
   });
   it('slices the requested page', () => {
     expect(sliceListing(items, { limit: null, pageSize: 20 }, 3)).toEqual({

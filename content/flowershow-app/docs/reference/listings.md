@@ -15,7 +15,7 @@ A folder named `blog` or `posts` (any case, at any depth, so `/notes/posts` coun
 
 ![A blog/ folder with no README: a generated, paginated blog index](/assets/docs-listings-zero-config-blog.webp)
 
-Pages that already decide for themselves are left as they are: any page with a `layout`, and any page that already has a list block, an Obsidian Bases block or a `<List />` component.
+Pages that already decide for themselves are left as they are: any page with a `layout`, and any page that already has a list block, an Obsidian Bases block or embed (`![[Posts.base]]`), a `<List />` component or an `<ObsidianBasesViews />` component.
 
 If your `blog/README.md` links to its posts by hand and you don't want a second list under it, add `list: false` to its frontmatter:
 
@@ -106,7 +106,7 @@ Every key works in a ```` ```list ```` or ```` ```blog ```` block and in a `list
 | `view` | `list`, `grid` | `list` | Rows with a small thumbnail, or a grid of cards. See [Views](#views). |
 | `sort` | `<field> [asc\|desc]` or `-<field>` | `date desc` | Order of items. `date` means the item's date (see [fields](#choosing-what-each-card-shows-fields)). `title`, `path` or any frontmatter field. |
 | `limit` | number | none | Show at most this many items and never paginate. For teasers. |
-| `pageSize` | number or `none` | `20` on `layout: list` and zero-config pages; none in blocks | Items per page. |
+| `pageSize` | number or `none` | `20` on `layout: list` and zero-config pages; none in blocks | Items per page. A list with neither `limit` nor `pageSize` shows at most 200 items. |
 | `where` | map of field to value(s) | none | Keep only matching items. See [Filtering](#filtering-with-where). |
 | `fields` | map of slot to field, or a list | per view | Which frontmatter field fills each part of a card. See [fields](#choosing-what-each-card-shows-fields). |
 | `media` | `thumb`, `thumb right`, `cover`, `none` | `thumb` in `list` (on the left), `cover` in `grid` | How images are shown: a thumbnail beside the text (left unless you write `thumb right`), a cover above it, or no images. |
@@ -187,7 +187,7 @@ A page is listed when it is in the `from` folder or any folder below it, and:
 - it doesn't have `publish: false`;
 - it doesn't have `draft: true`.
 
-A **draft** stays reachable at its URL (so you can share it for review) but is left out of lists, the RSS feed and the sitemap, and asks search engines not to index it.
+A **draft** stays reachable at its URL (so you can share it for review) but is left out of list blocks, `layout: list` and zero-config pages, the RSS feed and the sitemap, and asks search engines not to index it. The older `<List />` component, search, tag pages and the sidebar still show it; add `publish: false` to hide a page everywhere.
 
 Pages hidden from the sidebar with `contentHide` are still listed.
 
@@ -217,7 +217,7 @@ For anything more (`or`, `not`, comparisons, formulas), use [[obsidian-bases|Obs
 
 ## Pagination
 
-Pages are `?page=2`, `?page=3` and so on; page 1 is the plain URL. A `layout: list` or zero-config page shows 20 per page; a block shows everything unless you set `pageSize`. Only one list per page can paginate: give any other list a `limit`. On a `layout: list` page, use `pageSize`, not `limit`.
+Pages are `?page=2`, `?page=3` and so on; page 1 is the plain URL. A `layout: list` or zero-config page shows 20 per page; a block shows everything, up to 200 items, unless you set `limit` or `pageSize`. Only one list per page can paginate: give any other list a `limit`. On a `layout: list` page, use `pageSize`, not `limit`.
 
 Lists on `layout: list` and zero-config pages are always in the page's HTML when it loads. A block in an `.mdx` page appears after the page loads, like other MDX content, so prefer `.md` for pages that list things.
 
@@ -346,3 +346,4 @@ If your `custom.css` restyles `.list-component` for the old `<List />`, scope th
 - `layout: list` on your `changelog/README.md` renders a plain list, not the changelog timeline.
 - If your site has a `rootDir`, a `from` that starts with that folder's name has it removed, so `from: content/blog` and `from: blog` both work.
 - A page can have at most 10 lists.
+- A list with neither `limit` nor `pageSize` shows at most its first 200 items, with a note in `data-listing-notes`. For a bigger folder, set `pageSize` to page through it all.

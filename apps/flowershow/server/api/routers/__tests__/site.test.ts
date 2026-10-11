@@ -1829,6 +1829,16 @@ describe('site.getAuthors', () => {
     ).toEqual([{ key: 'jane', name: 'jane', url: null }]);
   });
 
+  it('keeps the alias of an unresolved wiki link', async () => {
+    const caller = createCaller(authorDb([]));
+    expect(
+      await caller.site.getAuthors({
+        siteId: 'site-1',
+        authors: ['[[jane|Jane Doe]]'],
+      }),
+    ).toEqual([{ key: '[[jane|Jane Doe]]', name: 'Jane Doe', url: null }]);
+  });
+
   it('still resolves an exact author page', async () => {
     const db = authorDb([
       makeBlob({

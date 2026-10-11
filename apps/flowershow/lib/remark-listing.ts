@@ -10,7 +10,7 @@ import {
   resolveListingImage,
   toListingItem,
 } from '@/lib/listing/items';
-import { sliceListing } from '@/lib/listing/paginate';
+import { MAX_UNPAGINATED_ITEMS, sliceListing } from '@/lib/listing/paginate';
 import { fetchRowsByIds, queryListingIndex } from '@/lib/listing/query';
 import { renderListing, renderListingError } from '@/lib/listing/render';
 import {
@@ -122,11 +122,6 @@ export default function remarkListing(options: RemarkListingOptions) {
             );
           paginationClaimed = true;
         }
-        if (result.notes.length)
-          console.warn(
-            `[listing] ${options.filePath}: ${result.notes.join(' | ')}`,
-          );
-
         const index = await queryListingIndex({
           siteId: options.siteId,
           spec,
@@ -145,6 +140,14 @@ export default function remarkListing(options: RemarkListingOptions) {
           positions = [promoted, ...positions.filter((i) => i !== promoted)];
         }
         const slice = sliceListing(positions, spec, options.page ?? 1);
+        const notes = slice.capped
+          ? [
+              ...result.notes,
+              `Showing the first ${MAX_UNPAGINATED_ITEMS} of ${slice.total} items; add "limit:" or "pageSize:" to choose.`,
+            ]
+          : result.notes;
+        if (notes.length)
+          console.warn(`[listing] ${options.filePath}: ${notes.join(' | ')}`);
         const rows = await fetchRowsByIds(
           prisma as never,
           options.siteId,
@@ -194,7 +197,7 @@ export default function remarkListing(options: RemarkListingOptions) {
           publicUrl: options.publicUrl ?? '/',
           locale,
           label,
-          notes: result.notes,
+          notes,
           featuredFirst: featuredFirst && slice.page === 1,
         });
       } catch (error) {

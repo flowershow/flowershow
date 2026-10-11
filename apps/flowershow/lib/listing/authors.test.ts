@@ -108,6 +108,31 @@ describe('resolveAuthors', () => {
     expect(out[1]!.avatar).toBe('http://h/people/ada.jpg');
     expect(findMany).toHaveBeenCalledTimes(1);
   });
+  it('a wiki-link alias wins, resolved or not', async () => {
+    const findMany = vi.fn(async () => [
+      {
+        id: 'b1',
+        path: 'people/ada.md',
+        appPath: '/people/ada',
+        permalink: null,
+        metadata: { title: 'Ada Lovelace' },
+      },
+    ]);
+    const out = await resolveAuthors(
+      { blob: { findMany } },
+      {
+        siteId: 's',
+        handles: ['[[jane|Jane Doe]]', '[[ada|Countess Ada]]', '[[ada]]'],
+        siteHostname: 'h',
+        files: [],
+      },
+    );
+    expect(out.map((a) => [a.name, a.url])).toEqual([
+      ['Jane Doe', null],
+      ['Countess Ada', '/people/ada'],
+      ['Ada Lovelace', '/people/ada'],
+    ]);
+  });
   it('does not query for an empty list', async () => {
     const findMany = vi.fn();
     expect(
