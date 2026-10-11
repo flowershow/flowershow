@@ -37,6 +37,7 @@ fl ./my-notes     # publish a folder (or a single .md / .html file)
 - [Supported agents](https://flowershow.app/docs/agents/supported-agents.md): per-agent skill install
 - [Connector (MCP)](https://flowershow.app/docs/agents/mcp.md): publish from Claude and ChatGPT
 - [Getting started from the CLI](https://flowershow.app/docs/getting-started/from-cli.md)
+- [Listing pages](https://flowershow.app/docs/reference/listings.md): a blog index or a grid of projects from any folder with one fenced block, layout: list, or nothing at all for a blog/ folder; works in .md
 - [Docs index](https://flowershow.app/docs/sitemap.md): every docs page with a one-line description, as Markdown
 - [Markdown access](https://flowershow.app/docs/agents/markdown-access.md): append `.md` to any Flowershow page URL to get its raw Markdown
 

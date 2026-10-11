@@ -409,6 +409,19 @@ Show an "Edit this page" link at the bottom of each page. [[edit-this-page|Learn
 
 ---
 
+### `locale`
+
+**Type:** `string` (a BCP 47 language tag such as `de-DE` or `fr`)  
+**Default:** `"en-US"`
+
+The language dates are written in on [[listings|listing pages and list blocks]]. Pages can override it with `locale` in frontmatter. An unknown tag falls back to `en-US`.
+
+```json
+"locale": "de-DE"
+```
+
+---
+
 ### `showReadingTime`
 
 **Type:** `boolean`  
