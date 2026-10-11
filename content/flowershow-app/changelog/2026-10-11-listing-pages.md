@@ -1,7 +1,7 @@
 ---
 title: Blog indexes and lists of pages in plain Markdown
 date: 2026-10-11
-description: "A blog/ folder now lists itself, and a ```blog block or layout: list shows any folder as a blog index, a grid, a compact archive or a team page. Works in .md."
+description: "A blog/ folder now lists itself, and a ```blog block or layout: list shows any folder as a blog index, a grid, a compact archive or a team page, and every post gets a proper post page. Works in .md."
 authors:
   - rufuspollock
 image: "[[assets/changelog-listing-pages.webp]]"
@@ -20,6 +20,9 @@ You can now list the pages of any folder without MDX or components. Add `layout:
 - **Grouping**: `group: year`, `month`, `folder` or any field (`group: team`) adds a heading before each group.
 - **Dates in your language** with the new `locale` setting.
 - **Clear errors**: a wrong key shows a card that names it and suggests the fix.
+- **Posts that look like posts**: every page in a `blog/` or `posts/` folder (or a `layout: list` folder sorted by date) gets a reading column, a big title with your description, the author's photo and the date, your `image` as a cover, and at the end its tags, previous and next links and three "Read more" cards (same tag first). Works in `.md` and `.mdx`. See [[post-pages|Post pages]].
+
+![[assets/changelog-post-pages.webp]]
 
 **Themes:** the official themes were updated for the new layouts. If you pin a theme version (`theme: leaf@v0.1.8`), move to `v0.1.9` or later; if your `custom.css` restyles `.list-component`, scope those rules to `.list-component:not([data-view])` to keep them on the old `<List />` only.
 
@@ -30,6 +33,7 @@ See [[listings|Listing pages]]. The `<List />` component keeps working; the docs
 - A `blog/` or `posts/` README, index page or folder note with only prose now gets a generated list under it, in a reading-width column. Add `list: false` to its frontmatter to keep it as before. See [A blog with nothing to write](/docs/reference/listings#a-blog-with-nothing-to-write).
 - ```` ```list ```` and ```` ```blog ```` code blocks now render as lists. To show one as code, wrap it in four backticks.
 - `draft: true` in frontmatter now hides a page from listings, the RSS feed and the sitemap, and asks search engines not to index it. Worth checking if you imported posts from Hugo, Jekyll or Astro that still carry it. See [Which pages are listed](/docs/reference/listings#which-pages-are-listed).
+- Pages in a `blog/` or `posts/` folder, or in a `layout: list` folder sorted by date, now use the post layout: a narrower column, tags at the end instead of under the title, and new previous/next and "Read more" links. **The `image` in a post's frontmatter now shows as a cover** unless the post already shows it in its text; add `showImage: false` to a post to hide it (the image stays its social card), `layout: default` to keep a page as it was, or `postLayout: false` to the folder's README for the whole folder. See [Turning it off](/docs/reference/post-pages#turning-it-off).
 - Author names link only to a page whose name matches exactly, preferring `people/` and `authors/` folders. See [Author pages](/docs/guides/author-pages).
 
 **Fixes**

@@ -134,6 +134,13 @@ export interface PageMetadata {
   locale?: string;
   version?: string;
   image?: string;
+  /** Post pages: `false` hides the `image` hero (it stays the social card). Untrusted. */
+  showImage?: boolean;
+  /** Post pages: alt text and caption of the hero image. Untrusted. */
+  imageAlt?: string;
+  imageCaption?: string;
+  /** On a folder's index or folder note: `false` keeps the folder's pages out of the post layout. */
+  postLayout?: boolean;
   authors?: string[];
   date?: string;
   publish?: boolean;

@@ -5,6 +5,7 @@ date: 2026-01-26
 authors:
   - abeelha
 image: "[[flowerstall-logo.png]]"
+showImage: false
 ---
 
 > Point at a file, see it live, move on.

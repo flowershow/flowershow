@@ -3582,6 +3582,264 @@
   }
 
   /* ────────────────────────────────────────────────────
+   Post pages (components/public/layouts/post.tsx; posts of a blog/posts or
+   layout: list folder, or layout: post). The header keeps the .page-header-*
+   classes; every rule here is at most one class (:where()) and later than the
+   page header defaults, so it overrides them and every theme rule wins.
+   Custom properties:
+     --post-max-width, --post-wide-max-width, --post-body-size,
+     --post-hero-ratio, --post-hero-radius, --post-avatar-size,
+     --post-meta-color, --post-eyebrow-color, --post-rule-color
+   ──────────────────────────────────────────────────── */
+
+  /* One reading column for the article, nav, edit link, backlinks and
+     comments; an index page and its posts share it (--list-max-width) */
+  :where(.post-layout) > :not(main),
+  :where(.post-layout > main) > * {
+    width: 100%;
+    max-width: var(--post-max-width, var(--list-max-width, 44rem));
+    margin-inline: auto;
+  }
+  :where(.post-layout > main) > :where(.post-read-more) {
+    max-width: var(--post-wide-max-width, 64rem);
+  }
+
+  :where(.post-header) {
+    margin-bottom: 2rem;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+  :where(.post-header) > * + * {
+    margin-top: 0;
+  }
+  :where(.post-header) .post-eyebrow {
+    margin-bottom: 1rem;
+    font-size: 0.8125rem;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: 0.06em;
+    color: var(--post-eyebrow-color, var(--color-accent));
+  }
+  :where(.post-header) .page-header-title {
+    font-size: clamp(2.25rem, 1.6rem + 2.2vw, 3.25rem);
+    line-height: 1.1;
+    letter-spacing: -0.03em;
+    text-wrap: pretty;
+    overflow-wrap: anywhere;
+  }
+  :where(.post-header) .post-dek {
+    margin-top: 1rem;
+    font-size: 1.125rem;
+    line-height: 1.45;
+    @media (min-width: 640px) {
+      font-size: 1.25rem;
+    }
+    font-weight: var(--font-weight-normal);
+    color: var(--color-foreground-500);
+    text-wrap: pretty;
+  }
+
+  /* Byline: avatars, then names over "date · N min read" */
+  :where(.post-header) .post-byline {
+    margin-top: 1.75rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    column-gap: 0.75rem;
+    row-gap: 0.125rem;
+    font-size: 0.9375rem;
+    line-height: 1.35;
+    text-transform: none;
+  }
+  :where(.post-header) .post-byline[data-avatars] {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+  :where(.post-header) .post-byline > * + * {
+    margin-left: 0;
+  }
+  :where(.post-byline) .post-byline-authors {
+    display: contents;
+  }
+  :where(.post-byline) .post-byline-avatars {
+    grid-row: span 2;
+    display: flex;
+    overflow: visible;
+  }
+  :where(.post-byline:not(:has(.post-byline-meta))) .post-byline-avatars {
+    grid-row: auto;
+  }
+  :where(.post-byline) .post-byline-avatars > * + * {
+    margin-left: calc(var(--post-avatar-size, 40px) * -0.3);
+  }
+  :where(.post-byline) .page-header-author-avatar {
+    width: var(--post-avatar-size, 40px);
+    height: var(--post-avatar-size, 40px);
+    margin-right: 0;
+    object-fit: cover;
+    outline: 0;
+    box-shadow: 0 0 0 2px var(--color-background);
+  }
+  :where(.post-byline) .page-header-author-avatar:last-child {
+    margin-right: 0;
+  }
+  :where(.post-byline) :is(.post-byline-names, .post-byline-meta) {
+    grid-column: -2;
+    min-width: 0;
+  }
+  :where(.post-byline) .post-byline-names {
+    font-weight: var(--font-weight-medium);
+    color: var(--color-foreground-800);
+  }
+  :where(.post-byline) .page-header-author-name {
+    color: inherit;
+  }
+  :where(.post-byline) .post-byline-meta {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: 0.875rem;
+    color: var(
+      --post-meta-color,
+      var(--list-meta-color, var(--color-foreground-500))
+    );
+  }
+  :where(.post-byline-meta) > * + *::before {
+    content: "·";
+    margin: 0 0.4em;
+  }
+  :where(.post-byline) :is(.page-header-date, .page-header-reading-time) {
+    display: inline;
+    color: inherit;
+  }
+  :where(.post-byline)
+    :is(.page-header-date-icon, .page-header-reading-time-icon) {
+    display: none;
+  }
+
+  /* Hero: inside the measure, intrinsic ratio (clamped, set inline as
+     --_post-hero-ratio) or 16/9; --post-hero-ratio overrides both */
+  :where(.post-header) .post-hero {
+    margin: 2.25rem 0 0;
+  }
+  :where(.post-hero) .post-hero-media {
+    position: relative;
+    aspect-ratio: var(--post-hero-ratio, var(--_post-hero-ratio, 16 / 9));
+    overflow: hidden;
+    border-radius: var(--post-hero-radius, var(--list-card-radius, 0.5rem));
+    background: var(--color-foreground-50);
+    box-shadow: 0 0 0 1px var(--color-foreground-100);
+  }
+  :where(.post-hero) .post-hero-caption {
+    margin-top: 0.75rem;
+    font-size: 0.875rem;
+    line-height: 1.4;
+    color: var(
+      --post-meta-color,
+      var(--list-meta-color, var(--color-foreground-500))
+    );
+  }
+
+  /* Body: a reading size for long text (themes set .rendered-mdx and win);
+     no 55vh floor, so a short post's footer follows its text */
+  :where(.post-page) .rendered-mdx:not(.is-plain) {
+    min-height: 0;
+    font-size: var(--post-body-size, 1.125rem);
+  }
+
+  /* Footer: tags, then previous/next */
+  :where(.post-page) .post-footer {
+    margin-top: 3rem;
+  }
+  :where(.post-footer) .post-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  :where(.post-nav) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.75rem;
+    margin-top: 2.5rem;
+    font-family: var(--font-heading);
+    @media (min-width: 640px) {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+  }
+  :where(.post-nav) .post-nav-placeholder {
+    @media (max-width: 639px) {
+      display: none;
+    }
+  }
+  :where(.post-nav) .post-nav-link {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 1rem 1.125rem;
+    border: 1px solid
+      var(
+        --post-rule-color,
+        var(--list-rule-color, var(--color-foreground-100))
+      );
+    border-radius: var(--list-card-radius, 0.5rem);
+    text-decoration: none;
+    transition:
+      border-color 0.15s ease,
+      background-color 0.15s ease;
+  }
+  :where(.post-nav) .post-nav-link:hover {
+    border-color: var(--color-foreground-200);
+    background: var(--color-foreground-50);
+  }
+  :where(.post-nav) .post-nav-link--next {
+    @media (min-width: 640px) {
+      grid-column: 2;
+      text-align: right;
+    }
+  }
+  :where(.post-nav) .post-nav-label {
+    font-size: 0.8125rem;
+    color: var(
+      --post-meta-color,
+      var(--list-meta-color, var(--color-foreground-500))
+    );
+  }
+  :where(.post-nav) .post-nav-title {
+    font-weight: var(--font-weight-semibold);
+    line-height: 1.35;
+    color: var(--color-foreground-900);
+    overflow-wrap: anywhere;
+  }
+
+  /* Read more: the listing grid cards, three across when there is room
+     (container query, so a narrow column with a sidebar or ToC gets one) */
+  :where(.post-read-more) {
+    margin-top: 4rem;
+    padding-top: 2.5rem;
+    border-top: 1px solid
+      var(
+        --post-rule-color,
+        var(--list-rule-color, var(--color-foreground-100))
+      );
+    container-type: inline-size;
+  }
+  :where(.post-read-more) .post-read-more-title {
+    margin: 0 0 1.5rem;
+    font-family: var(--font-heading);
+    font-size: 1.25rem;
+    font-weight: var(--font-weight-semibold);
+    letter-spacing: -0.01em;
+    color: var(--color-foreground-900);
+  }
+  :where(.post-read-more) .list-component--grid {
+    grid-template-columns: minmax(0, 1fr);
+    @container (min-width: 40rem) {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+  :where(.post-read-more) .list-component-item-headline {
+    font-size: 1.125rem;
+  }
+
+  /* ────────────────────────────────────────────────────
    Other
    ──────────────────────────────────────────────────── */
   .page-edit-button-container {

@@ -32,6 +32,13 @@ const GROUPS = [
     dom: `.page-hero-container\n└─ .page-hero[.has-image | .image-full]\nmain.page-main (structural wrapper)\n├─ .page-header\n│  ├─ .page-header-title\n│  ├─ .page-header-description\n│  └─ .page-header-metadata-container\n└─ .page-body (structural wrapper)\n   └─ .rendered-mdx[.is-plain]`,
   },
   {
+    id: 'post',
+    title: 'Post pages',
+    description:
+      'Individual posts: pages in a `blog/` or `posts/` folder, or in a folder listed by its own `layout: list` page (sorted by date), or with `layout: post`. The header keeps the `.page-header-*` classes; tags move to the article footer. Custom properties: `--post-max-width`, `--post-wide-max-width`, `--post-body-size`, `--post-hero-ratio`, `--post-hero-radius`, `--post-avatar-size`, `--post-meta-color`, `--post-eyebrow-color`, `--post-rule-color`.',
+    dom: `.layout-inner-center.post-layout\n└─ main.page-main\n   ├─ article.post-page[data-layout="post"]\n   │  ├─ header.page-header.post-header\n   │  │  ├─ nav.page-header-breadcrumbs.post-eyebrow (folders above the post)\n   │  │  ├─ h1.page-header-title\n   │  │  ├─ p.page-header-description.post-dek\n   │  │  ├─ .page-header-metadata-container.post-byline[data-avatars]\n   │  │  │  ├─ .page-header-authors-container.post-byline-authors\n   │  │  │  │  ├─ .page-header-authors-avatars-container.post-byline-avatars > img.page-header-author-avatar.post-byline-avatar\n   │  │  │  │  └─ .page-header-authors-names-container.post-byline-names > .page-header-author-name\n   │  │  │  └─ .post-byline-meta > .page-header-date > time, .page-header-reading-time\n   │  │  └─ figure.post-hero > .post-hero-media > img.post-hero-img, figcaption.post-hero-caption\n   │  ├─ .page-body > .rendered-mdx#mdxpage\n   │  └─ footer.post-footer > .page-header-tags.post-tags > .tag-pill\n   ├─ nav.post-nav > a.post-nav-link.post-nav-link--prev | --next > .post-nav-label, .post-nav-title (or .post-nav-placeholder)\n   └─ section.post-read-more > h2.post-read-more-title, section.list-component.list-component--grid (the listing grid cards)`,
+  },
+  {
     id: 'toc',
     title: 'Table of contents',
     description: 'The page ToC rail and recursively nested ToC items.',
@@ -147,6 +154,7 @@ export function classifyClassName(name) {
     return 'sidebar';
   if (/^(page-toc|toc(?:-|$))/.test(name)) return 'toc';
   if (/^list-component|^listing-page$/.test(name)) return 'listings';
+  if (/^post-/.test(name)) return 'post';
   if (/^tags?-/.test(name)) return 'tags';
   if (/^changelog/.test(name)) return 'changelog';
   if (/^search/.test(name)) return 'search';

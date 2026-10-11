@@ -1,3 +1,7 @@
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+import { CONTENT_DIR } from './fixtures';
+
 /**
  * Preview scenarios. `path` is the page's file (null = no file: a zero-config
  * folder), `markdown` is exactly what the author writes (shown above the
@@ -10,6 +14,10 @@ export type Shot = {
   theme?: string;
   /** Crop to this element instead of the first screen. */
   selector?: string;
+  /** The whole page, not just the first screen. */
+  fullPage?: boolean;
+  /** The page from this element's top to the end. */
+  from?: string;
 };
 export type Scenario = {
   name: string;
@@ -28,6 +36,10 @@ export type Scenario = {
     pageSize?: number;
   };
   shots?: Shot[];
+  /** Post scenarios: the reading time label to show (the route computes it when showReadingTime is on). */
+  readingTime?: string;
+  /** Render as an individual post (the post layout, its footer and read-more cards). */
+  post?: boolean;
 };
 
 /** Official themes copied into the preview (all six are linkable; the theme matrix shoots each). */
@@ -64,6 +76,103 @@ const inline = (title: string, block: string, intro = '') =>
     `title: ${title}`,
     `${intro ? `${intro}\n\n` : ''}## Latest posts\n\n${block.trim()}\n\n## More\n\nOrdinary page content continues after the block.`,
   );
+
+const changelogFile = (name: string) =>
+  readFileSync(path.join(CONTENT_DIR, 'changelog', `${name}.md`), 'utf8');
+const LOREM = [
+  'Most of what we publish starts as a note in a vault: a paragraph, a list of links, a half-finished argument. The trick is getting it out of the vault and in front of people without a build step, a deploy pipeline or a weekend lost to configuration.',
+  'This post walks through how we do it, what we got wrong the first time, and what we would change if we started again tomorrow.',
+  '## What we tried first',
+  'We started with a static site generator and a theme. It worked, until the theme needed a change and nobody remembered how the build worked. Every small fix became a small project.',
+  '> The best publishing tool is the one you do not have to think about.',
+  '## What we do now',
+  'Now every note in the `blog/` folder is a post. The folder is the blog, the frontmatter is the schema, and the index page lists itself. Writing a post means writing a Markdown file.',
+  '- Write in Obsidian, or any editor.\n- Add a title, a date and a description.\n- Publish.',
+  'That is the whole workflow. The rest of this post is the detail.',
+].join('\n\n');
+
+/** Individual posts (PR F): the real post layout, footer and read-more cards over the fixture site. */
+const POST_SCENARIOS: Scenario[] = [
+  {
+    name: 'post-full',
+    title:
+      'Post: everything (eyebrow, dek, byline, hero, tags, prev/next, read more)',
+    slug: '/blog/2026-10-05-annotations',
+    path: 'blog/2026-10-05-annotations.md',
+    post: true,
+    markdown: changelogFile('2026-10-05-annotations').replace(
+      'showToc: false\n',
+      'showToc: false\ntags:\n  - publishing\n',
+    ),
+    about:
+      'A real post (the annotations changelog entry) in a zero-config blog/ folder.',
+    shots: [
+      { file: 'post-full', fullPage: true },
+      { file: 'post-top' },
+      { file: 'post-mobile', width: 390, fullPage: true },
+      { file: 'post-mobile-top', width: 390 },
+      { file: 'post-dark', dark: true },
+      { file: 'post-footer', from: '.post-nav' },
+      { file: 'post-footer-dark', from: '.post-nav', dark: true },
+      ...themeShots('post', [['leaf', 390]]),
+    ],
+  },
+  {
+    name: 'post-text-only',
+    title: 'Post: no image, two authors, reading time',
+    slug: '/blog/2026-09-19-built-in-changelog',
+    path: 'blog/2026-09-19-built-in-changelog.md',
+    post: true,
+    readingTime: '2 min read',
+    markdown: page(
+      'title: Faster builds for large vaults\ndate: 2026-09-16\ndescription: Sites with thousands of notes now publish in a fraction of the time.\nauthors:\n  - olayway\n  - rufuspollock',
+      LOREM,
+    ),
+    shots: [
+      { file: 'post-text-only', fullPage: true },
+      { file: 'post-text-only-dark', dark: true },
+    ],
+  },
+  {
+    name: 'post-image-in-body',
+    title: 'Post: the image is already in the body, so no hero',
+    slug: '/blog/2026-09-25-tags',
+    path: 'blog/2026-09-25-tags.md',
+    post: true,
+    markdown: page(
+      'title: Tags\ndate: 2026-09-25\ndescription: Tag pages for every tag.\nauthors:\n  - abeelha\nimage: "[[assets/changelog-tags.webp]]"',
+      'Here it is:\n\n![[assets/changelog-tags.webp]]\n\nAnd some text after it.',
+    ),
+    shots: [{ file: 'post-image-in-body' }],
+  },
+  {
+    name: 'post-minimal',
+    title: 'Post: title and date only, very long title',
+    slug: '/blog/2026-08-21-monospace-theme',
+    path: 'blog/2026-08-21-monospace-theme.md',
+    post: true,
+    markdown: page(
+      'title: Why every research group should publish its notes as a website, and how to do it in an afternoon\ndate: 2026-09-13',
+      LOREM,
+    ),
+    shots: [
+      { file: 'post-minimal' },
+      { file: 'post-minimal-mobile', width: 390 },
+    ],
+  },
+  {
+    name: 'post-outside-collection',
+    title: 'layout: post outside any collection (header only, no footer)',
+    slug: '/notes/note-1',
+    path: 'notes/note-1.md',
+    post: true,
+    markdown: page(
+      'title: Reading list for October\ndate: 2026-10-09\nlayout: post\ndescription: What I am reading this month.',
+      LOREM,
+    ),
+    shots: [{ file: 'post-outside-collection' }],
+  },
+];
 
 export const SCENARIOS: Scenario[] = [
   {
@@ -462,4 +571,5 @@ export const SCENARIOS: Scenario[] = [
     markdown: inline('Home', '```list\nfrom: drafts\n```'),
     shots: [{ file: 'empty', selector: '#mdxpage' }],
   },
+  ...POST_SCENARIOS,
 ];

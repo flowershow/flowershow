@@ -210,6 +210,7 @@ export function buildSite(): { rows: Row[]; files: string[] } {
     ...copy('blog').map((r) => {
       const name = r.path.slice('blog/'.length);
       r.metadata.category = categoryFor(name);
+      r.metadata.tags = [categoryFor(name).toLowerCase()];
       if (name.startsWith(FEATURED_POST)) r.metadata.featured = true;
       return r;
     }),

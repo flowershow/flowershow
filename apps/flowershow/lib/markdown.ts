@@ -195,7 +195,7 @@ export async function processMarkdown(
  * properties, so `components` can map them to React components. The name is
  * lowercased because rehype-raw (HTML parsing) lowercases tag names anyway.
  */
-function remarkMdxJsxToElement() {
+export function remarkMdxJsxToElement() {
   return (tree: any) => {
     visit(tree, 'mdxJsxFlowElement', (node: any) => {
       node.data = {

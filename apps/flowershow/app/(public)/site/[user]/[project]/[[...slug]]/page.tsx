@@ -7,6 +7,7 @@ import type { GiscusProps } from '@giscus/react';
 import clsx from 'clsx';
 import { CodeIcon, EditIcon } from 'lucide-react';
 import Link from 'next/link';
+import { Suspense } from 'react';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
 import PageAnnotations from '@/components/public/annotations/page-annotations';
 import CanvasEnhancer from '@/components/public/canvas-enhancer';
@@ -15,6 +16,8 @@ import Comments from '@/components/public/comments';
 import Hero from '@/components/public/hero';
 import { PageChromeMarker } from '@/components/public/page-chrome-marker';
 import { BlogLayout } from '@/components/public/layouts/blog';
+import { PostLayout } from '@/components/public/layouts/post';
+import { PostFooterSection } from '@/components/public/layouts/post-footer';
 import { SidebarDesktop, SidebarMobileNav } from '@/components/public/sidebar';
 import TableOfContents from '@/components/public/table-of-contents';
 import { env } from '@/env.mjs';
@@ -72,6 +75,14 @@ import {
   resolveListingRoute,
 } from '@/lib/listing/route';
 import { isDraft } from '@/lib/listing/rules';
+import { resolvePostHero } from '@/lib/post/hero';
+import { loadPostHosts } from '@/lib/post/hosts';
+import {
+  mayBePost,
+  type PostRoute,
+  postHostPaths,
+  resolvePostRoute,
+} from '@/lib/post/route';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
 import { ensureLeadingSlash, normalizeAuthors } from '@/lib/utils';
@@ -534,6 +545,19 @@ export default async function SitePage(props: {
     }
   }
 
+  // Post pages: the folder hosts' frontmatter (one cached query) loads while
+  // the body does. A failed lookup means "not a post", never a guess.
+  const postHosts =
+    /\.mdx?$/i.test(blob.path) &&
+    mayBePost(blob.metadata as Record<string, unknown> | null)
+      ? loadPostHosts(site.id, postHostPaths(blob.path, siteFilePaths)).catch(
+          (error) => {
+            console.error('Error loading post hosts:', error);
+            return null;
+          },
+        )
+      : Promise.resolve(null);
+
   const pageContent = await api.site.getBlobContent.query({
     id: blob.id,
   });
@@ -679,6 +703,23 @@ export default async function SitePage(props: {
     );
   }
 
+  // Post pages (docs/plans/2026-10-11-post-page-layout.md): items of a blog/posts
+  // folder or a `layout: list` folder, or `layout: post`. Never a page-level
+  // listing or a changelog page; the host frontmatter is one cached query.
+  const hosts = await postHosts;
+  const postRoute: PostRoute =
+    !changelog && !pageLevelRoute && hosts
+      ? resolvePostRoute({
+          pagePath: blob.path,
+          metadata: metadata as Record<string, unknown> | null,
+          siteFilePaths,
+          hosts,
+          rootDir: site.rootDir ?? undefined,
+        })
+      : { kind: 'none' };
+  const isPost = postRoute.kind === 'post';
+  const postTags = frontmatterTags(metadata as Record<string, unknown> | null);
+
   // Frontmatter `authors` is user-controlled: it may be a scalar (`authors: Jane`)
   // or arbitrary YAML, while getAuthors requires string[]. Normalize before the
   // query so a scalar renders correctly and malformed values don't crash render.
@@ -724,8 +765,9 @@ export default async function SitePage(props: {
     changelog?.kind === 'index' || changelog?.kind === 'file';
   // A page-level listing's item headings never enter the ToC, so without
   // headings of its own the column would be empty (and narrow the grid)
+  // Same for a post without headings: no empty rail pushing the column left
   const emptyListingToc =
-    pageLevelRoute != null && !hasTocHeadings(pageContent ?? '');
+    (pageLevelRoute != null || isPost) && !hasTocHeadings(pageContent ?? '');
   const showToc =
     !isChangelogTimeline &&
     !emptyListingToc &&
@@ -772,6 +814,20 @@ export default async function SitePage(props: {
         section: metadata?.section,
       })
     : undefined;
+  const postHero = isPost
+    ? resolvePostHero({
+        metadata: {
+          ...(metadata as Record<string, unknown> | null),
+          showHero: heroConfig.showHero,
+        },
+        body: pageContent ?? '',
+        pagePath: blob.path,
+        files: siteFilePaths,
+        siteHostname,
+        permalinks: permalinksMapping,
+        dimensions: imageDimensions,
+      })
+    : null;
 
   return (
     <>
@@ -812,7 +868,7 @@ export default async function SitePage(props: {
           </div>
         )}
 
-        <div className="layout-inner-center">
+        <div className={clsx('layout-inner-center', isPost && 'post-layout')}>
           <main className="page-main">
             {changelog?.kind === 'index' ? (
               <>
@@ -868,6 +924,42 @@ export default async function SitePage(props: {
                 <div id="mdxpage">{compiledContent}</div>
                 <CanvasEnhancer />
               </ChangelogEntryPage>
+            ) : isPost ? (
+              <PostLayout
+                title={metadata?.title ?? ''}
+                description={displayDescription(metadata) ?? ''}
+                eyebrow={breadcrumbs?.slice(0, -1)}
+                authors={authors}
+                date={metadata?.date}
+                locale={locale}
+                readingTime={pageReadingTime}
+                hero={postHero}
+                tags={showTags ? postTags : undefined}
+                showHeader={!heroConfig.showHero}
+                after={
+                  postRoute.kind === 'post' &&
+                  postRoute.collection && (
+                    <Suspense fallback={null}>
+                      <PostFooterSection
+                        siteId={site.id}
+                        rootDir={site.rootDir ?? undefined}
+                        collection={postRoute.collection}
+                        pagePath={blob.path}
+                        tags={postTags}
+                        siteHostname={siteHostname}
+                        files={siteFilePaths}
+                        permalinks={permalinksMapping}
+                        locale={locale}
+                      />
+                    </Suspense>
+                  )
+                }
+              >
+                <div className="rendered-mdx" id="mdxpage">
+                  {compiledContent}
+                </div>
+                <CanvasEnhancer />
+              </PostLayout>
             ) : (
               <ListingPageWrapper view={pageLevelRoute?.view}>
                 <BlogLayout

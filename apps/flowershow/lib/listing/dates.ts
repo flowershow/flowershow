@@ -55,3 +55,12 @@ export function groupLabel(
   if (!key) return 'Other';
   return group.by === 'folder' ? entryTitleFromPath(key) : key;
 }
+
+/** A post page date in long form ("September 18, 2026") in the page/site locale. */
+export function formatLongDate(isoDate: string, locale: string): string {
+  return formatter(
+    locale,
+    { year: 'numeric', month: 'long', day: 'numeric' },
+    'long',
+  ).format(new Date(`${isoDate.slice(0, 10)}T00:00:00Z`));
+}

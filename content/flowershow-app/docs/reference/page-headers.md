@@ -3,6 +3,9 @@ title: Page headers
 description: Configure page headers and SEO meta tags.
 ---
 
+> [!tip] Blog posts
+> Pages in a `blog/` or `posts/` folder use the post version of this header (a larger title, a byline with author photos, the `image` as a cover, and previous/next and "Read more" at the end). See [[post-pages|Post pages]].
+
 ## Available configuration options
 
 Here are all the available page configuration options:
