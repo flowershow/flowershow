@@ -151,7 +151,7 @@ jobs:
           CI: true
 
       - name: Capture listing screenshots (opt-in)
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.listing_screenshots }}
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.listing_screenshots }}
         working-directory: apps/flowershow
         env:
           CI: true
@@ -160,7 +160,7 @@ jobs:
         run: npx playwright test --project=setup && npx playwright test --project=listings --no-deps listings-screenshots
 
       - name: Upload listing screenshots
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.listing_screenshots }}
+        if: ${{ !cancelled() && github.event_name == 'workflow_dispatch' && inputs.listing_screenshots }}
         uses: actions/upload-artifact@v4
         with:
           name: listing-screenshots
