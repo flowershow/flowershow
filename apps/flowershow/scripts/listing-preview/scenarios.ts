@@ -19,8 +19,41 @@ export type Scenario = {
   markdown: string;
   page?: number;
   about?: string;
+  /** Render the legacy MDX <List /> with these props instead (theme back-compat). */
+  legacy?: {
+    dir: string;
+    fields?: Array<'title' | 'description' | 'authors' | 'date' | 'image'>;
+    pageSize?: number;
+  };
   shots?: Shot[];
 };
+
+/** Official themes copied into the preview (all six are linkable; the theme matrix shoots each). */
+export const THEMES = [
+  'leaf',
+  'lessflowery',
+  'letterpress',
+  'superstack',
+  'monospace',
+  'material-draft',
+];
+
+/**
+ * Theme matrix: one shot per theme for a view, plus mobile ones. Theme shots are
+ * written only when capture.mjs is given a filter matching "theme-", so a
+ * before/after pair comes from two builds (THEMES_DIR = the old and the new
+ * themes checkout) captured into themes-before/ and themes-after/.
+ */
+function themeShots(view: string, mobile: Array<[string, 390]> = []): Shot[] {
+  return [
+    ...THEMES.map((theme) => ({ file: `theme-${theme}-${view}`, theme })),
+    ...mobile.map(([theme, width]) => ({
+      file: `theme-${theme}-${view}-mobile`,
+      theme,
+      width,
+    })),
+  ];
+}
 
 const page = (fm: string, body = '') =>
   `---\n${fm.trim()}\n---\n${body ? `\n${body.trim()}\n` : ''}`;
@@ -76,7 +109,7 @@ export const SCENARIOS: Scenario[] = [
     markdown: page('title: Archive\nlayout: list'),
     shots: [
       { file: 'list-page-layout' },
-      { file: 'theme-lessflowery-list', theme: 'lessflowery' },
+      ...themeShots('list', [['lessflowery', 390]]),
     ],
   },
   {
@@ -162,7 +195,6 @@ export const SCENARIOS: Scenario[] = [
       { file: 'grid-blog' },
       { file: 'mobile-grid', width: 390 },
       { file: 'dark-grid', dark: true },
-      { file: 'theme-lessflowery-grid', theme: 'lessflowery' },
     ],
   },
   {
@@ -182,7 +214,7 @@ export const SCENARIOS: Scenario[] = [
     markdown: page(
       'title: Projects\nlayout: list\nlist:\n  view: grid\n  sort: title\n  ratio: 4/3\n  fields:\n    date: none\n    eyebrow: client\n    meta: [status]',
     ),
-    shots: [{ file: 'grid-projects' }],
+    shots: [{ file: 'grid-projects' }, ...themeShots('grid', [['leaf', 390]])],
   },
   {
     name: 'grid-square',
@@ -194,6 +226,19 @@ export const SCENARIOS: Scenario[] = [
       '```list\nfrom: projects\nview: grid\nratio: 1/1\nsort: title\nfields:\n  date: none\n```',
     ),
     shots: [{ file: 'grid-square' }],
+  },
+  {
+    name: 'legacy-list',
+    title:
+      'Legacy MDX <List /> (no data-view): themes must keep their old look here',
+    slug: '/blog',
+    path: 'blog/index.mdx',
+    markdown: page(
+      'title: Blog',
+      '<List dir="/blog" fields={["title", "description", "date", "image"]} />',
+    ),
+    legacy: { dir: '/blog', fields: ['title', 'description', 'date', 'image'] },
+    shots: [{ file: 'legacy-list' }, ...themeShots('legacy')],
   },
   {
     name: 'error-missing-folder',
@@ -224,14 +269,4 @@ export const SCENARIOS: Scenario[] = [
     markdown: inline('Home', '```list\nfrom: drafts\n```'),
     shots: [{ file: 'empty', selector: '#mdxpage' }],
   },
-];
-
-/** Official themes copied into the preview (all six are linkable; screenshots use the ones named in `shots`). */
-export const THEMES = [
-  'leaf',
-  'lessflowery',
-  'letterpress',
-  'superstack',
-  'monospace',
-  'material-draft',
 ];

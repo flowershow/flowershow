@@ -2,6 +2,9 @@
 // Usage (from apps/flowershow, after building the preview):
 //   node scripts/listing-preview/capture.mjs [outDir] [nameFilterRegex]
 // Default outDir: ../../docs/pr-assets/listings. Exits non-zero if a layout check fails.
+// Theme matrix (shots with a theme) only when the filter mentions "theme-", e.g.
+//   THEMES_DIR=../../../themes pnpm preview:listings && node scripts/listing-preview/capture.mjs ../../docs/pr-assets/listings/themes-before theme-
+//   THEMES_DIR=<patched themes> pnpm preview:listings && node scripts/listing-preview/capture.mjs ../../docs/pr-assets/listings/themes-after theme-
 import { mkdirSync, readFileSync, statSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -120,6 +123,8 @@ let n = 0;
 for (const s of scenarios) {
   for (const shot of s.shots ?? []) {
     if (only && !only.test(shot.file)) continue;
+    // Theme shots compare two theme checkouts: only on request (filter "theme-")
+    if (shot.theme && !(only && /theme-/.test(only.source))) continue;
     const page = await open(s.name, shot);
     const target = shot.selector ? page.locator(shot.selector).first() : page;
     const png = path.join(out, `${shot.file}.png`);

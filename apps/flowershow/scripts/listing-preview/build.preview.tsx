@@ -41,7 +41,51 @@ vi.mock('@/server/db', async () => {
 vi.mock('next/cache', () => ({
   unstable_cache: (fn: (...a: unknown[]) => unknown) => fn,
 }));
-vi.mock('@/trpc/react', () => ({ api: {} }));
+// The legacy <List /> fetches through tRPC on the client; serve it the fixture rows.
+vi.mock('@/trpc/react', async () => {
+  const { buildSite: b } = await import('./fixtures');
+  const rows = b().rows;
+  return {
+    api: {
+      site: {
+        getListComponentItems: {
+          useQuery: ({ dir }: { dir: string }) => {
+            const d = dir.replace(/^\/+/, '');
+            const items = rows
+              .filter(
+                (r) =>
+                  r.path.startsWith(`${d}/`) && !/README\.md$/.test(r.path),
+              )
+              .sort((a, b) =>
+                String(b.metadata.date ?? '').localeCompare(
+                  String(a.metadata.date ?? ''),
+                ),
+              )
+              .map((r) => ({
+                url: r.appPath,
+                metadata: {
+                  ...r.metadata,
+                  image:
+                    typeof r.metadata.image === 'string'
+                      ? r.metadata.image.replace(
+                          /^\[\[(.*)\]\]$/,
+                          `http://${'preview.flowershow.local'}/$1`,
+                        )
+                      : undefined,
+                },
+              }));
+            return { data: { items }, isLoading: false, error: null };
+          },
+        },
+      },
+    },
+  };
+});
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(),
+  usePathname: () => '/blog',
+  useRouter: () => ({ push: () => {} }),
+}));
 vi.mock('@/trpc/server', () => ({ api: {} }));
 /** next/image without a Next server: the <img> it renders, minus the optimiser URL. */
 vi.mock('next/image', () => ({
@@ -56,6 +100,7 @@ vi.mock('next/image', () => ({
 }));
 
 import { BlogLayout } from '@/components/public/layouts/blog';
+import List from '@/components/public/mdx/list';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
 import { renderPageListing } from '@/lib/listing/page-listing';
 import { resolveListingRoute } from '@/lib/listing/route';
@@ -69,6 +114,14 @@ const LOCALE = 'en-US';
 
 async function renderScenario(s: Scenario): Promise<string> {
   const { data: metadata } = matter(s.markdown);
+  if (s.legacy)
+    return wrap(
+      <BlogLayout title={metadata.title ?? ''}>
+        <div className="rendered-mdx" id="mdxpage">
+          <List siteId="preview" {...s.legacy} />
+        </div>
+      </BlogLayout>,
+    );
   const pageNo = s.page ?? 1;
   const route = resolveListingRoute({
     slug: s.slug,
@@ -146,6 +199,10 @@ async function renderScenario(s: Scenario): Promise<string> {
         layout
       );
   }
+  return wrap(body);
+}
+
+function wrap(body: React.ReactElement): string {
   const html = renderToStaticMarkup(
     <div className="site-layout no-nav">
       <div className="site-body">
