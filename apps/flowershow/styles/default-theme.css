@@ -1857,7 +1857,13 @@
     font-size: 0.9375rem;
     -webkit-line-clamp: 3;
   }
-  /* Whole card clickable; links inside it stay above the overlay (UX m-4) */
+  /* Whole card clickable; links inside it stay above the overlay (UX m-4).
+     The overlay's box is the card, so the headline must not be positioned:
+     .rendered-mdx :is(h1, …, h6) sets position: relative for heading links
+     (0,1,1), hence two classes here, not :where(). */
+  .list-component--grid .list-component-item-headline {
+    position: static;
+  }
   :where(.list-component--grid) .list-component-item-headline-link::after {
     content: "";
     position: absolute;

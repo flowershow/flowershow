@@ -73,6 +73,22 @@ async function open(name, opts = {}) {
   await page.close();
 }
 {
+  // Whole grid card clickable (UX m-4): the summary's centre must hit the headline link's overlay
+  const page = await open('grid-projects');
+  const hit = await page.$eval(
+    'section.list-component--grid > article .list-component-item-summary',
+    (el) => {
+      const r = el.getBoundingClientRect();
+      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      return top?.closest('a')?.className ?? top?.className ?? '';
+    },
+  );
+  if (!/list-component-item-headline-link/.test(hit))
+    failures.push(`grid-projects: a click on the card summary hits "${hit}", not the card link`);
+  console.log(`check grid card overlay: ${hit}`);
+  await page.close();
+}
+{
   const page = await open('archive-page-1');
   const { maxWidth, width } = await page.$eval(
     '.listing-page[data-view="list"]',
