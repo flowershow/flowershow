@@ -14,7 +14,9 @@
     "test:all": "vitest",
     "test:e2e": "playwright test",
     "storybook": "storybook dev -p 6006",
-    "build-storybook": "storybook build -o ./deploy/storybook/out"
+    "build-storybook": "storybook build -o ./deploy/storybook/out",
+    "preview:listings": "vitest run --config scripts/listing-preview/vitest.config.mts",
+    "preview:listings:shots": "node scripts/listing-preview/capture.mjs"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
