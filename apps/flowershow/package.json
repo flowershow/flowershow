@@ -15,7 +15,8 @@
     "test:e2e": "playwright test",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build -o ./deploy/storybook/out",
-    "preview:listings": "vitest run --config scripts/listing-preview/vitest.config.mts",
+    "preview:listings": "vitest run --config scripts/listing-preview/vitest.config.mts build.preview",
+    "preview:listings:demo": "vitest run --config scripts/listing-preview/vitest.config.mts demo.preview",
     "preview:listings:shots": "node scripts/listing-preview/capture.mjs"
   },
   "lint-staged": {

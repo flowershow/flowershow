@@ -50,6 +50,7 @@ vi.mock('next/image', () => ({
       ? { position: 'absolute', inset: 0, width: '100%', height: '100%' }
       : {};
     // biome-ignore lint/a11y/useAltText: alt is passed through
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text -- alt is passed through
     return <img {...p} style={{ ...fillStyle, ...style }} />;
   },
 }));

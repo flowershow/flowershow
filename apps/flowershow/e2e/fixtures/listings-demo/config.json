@@ -1,0 +1,15 @@
+{
+  "title": "Listings demo",
+  "description": "Flowershow list blocks and layout: list",
+  "showToc": true,
+  "showSidebar": false,
+  "enableRss": true,
+  "nav": {
+    "title": "Listings demo",
+    "links": [
+      { "href": "/blog", "name": "Blog" },
+      { "href": "/projects", "name": "Projects" },
+      { "href": "/archive", "name": "Archive" }
+    ]
+  }
+}

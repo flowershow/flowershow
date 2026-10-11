@@ -19,7 +19,7 @@ export default defineConfig({
   resolve: { alias: { '@': root } },
   test: {
     environment: 'node',
-    include: ['scripts/listing-preview/build.preview.tsx'],
+    include: ['scripts/listing-preview/*.preview.tsx'],
     setupFiles: ['./vitest.setup.ts'],
     testTimeout: 120_000,
   },

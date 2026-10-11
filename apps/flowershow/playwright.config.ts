@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 import dotenv from 'dotenv';
 import {
   FREE_SITE_BASE_URL,
+  LISTINGS_SITE_BASE_URL,
   PASSWORD_CUSTOM_DOMAIN_SITE_CUSTOM_DOMAIN,
   PASSWORD_SITE_BASE_URL,
   PREMIUM_SITE_CUSTOM_DOMAIN,
@@ -46,6 +47,8 @@ export default defineConfig({
       testIgnore: [
         '**/password-protection.spec.ts',
         '**/password-protection-custom-domain.spec.ts',
+        // List blocks run against their own seeded site (the listings project).
+        '**/listings*.spec.ts',
       ],
       dependencies: ['setup'],
     },
@@ -100,6 +103,16 @@ export default defineConfig({
       dependencies: ['setup'],
     },
     {
+      name: 'listings',
+      use: {
+        ...devices['Desktop Chrome'],
+        baseURL: LISTINGS_SITE_BASE_URL,
+        basePath: '',
+      } as any,
+      testMatch: ['**/listings*.spec.ts'],
+      dependencies: ['setup'],
+    },
+    {
       name: 'teardown',
       testDir: './e2e',
       testMatch: 'teardown.ts',
@@ -108,6 +121,7 @@ export default defineConfig({
         'custom-domain',
         'password-protection',
         'password-custom-domain',
+        'listings',
       ],
     },
   ],
