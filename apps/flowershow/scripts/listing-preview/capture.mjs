@@ -1,10 +1,10 @@
 // Screenshots and layout assertions for the static listing preview.
 // Usage (from apps/flowershow, after building the preview):
 //   node scripts/listing-preview/capture.mjs [outDir] [nameFilterRegex]
-// Default outDir: ../../docs/pr-assets/listings. Exits non-zero if a layout check fails.
+// Default outDir: .listing-preview/shots (gitignored). Exits non-zero if a layout check fails.
 // Theme matrix (shots with a theme) only when the filter mentions "theme-", e.g.
-//   THEMES_DIR=../../../themes pnpm preview:listings && node scripts/listing-preview/capture.mjs ../../docs/pr-assets/listings/themes-before theme-
-//   THEMES_DIR=<patched themes> pnpm preview:listings && node scripts/listing-preview/capture.mjs ../../docs/pr-assets/listings/themes-after theme-
+//   THEMES_DIR=../../../themes pnpm preview:listings && node scripts/listing-preview/capture.mjs .listing-preview/shots/themes-before theme-
+//   THEMES_DIR=<patched themes> pnpm preview:listings && node scripts/listing-preview/capture.mjs .listing-preview/shots/themes-after theme-
 import { mkdirSync, readFileSync, statSync, unlinkSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -13,7 +13,7 @@ import { chromium } from '@playwright/test';
 const here = path.dirname(fileURLToPath(import.meta.url));
 const preview = path.resolve(here, '../../.listing-preview');
 const out = path.resolve(
-  process.argv[2] ?? path.join(here, '../../../../docs/pr-assets/listings'),
+  process.argv[2] ?? path.join(preview, 'shots'),
 );
 const only = process.argv[3] ? new RegExp(process.argv[3]) : null;
 const MAX_BYTES = 300 * 1024;

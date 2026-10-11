@@ -13,6 +13,8 @@ A folder named `blog` or `posts` (any case, at any depth, so `/notes/posts` coun
 - **A `README.md` (or `index.md`) with only prose:** the list appears under your prose.
 - **An Obsidian folder note** (`blog.md` beside `blog/`) with only prose: the same, the list appears under the note.
 
+![A blog/ folder with no README: a generated, paginated blog index](/assets/docs-listings-zero-config-blog.webp)
+
 Pages that already decide for themselves are left as they are: any page with a `layout`, and any page that already has a list block, an Obsidian Bases block or a `<List />` component.
 
 If your `blog/README.md` links to its posts by hand and you don't want a second list under it, add `list: false` to its frontmatter:
@@ -37,7 +39,11 @@ layout: list
 Notes on building things, roughly weekly.
 ```
 
-The page shows its title, your intro, then every page in `blog/` and its subfolders, newest first, 20 per page, with "Newer" and "Older" links. Each item shows its title, description, image (if it has one), date and authors. Page-level options go in a `list:` map in the same frontmatter and use the same keys as a block (see [Options](#options)):
+The page shows its title, your intro, then every page in `blog/` and its subfolders, newest first, 20 per page, with "Newer" and "Older" links. Each item shows its title, description, image (if it has one), date and authors.
+
+![A layout: list page: title, intro, then the posts with thumbnails on the left](/assets/docs-listings-list-page-layout.webp)
+
+Page-level options go in a `list:` map in the same frontmatter and use the same keys as a block (see [Options](#options)):
 
 ```markdown
 ---
@@ -87,6 +93,8 @@ limit: 3
 ````
 
 `limit` shows the first three and never paginates.
+
+![A home page with the three latest posts under a "Latest posts" heading](/assets/docs-listings-latest-three.webp)
 
 ## Options
 
@@ -148,6 +156,8 @@ Authors show as small avatars and names linked to their author pages (see [[page
 **`list`** (the default) is one column of rows. The thumbnail sits on the left; `media: thumb right` puts it on the right. On a `layout: list` page the header, intro and list share one reading-width column. A row without an image is text only, lined up with the other rows' text. `media: cover` shows a wide image above each row's text; `media: none` gives plain text rows.
 
 **`grid`** shows cards in three columns on wide screens, two on tablets and one on phones. A `layout: list` grid page uses the full content width.
+
+![A grid of posts: a cover image, or a letter tile when a post has none, above each title, description, date and authors](/assets/docs-listings-grid-blog.webp)
 
 How a grid handles items without an image:
 
