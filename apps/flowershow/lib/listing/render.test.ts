@@ -460,3 +460,135 @@ describe('renderListingError', () => {
     );
   });
 });
+
+describe.skip('[B2] compact, people, featured, grouping', () => {
+  it('compact: date + title, no media', async () => {
+    const body = await html(
+      renderListing(
+        input({
+          spec: spec({
+            view: 'compact',
+            fields: DEFAULT_FIELDS.compact,
+            media: 'none',
+          }),
+          page: page([item({ summary: null, authorHandles: [] })]),
+        }),
+      ),
+    );
+    expect(
+      body.querySelector(
+        'section.list-component--compact[data-view="compact"][data-media="none"] .list-component-item-date',
+      ),
+    ).not.toBeNull();
+    expect(body.querySelector('.list-component-item-media')).toBeNull();
+  });
+  it('people: portrait sizes, role meta, initials when there is no portrait', async () => {
+    const people = spec({
+      view: 'people',
+      fields: DEFAULT_FIELDS.people,
+      media: 'cover',
+      ratio: '1/1',
+    });
+    const body = await html(
+      renderListing(
+        input({
+          spec: people,
+          page: page([
+            item({
+              date: null,
+              authorHandles: [],
+              meta: [
+                { key: 'role', label: 'Role', parts: [{ text: 'Founder' }] },
+              ],
+            }),
+            item({
+              url: '/g',
+              title: 'Grace Hopper',
+              image: null,
+              date: null,
+              authorHandles: [],
+            }),
+          ]),
+        }),
+      ),
+    );
+    expect(
+      body
+        .querySelector(
+          'section.list-component--people[data-ratio="1-1"] listing-image',
+        )!
+        .getAttribute('sizes'),
+    ).toBe('(min-width: 1024px) 25vw, 50vw');
+    expect(
+      body.querySelector('.list-component-item-meta-value[data-field="role"]')!
+        .textContent,
+    ).toBe('Founder');
+    expect(
+      body.querySelector(
+        '.list-component-item-media--placeholder .list-component-item-initials',
+      )!.textContent,
+    ).toBe('GH');
+  });
+  it('featured: only the first item of the page the plugin marks, hero sizes, no placeholder, above the first group', async () => {
+    const items = [
+      item({ url: '/f', group: '2025' }),
+      item({ url: '/a', group: '2026' }),
+      item({ url: '/b', group: '2026', image: null }),
+    ];
+    const body = await html(
+      renderListing(
+        input({
+          spec: spec({
+            view: 'grid',
+            featured: 1,
+            media: 'cover',
+            ratio: '16/9',
+            group: { by: 'year' },
+          }),
+          featuredFirst: true,
+          page: page(items),
+        }),
+      ),
+    );
+    const kids = [...body.querySelector('section')!.children].map((c) =>
+      c.tagName === 'H2'
+        ? `h2:${c.textContent}`
+        : c.classList.contains('list-component-item--featured')
+          ? 'hero'
+          : 'article',
+    );
+    expect(kids).toEqual(['hero', 'h2:2026', 'article', 'article']);
+    expect(
+      body
+        .querySelector('.list-component-item--featured listing-image')!
+        .getAttribute('sizes'),
+    ).toBe('(min-width: 768px) 58vw, 100vw');
+  });
+  it('grouping: flat headings before each group, out of the ToC', async () => {
+    const items = [
+      item({ url: '/a', group: '2026' }),
+      item({ url: '/b', group: '2026' }),
+      item({ url: '/c', group: '2025' }),
+    ];
+    const body = await html(
+      renderListing(
+        input({ spec: spec({ group: { by: 'year' } }), page: page(items) }),
+      ),
+    );
+    const kids = [...body.querySelector('section')!.children].map((c) =>
+      c.tagName === 'H2' ? `h2:${c.textContent}` : 'article',
+    );
+    expect(kids).toEqual([
+      'h2:2026',
+      'article',
+      'article',
+      'h2:2025',
+      'article',
+    ]);
+    expect(
+      body
+        .querySelector('h2.list-component-group-heading')!
+        .getAttribute('data-toc-ignore'),
+    ).toBe('');
+  });
+});
