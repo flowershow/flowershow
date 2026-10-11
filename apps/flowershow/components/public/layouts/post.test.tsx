@@ -87,6 +87,7 @@ describe('PostLayout', () => {
     const html = render({
       hero: { src: 'https://cdn/x.jpg', alt: 'X', caption: null },
     });
+    expect(html).toContain('<figure class="post-hero" data-size="unknown">');
     expect(html).toContain(
       '<img class="post-hero-img" src="https://cdn/x.jpg" alt="X" fetchPriority="high" decoding="async"/>',
     );

@@ -174,7 +174,10 @@ function Eyebrow({ crumbs }: { crumbs: Breadcrumb[] }) {
 function Hero({ hero }: { hero: PostHero }) {
   const sizes = '(min-width: 768px) 44rem, 100vw';
   return (
-    <figure className="post-hero">
+    <figure
+      className="post-hero"
+      data-size={hero.width && hero.height ? undefined : 'unknown'}
+    >
       {hero.width && hero.height ? (
         <Image
           className="post-hero-img"

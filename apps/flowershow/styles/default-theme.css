@@ -3718,17 +3718,20 @@
   }
 
   /* Cover: its own shape, never cropped or upscaled, at most the column
-     wide and --post-hero-max-height tall, centred (lib/post/hero.ts drops
-     known-small or square-ish images; unknown sizes land here as they are) */
+     wide, centred (lib/post/hero.ts drops known-small or square-ish
+     images); one of unknown size is also at most --post-hero-max-height tall */
   :where(.post-header) .post-hero {
     margin: 2.25rem 0 0;
+  }
+  /* Size unknown (an external image): it may be a square logo, so cap it */
+  :where(.post-hero[data-size="unknown"]) .post-hero-img {
+    max-height: var(--post-hero-max-height, 24rem);
   }
   img:where(.post-hero-img) {
     display: block;
     width: auto;
     max-width: 100%;
     height: auto;
-    max-height: var(--post-hero-max-height, 24rem);
     margin-inline: auto;
     border-radius: var(--post-hero-radius, var(--list-card-radius, 0.5rem));
     box-shadow: 0 0 0 1px var(--color-foreground-100);

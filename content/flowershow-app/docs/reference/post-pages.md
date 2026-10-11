@@ -57,11 +57,11 @@ The post itself...
 
 ## The cover image
 
-The `image` you set (it is also your page's social preview card) is shown as a cover under the byline. It keeps its own shape and is never cropped or enlarged: at most the reading column wide and 24rem tall, centred. Add `imageAlt` for screen readers and `imageCaption` for a caption under it.
+The `image` you set (it is also your page's social preview card) is shown as a cover under the byline. It keeps its own shape and is never cropped or enlarged: at most the reading column wide, centred. Add `imageAlt` for screen readers and `imageCaption` for a caption under it.
 
 The cover is left out when:
 
-- the image is in your site and is narrower than 600px or not clearly landscape (less than 1.2 times as wide as it is tall), such as a logo, an icon or a portrait. An image from another website, whose size Flowershow doesn't know, is shown at its own size;
+- the image is in your site and is narrower than 600px or not clearly landscape (less than 1.2 times as wide as it is tall), such as a logo, an icon or a portrait. An image from another website, whose size Flowershow doesn't know, is shown at its own size and at most 24rem tall;
 - the post already shows the same image in its text (as `![[...]]`, `![](...)` or `<img>`, with or without `%20` in the name), so it never appears twice;
 - the post uses a full-width [[hero-sections|hero section]] (`showHero: true`), which already shows it;
 - you set `showImage: false`, for example when `image` is a logo or a card made for social media. The image stays your social preview card.
@@ -94,7 +94,7 @@ The default styles are easy to override, and these CSS variables change the most
 | `--post-max-width` | `44rem` (same as `--list-max-width`) | The reading column |
 | `--post-wide-max-width` | `64rem` | The width of "Read more" |
 | `--post-body-size` | `1.125rem` | Body text size |
-| `--post-hero-max-height` | `24rem` | The tallest a cover can be |
+| `--post-hero-max-height` | `24rem` | The tallest a cover from another website can be |
 | `--post-hero-radius` | `0.5rem` | Cover image corners |
 | `--post-avatar-size` | `40px` | Byline photos |
 | `--post-meta-color` | muted text | Date, reading time, caption, "Previous"/"Next" |
