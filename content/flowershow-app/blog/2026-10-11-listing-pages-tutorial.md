@@ -118,7 +118,7 @@ limit: 5
 
 ## 3. A grid of projects
 
-Make a `projects/` folder with one page per project. A project can be a single file (`projects/seed-library.md`) or a folder of its own (`projects/seed-library/README.md`, with its images beside it, titled after the folder); both count as one item. Give each one whatever fields make sense, for example `projects/seed-library.md`:
+Make a `projects/` folder with one page per project. A project can be a single file (`projects/seed-library.md`) or a folder of its own (`projects/seed-library/README.md`, with its images beside it; it takes its `title:`, or the folder name if it has none); both count as one item. Give each one whatever fields make sense, for example `projects/seed-library.md`:
 
 ```markdown
 ---
