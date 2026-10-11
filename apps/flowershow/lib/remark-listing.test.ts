@@ -115,6 +115,17 @@ describe('remarkListing', () => {
     );
     expect(queryListingIndex).not.toHaveBeenCalled();
   });
+  it('a missing folder is reported together with invalid keys, folder first (design 3.8)', async () => {
+    const tree = await run(
+      '```list\nfrom: posts\nperPage: 5\nimage: cover\n```',
+    );
+    const card = JSON.stringify(tree.children[0]);
+    const folder = card.indexOf('No folder \\"posts\\" with pages.');
+    expect(folder).toBeGreaterThan(-1);
+    expect(card.indexOf('Unknown key \\"perPage\\"')).toBeGreaterThan(folder);
+    expect(card).toContain('Unknown key \\"image\\"');
+    expect(queryListingIndex).not.toHaveBeenCalled();
+  });
   it('./ resolves against the page folder; capitalised folders resolve (Review Focus 1)', async () => {
     await run('```list\nfrom: ./x\n```', {
       filePath: 'projects/README.md',

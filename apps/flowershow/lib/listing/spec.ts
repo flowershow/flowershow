@@ -56,7 +56,12 @@ export type ListingSpec = {
 export type ListingSource = 'list' | 'blog' | 'layout';
 export type SpecResult =
   | { ok: true; spec: ListingSpec; notes: string[] }
-  | { ok: false; errors: string[] };
+  | {
+      ok: false;
+      errors: string[];
+      /** The folder the block names, when that part parsed: the plugin reports a missing folder alongside the key errors (design 3.8). */
+      from?: { from: string; relative: boolean };
+    };
 
 export const INDEX_PAGE_SIZE = 20;
 const SLOTS = [
@@ -571,7 +576,10 @@ export function parseListingSpec(
       );
   }
 
-  if (errors.length || from === null) return { ok: false, errors };
+  if (errors.length || from === null)
+    return from === null
+      ? { ok: false, errors }
+      : { ok: false, errors, from: { from, relative: fromRelative } };
   return {
     ok: true,
     spec: {

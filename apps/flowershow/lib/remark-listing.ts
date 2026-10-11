@@ -77,24 +77,40 @@ export default function remarkListing(options: RemarkListingOptions) {
             ],
             heading,
           );
-        if (!result.ok) return renderListingError(result.errors, heading);
-        const parsed = result.spec;
-        const joined = parsed.fromRelative
-          ? [dirOf(currentPath), parsed.from].filter(Boolean).join('/')
-          : parsed.from;
-        const spec = {
-          ...parsed,
-          from: resolveFolderCase(joined, options.files),
+        const resolveFrom = (from: string, relative: boolean) =>
+          resolveFolderCase(
+            relative
+              ? [dirOf(currentPath), from].filter(Boolean).join('/')
+              : from,
+            options.files,
+          );
+        const missingFolder = (from: string) => {
+          if (folderHasPages(from, options.files)) return [];
+          const near = nearestFolders(from, options.files);
+          return [
+            `No folder "${from}" with pages.${near.length ? ` Folders with pages: ${near.join(', ')}.` : ''}`,
+          ];
         };
-        if (!folderHasPages(spec.from, options.files)) {
-          const near = nearestFolders(spec.from, options.files);
+        if (!result.ok)
           return renderListingError(
             [
-              `No folder "${spec.from}" with pages.${near.length ? ` Folders with pages: ${near.join(', ')}.` : ''}`,
+              ...(result.from
+                ? missingFolder(
+                    resolveFrom(result.from.from, result.from.relative),
+                  )
+                : []),
+              ...result.errors,
             ],
             heading,
           );
-        }
+        const parsed = result.spec;
+        const spec = {
+          ...parsed,
+          from: resolveFrom(parsed.from, parsed.fromRelative),
+        };
+        const folderErrors = missingFolder(spec.from);
+        if (folderErrors.length)
+          return renderListingError(folderErrors, heading);
         if (spec.pageSize != null) {
           if (paginationClaimed)
             return renderListingError(
