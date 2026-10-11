@@ -59,7 +59,9 @@ import { VirtualListingPage } from '@/components/public/listing/virtual-listing-
 import { resolveLocale } from '@/lib/listing/dates';
 import {
   isListingPageOutOfRange,
+  listingPaginatesByPage,
   renderPageListing,
+  resolveMetadataListingRoute,
 } from '@/lib/listing/page-listing';
 import { listingCanonical, pageFromSearchParam } from '@/lib/listing/paginate';
 import { isAutoListingDirName, resolveListingRoute } from '@/lib/listing/route';
@@ -159,20 +161,25 @@ export async function generateMetadata(props: {
   }
 
   // Page-level listings (layout: list, zero-config): self-canonical per page and
-  // noindex past the last page. The body is not loaded here, so a prose README
-  // with its own block counts as auto; only canonical and noindex depend on it.
+  // noindex past the last page. The body is loaded only for an auto listing (a
+  // README with its own block is not one), so SitePage and this agree.
   const siteFilePaths =
     (await api.site.getAllBlobPaths
       .query({ siteId: site.id })
       .catch(() => null)) ?? [];
-  const listingRoute = resolveListingRoute({
-    slug: decodedSlug,
-    blob: blob ? { path: blob.path } : null,
-    metadata: (metadata as Record<string, unknown> | null) ?? null,
-    content: '',
-    siteFilePaths,
-    changelogKind: isChangelogFallback ? 'index' : null,
-  });
+  const listingRoute = await resolveMetadataListingRoute(
+    {
+      slug: decodedSlug,
+      blob: blob ? { path: blob.path } : null,
+      metadata: (metadata as Record<string, unknown> | null) ?? null,
+      siteFilePaths,
+      changelogKind: isChangelogFallback ? 'index' : null,
+    },
+    async () =>
+      blob
+        ? await api.site.getBlobContent.query({ id: blob.id }).catch(() => null)
+        : null,
+  );
   const pageLevelListing = listingRoute.kind !== 'none';
   const pageParam = (await props.searchParams)?.page;
   const noindex =
@@ -256,7 +263,11 @@ export async function generateMetadata(props: {
       image,
     }),
     alternates: {
-      canonical: listingCanonical(url, pageLevelListing, pageParam),
+      canonical: listingCanonical(
+        url,
+        listingPaginatesByPage(listingRoute),
+        pageParam,
+      ),
       ...(siteConfig?.enableRss && {
         types: {
           'application/rss+xml': `${siteUrl}/rss.xml`,

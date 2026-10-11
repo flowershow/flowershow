@@ -129,6 +129,16 @@ describe('autoListingFor (cases 2 and 3)', () => {
     none('blog/first-post.md', {});
     none('podcast.md', {}); // folder note, but podcast is not an auto folder name
   });
+  it('a folder note beside an attachments-only folder gets no listing (no error card on a published page)', () => {
+    expect(
+      autoListingFor({
+        blobPath: 'att/posts.md',
+        metadata: {},
+        content: 'Prose.',
+        siteFilePaths: ['/att/posts.md', '/att/posts/cover.png'],
+      }),
+    ).toBeNull();
+  });
 });
 
 describe('resolveListingRoute (precedence table)', () => {

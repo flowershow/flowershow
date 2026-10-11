@@ -2,7 +2,7 @@ import { dirOf } from '@/lib/changelog';
 import { resolveFolderCase } from '@/lib/listing/items';
 import { queryListingIndex } from '@/lib/listing/query';
 import { processMarkdown } from '@/lib/markdown';
-import type { ListingRoute } from './route';
+import { type ListingRoute, resolveListingRoute } from './route';
 import { parseListingSpec } from './spec';
 
 type PageLevelRoute = Extract<
@@ -86,4 +86,24 @@ export async function isListingPageOutOfRange(args: {
   } catch {
     return false;
   }
+}
+
+/** Only then does `?page=N` change the content, so only then is it its own canonical. */
+export function listingPaginatesByPage(route: ListingRoute): boolean {
+  if (route.kind === 'virtual') return true;
+  return route.kind === 'page' && route.pageSize != null;
+}
+
+/**
+ * The route as SitePage will see it, for generateMetadata: an auto listing
+ * depends on the body (a README with its own block is not one), so the body is
+ * loaded only in that case.
+ */
+export async function resolveMetadataListingRoute(
+  args: Omit<Parameters<typeof resolveListingRoute>[0], 'content'>,
+  loadContent: () => Promise<string | null>,
+): Promise<ListingRoute> {
+  const route = resolveListingRoute({ ...args, content: '' });
+  if (route.kind !== 'page' || route.source !== 'auto') return route;
+  return resolveListingRoute({ ...args, content: (await loadContent()) ?? '' });
 }

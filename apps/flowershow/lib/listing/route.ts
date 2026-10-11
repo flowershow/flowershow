@@ -10,6 +10,7 @@ import {
   isFolderIndexPath,
   normalizeDir,
 } from '@/lib/changelog';
+import { folderHasPages } from './items';
 import {
   implicitListingFrom,
   type ListingView,
@@ -111,6 +112,8 @@ export function autoListingFor({
       dir = sibling; // folder note (case 3)
   }
   if (dir === null || !isAutoListingDirName(dir)) return null;
+  // A folder of attachments only would render the "no folder with pages" card on a published page
+  if (!folderHasPages(dir, siteFilePaths)) return null;
   if (metadata?.layout) return null;
   if (metadata?.list === false || metadata?.list === 'false') return null;
   if (hasExplicitListing(content)) return null;
