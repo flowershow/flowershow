@@ -57,17 +57,32 @@ authors: [you]
 ---
 ```
 
-2. **Add a blog index page.**
+2. **Your blog index is already there.**
 
-Create a new file, for example `/blog/README.md`, and add the List component:
+A folder named `blog` (or `posts`) lists itself: `/blog` shows all your posts, newest first, with titles, descriptions, images, dates and authors. Nothing to write.
 
-```
+Want an intro above the list, or a grid of cards? Add `/blog/README.md` (or an Obsidian folder note, `blog.md` beside the folder):
+
+```markdown
 ---
 title: My Blog
+layout: list
+list:
+  view: grid
 ---
 
-<List dir="/blog" />
+Notes from my vault, published as I go.
 ```
+
+To show your latest posts on your home page, drop a `blog` block into it:
+
+````markdown
+```blog
+limit: 3
+```
+````
+
+It's all plain Markdown, so it works in `.md` files. See [[listings|Listing pages]] for every option.
 
 3. **Sync your vault to GitHub**.
 4. **Connect your repository on** [**Flowershow Cloud**](https://flowershow.app) — your blog will be built and published automatically.

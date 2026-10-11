@@ -398,7 +398,15 @@
     },
     {
       "from": "/docs/custom-collection-cards",
-      "to": "/docs/reference/custom-collection-cards"
+      "to": "/docs/reference/listings"
+    },
+    {
+      "from": "/docs/guides/custom-collection-cards",
+      "to": "/docs/reference/listings"
+    },
+    {
+      "from": "/docs/reference/custom-collection-cards",
+      "to": "/docs/reference/listings"
     },
     {
       "from": "/docs/custom-domain",

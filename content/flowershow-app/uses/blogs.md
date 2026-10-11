@@ -109,8 +109,8 @@ showComments: false
             </div>
             <div className="bento-body">
               <h3>Beautiful blog index</h3>
-              <p>One line sets up a listing of your posts — with dates, thumbnails, and descriptions. Sorted by date. Paginated if you want. No separate CMS or configuration.</p>
-              <a className="ft-learn" href="/docs/list-component"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+              <p>Put your posts in a <code>blog</code> folder and the index builds itself — dates, thumbnails, descriptions, newest first, paginated. Switch to a grid, a compact archive or a featured post with one line. No separate CMS or configuration.</p>
+              <a className="ft-learn" href="/docs/reference/listings"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             </div>
           </div>
           <div className="bento-card bento-search reveal">

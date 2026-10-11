@@ -62,18 +62,18 @@ This folder will contain:
 > - Date (e.g., `/blog/2025/06` for June 2025 posts)
 > - Status (e.g., `/blog/drafts`, `/blog/archive`) and then exclude unfinished work from publishing.
 >
-> The List component will automatically include posts from all subdirectories.
+> The blog listing automatically includes posts from all subdirectories.
 
 > [!note] Alternative Setup
 > In this tutorial, we’re adding the blog inside a /blog directory.
-> However, if your entire site _is_ a blog, you can keep your content directly in the **root folder** — in that case, your main `README.md` (or `index.md`) file will serve as the blog index page with the `<List />` component listing all your posts.
+> However, if your entire site _is_ a blog, you can show your posts right on your home page: put a ```` ```blog ```` block in your main `README.md` (or `index.md`) and it lists everything in `/blog`. See Step 3.
 
 ## Step 2: Add Your Blog Posts
 
 Now, let's add some posts to our blog.
 
 1. Create a new markdown file in the chosen blog directory, for example: `/blog/hello-flowershow.md`.
-2. Add frontmatter at the top of the file and some content below it. The frontmatter sets structured metadata of the page, and controls how your post appears in the List component (see next steps) and page headers:
+2. Add frontmatter at the top of the file and some content below it. The frontmatter sets structured metadata of the page, and controls how your post appears in the blog listing (see next step) and page headers:
 
 ```markdown
 ---
@@ -102,51 +102,64 @@ The frontmatter fields explained:
 
 ## Step 3: Create the Blog Landing Page
 
-The landing page serves as the main entry point for your blog section. You can create it using either `README.md` or `index.md` in your blog directory.
+The landing page serves as the main entry point for your blog section. Good news: if your folder is called `blog` or `posts`, you already have one.
 
-1. Inside your blog directory, create a `README.md` file (`/blog/README.md`).
-2. Add the following content to create a landing page that lists all blog posts:
+### Option A: Do nothing
+
+Flowershow lists a `blog/` or `posts/` folder by itself. With no `README.md` in the folder, `/blog` shows every post in it (and its subfolders), newest first, 20 per page, with each post's title, description, image, date and authors.
+
+### Option B: Add an intro
+
+Want a sentence or two above the list? Create `/blog/README.md` (or `index.md`) with just your prose. The list of posts appears under it automatically:
 
 ```markdown
 ---
 title: Blog
 description: A collection of my blog posts
-showToc: false
-syntaxMode: mdx
 ---
 
-<List
-dir="/blog"
-slots={{
-    headline: "title",
-    summary: "description",
-    eyebrow: "date",
-    media: "image"
-  }}
-/>
+Notes on building things, roughly weekly.
 ```
-
-The List component automatically scans the directory specified in the dir property and lists all the markdown files inside.
-
-The `slots` tell Flowershow which frontmatter fields to display in each part of the list item:
-
-- **headline**: the main title (title field)
-- **summary**: short description (description field)
-- **eyebrow**: smaller text above the title (often the date)
-- **media**: the featured image (image field)
-- **footnote**: optional small text below the summary (for example, authors)
-
-💡 You can freely adjust which frontmatter fields are connected to which slots — or omit slots you don’t need.
 
 ![[Pasted image 20251007233209.png]]
 
-> [!info] `List` Component Options
-> Learn how to customize the List component in the [List Component Docs](/docs/list-component).
+### Option C: Choose how the list looks
 
-> [!important]
-> Using the `List` component requires MDX rendering, since it uses JSX (like `<List />`).
-> This is why we set `syntaxMode: mdx` in the frontmatter - to make sure Flowershow parses and renders this file as MDX.
-> 📚 Read more about different syntax rendering modes and how to enable them: https://flowershow.app/blog/announcing-syntax-mode-configuration
+To change the look, add `layout: list` and a `list:` map to the frontmatter. For example, a grid of cards with the latest post as a large featured hero:
+
+```markdown
+---
+title: Blog
+description: A collection of my blog posts
+layout: list
+list:
+  view: grid
+  featured: 1
+---
+
+Notes on building things, roughly weekly.
+```
+
+`view` can be `list` (the default: rows with a thumbnail), `grid` (cards), `compact` (one line per post, grouped by year, great for archives) or `people` (portraits, for a team page). You can also choose which frontmatter fields show on each card, filter, sort, group and paginate.
+
+> [!tip] Using a different folder name?
+> Zero-config listing only applies to folders named `blog` or `posts`. For `/articles` or anything else, add `layout: list` to that folder's `README.md` and it lists its own folder.
+
+> [!tip] Show your latest posts on the home page
+> Put a ```` ```blog ```` block anywhere on any page, such as your site's main `README.md`:
+>
+> ````markdown
+> ## Latest posts
+>
+> ```blog
+> limit: 3
+> ```
+>
+> [All posts →](/blog)
+> ````
+
+> [!info] Listing page options
+> All of this is plain Markdown: it works in `.md` files, no MDX needed. See [[listings|Listing pages]] for every option (views, `fields`, `where`, `sort`, `group`, `pageSize`, images and more).
 
 ## Step 4: Set Up Author Pages
 

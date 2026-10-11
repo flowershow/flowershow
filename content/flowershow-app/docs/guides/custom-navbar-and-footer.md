@@ -209,6 +209,6 @@ If the navbar or footer doesn't change, check that the files are at the root, na
 
 - **A bespoke landing page.** Combine `layout: plain` with `showNavbar: false` and `showFooter: false` in a page's frontmatter to give one page its own full-width design. See [[navbar#hide-the-navbar-on-a-page|Hide the navbar on a page]].
 - **Search and the dark-mode toggle** stay in your custom navbar if you turn them on in `config.json`. You can move them with CSS `order`; see [[navbar#custom-navbar|Custom navbar]].
-- **Tag and list styling.** Recolor tag pills and style `<List>` cards to match. See [[tags|Tags]] and [[list-component|List component]].
+- **Tag and list styling.** Recolor tag pills and style listing cards to match. See [[tags|Tags]] and [[listings#styling|Listing pages]].
 
 Full details: [[navbar#custom-navbar|Custom navbar reference]], [[footer#custom-footer|Custom footer reference]], [Styling your site](/docs/guides/custom-styles).

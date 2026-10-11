@@ -199,6 +199,8 @@ Flowershow is designed to feel like writing in a modern digital notebook — whe
 <List dir="blog" />
 ```
 
+(For listing pages you don't need MDX at all: a ```` ```blog ```` or ```` ```list ```` block works in plain `.md`. See [[listings|Listing pages]].)
+
 That’s why **Flowershow parses all files as MDX by default**.
 
 It means you can always use components without having to rename files or remember a special syntax.

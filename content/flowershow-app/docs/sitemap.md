@@ -22,8 +22,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 ## Guides
 
 - [Author Pages](/docs/guides/author-pages) — Learn how to set up author pages to attribute content to your creators with links to custom profiles page and avatars.
-- [Content Catalogs and Listing Pages](/docs/guides/content-catalogs) — Flowershow's new List component makes it super easy to create blog index pages and other kind of listing pages for tutorials, recipes, and more.
-- [Custom collection cards](/docs/guides/custom-collection-cards) — Render custom cards for a collection of pages using normal HTML in the page body.
+- [Content Catalogs and Listing Pages](/docs/guides/content-catalogs) — Create blog index pages and other listing pages for tutorials, recipes, projects and more, with a few lines of plain Markdown.
 - [Custom Fonts](/docs/guides/custom-fonts) — Use Google Fonts or your own font files on your site
 - [Give your site a custom navbar and footer](/docs/guides/custom-navbar-and-footer) — Make your site look like your brand with your own navbar, footer, colors and fonts, using three small files.
 - [Styling your site](/docs/guides/custom-styles) — Customize your site's appearance — colors, fonts, and more — using CSS variables and a single custom.css file.

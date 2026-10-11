@@ -31,7 +31,7 @@ syntaxMode: mdx
 ## When to enable MDX
 
 MDX lets you embed React components directly in your content. Enable it (globally or per page) when you want to:
-- Use Flowershow components like [[list-component|List]]
+- Use Flowershow components like the legacy [[list-component|List]] component (listing pages don't need MDX: see [[listings|Listing pages]])
 - Write [[custom-styles#jsx-blocks-styled-with-tailwind|JSX blocks styled with Tailwind]]
 - Embed interactive React components
 - [[frontmatter-variables|Use frontmatter fields as variables in your content]]
