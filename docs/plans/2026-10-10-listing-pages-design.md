@@ -69,7 +69,7 @@ Renders at `/blog`: the page header (title, description if any), the intro parag
 └──────────────────────────────────────────────────────────┘
 ```
 
-The whole page (header, intro and list) shares one centred 44rem column (6, "Widths"). The thumbnail sits on the right; a post without an image simply has a full-width text row.
+The whole page (header, intro and list) shares one centred 44rem column (6, "Widths"). The thumbnail sits on the left (`media: thumb right` moves it); a post without an image is a text-only row whose text lines up with the other rows' text.
 
 ### 3.1a A blog with no index file at all
 
@@ -137,7 +137,7 @@ status: In progress
 ---
 ```
 
-Renders a responsive grid (3, 2, then 1 column at the default content width); `status` appears in the card's meta line. A project without an image gets a quiet placeholder box so the titles stay on one baseline (4.9).
+Renders a responsive grid (3, 2, then 1 column at the default content width); `status` appears in the card's meta line. A project without an image has no image block at all; its card starts with its text at the top of the row, like Vercel's text-only grid (4.9). `defaultImage:` gives such items an image instead.
 
 ```
 ┌──────────────┐ ┌──────────────┐ ┌──────────────┐
@@ -243,12 +243,13 @@ What does **not** produce an error: `dir`/`folder` (read as `from`), `layout: ca
 | `pageSize` | integer \| `none` | `20` on page-level listings; `none` for inline blocks | Items per page. The inline default keeps the recorded decision from #892 (pagination only when asked for) and stops a home-page teaser from claiming `?page`. |
 | `where` | map of field → value or list of values | none | Keep items whose field equals the value (scalars) or contains it (lists); a list of values means any of them. Multiple keys are AND. `date: upcoming` / `date: past` compare the date slot with today. A strict subset of Bases filters (4.6). |
 | `fields` | map of slot → key \| `none`, or a list of field names | per view (4.4) | Which frontmatter key fills each card slot: `eyebrow` (up to two keys), `title`, `summary`, `date`, `image`, `authors`, `meta` (up to two keys). Only the slots you name change. The list form (`fields: [title, date, description]`, the legacy `<List fields>` shape) turns on exactly those slots. |
-| `media` | `none` \| `thumb` \| `cover` | `list`: `thumb`; `grid`/`people`: `cover`; `compact`: `none` | How images are presented: a small thumbnail beside the text, a cover above it, or none. Named `media`, not `image`, so it never reads as "the `image` field"; a block-level `image:` key is an error that points to `media` and to `fields.image`. |
+| `media` | `none` \| `thumb` \| `cover`; `thumb` takes `left` (default) or `right` | `list`: `thumb left`; `grid`/`people`: `cover`; `compact`: `none` | How images are presented: a small thumbnail beside the text (left unless `media: thumb right`), a cover above it, or none. Named `media`, not `image`, so it never reads as "the `image` field"; a block-level `image:` key is an error that points to `media` and to `fields.image`. `left`/`right` with `cover` or `none` is an error. |
 | `ratio` | `16/9` \| `3/2` \| `4/3` \| `1/1` \| `3/4` (also `16:9`) | `thumb`: `3/2`; `cover`: `16/9` (`people`: `1/1`) | Image box aspect ratio. |
+| `defaultImage` | image path or `[[wikilink]]` | none | (added 2026-10-11) Image for items without one, resolved against the listing page like item images. Distinct from `fields.image` (which frontmatter key holds an item's image) and `media` (how images are shown); ignored, with a note, under `media: none`. No image is ever generated. A site-wide default is a follow-up. |
 | `featured` | `0` \| `1` | `0` | (PR B2) `1` promotes one item on page 1 to a split hero above the rest: the first item (in sort order) with `featured: true` in its frontmatter, else the first item. It is not repeated in the list. `list` and `grid` only. |
 | `group` | `none` \| `year` \| `month` \| `day` \| `folder` \| field name | `none`; `year` for `compact` on page-level listings | (PR B2) A heading before each group. Items are ordered by group first and by `sort` within a group, so every group appears once (4.5). `folder` groups by the first subfolder under `from`. |
 
-Nothing else. Keys are camelCase in the docs and matched case-insensitively. Parsing is lenient on type (`pageSize: "5"`, `featured: true`) and strict on unknown keys (error card with a suggestion). Nested (dotted) keys such as `links.github` in `fields`, `where`, `sort` or `group` are an error until nested paths are supported. `readingTime` is computed on the post page, not stored, so it is not a listing field yet (an error says so; storing a word count at ingestion is a follow-up). Subfolders are always included; a `recursive` switch was cut.
+Nothing else: ten keys in PR B, twelve with PR B2. Keys are camelCase in the docs and matched case-insensitively. Parsing is lenient on type (`pageSize: "5"`, `featured: true`) and strict on unknown keys (error card with a suggestion). Nested (dotted) keys such as `links.github` in `fields`, `where`, `sort` or `group` are an error until nested paths are supported. `readingTime` is computed on the post page, not stored, so it is not a listing field yet (an error says so; storing a word count at ingestion is a follow-up). Subfolders are always included; a `recursive` switch was cut.
 
 ### 4.3 Which pages are items
 
@@ -318,7 +319,7 @@ Not in v1: `not`, general comparisons, date arithmetic. Those are Bases territor
 Four views, from the moodboard (`moodboard/findings.md` §5): a list row, a grid card, a compact row, and a people card whose slot order and density differ. Everything else is a knob: `featured`, `group`, `media`, `ratio`. `magazine` is `grid` + `featured: 1`; `cards` is `grid`. PR B ships `list` and `grid`; PR B2 ships `compact`, `people`, `featured` and `group` (8).
 
 **`list` (default): blog feed, notes, podcasts, events** (Substack list, Overreacted, Atlantic, Acquired).
-- Row: text block left, thumbnail right (`media: thumb`, `ratio` 3/2, `--list-thumb-width` 160px; 88px below 640px, never dropped on mobile). `media: cover` puts a 16/9 image above the text; `media: none` gives the Overreacted/PaperMod text row. Thumbnail on the left is one line of CSS (`:where([data-view="list"]) .list-component-item { flex-direction: row-reverse }`), documented rather than a knob.
+- Row: thumbnail left, text right (`media: thumb`, `ratio` 3/2, `--list-thumb-width` 160px; 88px below 640px on the same side, never dropped on mobile), as in Ghost Edition/Headline, The Atlantic and Acquired. `media: thumb right` (or `thumb left`) picks the side; the root carries `data-media-side="left|right"` and the image's `order` is `var(--list-thumb-order, 0)` (right sets 2), so a theme can flip every list with one variable. The image is first in the DOM but `aria-hidden` and out of the tab order, so the title is read first. `media: cover` puts a 16/9 image above the text; `media: none` gives the Overreacted/PaperMod text row.
 - Text block: eyebrow → title (1.25rem semibold, not clamped) → summary (1rem muted, 2-line clamp) → meta line (0.875rem muted; each segment unbreakable, wrapping between segments).
 - Rows separated by a 1px rule (`--list-rule-color`), 1.5rem vertical padding.
 - No image: the row collapses to full-width text (per row; Substack does this).
@@ -327,7 +328,7 @@ Four views, from the moodboard (`moodboard/findings.md` §5): a list row, a grid
 **`grid`: blog cards, projects, customers, docs index** (Linear Now, Vercel, Ghost Casper, Astro themes).
 - Card: image (`cover`, 16/9 default, `--list-card-radius`, hairline border) → eyebrow → title (1.25rem, not clamped) → summary (0.9375rem muted, 3-line clamp) → meta line with avatar stack. No card background or border by default (`--list-card-bg: transparent`, `--list-card-border: none`, `--list-card-hover-bg: transparent`); themes set them for boxed cards. Whole card clickable; links inside the card (authors, meta links) are lifted above the overlay in the default stylesheet.
 - Columns: `repeat(auto-fill, minmax(min(100%, var(--list-card-min, 17.5rem)), 1fr))`, which gives 3 at ≥1024px, 2 at ≥640px, 1 below at the default content width; gap `--list-gap` (2rem, 1.5rem below 640px). The grid takes its container's width (never the 44rem measure).
-- No image: when no item on the page has an image, the image slot collapses for the whole listing (Vercel's text grid). When some do, items without one get a placeholder box (`--list-media-placeholder`, a subtle tint of the background) so titles stay on one baseline.
+- No image, no magic: nothing is generated. `defaultImage: <path or [[wikilink]]>` (resolved against the listing page, like item images, through `ListingImage`) is used for any item without an image. Without it: when no item on the page has an image, the image slot collapses for the whole listing; in a mixed `list` a row without an image is text only, its text aligned with the image rows' text when the thumbnail is on the left; in a mixed `grid` a card without an image has no media block and its text starts at the top of the card (Vercel's text-only grid). A site-wide default image (e.g. in `config.json`) is a deferred follow-up.
 - `media: none` collapses the image slot; `media: thumb` is shown as `cover`.
 - Projects: `fields: { date: none, eyebrow: client, meta: [status] }`, `ratio: 1/1` or `3/4`; the card is unchanged.
 
@@ -467,7 +468,7 @@ Items and group headings are direct children of the root and pagination is the l
 Rules:
 
 - Existing classes keep their names: `media`, `eyebrow`, `headline`, `summary`, `pagination-*`, `empty`, `error`. Two meaning shifts, noted for theme authors: `eyebrow` now holds the `fields.eyebrow` value (the date moved to the meta line, where every reference listing puts it), and `-item-footnote` is not emitted by the new engine (the meta line `-item-meta` replaces it; the legacy component keeps it). The e2e expectations in `e2e/specs/blog.spec.ts` (`.list-component-item-headline a`, `.list-component-item-summary`) hold.
-- New classes are additive: `--list`/`--grid`/`--people`/`--compact` modifiers (plus `data-view`, `data-media`, `data-ratio`, `data-listing-notes` attributes), `-item--featured`, `-item-meta`, `-item-meta-value[data-field]`, `-item-date`, `-item-authors`, `-item-avatars`, `-item-author`, `-item-author-avatar`, `-item-media--placeholder`, `-item-initials`, `-group-heading`, `-error--block`, `.listing-page` (page wrapper), and `.is-disabled` on end-of-range pagination buttons. Meta-line separators (" · ") are CSS on each following segment; segments never break internally (a separator can start a wrapped line, as on Substack).
+- New classes are additive: `--list`/`--grid`/`--people`/`--compact` modifiers (plus `data-view`, `data-media`, `data-media-side`, `data-ratio`, `data-listing-notes` attributes), `-item--featured`, `-item-meta`, `-item-meta-value[data-field]`, `-item-date`, `-item-authors`, `-item-avatars`, `-item-author`, `-item-author-avatar`, `-item-media--placeholder` and `-item-initials` (people, PR B2), `-group-heading`, `-error--block`, `.listing-page` (page wrapper), and `.is-disabled` on end-of-range pagination buttons. Meta-line and eyebrow separators (" · ") are CSS; segments never break internally, and the separator slot at the start of a wrapped line is clipped, so no line starts with "·".
 - **Item and group headings stay out of the page's heading machinery.** `rehype-slug` and `rehype-autolink-headings` run on hast after `remark-rehype`, and `components/public/table-of-contents.tsx` collects `#mdxpage h2, h3, …` from the DOM. The renderer gives every listing heading a placeholder id (so `rehype-slug` skips it and real headings keep their slugs), a rehype step after `rehypeSlug` in both chains removes it, the autolink `test` skips listing headings, and the ToC selector excludes `[data-toc-ignore]`. A parity test asserts no `.heading-link` and no heading `id` inside `.list-component` in both pipelines.
 - **Heading levels.** Items are `h3` and group headings `h2`, as in v4; adjusting levels to the surrounding outline is a follow-up (both are excluded from the ToC, so the only cost is an a11y heading-order warning on some pages).
 - **Images go through `next/image` with real sizes.** `components/public/mdx/fs-image.tsx` optimises only `internal`-class images, so the renderer emits an internal `ListingImage` element (an MDX JSX element, lowercased to `listingimage` for `.md` exactly like `ObsidianBasesViews`) registered in both pipelines. String props only: `src`, `alt`, `sizes`, `variant` (`media` | `avatar`). `ListingImage` sits inside the MDX factory's error boundary. `sizes` per view and shape: list thumb `(min-width: 640px) 160px, 88px`; list cover `(min-width: 768px) 44rem, 100vw`; grid `(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw`; people `(min-width: 1024px) 25vw, 50vw`; featured `(min-width: 768px) 58vw, 100vw`; avatars `20px`. It renders `next/image` with `fill` inside a box sized by `--list-media-ratio`, `objectFit: cover`, lazy, never zoomable. Authors never write it; it is an implementation detail with a parity test.
@@ -484,7 +485,8 @@ CSS custom properties (the moodboard's set, named in the existing `--list-*` con
 | `--list-card-border` | `none` | Card border (`1px solid …` for boxed cards) |
 | `--list-card-bg` | `transparent` | Card background |
 | `--list-media-ratio` | per `ratio` (`3 / 2`, `16 / 9`, `1 / 1`, …) | Image box aspect ratio; settable on `:root` (the stylesheet reads it through an internal `--_list-ratio` fallback) |
-| `--list-media-placeholder` | a 4% tint of the foreground | Placeholder box for grid items without an image, and the people initials square |
+| `--list-thumb-order` | `0` (`2` with `media: thumb right`) | Side of the list thumbnail: `0` left, `2` right |
+| `--list-media-placeholder` | a 4% tint of the foreground | The people initials square (PR B2) |
 | `--list-card-hover-bg` | `transparent` | Card background on hover (boxed-card themes) |
 | `--list-compact-meta-width` | `9em` | Width of the optional second column in `compact` |
 | `--list-thumb-width` | `160px` (`88px` below 640px) | List-view thumbnail width |
@@ -495,7 +497,7 @@ CSS custom properties (the moodboard's set, named in the existing `--list-*` con
 
 `scripts/theme-class-reference.mjs` (repo root) holds the hand-written DOM tree for the reference and checks the stylesheet's classes, so the new classes land in `reference/theme-class-reference.md`.
 
-Theme PR (C1), a prerequisite of PR B, all six official themes (`leaf`, `lessflowery`, `letterpress`, `superstack`, `monospace`, `material-draft`): re-scope the legacy layout rules listed above to `.list-component:not([data-view])`; add per-view rules; add `.is-disabled` beside each `:disabled` rule on `.list-component-pagination-button`; confirm the icon rules apply to the inline SVG; check rules that assumed `-item-eyebrow` holds a date or that style `-item-footnote`; span `-group-heading` across grid roots; check the thumbnail-right list row, the grid placeholder and (for B2) the featured hero.
+Theme PR (C1), a prerequisite of PR B, all six official themes (`leaf`, `lessflowery`, `letterpress`, `superstack`, `monospace`, `material-draft`): re-scope the legacy layout rules listed above to `.list-component:not([data-view])`; add per-view rules; add `.is-disabled` beside each `:disabled` rule on `.list-component-pagination-button`; confirm the icon rules apply to the inline SVG; check rules that assumed `-item-eyebrow` holds a date or that style `-item-footnote`; span `-group-heading` across grid roots; check the thumbnail-left list row (and `thumb right`), text-only grid cards and (for B2) the featured hero.
 
 ## 7. Technical architecture
 
@@ -553,7 +555,7 @@ Untouched apart from two isolated fixes in their own small PR: `getListComponent
 
 - `lib/listing/*`, `lib/remark-listing.ts`, `lib/rehype-listing-headings.ts`, `components/public/mdx/listing-image.tsx`; registered in both pipelines; ToC selector and autolink test updated.
 - ```` ```list ```` and ```` ```blog ```` blocks and `layout: list`, with nine keys (`from`, `view`, `sort`, `limit`, `pageSize`, `where`, `fields`, `media`, `ratio`), all aliases and the error/note rules of 4.12.
-- Views `list` and `grid` (with the grid placeholder rule); the `fields` slot map with fallbacks; `where` with list values and `upcoming`/`past`; `sort: date` = date slot.
+- Views `list` (thumbnail left, `media: thumb right`) and `grid` (no placeholders; `defaultImage`); the `fields` slot map with fallbacks; `where` with list values and `upcoming`/`past`; `sort: date` = date slot.
 - Zero-config blog folders, cases 1–3 (4.10), via the pure route resolver; page-level listings server-rendered in the route; page widths (6).
 - Site/page `locale` for listing dates (4.11).
 - Item rules (4.3) including `draft: true` (listings, RSS, sitemap, `noindex`).
@@ -666,7 +668,7 @@ Sources: `adv-review-ux.md` (layout and author experience) and `adv-review-tech.
 - **Image knob (UX M-5):** `media: none|thumb|cover` plus `ratio:`; a block-level `image:` points to both (4.2).
 - **fields (UX M-9, M-8, M-14):** list form accepted; `layout` alias of `view`; case-insensitive keys; eyebrow takes up to two keys and removes them from the meta line; `readingTime` is an error with an explanation (not available without storing a word count at ingestion, which is not cheap: existing pages would need republishing) (4.2, 4.4).
 - **Errors and notes (UX M-10, M-13):** a missing folder is an error card with the nearest folders; a file in `from` is an error (UX M-7); redundancy notes go to `data-listing-notes` and the server log, never visible to visitors, because the alternatives are worse: a visible note stays on live pages of authors who do not preview, and an HTML comment cannot be emitted identically in MDX (4.12).
-- **No images (UX M-2):** list rows collapse; grid uses a placeholder when some items have images and collapses when none do; people use initials (4.9). The 3.1 mock now matches the spec.
+- **No images (UX M-2), revised 2026-10-11 (user decision):** no generated placeholders; `defaultImage` or nothing. List rows go text only, grid cards drop the media block, the slot collapses when no item has an image; people use initials (PR B2, 4.9). The 3.1 mock now matches the spec.
 - **SSR (tech M6):** page-level listings render in the route through the `.md` pipeline, outside the MDX tree; only inline blocks in `.mdx` render after hydration (4.1, 7.2).
 - **Cache (tech M7):** the cache holds the ordered index (ids, paths, featured flags, group keys); page rows are fetched by id; payload size is unit-tested at 5,000 items (7.3).
 - **Testability (tech M19):** a pure `resolveListingRoute` with a table test (7.3, 7.6).
