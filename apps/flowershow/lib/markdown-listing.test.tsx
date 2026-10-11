@@ -160,6 +160,16 @@ describe('list blocks: .md and .mdx render the same listing', () => {
       ).toBe('-1');
       expect(s.querySelector('h3')!.getAttribute('data-toc-ignore')).toBe('');
     });
+    it(`${name}: item headings have no id, no .heading-link, and do not shift real slugs`, async () => {
+      const doc = new DOMParser().parseFromString(await render(), 'text/html');
+      const s = doc.querySelector('section.list-component')!;
+      expect(s.querySelectorAll('.heading-link')).toHaveLength(0);
+      expect(
+        s.querySelectorAll('h1[id],h2[id],h3[id],h4[id],h5[id],h6[id]'),
+      ).toHaveLength(0);
+      expect(s.querySelector('h3[data-toc-ignore]')).not.toBeNull();
+      expect(doc.querySelector('h2#intro')).not.toBeNull(); // the post titled "Intro" must not make this #intro-1
+    });
     it(`${name}: wiki aliases inside frontmatter fields render as links`, async () => {
       expect(
         section(await render()).querySelector(

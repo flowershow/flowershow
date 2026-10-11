@@ -37,6 +37,7 @@ import type { ImageDimensionsMap } from './image-dimensions';
 import rehypeHtmlEnhancements from './rehype-html-enhancements';
 import rehypeInjectImageDimensions from './rehype-inject-image-dimensions';
 import rehypeJsonCanvas from './rehype-json-canvas';
+import rehypeListingHeadings from './rehype-listing-headings';
 import rehypeResolveExplicitJsxUrls from './rehype-resolve-explicit-jsx-urls';
 import rehypeResolveHtmlUrls from './rehype-resolve-html-urls';
 import rehypeToReact from './rehype-to-react';
@@ -46,6 +47,10 @@ import remarkChangelog, {
   type RemarkChangelogOptions,
 } from './remark-changelog';
 import remarkCommonMarkLink from './remark-commonmark-link';
+import {
+  LISTING_GROUP_HEADING_CLASS,
+  LISTING_HEADLINE_CLASS,
+} from './listing/render';
 import remarkListing, { type ListingRenderContext } from './remark-listing';
 import remarkObsidianBases from './remark-obsidian-bases';
 import remarkTags from './remark-tags';
@@ -160,6 +165,7 @@ export async function processMarkdown(
     .use(rehypeResolveHtmlUrls, { filePath, siteHostname })
     .use(rehypeHtmlEnhancements, {})
     .use(rehypeSlug)
+    .use(rehypeListingHeadings)
     .use(rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig)
     .use(rehypeKatex, { output: 'htmlAndMathml' })
     .use(rehypePrismPlus, { ignoreMissing: true })
@@ -392,6 +398,7 @@ export const getMdxOptions = ({
         [rehypeResolveExplicitJsxUrls, { filePath, siteHostname }],
         [rehypeHtmlEnhancements, {}],
         rehypeSlug,
+        rehypeListingHeadings,
         [rehypeAutolinkHeadings, rehypeAutolinkHeadingsConfig],
         // @ts-ignore
         [rehypeKatex, { output: 'htmlAndMathml' }],
@@ -415,6 +422,15 @@ export const getUrlResolver = (siteHostname: string) => {
 };
 
 // Changelog page and entry titles already link to their own anchor
+function isListingHeadline(element: any): boolean {
+  const className = element.properties?.className;
+  return (
+    Array.isArray(className) &&
+    (className.includes(LISTING_HEADLINE_CLASS) ||
+      className.includes(LISTING_GROUP_HEADING_CLASS))
+  );
+}
+
 function isChangelogTitle(element: any): boolean {
   const className = element.properties?.className;
   return (
@@ -431,6 +447,7 @@ const rehypeAutolinkHeadingsConfig: RehypeAutolinkHeadingsOptions = {
       ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(element.tagName) &&
       element.properties?.id !== 'table-of-contents' &&
       !isChangelogTitle(element) &&
+      !isListingHeadline(element) &&
       element.properties?.className !== 'blockquote-heading'
     );
   },
