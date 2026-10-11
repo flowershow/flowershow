@@ -18,7 +18,7 @@ You have a folder of pages (posts, projects, people) and you want a page that li
 
 Three index pages, each made from a folder of ordinary Markdown pages:
 
-1. **A blog index** at `/blog`: every post, newest first, 20 per page, with "Newer" and "Older" links. The blog you're reading is one: [flowershow.app/blog](/blog).
+1. **A blog index** at `/blog`: every post, newest first, 20 per page. The blog you're reading is one: [flowershow.app/blog](/blog).
    ![A blog index: the title, then posts with a thumbnail on the left and their description, date and authors](/assets/docs-listings-zero-config-blog.webp)
 2. **A project portfolio** at `/projects`: a grid of cards with cover images.
    ![A grid of cards, each with a cover image, or a letter tile when there is none, above the title and description](/assets/docs-listings-grid-blog.webp)
@@ -44,7 +44,7 @@ blog/
   first-frost.md
 ```
 
-Give each post a `title`, a `date` and, if you like, a `description` and an `image`:
+Give each post a `title`, a `date` and, if you like, a `description` and an `image`. For example, `blog/notes-from-the-garden.md`:
 
 ```markdown
 ---
@@ -57,7 +57,7 @@ image: "[[garden.jpg]]"
 The tomatoes did better than expected...
 ```
 
-Publish, then open `/blog` on your site. You should see an index of your posts, newest first, titled "Blog", even though you haven't written an index page. A folder named `blog` or `posts` (at any depth) always lists itself.
+Publish, then open `/blog` on your site. You should see an index of your posts, newest first, titled "Blog", even though you haven't written an index page. A folder named `blog` or `posts` (at any depth) lists itself, unless its `README.md` decides for itself (for example, it has a `layout`, its own list or Bases block, or `list: false`).
 
 ## Step 2: Add an intro above the posts
 
@@ -75,7 +75,7 @@ Publish and reload `/blog`. You should see your intro, then the same list of pos
 
 ## Step 3: Make a project portfolio with `layout: list`
 
-Folders with other names don't list themselves; you tell them to. Create a `projects/` folder with one page per project:
+Folders with other names don't list themselves; you tell them to. Create a `projects/` folder with one page per project, for example `projects/seed-library.md`:
 
 ```markdown
 ---
@@ -95,19 +95,16 @@ title: Projects
 layout: list
 list:
   view: grid
-  sort: title
-  fields:
-    date: none
 ---
 
 Things I'm building, or have built.
 ```
 
-`layout: list` makes this page the index of its own folder. The settings under `list:` choose cards (`view: grid`), alphabetical order (`sort: title`) and no dates (`date: none`). Publish and open `/projects`. You should see a grid of cards: three across on a wide screen, one on a phone. If some projects have an image and others don't, the others get a tile with their first letter, so the rows stay lined up.
+`layout: list` makes this page the index of its own folder. `view: grid` under `list:` turns the rows into cards. Publish and open `/projects`. You should see a grid of cards (pages without a `date` are sorted by title): three across on a wide screen, two on a tablet, one on a phone. If some projects have an image and others don't, the others get a tile with their first letter, so the rows stay lined up.
 
 ## Step 4: Make a team page with `view: people`
 
-Create a `team/` folder with one page per person (`team/ada.md`, `team/grace.md`). Each page has the person's photo, role and a short bio:
+Create a `team/` folder with one page per person (`team/ada.md`, `team/grace.md`). Each page has the person's photo, role and a short bio, for example `team/ada.md`:
 
 ```markdown
 ---
@@ -129,7 +126,7 @@ list:
 ---
 ```
 
-Publish and open `/team`. You should see square portraits with each person's name, role and bio, sorted by name. Someone without a photo gets their initials. To choose the order yourself, give each person an `order: 1`, `order: 2` and so on, and add `sort: order` under `list:` (that's what the live team list above does).
+Publish and open `/team`. You should see square portraits with each person's name, role and bio, sorted by name. Someone without a photo gets their initials.
 
 That's the whole pattern: a folder of pages, plus a `README.md` with `layout: list` and, if you want, a `view`.
 
@@ -145,19 +142,12 @@ That's the whole pattern: a folder of pages, plus a `README.md` with `layout: li
 
 Each of these is one or two lines under `list:`; the [[listings|Listing pages]] reference has every key and default.
 
-- **An archive**, one line per post under a heading per year: `view: compact` on an `archive.md` with `from: blog`.
+- **Projects in alphabetical order, without dates**: `sort: title` and `fields: { date: none }`.
+- **People in your own order**: give each person `order: 1`, `order: 2` and so on, and add `sort: order` (as the live team list above does).
+- **An archive**, one line per post under a heading per year: an `archive.md` with `layout: list` and `list: { from: blog, view: compact }`.
 - **A featured post** as a large hero above the rest: `featured: 1`.
 - **Headings per group**: `group: year`, or `group: status` for projects.
 - **What each card shows**: `fields`, e.g. `eyebrow: category` or `meta: [status]`.
 - **Styling**: CSS custom properties such as `--list-card-radius` in your `custom.css`; see [Styling](/docs/reference/listings#styling).
 - **A few items inside another page**: [[show-a-list-of-pages-anywhere|Show a list of pages anywhere]].
-
-## If you already have a Flowershow site
-
-Three changes that came with listing pages could affect an existing site:
-
-- A `blog/` or `posts/` `README.md`, `index.md` or folder note with only prose now gets a list under it. Add `list: false` to keep it as it was.
-- A code block marked `list` or `blog` now renders as a list. To show one as code, put four backticks around it instead of three.
-- `draft: true` now hides a page from lists, the RSS feed and the sitemap. If you imported posts from Hugo, Jekyll or Astro, check none are still marked as drafts.
-
-The `<List />` component keeps working; to switch, see [Coming from the List component](/docs/reference/listings#coming-from-the-list-component). If your site pins a theme version in `config.json`, move to `v0.1.9` or later for the new views.
+- **Already have a Flowershow site, or use `<List />`?** What changed and how to switch: [[2026-10-11-listing-pages|the listing pages changelog entry]] and [Coming from the List component](/docs/reference/listings#coming-from-the-list-component).

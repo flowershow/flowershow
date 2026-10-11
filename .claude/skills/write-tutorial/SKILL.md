@@ -78,7 +78,8 @@ Writing rules:
 - **Result first.** Within the first screen, show what they'll get. Say what they'll learn, don't promise it.
 - **One action per step**, imperative verb, where-before-what ("In your home page's `README.md`, add..."). End every step with what the reader should now see.
 - **Complete snippets.** Each snippet works when pasted as is; name the file it belongs in. Show the minimum: no option the step doesn't need.
-- **No tours, no alternatives inline.** Explanation is a sentence plus a link. Every "you can also..." goes to Next steps.
+- **No tours, no alternatives inline.** Explanation is a sentence plus a link. Every "you can also..." goes to Next steps. Exception: when the need has two real routes, end with a short "choose this when" step (a two-column table plus one example).
+- **Don't overclaim.** Words like "always" and "any" must survive the reference's exceptions; claims the reference doesn't make need a check in the code or on the live site.
 - **Answer the scope question explicitly** when a reader could wonder "does this work only here?" (e.g. "a ```` ```blog ```` block works on any page").
 - **Accuracy.** Every key, default and behaviour must match the reference page (`docs/reference/*.md`). Check each one; never write from memory.
 - Plain language, second person, no "simply"/"just"/"easy". No emojis in headings.
@@ -108,7 +109,7 @@ Writing rules:
 Score each check pass/fail. A tutorial ships when all 10 pass. For an **overview** page, checks 5 and 6 are N/A; check 2 means each section serves one need.
 
 1. **Goal title.** The title states the reader's goal (verb + outcome), not the feature name; the slug is plain (no date); `description` states the outcome.
-2. **One need.** The page solves one need end to end; anything else is a one-liner in Next steps.
+2. **One need.** The page solves one need end to end; anything else is a one-liner in Next steps. A step that helps the reader choose between two routes to the *same* need (list block vs Obsidian Bases) is fine; migration notes for existing users belong in the changelog, linked from Next steps.
 3. **Result first.** The end result (live block or screenshot) and what you'll learn appear before the first step.
 4. **AI signpost.** A callout near the top gives the page's `.md` URL and how to install the Flowershow skill (or llms.txt).
 5. **Prerequisites and time** are stated before the steps.

@@ -1,6 +1,6 @@
 ---
 title: "Show a list of pages anywhere: your latest posts on your home page in one block"
-description: "Put your three newest blog posts on your home page, or a list of projects on your about page, with one Markdown block. And when to use Obsidian Bases instead."
+description: "Put your three newest blog posts on your home page, or a list of projects on your about page, with one Markdown block, and know when to use Obsidian Bases instead."
 date: 2026-10-11
 authors:
   - rufuspollock
@@ -10,7 +10,7 @@ image: "[[assets/docs-listings-latest-three.webp]]"
 > [!tip] Using an AI assistant?
 > Give it this page as Markdown: https://flowershow.app/blog/show-a-list-of-pages-anywhere.md. Or install the Flowershow skill so it knows how to write list blocks for you: tell your agent "Install the Flowershow skill from https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md" (more options in [[skills|Skills]]). The whole site is indexed at https://flowershow.app/llms.txt.
 
-You want a short list of pages inside a page you already have: your three latest posts on the home page, your projects on your about page, related posts at the end of a post. On Flowershow that's one small block of Markdown, and it works on **any page**: the home page, an about page, a docs page, a blog post.
+You want a short list of pages inside a page you already have: your three latest posts on the home page, your projects on your about page. On Flowershow that's one small block of Markdown, and it works on **any page**: the home page, an about page, a docs page, a blog post.
 
 (If you want a whole page that *is* the index, like `/blog` or a team page, see [[listing-pages-tutorial|How to create great listing pages]].)
 
@@ -32,15 +32,11 @@ limit: 3
 
 You'll learn how to put a list like this on any page, how to point it at a folder other than `blog/`, and when to reach for Obsidian Bases instead.
 
-**You'll need:** a Flowershow site with a few posts in a `blog/` folder, each with a `title` and a `date` in its frontmatter. **Time:** about 5 minutes.
+**You'll need:** a Flowershow site with a few posts in a `blog/` folder, each with a `title` and a `date` in its frontmatter. For Step 2, a second folder of pages, such as `projects/`. **Time:** about 5 minutes.
 
-## Step 1: Open the page where the list should go
+## Step 1: Add a `blog` block to your home page
 
-Open the Markdown file for that page in your editor (Obsidian, VS Code, GitHub, anything). Your home page is the `README.md` (or `index.md`) at the top of your site. It can be a `.md` or an `.mdx` file.
-
-## Step 2: Add a `blog` block with `limit: 3`
-
-Where you want the posts to appear, add this to the file. A heading above it and a link to the rest below it are optional but help readers:
+Open your home page's file: the `README.md` (or `index.md`) at the top of your site. Where you want the posts to appear, add this:
 
 ````markdown
 ## Latest posts
@@ -52,37 +48,29 @@ limit: 3
 [All posts →](/blog)
 ````
 
-A ```` ```blog ```` block lists the `blog/` folder (and its subfolders), newest first. `limit: 3` shows only the first three and never adds page links.
-
-## Step 3: Publish and look at the page
-
-Publish or sync your site as you normally do, then open the page. You should see your three newest posts, each with its title, description, image (if it has one), date and authors:
+Publish or sync your site as you normally do, then open the home page. You should see your three newest posts under "Latest posts", each with its title, description, image (if it has one), date and authors:
 
 ![A home page with the three latest posts under a "Latest posts" heading](/assets/docs-listings-latest-three.webp)
 
-In Obsidian the block stays a plain code block, so nothing breaks in your vault.
+A ```` ```blog ```` block lists the `blog/` folder and its subfolders, newest first; `limit: 3` shows only the first three and never adds page links. The heading and the "All posts" link are ordinary Markdown, there to help readers. The same block works on any other page too. Use a `.md` page if you can: in an `.mdx` page the list appears just after the page loads. In Obsidian the block shows as a plain code block, so nothing breaks in your vault.
 
-## Step 4: List a different folder
+## Step 2: List a different folder on another page
 
-To list any other folder, use a ```` ```list ```` block and say which folder with `from`. For example, on your about page, your projects as cards:
+To list any other folder, use a ```` ```list ```` block and name the folder with `from`. For example, open your `about.md` and add your projects:
 
 ````markdown
 ## What I'm working on
 
 ```list
 from: projects
-view: grid
-limit: 6
-fields:
-  date: none
 ```
 ````
 
-`from` is the folder's path from the top of your site (`from: notes/books` works too). `view: grid` shows cards, and `date: none` hides dates, which projects rarely need. Publish again: you should see up to six project cards on the page.
+`from` is the folder's path from the top of your site (`from: notes/books` works too). Publish again and open `/about`. You should see every page in `projects/`, in the same rows as your posts: newest first, then any undated pages by title.
 
 That's the fast path: a ```` ```blog ```` block for posts, a ```` ```list ```` block for anything else.
 
-## When you need more: Obsidian Bases
+## Step 3: Choose Obsidian Bases when you need more
 
 List blocks cover lists from a folder: newest first or sorted by a field, simple filters with `where` (`tags: [design]`, `date: upcoming`), and a few views. If you need more than that, use an [[obsidian-bases|Obsidian Bases]] block instead. Flowershow renders ```` ```base ```` blocks in `.md` pages too.
 
@@ -107,7 +95,7 @@ views:
     name: Posts about lists
     order:
       - file.name
-      - date
+      - title
 ```
 ````
 
@@ -125,22 +113,21 @@ views:
     name: Posts about lists
     order:
       - file.name
-      - date
+      - title
 ```
 
-If you built a base in Obsidian, open the `.base` file, copy its contents into a ```` ```base ```` block on your page, and publish. The full list of supported filters, functions and views is in the [[obsidian-bases|Obsidian Bases]] reference.
+You should see a table with one row per matching post. Bases support on Flowershow is in beta, and a few Obsidian features (such as `this`, the embedding file's properties) aren't supported yet: check the [[obsidian-bases|Obsidian Bases]] reference before you rely on one.
 
 ## Troubleshooting
 
-- **The block shows as code on the live page.** Check the fence: three backticks and the word `blog`, `list` or `base` on the first line, with nothing else after it.
+- **The block shows as code on the live page.** Check the fence: three backticks followed directly by `blog`, `list` or `base`, with nothing else on that line.
 - **You see a "List block has problems" card.** A key or folder name is wrong. The card says what to fix, for example `Unknown key "perPage". Use "pageSize".` or `No folder "posts" with pages. Folders with pages: blog, notes.`
 - **"Nothing here yet."** The folder exists but has nothing to list. Pages with `draft: true` or `publish: false` are left out.
 - **The posts are in the wrong order.** Lists sort by each page's `date` (or, if it has none, `pubDate`, `published`, `publishDate`, `created`, or a `YYYY-MM-DD` at the start of the file name). Posts without a date go last.
-- **"Only one list per page can paginate".** More than one list on the page has a `pageSize`. Keep `pageSize` on one list and use `limit` on the others.
 
 ## Next steps
 
-- One line per post instead of cards: add `view: compact`. A big featured post on top: `view: grid` and `featured: 1`. See [[listings|Listing pages]].
-- Only some posts: `where: { tags: [garden] }`. Choose what each card shows: `fields`. Both in [[listings|Listing pages]].
+- Cards instead of rows: `view: grid`. One line per post: `view: compact`. A big featured post on top: `featured: 1`. See [[listings|Listing pages]].
+- Only some posts, e.g. related posts at the end of a post: `where: { tags: [garden] }`. Hide dates for projects: `fields: { date: none }`. Both in [[listings|Listing pages]].
 - A whole page that lists a folder (`/blog`, a portfolio, a team page): [[listing-pages-tutorial|How to create great listing pages]].
 - Setting up a blog from scratch: [[publish-blog|Publishing a blog]].
