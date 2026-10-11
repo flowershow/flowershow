@@ -5,6 +5,12 @@ on:
     branches: [main, staging]
   pull_request:
     branches: [main, staging]
+  workflow_dispatch:
+    inputs:
+      listing_screenshots:
+        description: Also capture listing screenshots and upload them as an artifact
+        type: boolean
+        default: false
 
 jobs:
   e2e:
@@ -143,6 +149,22 @@ jobs:
             2>&1 | tee /tmp/playwright-debug.log
         env:
           CI: true
+
+      - name: Capture listing screenshots (opt-in)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.listing_screenshots }}
+        working-directory: apps/flowershow
+        env:
+          CI: true
+          LISTING_SCREENSHOTS: "1"
+        # The main run's teardown project deleted the seeded data: re-seed, then capture
+        run: npx playwright test --project=setup && npx playwright test --project=listings --no-deps listings-screenshots
+
+      - name: Upload listing screenshots
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.listing_screenshots }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: listing-screenshots
+          path: apps/flowershow/test-results/listing-screenshots/
 
       - name: Collect debug logs
         if: ${{ !cancelled() }}
