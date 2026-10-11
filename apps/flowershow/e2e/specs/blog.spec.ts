@@ -7,6 +7,8 @@ test('Blog List Component', async ({ page, basePath }) => {
 
   await test.step('renders the list component with all blog posts', async () => {
     await expect(list).toBeVisible();
+    // blog/index.mdx uses <List />: the zero-config listing must not add a second one
+    await expect(page.locator('.list-component')).toHaveCount(1);
     const items = list.locator('.list-component-item');
     await expect(items).toHaveCount(3);
   });
