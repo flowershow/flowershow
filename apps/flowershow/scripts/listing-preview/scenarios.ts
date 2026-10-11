@@ -143,6 +143,17 @@ export const SCENARIOS: Scenario[] = [
     shots: [{ file: 'list-mixed-images' }],
   },
   {
+    name: 'list-thumb-right',
+    title: 'list: thumbnail on the right (media: thumb right)',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline('Home', '```blog\nmedia: thumb right\nlimit: 6\n```'),
+    shots: [
+      { file: 'list-thumb-right' },
+      { file: 'list-thumb-right-mobile', width: 390 },
+    ],
+  },
+  {
     name: 'list-no-images',
     title: 'list: media none',
     slug: '/',
@@ -208,13 +219,25 @@ export const SCENARIOS: Scenario[] = [
   {
     name: 'grid-projects',
     title:
-      'grid page: projects, ratio 4/3, no dates, status meta (one project without an image)',
+      'grid page: projects, ratio 4/3, no dates, status meta (one project without an image: no media block)',
     slug: '/projects',
     path: 'projects/README.md',
     markdown: page(
       'title: Projects\nlayout: list\nlist:\n  view: grid\n  sort: title\n  ratio: 4/3\n  fields:\n    date: none\n    eyebrow: client\n    meta: [status]',
     ),
     shots: [{ file: 'grid-projects' }, ...themeShots('grid', [['leaf', 390]])],
+  },
+  {
+    name: 'grid-default-image',
+    title:
+      'grid: defaultImage for items without an image (the Themes project has none)',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Home',
+      '```list\nfrom: projects\nview: grid\nsort: title\ndefaultImage: "[[assets/changelog-click-to-enlarge-images.webp]]"\nfields:\n  date: none\n```',
+    ),
+    shots: [{ file: 'grid-default-image' }],
   },
   {
     name: 'grid-square',

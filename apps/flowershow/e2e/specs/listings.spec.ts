@@ -107,7 +107,7 @@ test('home page: latest 3 and a featured-tag list; inline blocks have no aria-la
   await expect(page.locator('.listing-page')).toHaveCount(0);
 });
 
-test('projects grid: nested indexes, placeholders, whole card clickable, full content width', async ({
+test('projects grid: nested indexes, cards without images have no media, whole card clickable, full content width', async ({
   page,
 }) => {
   await page.goto('/projects');
@@ -123,12 +123,50 @@ test('projects grid: nested indexes, placeholders, whole card clickable, full co
       .locator('.list-component-item-meta-value[data-field="status"]'),
   ).toHaveText('Shipped');
   await expect(cards.locator('time')).toHaveCount(0); // fields.date: none
+  // Beta and Gamma have no image: no media block at all (no placeholder), Alpha has one
+  await expect(cards.locator('.list-component-item-media')).toHaveCount(1);
   await expect(
-    page.locator('.list-component-item-media--placeholder'),
-  ).toHaveCount(2); // Beta and Gamma have no image, Alpha does
+    cards.nth(2).locator('.list-component-item-media img'),
+  ).toBeVisible();
   await expect(page.locator('.listing-page[data-view="grid"]')).toBeVisible();
   await cards.nth(2).locator('.list-component-item-summary').click();
   await expect(page).toHaveURL(/\/projects\/alpha$/);
+});
+
+test('thumbnail side: left by default, right with media: thumb right', async ({
+  page,
+}) => {
+  await page.goto('/blog');
+  const row = page
+    .locator(
+      'section.list-component[data-media-side="left"] > article:has(.list-component-item-media)',
+    )
+    .first();
+  const media = await row.locator('.list-component-item-media').boundingBox();
+  const title = await row
+    .locator('.list-component-item-headline')
+    .boundingBox();
+  expect(media!.x).toBeLessThan(title!.x);
+  await page.goto('/thumb-right');
+  const r2 = page
+    .locator(
+      'section.list-component[data-media-side="right"] > article:has(.list-component-item-media)',
+    )
+    .first();
+  const m2 = await r2.locator('.list-component-item-media').boundingBox();
+  const t2 = await r2.locator('.list-component-item-headline').boundingBox();
+  expect(m2!.x).toBeGreaterThan(t2!.x);
+});
+
+test('defaultImage fills cards without an image', async ({ page }) => {
+  await page.goto('/default-image');
+  const cards = page.locator('section.list-component--grid > article');
+  await expect(cards).toHaveCount(3);
+  await expect(cards.locator('.list-component-item-media img')).toHaveCount(3);
+  await expect(cards.nth(0).locator('img')).toHaveAttribute(
+    'src',
+    /alpha-cover\.jpg$/,
+  ); // Beta, via defaultImage
 });
 
 test('folder note with where, and wiki-linked custom fields', async ({

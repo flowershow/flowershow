@@ -67,6 +67,8 @@ const URLS: Array<[name: string, slug: string, page?: number]> = [
   ['case', '/case'],
   ['nested', '/nested'],
   ['mdx-page', '/mdx-page'],
+  ['thumb-right', '/thumb-right'],
+  ['default-image', '/default-image'],
 ];
 
 it('renders the e2e listings fixture', async () => {
@@ -175,6 +177,10 @@ it('renders the e2e listings fixture', async () => {
       placeholders: doc.querySelectorAll(
         '.list-component-item-media--placeholder',
       ).length,
+      media: doc.querySelectorAll('.list-component-item-media img').length,
+      side: doc
+        .querySelector('section.list-component')
+        ?.getAttribute('data-media-side'),
       lastChild: doc.querySelector('#mdxpage > :last-child')?.className,
       notes: [...doc.querySelectorAll('[data-listing-notes]')].map((e) =>
         e.getAttribute('data-listing-notes'),

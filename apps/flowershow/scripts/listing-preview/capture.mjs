@@ -79,12 +79,17 @@ async function open(name, opts = {}) {
     'section.list-component--grid > article .list-component-item-summary',
     (el) => {
       const r = el.getBoundingClientRect();
-      const top = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+      const top = document.elementFromPoint(
+        r.x + r.width / 2,
+        r.y + r.height / 2,
+      );
       return top?.closest('a')?.className ?? top?.className ?? '';
     },
   );
   if (!/list-component-item-headline-link/.test(hit))
-    failures.push(`grid-projects: a click on the card summary hits "${hit}", not the card link`);
+    failures.push(
+      `grid-projects: a click on the card summary hits "${hit}", not the card link`,
+    );
   console.log(`check grid card overlay: ${hit}`);
   await page.close();
 }
