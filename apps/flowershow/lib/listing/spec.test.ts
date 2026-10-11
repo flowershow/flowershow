@@ -36,7 +36,9 @@ describe('presets and from', () => {
         meta: [],
       },
       media: 'thumb',
+      mediaSide: 'left',
       ratio: '3/2',
+      defaultImage: null,
       featured: 0,
       group: { by: 'none' },
     });
@@ -279,6 +281,45 @@ describe('media and ratio', () => {
     expect(errs(blog({ ratio: '2/1' }))).toEqual([
       '"ratio" must be one of 16/9, 3/2, 4/3, 1/1, 3/4 (got "2/1").',
     ]);
+  });
+  it('thumbnail side: left by default, "thumb right" / "thumb left" (one word plus an option)', () => {
+    expect(ok(blog({}))).toMatchObject({ media: 'thumb', mediaSide: 'left' });
+    expect(ok(blog({ media: 'thumb right' }))).toMatchObject({
+      media: 'thumb',
+      mediaSide: 'right',
+    });
+    expect(ok(blog({ media: 'Thumb  Left' })).mediaSide).toBe('left');
+    expect(errs(blog({ media: 'thumb top' }))).toEqual([
+      '"media: thumb" takes "left" or "right" (got "top").',
+    ]);
+    expect(errs(blog({ media: 'cover right' }))).toEqual([
+      '"left" and "right" apply only to "media: thumb" (got "cover right").',
+    ]);
+    const g = blog({ view: 'grid', media: 'thumb right' });
+    expect(g.ok && g.spec.media).toBe('cover');
+  });
+  it('defaultImage: a path or [[wikilink]] for items without an image; distinct from fields.image and media', () => {
+    expect(ok(blog({ defaultImage: '/assets/cover.png' })).defaultImage).toBe(
+      '/assets/cover.png',
+    );
+    expect(ok(blog({ defaultimage: '[[cover.png]]' })).defaultImage).toBe(
+      '[[cover.png]]',
+    );
+    // unquoted [[cover.png]] in YAML is a nested list
+    expect(
+      ok(parseListingBlock('blog', 'defaultImage: [[cover.png]]')).defaultImage,
+    ).toBe('[[cover.png]]');
+    expect(errs(blog({ defaultImage: 42 }))).toEqual([
+      '"defaultImage" must be an image path or [[wikilink]], e.g. "defaultImage: [[cover.png]]".',
+    ]);
+    const none = blog({ defaultImage: 'a.png', media: 'none' });
+    expect(none.ok && none.spec.defaultImage).toBe('a.png');
+    expect(notes(none)).toEqual([
+      '"defaultImage" is ignored because "media" is none.',
+    ]);
+    expect(
+      ok(blog({ defaultImage: 'a.png', fields: { image: 'cover' } })),
+    ).toMatchObject({ defaultImage: 'a.png', fields: { image: 'cover' } });
   });
   it('grid shows thumb as cover, with a note', () => {
     const r = blog({ view: 'grid', media: 'thumb' });

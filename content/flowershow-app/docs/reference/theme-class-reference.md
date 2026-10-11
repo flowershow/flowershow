@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **306 styled class selectors**:
-**304 stable semantic hooks** and **2 non-contract
+and currently documents **304 styled class selectors**:
+**302 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -272,10 +272,10 @@ Collection/blog listing cards, empty and error states, loading placeholders, and
 
 ```text
 div.listing-page[data-view] (page-level list/compact pages only)
-section.list-component[.list-component--list | --grid | --compact | --people][data-view][data-media][data-ratio][data-listing-notes]   (div without data-view for legacy <List />)
+section.list-component[.list-component--list | --grid | --compact | --people][data-view][data-media][data-media-side][data-ratio][data-listing-notes]   (div without data-view for legacy <List />)
 ├─ h2.list-component-group-heading (optional, with group)
 ├─ article.list-component-item[.list-component-item--featured] / .list-component-skeleton-item (legacy only)
-│  ├─ .list-component-item-media[.list-component-item-media--placeholder] > a.list-component-item-media-link > img.list-component-item-media-img | span.list-component-item-initials
+│  ├─ .list-component-item-media (only when the item, or defaultImage, has an image) > a.list-component-item-media-link > img.list-component-item-media-img
 │  └─ .list-component-item-content
 │     ├─ .list-component-item-eyebrow > span
 │     ├─ .list-component-item-headline > a.list-component-item-headline-link
@@ -316,12 +316,10 @@ section.list-component[.list-component--list | --grid | --compact | --people][da
 | <code>.list-component-item-headline</code> | Hook |
 | <code>.list-component-item-headline-link</code> | Hook |
 | <code>.list-component-item-media</code> | Hook |
-| <code>.list-component-item-media--placeholder</code> | Variant |
 | <code>.list-component-item-media-img</code> | Hook |
 | <code>.list-component-item-media-link</code> | Hook |
 | <code>.list-component-item-meta</code> | Hook |
 | <code>.list-component-item-meta-value</code> | Hook |
-| <code>.list-component-item-monogram</code> | Hook |
 | <code>.list-component-item-summary</code> | Hook |
 | <code>.list-component-pagination</code> | Hook |
 | <code>.list-component-pagination-button</code> | Hook |

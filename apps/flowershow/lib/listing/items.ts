@@ -379,6 +379,15 @@ function resolveTarget(
   });
 }
 
+/** An image value (path or [[wikilink]]) resolved like an item image, from `originPath`; null if it is not an image. */
+export function resolveListingImage(
+  value: string,
+  originPath: string,
+  ctx: ItemContext,
+): string | null {
+  return imageSrc(resolveTarget(value, originPath, ctx), ctx.siteHostname);
+}
+
 /** Only real images: external http(s) URLs, or site assets with an image extension (tech minor 9). */
 function imageSrc(resolved: string, siteHostname: string): string | null {
   if (!/^https?:\/\//i.test(resolved)) return null;

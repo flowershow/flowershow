@@ -1623,7 +1623,7 @@
    All selectors are :where() so themes always win. Custom properties:
      --list-max-width, --list-gap, --list-card-min, --list-card-radius,
      --list-card-border, --list-card-bg, --list-card-hover-bg,
-     --list-media-ratio, --list-media-placeholder, --list-monogram-color, --list-thumb-width,
+     --list-media-ratio, --list-thumb-width, --list-thumb-order,
      --list-avatar-shape, --list-meta-color, --list-eyebrow-color,
      --list-rule-color, --list-compact-meta-width
    ──────────────────────────────────────────────────── */
@@ -1757,35 +1757,10 @@
   :where(.list-component[data-view]) .list-component-item-media-img {
     border-radius: var(--list-card-radius, 0.5rem);
   }
-  /* Grid cards without an image (in a grid where others have one): a tile tinted
-     with the theme accent, carrying the title's first letter, so rows stay
-     aligned and the card reads as deliberate rather than a broken image. */
-  :where(.list-component-item-media--placeholder) {
-    display: grid;
-    place-items: center;
-    border-radius: var(--list-card-radius, 0.5rem);
-    background: var(
-      --list-media-placeholder,
-      linear-gradient(
-        135deg,
-        color-mix(in oklch, var(--color-accent) 7%, var(--color-background)),
-        color-mix(in oklch, var(--color-accent) 16%, var(--color-background))
-      )
-    );
-  }
-  :where(.list-component-item-monogram) {
-    font-family: var(--font-heading);
-    font-size: clamp(2.5rem, 4vw, 3.5rem);
-    font-weight: var(--font-weight-semibold);
-    line-height: 1;
-    color: var(
-      --list-monogram-color,
-      color-mix(in oklch, var(--color-accent) 70%, var(--color-background))
-    );
-    user-select: none;
-  }
-
-  /* list: text left, thumbnail right; full-width text row without an image */
+  /* list: thumbnail left (default) or right (media: thumb right →
+     data-media-side="right", or --list-thumb-order: 2 from a theme); the
+     image comes first in the DOM but is aria-hidden and out of the tab order,
+     so the title is the first thing read. A row without an image is text only. */
   :where(.list-component--list) .list-component-item {
     flex-direction: row;
     align-items: flex-start;
@@ -1797,13 +1772,26 @@
     flex: 1 1 auto;
     min-width: 0;
   }
-  :where(.list-component--list[data-media="thumb"]) .list-component-item-media {
-    order: 2;
-    flex: 0 0 auto;
-    width: var(--list-thumb-width, 160px);
+  :where(.list-component--list[data-media="thumb"]) {
+    --_list-thumb: var(--list-thumb-width, 160px);
     @media (max-width: 639px) {
-      width: var(--list-thumb-width, 88px);
+      --_list-thumb: var(--list-thumb-width, 88px);
     }
+  }
+  :where(.list-component--list[data-media="thumb"]) .list-component-item-media {
+    order: var(--list-thumb-order, 0);
+    flex: 0 0 auto;
+    width: var(--_list-thumb);
+  }
+  :where(.list-component--list[data-media-side="right"]) {
+    --list-thumb-order: 2;
+  }
+  /* In a mixed list the text of a row without an image lines up with the
+     text of the rows that have one (thumbnail on the left only) */
+  :where(.list-component--list[data-media="thumb"][data-media-side="left"])
+    .list-component-item:not(:has(> .list-component-item-media))
+    .list-component-item-content {
+    padding-inline-start: calc(var(--_list-thumb) + 1.25rem);
   }
   :where(.list-component--list[data-media="cover"]) .list-component-item {
     flex-direction: column;
@@ -1846,12 +1834,6 @@
   }
   :where(.list-component--grid) .list-component-item-media {
     width: 100%;
-  }
-  /* One column: placeholders only align rows, so drop them */
-  @media (max-width: 639px) {
-    :where(.list-component--grid) .list-component-item-media--placeholder {
-      display: none;
-    }
   }
   :where(.list-component--grid) .list-component-item-summary {
     font-size: 0.9375rem;

@@ -7,6 +7,7 @@ import {
   folderHasPages,
   nearestFolders,
   resolveFolderCase,
+  resolveListingImage,
   toListingItem,
 } from '@/lib/listing/items';
 import { sliceListing } from '@/lib/listing/paginate';
@@ -156,8 +157,17 @@ export default function remarkListing(options: RemarkListingOptions) {
           fields: spec.fields,
           locale,
         };
+        // defaultImage: for items without an image, resolved against the listing page
+        const fallbackImage =
+          spec.defaultImage && spec.media !== 'none'
+            ? resolveListingImage(spec.defaultImage, currentPath, ctx)
+            : null;
         const items = rows.map((row) => {
-          const it = toListingItem(row, ctx);
+          const own = toListingItem(row, ctx);
+          const it =
+            fallbackImage && !own.image
+              ? { ...own, image: fallbackImage }
+              : own;
           const pos = index.ids.indexOf(row.id);
           return index.groups
             ? {

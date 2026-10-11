@@ -11,6 +11,7 @@ export const ALL_LISTING_KEYS = [
   'fields',
   'media',
   'ratio',
+  'defaultImage',
   'featured',
   'group',
 ] as const;
@@ -37,6 +38,7 @@ export type ListingGroup =
   | { by: 'none' | 'year' | 'month' | 'day' | 'folder' }
   | { by: 'field'; field: string };
 export type MediaShape = 'none' | 'thumb' | 'cover';
+export type MediaSide = 'left' | 'right';
 export const RATIOS = ['16/9', '3/2', '4/3', '1/1', '3/4'] as const;
 export type Ratio = (typeof RATIOS)[number];
 export type ListingSpec = {
@@ -49,7 +51,11 @@ export type ListingSpec = {
   where: Record<string, string[]>;
   fields: ListingFields;
   media: MediaShape;
+  /** Where a list thumbnail sits (media: thumb left|right); left by default. */
+  mediaSide: MediaSide;
   ratio: Ratio;
+  /** Image (path or [[wikilink]]) for items without one; resolved against the listing page. */
+  defaultImage: string | null;
   featured: 0 | 1;
   group: ListingGroup;
 };
@@ -524,14 +530,48 @@ export function parseListingSpec(
   const fields = parseFields(values.fields, view, errors);
 
   let media = DEFAULT_MEDIA[view];
+  let mediaSide: MediaSide = 'left';
   if (values.media != null) {
-    const m = isNone(values.media)
-      ? 'none'
-      : String(values.media).trim().toLowerCase();
-    if (m === 'none' || m === 'thumb' || m === 'cover') media = m;
-    else
+    const [m = '', side, ...rest] = isNone(values.media)
+      ? ['none']
+      : String(values.media).trim().toLowerCase().split(/\s+/);
+    if (m !== 'none' && m !== 'thumb' && m !== 'cover')
       errors.push(
         `"media" must be none, thumb or cover (got "${String(values.media)}").`,
+      );
+    else if (side != null && m !== 'thumb')
+      errors.push(
+        `"left" and "right" apply only to "media: thumb" (got "${String(values.media).trim()}").`,
+      );
+    else if (
+      side != null &&
+      ((side !== 'left' && side !== 'right') || rest.length)
+    )
+      errors.push(
+        `"media: thumb" takes "left" or "right" (got "${[side, ...rest].join(' ')}").`,
+      );
+    else {
+      media = m;
+      if (side === 'left' || side === 'right') mediaSide = side;
+    }
+  }
+  let defaultImage: string | null = null;
+  if (values.defaultImage != null) {
+    // unquoted [[cover.png]] parses as a nested list
+    const v = values.defaultImage;
+    const nested =
+      Array.isArray(v) &&
+      v.length === 1 &&
+      Array.isArray(v[0]) &&
+      v[0].length === 1 &&
+      typeof v[0][0] === 'string'
+        ? `[[${v[0][0]}]]`
+        : null;
+    const str = nested ?? (typeof v === 'string' ? v.trim() : '');
+    if (str) defaultImage = str;
+    else
+      errors.push(
+        '"defaultImage" must be an image path or [[wikilink]], e.g. "defaultImage: [[cover.png]]".',
       );
   }
   if (view === 'compact' && media !== 'none') {
@@ -543,6 +583,8 @@ export function parseListingSpec(
     notes.push('"media: thumb" is shown as "cover" in the grid view.');
     media = 'cover';
   }
+  if (defaultImage && media === 'none')
+    notes.push('"defaultImage" is ignored because "media" is none.');
   let ratio: Ratio =
     view === 'people' ? '1/1' : media === 'cover' ? '16/9' : '3/2';
   if (values.ratio != null) {
@@ -592,7 +634,9 @@ export function parseListingSpec(
       where,
       fields,
       media,
+      mediaSide,
       ratio,
+      defaultImage,
       featured,
       group,
     },

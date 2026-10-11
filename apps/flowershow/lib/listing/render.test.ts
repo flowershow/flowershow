@@ -43,7 +43,9 @@ const spec = (o: Partial<ListingSpec> = {}): ListingSpec => ({
   where: {},
   fields: DEFAULT_FIELDS.list,
   media: 'thumb',
+  mediaSide: 'left',
   ratio: '3/2',
+  defaultImage: null,
   featured: 0,
   group: { by: 'none' },
   ...o,
@@ -279,7 +281,7 @@ describe('grid view and the no-image rule (UX M-2)', () => {
         .getAttribute('sizes'),
     ).toBe('(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw');
   });
-  it('some items with images: the others get a placeholder box', async () => {
+  it('mixed grid: a card without an image has no media block at all (no placeholder)', async () => {
     const body = await html(
       renderListing(
         input({
@@ -288,37 +290,23 @@ describe('grid view and the no-image rule (UX M-2)', () => {
         }),
       ),
     );
-    expect(body.querySelectorAll('.list-component-item-media')).toHaveLength(2);
+    const cards = body.querySelectorAll('section > article');
     expect(
-      body.querySelectorAll(
-        '.list-component-item-media--placeholder[aria-hidden="true"]',
-      ),
-    ).toHaveLength(1);
-  });
-  it('a grid placeholder carries a monogram: the first letter or digit of the title', async () => {
-    const body = await html(
-      renderListing(
-        input({
-          spec: grid,
-          page: page([
-            item(),
-            item({ url: '/b', image: null, title: 'économie notes' }),
-            item({ url: '/c', image: null, title: '“1984”, again' }),
-            item({ url: '/d', image: null, title: '***' }),
-          ]),
-        }),
-      ),
-    );
-    expect(
-      [
-        ...body.querySelectorAll(
-          '.list-component-item-media--placeholder .list-component-item-monogram',
-        ),
-      ].map((e) => e.textContent),
-    ).toEqual(['É', '1']);
+      cards[0]!.querySelector('.list-component-item-media'),
+    ).not.toBeNull();
+    expect(cards[1]!.querySelector('.list-component-item-media')).toBeNull();
     expect(
       body.querySelectorAll('.list-component-item-media--placeholder'),
-    ).toHaveLength(3); // no letter: the tinted box alone
+    ).toHaveLength(0);
+  });
+  it('list thumbnails: data-media-side left by default, right on request; only for thumb', async () => {
+    const side = async (o: Partial<ListingSpec>) =>
+      (await html(renderListing(input({ spec: spec(o) }))))
+        .querySelector('section')!
+        .getAttribute('data-media-side');
+    expect(await side({})).toBe('left');
+    expect(await side({ mediaSide: 'right' })).toBe('right');
+    expect(await side({ media: 'cover' })).toBeNull();
   });
   it('no item with an image: the slot collapses for the whole listing', async () => {
     const body = await html(
@@ -495,7 +483,7 @@ describe('renderListingError', () => {
     expect(
       card.querySelector('.list-component-error-keys')!.textContent,
     ).toMatch(
-      /^Keys: from, view, sort, limit, pageSize, where, fields, media, ratio(, featured, group)?\.$/,
+      /^Keys: from, view, sort, limit, pageSize, where, fields, media, ratio, defaultImage(, featured, group)?\.$/,
     );
   });
 });

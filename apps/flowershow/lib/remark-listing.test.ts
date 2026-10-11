@@ -126,6 +126,25 @@ describe('remarkListing', () => {
     expect(card).toContain('Unknown key \\"image\\"');
     expect(queryListingIndex).not.toHaveBeenCalled();
   });
+  it('defaultImage fills items without an image, resolved against the listing page like item images', async () => {
+    const tree = await run(
+      '```blog\nlimit: 2\ndefaultImage: "[[cover.png]]"\n```',
+      {
+        files: [...base.files, '/assets/cover.png'],
+      },
+    );
+    const srcs = JSON.stringify(tree).match(
+      /"name":"src","value":"[^"]+"(?=\},\{"type":"mdxJsxAttribute","name":"alt")/g,
+    );
+    expect(srcs).toEqual([
+      '"name":"src","value":"http://h/assets/cover.png"',
+      '"name":"src","value":"http://h/assets/cover.png"',
+    ]);
+    // not an image: ignored, the rows stay text only
+    const t2 = await run('```blog\nlimit: 2\ndefaultImage: notes/n.md\n```');
+    expect(JSON.stringify(t2)).not.toContain('notes/n.md');
+    expect(JSON.stringify(t2)).not.toContain('list-component-item-media');
+  });
   it('./ resolves against the page folder; capitalised folders resolve (Review Focus 1)', async () => {
     await run('```list\nfrom: ./x\n```', {
       filePath: 'projects/README.md',
