@@ -1635,12 +1635,24 @@
   }
 
   /* Image ratio: settable from :root through --list-media-ratio */
-  :where(.list-component[data-view]) { --_list-ratio: var(--list-media-ratio, 3 / 2); }
-  :where(.list-component[data-ratio="16-9"]) { --_list-ratio: var(--list-media-ratio, 16 / 9); }
-  :where(.list-component[data-ratio="3-2"]) { --_list-ratio: var(--list-media-ratio, 3 / 2); }
-  :where(.list-component[data-ratio="4-3"]) { --_list-ratio: var(--list-media-ratio, 4 / 3); }
-  :where(.list-component[data-ratio="1-1"]) { --_list-ratio: var(--list-media-ratio, 1 / 1); }
-  :where(.list-component[data-ratio="3-4"]) { --_list-ratio: var(--list-media-ratio, 3 / 4); }
+  :where(.list-component[data-view]) {
+    --_list-ratio: var(--list-media-ratio, 3 / 2);
+  }
+  :where(.list-component[data-ratio="16-9"]) {
+    --_list-ratio: var(--list-media-ratio, 16 / 9);
+  }
+  :where(.list-component[data-ratio="3-2"]) {
+    --_list-ratio: var(--list-media-ratio, 3 / 2);
+  }
+  :where(.list-component[data-ratio="4-3"]) {
+    --_list-ratio: var(--list-media-ratio, 4 / 3);
+  }
+  :where(.list-component[data-ratio="1-1"]) {
+    --_list-ratio: var(--list-media-ratio, 1 / 1);
+  }
+  :where(.list-component[data-ratio="3-4"]) {
+    --_list-ratio: var(--list-media-ratio, 3 / 4);
+  }
 
   /* Shared slots */
   :where(.list-component[data-view]) .list-component-item-eyebrow {
@@ -1661,6 +1673,7 @@
   /* Titles are never clamped (UX m-2) */
   :where(.list-component[data-view]) .list-component-item-headline {
     margin: 0 0 0.375rem;
+    overflow-wrap: anywhere;
     font-size: 1.25rem;
     line-height: 1.35;
   }
@@ -1688,13 +1701,12 @@
   :where(.list-component-item-authors) {
     display: inline-flex;
     align-items: center;
-    gap: 0.25rem;
   }
   :where(.list-component-item-author + .list-component-item-author)::before {
-    content: ", ";
+    content: ",\00a0";
   }
-  :where(.list-component-item-authors-more)::before {
-    content: " ";
+  :where(.list-component-item-authors-more) {
+    margin-left: 0.3em;
   }
   :where(.list-component-item-author) {
     color: inherit;
@@ -1702,13 +1714,14 @@
   }
   :where(.list-component-item-avatars) {
     display: inline-flex;
-    margin-right: 0.25rem;
+    margin-right: 0.375rem;
   }
   :where(.list-component-item-avatars > * + *) {
     margin-left: -6px;
   }
-  /* One avatar size, here and in ListingImage (20px) */
-  :where(.list-component-item-author-avatar) {
+  /* One avatar size, here and in ListingImage (20px). img: so preflight's
+     img { height: auto } cannot stretch non-square photos; still one element + :where. */
+  img:where(.list-component-item-author-avatar) {
     width: 20px;
     height: 20px;
     flex-shrink: 0;
@@ -1716,15 +1729,21 @@
     object-fit: cover;
     box-shadow: 0 0 0 2px var(--color-background);
   }
+  /* Hairline ring so white screenshots do not melt into the page (moodboard: Linear, Vercel) */
   :where(.list-component[data-view]) .list-component-item-media {
     aspect-ratio: var(--_list-ratio);
+    border-radius: var(--list-card-radius, 0.5rem);
+    box-shadow: 0 0 0 1px var(--color-foreground-100);
   }
   :where(.list-component[data-view]) .list-component-item-media-img {
     border-radius: var(--list-card-radius, 0.5rem);
   }
   :where(.list-component-item-media--placeholder) {
     border-radius: var(--list-card-radius, 0.5rem);
-    background: var(--list-media-placeholder, color-mix(in oklch, var(--color-foreground-900) 4%, transparent));
+    background: var(
+      --list-media-placeholder,
+      color-mix(in oklch, var(--color-foreground-900) 4%, transparent)
+    );
   }
 
   /* list: text left, thumbnail right; full-width text row without an image */
@@ -1755,15 +1774,24 @@
   }
 
   /* grid (design 4.9): 3 / 2 / 1 columns from the container width; never the measure */
-  :where(.list-component--grid) {
+  /* One class (like the legacy .list-component root rule it must beat), still at most one class so themes win */
+  .list-component:where(.list-component--grid) {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--list-card-min, 17.5rem)), 1fr));
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(min(100%, var(--list-card-min, 17.5rem)), 1fr)
+      );
     gap: var(--list-gap, 2rem);
     @media (max-width: 639px) {
       gap: var(--list-gap, 1.5rem);
     }
   }
-  :where(.list-component--grid) > :is(.list-component-pagination, .list-component-empty, .list-component-group-heading) {
+  :where(.list-component--grid)
+    > :is(
+      .list-component-pagination,
+      .list-component-empty,
+      .list-component-group-heading
+    ) {
     grid-column: 1 / -1;
   }
   :where(.list-component--grid) .list-component-item {
@@ -1779,8 +1807,12 @@
   }
   :where(.list-component--grid) .list-component-item-media {
     width: 100%;
-    border-radius: var(--list-card-radius, 0.5rem);
-    box-shadow: 0 0 0 1px var(--color-foreground-100);
+  }
+  /* One column: placeholders only align rows, so drop them */
+  @media (max-width: 639px) {
+    :where(.list-component--grid) .list-component-item-media--placeholder {
+      display: none;
+    }
   }
   :where(.list-component--grid) .list-component-item-summary {
     font-size: 0.9375rem;
@@ -1793,13 +1825,21 @@
     inset: 0;
     z-index: 1;
   }
-  :where(.list-component--grid) :is(.list-component-item-author, .list-component-item-meta-value a, .list-component-item-eyebrow a) {
+  :where(.list-component--grid)
+    :is(
+      .list-component-item-author,
+      .list-component-item-meta-value a,
+      .list-component-item-eyebrow a
+    ) {
     position: relative;
     z-index: 2;
   }
 
   /* Pagination, errors */
-  :where(a.list-component-pagination-button, a.list-component-pagination-page-button) {
+  :where(
+    a.list-component-pagination-button,
+    a.list-component-pagination-page-button
+  ) {
     text-decoration: none;
   }
   /* <a>/<span> cannot match :disabled; mirrors the :disabled rule above. */

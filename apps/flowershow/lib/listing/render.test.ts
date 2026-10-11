@@ -213,6 +213,20 @@ describe('card anatomy (design section 6)', () => {
       by.querySelector('.list-component-item-authors-more')!.textContent,
     ).toBe('and 2 others');
   });
+  it('three authors: "and 1 other", singular', async () => {
+    const by = (
+      await html(
+        renderListing(
+          input({
+            page: page([item({ authorHandles: ['ada', 'guest', 'c'] })]),
+          }),
+        ),
+      )
+    ).querySelector('.list-component-item-authors')!;
+    expect(
+      by.querySelector('.list-component-item-authors-more')!.textContent,
+    ).toBe('and 1 other');
+  });
   it('list: a row without an image collapses (no media, no placeholder); media none hides images', async () => {
     const body = await html(
       renderListing(

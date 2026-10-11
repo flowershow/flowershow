@@ -119,7 +119,11 @@ function renderAuthors(
           el(
             'span',
             ['list-component-item-authors-more'],
-            [text(`and ${resolved.length - 2} others`)],
+            [
+              text(
+                `and ${resolved.length - 2} other${resolved.length === 3 ? '' : 's'}`,
+              ),
+            ],
           ),
         ]
       : [];
