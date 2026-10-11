@@ -295,6 +295,31 @@ describe('grid view and the no-image rule (UX M-2)', () => {
       ),
     ).toHaveLength(1);
   });
+  it('a grid placeholder carries a monogram: the first letter or digit of the title', async () => {
+    const body = await html(
+      renderListing(
+        input({
+          spec: grid,
+          page: page([
+            item(),
+            item({ url: '/b', image: null, title: 'économie notes' }),
+            item({ url: '/c', image: null, title: '“1984”, again' }),
+            item({ url: '/d', image: null, title: '***' }),
+          ]),
+        }),
+      ),
+    );
+    expect(
+      [
+        ...body.querySelectorAll(
+          '.list-component-item-media--placeholder .list-component-item-monogram',
+        ),
+      ].map((e) => e.textContent),
+    ).toEqual(['É', '1']);
+    expect(
+      body.querySelectorAll('.list-component-item-media--placeholder'),
+    ).toHaveLength(3); // no letter: the tinted box alone
+  });
   it('no item with an image: the slot collapses for the whole listing', async () => {
     const body = await html(
       renderListing(

@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **305 styled class selectors**:
-**303 stable semantic hooks** and **2 non-contract
+and currently documents **306 styled class selectors**:
+**304 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -321,6 +321,7 @@ section.list-component[.list-component--list | --grid | --compact | --people][da
 | <code>.list-component-item-media-link</code> | Hook |
 | <code>.list-component-item-meta</code> | Hook |
 | <code>.list-component-item-meta-value</code> | Hook |
+| <code>.list-component-item-monogram</code> | Hook |
 | <code>.list-component-item-summary</code> | Hook |
 | <code>.list-component-pagination</code> | Hook |
 | <code>.list-component-pagination-button</code> | Hook |

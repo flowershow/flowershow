@@ -92,6 +92,11 @@ function initials(name: string): string {
     .join('');
 }
 
+/** First letter or digit of a title, for a grid card without an image ('' if none). */
+function monogram(title: string): string {
+  return title.match(/[\p{L}\p{N}]/u)?.[0]?.toLocaleUpperCase() ?? '';
+}
+
 function renderAuthors(
   handles: string[],
   authors: Map<string, ResolvedAuthor>,
@@ -188,13 +193,18 @@ function renderMedia(
       ],
       { ariaHidden: 'true' },
     );
-  if (ctx.placeholder && !ctx.featured)
+  if (ctx.placeholder && !ctx.featured) {
+    // A tinted tile with the title's first letter keeps rows aligned without looking like a broken image
+    const letter = monogram(item.title);
     return el(
       'div',
       ['list-component-item-media', 'list-component-item-media--placeholder'],
-      [],
+      letter
+        ? [el('span', ['list-component-item-monogram'], [text(letter)])]
+        : [],
       { ariaHidden: 'true' },
     );
+  }
   return null;
 }
 

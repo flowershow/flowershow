@@ -558,11 +558,11 @@
     transition: color 0.15s ease-in-out;
   }
 
-  .site-navbar-custom :where(a:hover, a[aria-current='page']) {
+  .site-navbar-custom :where(a:hover, a[aria-current="page"]) {
     color: var(--color-foreground-900);
   }
 
-  .site-navbar-custom :where(a[aria-current='page']) {
+  .site-navbar-custom :where(a[aria-current="page"]) {
     font-weight: var(--font-weight-semibold);
   }
 
@@ -1623,7 +1623,7 @@
    All selectors are :where() so themes always win. Custom properties:
      --list-max-width, --list-gap, --list-card-min, --list-card-radius,
      --list-card-border, --list-card-bg, --list-card-hover-bg,
-     --list-media-ratio, --list-media-placeholder, --list-thumb-width,
+     --list-media-ratio, --list-media-placeholder, --list-monogram-color, --list-thumb-width,
      --list-avatar-shape, --list-meta-color, --list-eyebrow-color,
      --list-rule-color, --list-compact-meta-width
    ──────────────────────────────────────────────────── */
@@ -1670,6 +1670,29 @@
     content: "·";
     margin-right: 0.5rem;
   }
+  /* Wrap-friendly separators (eyebrow and meta line): each segment carries its
+     leading "·" in a --_list-sep slot; the row is pulled left by one slot and
+     that strip is clipped, so whichever segment starts a line (the first one, or
+     one that wrapped) hides its separator and no line begins with "·". */
+  /* (the eyebrow selector matches the eyebrow rule's one class, so its margin wins) */
+  :where(.list-component[data-view]) .list-component-item-eyebrow,
+  :where(.list-component-item-meta) {
+    --_list-sep: 1.125rem;
+    column-gap: 0;
+    margin-left: calc(-1 * var(--_list-sep));
+    clip-path: inset(-0.5rem -0.5rem -0.5rem calc(var(--_list-sep) - 4px));
+  }
+  :where(
+      .list-component[data-view] .list-component-item-eyebrow,
+      .list-component-item-meta
+    )
+    > *::before {
+    content: "·";
+    display: inline-block;
+    width: var(--_list-sep);
+    margin: 0;
+    text-align: center;
+  }
   /* Titles are never clamped (UX m-2) */
   :where(.list-component[data-view]) .list-component-item-headline {
     margin: 0 0 0.375rem;
@@ -1686,17 +1709,13 @@
     display: flex;
     flex-wrap: wrap;
     align-items: center;
-    gap: 0.125rem 0.5rem;
+    row-gap: 0.125rem;
     font-size: 0.875rem;
     color: var(--list-meta-color, var(--color-foreground-500));
   }
-  /* Segments never break internally; a separator may start a wrapped line */
+  /* Segments never break internally; separators: see the eyebrow rule above */
   :where(.list-component-item-meta) > * {
     white-space: nowrap;
-  }
-  :where(.list-component-item-meta > * + *)::before {
-    content: "·";
-    margin-right: 0.5rem;
   }
   :where(.list-component-item-authors) {
     display: inline-flex;
@@ -1738,12 +1757,32 @@
   :where(.list-component[data-view]) .list-component-item-media-img {
     border-radius: var(--list-card-radius, 0.5rem);
   }
+  /* Grid cards without an image (in a grid where others have one): a tile tinted
+     with the theme accent, carrying the title's first letter, so rows stay
+     aligned and the card reads as deliberate rather than a broken image. */
   :where(.list-component-item-media--placeholder) {
+    display: grid;
+    place-items: center;
     border-radius: var(--list-card-radius, 0.5rem);
     background: var(
       --list-media-placeholder,
-      color-mix(in oklch, var(--color-foreground-900) 4%, transparent)
+      linear-gradient(
+        135deg,
+        color-mix(in oklch, var(--color-accent) 7%, var(--color-background)),
+        color-mix(in oklch, var(--color-accent) 16%, var(--color-background))
+      )
     );
+  }
+  :where(.list-component-item-monogram) {
+    font-family: var(--font-heading);
+    font-size: clamp(2.5rem, 4vw, 3.5rem);
+    font-weight: var(--font-weight-semibold);
+    line-height: 1;
+    color: var(
+      --list-monogram-color,
+      color-mix(in oklch, var(--color-accent) 70%, var(--color-background))
+    );
+    user-select: none;
   }
 
   /* list: text left, thumbnail right; full-width text row without an image */
