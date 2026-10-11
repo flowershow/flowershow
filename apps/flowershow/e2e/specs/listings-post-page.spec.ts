@@ -85,6 +85,8 @@ test('an MDX post gets the same layout; previous is older, next is newer', async
     'Ada Lovelace and Grace Hopper',
   );
   await expect(page.locator('.post-byline-avatar')).toHaveCount(2);
+  // its image is a known-size portrait: no cover (it stays the social card)
+  await expect(page.locator('.post-hero')).toHaveCount(0);
   await expect(page.locator('a.post-nav-link--prev')).toHaveAttribute(
     'href',
     '/post-demo/blog/alpha',
