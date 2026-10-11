@@ -126,6 +126,12 @@ test('catalogue items and ordinary pages keep the page layout', async ({
     'Catalog item',
   );
   await expect(page.locator('article.post-page')).toHaveCount(0);
+  // a bare layout: list over undated pages (the content-catalogs guide's Recipes)
+  await page.goto('/post-demo/recipes/soup');
+  await expect(page.locator('main .page-header-title')).toHaveText(
+    'Tomato soup',
+  );
+  await expect(page.locator('article.post-page')).toHaveCount(0);
   await page.goto('/people/ada');
   await expect(page.locator('article.post-page')).toHaveCount(0);
 });

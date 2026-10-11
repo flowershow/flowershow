@@ -76,12 +76,12 @@ import {
 } from '@/lib/listing/route';
 import { isDraft } from '@/lib/listing/rules';
 import { resolvePostHero } from '@/lib/post/hero';
-import { loadPostHosts } from '@/lib/post/hosts';
+import { loadPostRouteInputs } from '@/lib/post/hosts';
 import {
   linkCollectionCrumb,
   mayBePost,
   type PostRoute,
-  postHostPaths,
+  postFiles,
   resolvePostRoute,
 } from '@/lib/post/route';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
@@ -548,14 +548,15 @@ export default async function SitePage(props: {
 
   // Post pages: the folder hosts' frontmatter (one cached query) loads while
   // the body does. A failed lookup means "not a post", never a guess.
-  const postHosts =
+  const postFileIndex = postFiles(siteFilePaths);
+  const postInputs =
     /\.mdx?$/i.test(blob.path) &&
     mayBePost(blob.metadata as Record<string, unknown> | null)
-      ? loadPostHosts(site.id, postHostPaths(blob.path, siteFilePaths)).catch(
-          (error) => {
-            console.error('Error loading post hosts:', error);
-            return null;
-          },
+      ? loadPostRouteInputs(
+          site.id,
+          blob.path,
+          postFileIndex,
+          site.rootDir ?? undefined,
         )
       : Promise.resolve(null);
 
@@ -707,14 +708,15 @@ export default async function SitePage(props: {
   // Post pages (docs/plans/2026-10-11-post-page-layout.md): items of a blog/posts
   // folder or a `layout: list` folder, or `layout: post`. Never a page-level
   // listing or a changelog page; the host frontmatter is one cached query.
-  const hosts = await postHosts;
+  const postRouteInputs = await postInputs;
   const postRoute: PostRoute =
-    !changelog && !pageLevelRoute && hosts
+    !changelog && !pageLevelRoute && postRouteInputs
       ? resolvePostRoute({
           pagePath: blob.path,
           metadata: metadata as Record<string, unknown> | null,
-          siteFilePaths,
-          hosts,
+          files: postFileIndex,
+          hosts: postRouteInputs.hosts,
+          datedShare: postRouteInputs.datedShare,
           rootDir: site.rootDir ?? undefined,
         })
       : { kind: 'none' };
@@ -932,7 +934,7 @@ export default async function SitePage(props: {
                 eyebrow={linkCollectionCrumb(
                   breadcrumbs?.slice(0, -1) ?? [],
                   postRoute.kind === 'post' ? postRoute.collection : null,
-                  metadata?.section,
+                  { section: metadata?.section, tree: siteTree },
                 )}
                 authors={authors}
                 date={metadata?.date}
@@ -950,7 +952,6 @@ export default async function SitePage(props: {
                         rootDir={site.rootDir ?? undefined}
                         collection={postRoute.collection}
                         pagePath={blob.path}
-                        tags={postTags}
                         siteHostname={siteHostname}
                         files={siteFilePaths}
                         permalinks={permalinksMapping}

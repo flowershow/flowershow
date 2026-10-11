@@ -38,6 +38,8 @@ export type Scenario = {
   shots?: Shot[];
   /** Post scenarios: the reading time label to show (the route computes it when showReadingTime is on). */
   readingTime?: string;
+  /** Post scenarios: pretend the site does not know the image sizes (an external cover). */
+  unknownSizes?: boolean;
   /** Render as an individual post (the post layout, its footer and read-more cards). */
   post?: boolean;
 };
@@ -159,6 +161,20 @@ const POST_SCENARIOS: Scenario[] = [
       { file: 'post-minimal' },
       { file: 'post-minimal-mobile', width: 390 },
     ],
+  },
+  {
+    name: 'post-square-unknown',
+    title:
+      'Post: a square cover whose size is unknown (natural size, uncropped, height capped)',
+    slug: '/blog/2026-08-21-monospace-theme',
+    path: 'blog/2026-08-21-monospace-theme.md',
+    post: true,
+    unknownSizes: true,
+    markdown: page(
+      'title: A square logo as the image\ndate: 2026-08-21\ndescription: With a known size this cover would be dropped; unknown, it shows as it is.\nimage: "[[people/rufuspollock.jpeg]]"',
+      LOREM,
+    ),
+    shots: [{ file: 'post-square-unknown' }],
   },
   {
     name: 'post-outside-collection',

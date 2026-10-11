@@ -2,7 +2,7 @@ import { tagToHref } from '@flowershow/core';
 import { CalendarIcon, ChevronRightIcon, ClockIcon } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { CSSProperties, ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import type { Breadcrumb } from '@/lib/breadcrumbs';
 import { formatLongDate } from '@/lib/listing/dates';
 import type { ListingItem } from '@/lib/listing/items';
@@ -172,23 +172,31 @@ function Eyebrow({ crumbs }: { crumbs: Breadcrumb[] }) {
 }
 
 function Hero({ hero }: { hero: PostHero }) {
-  const style =
-    hero.ratio != null
-      ? ({ '--_post-hero-ratio': String(hero.ratio) } as CSSProperties)
-      : undefined;
+  const sizes = '(min-width: 768px) 44rem, 100vw';
   return (
     <figure className="post-hero">
-      <div className="post-hero-media" style={style}>
+      {hero.width && hero.height ? (
         <Image
           className="post-hero-img"
           src={hero.src}
           alt={hero.alt}
-          fill
-          sizes="(min-width: 768px) 44rem, 100vw"
+          width={hero.width}
+          height={hero.height}
+          sizes={sizes}
           priority
-          style={{ objectFit: 'cover' }}
         />
-      </div>
+      ) : (
+        // Size unknown (an external URL): the browser's natural size, never
+        // upscaled or cropped, height capped in CSS (default-theme.css)
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          className="post-hero-img"
+          src={hero.src}
+          alt={hero.alt}
+          fetchPriority="high"
+          decoding="async"
+        />
+      )}
       {hero.caption && (
         <figcaption className="post-hero-caption">{hero.caption}</figcaption>
       )}

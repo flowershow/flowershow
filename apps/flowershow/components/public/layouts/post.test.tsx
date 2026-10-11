@@ -28,7 +28,13 @@ describe('PostLayout', () => {
       ],
       date: '2026-09-18',
       readingTime: '4 min read',
-      hero: { src: 'http://s/h.png', alt: '', caption: 'Cap', ratio: 1.6 },
+      hero: {
+        src: 'http://s/h.png',
+        alt: '',
+        caption: 'Cap',
+        width: 1600,
+        height: 1000,
+      },
       tags: ['x'],
     });
     expect(html).toContain('<article class="post-page" data-layout="post">');
@@ -59,7 +65,9 @@ describe('PostLayout', () => {
       '<time dateTime="2026-09-18">September 18, 2026</time>',
     );
     expect(html).toContain('4 min read');
-    expect(html).toContain('style="--_post-hero-ratio:1.6"');
+    expect(html).toMatch(
+      /<img class="post-hero-img"[^>]*width="1600" height="1000"/,
+    );
     expect(html).toContain(
       '<figcaption class="post-hero-caption">Cap</figcaption>',
     );
@@ -74,6 +82,14 @@ describe('PostLayout', () => {
     expect(html).not.toContain('post-dek');
     expect(html).not.toContain('post-hero');
     expect(html).not.toContain('post-footer');
+  });
+  it('a cover of unknown size is a plain, uncropped img', () => {
+    const html = render({
+      hero: { src: 'https://cdn/x.jpg', alt: 'X', caption: null },
+    });
+    expect(html).toContain(
+      '<img class="post-hero-img" src="https://cdn/x.jpg" alt="X" fetchPriority="high" decoding="async"/>',
+    );
   });
   it('shows a date that is not a date as written; no header with showHeader false', () => {
     expect(render({ date: '1964-1982' })).toContain('<span>1964-1982</span>');

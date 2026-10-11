@@ -106,7 +106,13 @@ import { PostFooterSection } from '@/components/public/layouts/post-footer';
 import { resolveAuthors } from '@/lib/listing/authors';
 import { pageHeaderBreadcrumbs } from '@/lib/breadcrumbs';
 import { resolvePostHero } from '@/lib/post/hero';
-import { postHostPaths, resolvePostRoute } from '@/lib/post/route';
+import { loadDatedShares } from '@/lib/post/hosts';
+import {
+  datedShareDirs,
+  postFiles,
+  postHostPaths,
+  resolvePostRoute,
+} from '@/lib/post/route';
 import { frontmatterTags } from '@flowershow/core';
 import List from '@/components/public/mdx/list';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
@@ -140,17 +146,20 @@ async function renderPost(s: Scenario): Promise<string> {
   if (metadata.date instanceof Date)
     metadata.date = metadata.date.toISOString().slice(0, 10);
   const pagePath = s.path!;
-  const hostPaths = postHostPaths(pagePath, site.files);
+  const files = postFiles(site.files);
+  const hostPaths = postHostPaths(pagePath, files);
   const hosts = Object.fromEntries(
     site.rows
       .filter((r) => hostPaths.includes(r.path))
       .map((r) => [r.path, r.metadata]),
   );
+  const dirs = datedShareDirs({ pagePath, files, hosts });
   const route = resolvePostRoute({
     pagePath,
     metadata,
-    siteFilePaths: site.files,
+    files,
     hosts,
+    datedShare: dirs.length ? await loadDatedShares('preview', dirs) : {},
   });
   if (route.kind !== 'post') throw new Error(`${s.name}: not a post`);
   const body = await processMarkdown(s.markdown, {
@@ -193,7 +202,6 @@ async function renderPost(s: Scenario): Promise<string> {
         siteId: 'preview',
         collection: route.collection,
         pagePath,
-        tags: frontmatterTags(metadata),
         siteHostname: SITE_HOSTNAME,
         files: site.files,
         permalinks: {},
@@ -220,7 +228,7 @@ async function renderPost(s: Scenario): Promise<string> {
                   pagePath,
                   files: site.files,
                   siteHostname: SITE_HOSTNAME,
-                  dimensions: DIMENSIONS,
+                  dimensions: s.unknownSizes ? {} : DIMENSIONS,
                 })}
                 tags={frontmatterTags(metadata)}
                 after={footer}

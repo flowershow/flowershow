@@ -313,7 +313,7 @@ for (const width of [1440, 390]) {
     );
     return {
       article: w('article.post-page'),
-      hero: w('.post-hero-media'),
+      hero: w('.post-hero-img'),
       cols: grid
         ? getComputedStyle(grid).gridTemplateColumns.split(' ').length
         : 0,

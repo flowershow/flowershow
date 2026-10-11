@@ -3584,11 +3584,12 @@
   /* ────────────────────────────────────────────────────
    Post pages (components/public/layouts/post.tsx; posts of a blog/posts or
    layout: list folder, or layout: post). The header keeps the .page-header-*
-   classes; every rule here is at most one class (:where()) and later than the
-   page header defaults, so it overrides them and every theme rule wins.
+   classes; every rule here is at most one class (:where(), or a bare .post-*
+   class where it must beat a .page-header-* default) and later than the page
+   header defaults, so it overrides them and every theme rule wins.
    Custom properties:
      --post-max-width, --post-wide-max-width, --post-body-size,
-     --post-hero-ratio, --post-hero-radius, --post-avatar-size,
+     --post-hero-max-height, --post-hero-radius, --post-avatar-size,
      --post-meta-color, --post-eyebrow-color, --post-rule-color
    ──────────────────────────────────────────────────── */
 
@@ -3604,12 +3605,14 @@
     max-width: var(--post-wide-max-width, 64rem);
   }
 
-  :where(.post-header) {
+  /* One class each, like the .page-header defaults above that they replace
+     (later in the file, so they win; themes load later still and win) */
+  .post-header {
     margin-bottom: 2rem;
     padding-bottom: 0;
-    border-bottom: 0;
+    border-bottom-width: 0;
   }
-  :where(.post-header) > * + * {
+  .post-header > * + * {
     margin-top: 0;
   }
   :where(.post-header) .post-eyebrow {
@@ -3714,17 +3717,20 @@
     display: none;
   }
 
-  /* Hero: inside the measure, intrinsic ratio (clamped, set inline as
-     --_post-hero-ratio) or 16/9; --post-hero-ratio overrides both */
+  /* Cover: its own shape, never cropped or upscaled, at most the column
+     wide and --post-hero-max-height tall, centred (lib/post/hero.ts drops
+     known-small or square-ish images; unknown sizes land here as they are) */
   :where(.post-header) .post-hero {
     margin: 2.25rem 0 0;
   }
-  :where(.post-hero) .post-hero-media {
-    position: relative;
-    aspect-ratio: var(--post-hero-ratio, var(--_post-hero-ratio, 16 / 9));
-    overflow: hidden;
+  img:where(.post-hero-img) {
+    display: block;
+    width: auto;
+    max-width: 100%;
+    height: auto;
+    max-height: var(--post-hero-max-height, 24rem);
+    margin-inline: auto;
     border-radius: var(--post-hero-radius, var(--list-card-radius, 0.5rem));
-    background: var(--color-foreground-50);
     box-shadow: 0 0 0 1px var(--color-foreground-100);
   }
   :where(.post-hero) .post-hero-caption {

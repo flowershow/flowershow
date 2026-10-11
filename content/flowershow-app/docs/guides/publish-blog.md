@@ -97,7 +97,7 @@ The frontmatter fields explained:
 
 ![[Pasted image 20251007233101.png]]
 
-Every page in your `blog/` folder is laid out as a post: a reading column, a big title with your description under it, the author and date, the cover image, and at the end its tags, the previous and next posts, and three more posts to read. See [[post-pages|Post pages]] for what each part comes from and how to turn it off.
+Every dated page in your `blog/` folder is laid out as a post: a reading column, a big title with your description under it, the author and date, the cover image, and at the end its tags, the previous and next posts, and three more posts to read. See [[post-pages|Post pages]] for what each part comes from and how to turn it off.
 
 > [!info] Learn about different options to set the page title
 > You don't have to use `title` frontmatter field to set the page title. To learn about other options, see [Three Ways to Set a Page Title](/blog/how-to-set-page-title).

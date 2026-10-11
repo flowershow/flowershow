@@ -242,7 +242,7 @@ main.page-main (structural wrapper)
 
 ## Post pages
 
-Individual posts: pages in a `blog/` or `posts/` folder, or in a folder listed by its own `layout: list` page (sorted by date), or with `layout: post`. The header keeps the `.page-header-*` classes; tags move to the article footer. Custom properties: `--post-max-width`, `--post-wide-max-width`, `--post-body-size`, `--post-hero-ratio`, `--post-hero-radius`, `--post-avatar-size`, `--post-meta-color`, `--post-eyebrow-color`, `--post-rule-color`.
+Individual posts: dated pages in a `blog/` or `posts/` folder, pages of a folder listed by its own `layout: list` page that is a dated feed, or pages with `layout: post`. The header keeps the `.page-header-*` classes; tags move to the article footer. Custom properties: `--post-max-width`, `--post-wide-max-width`, `--post-body-size`, `--post-hero-max-height`, `--post-hero-radius`, `--post-avatar-size`, `--post-meta-color`, `--post-eyebrow-color`, `--post-rule-color`.
 
 **DOM shape**
 
@@ -259,7 +259,7 @@ Individual posts: pages in a `blog/` or `posts/` folder, or in a folder listed b
    │  │  │  │  ├─ .page-header-authors-avatars-container.post-byline-avatars > img.page-header-author-avatar.post-byline-avatar
    │  │  │  │  └─ .page-header-authors-names-container.post-byline-names > .page-header-author-name
    │  │  │  └─ .post-byline-meta > .page-header-date > time, .page-header-reading-time
-   │  │  └─ figure.post-hero > .post-hero-media > img.post-hero-img, figcaption.post-hero-caption
+   │  │  └─ figure.post-hero > img.post-hero-img, figcaption.post-hero-caption
    │  ├─ .page-body > .rendered-mdx#mdxpage
    │  └─ footer.post-footer > .page-header-tags.post-tags > .tag-pill
    ├─ nav.post-nav > a.post-nav-link.post-nav-link--prev | --next > .post-nav-label, .post-nav-title (or .post-nav-placeholder)
@@ -279,7 +279,7 @@ Individual posts: pages in a `blog/` or `posts/` folder, or in a folder listed b
 | <code>.post-header</code> | Hook |
 | <code>.post-hero</code> | Hook |
 | <code>.post-hero-caption</code> | Hook |
-| <code>.post-hero-media</code> | Hook |
+| <code>.post-hero-img</code> | Hook |
 | <code>.post-layout</code> | Hook |
 | <code>.post-nav</code> | Hook |
 | <code>.post-nav-label</code> | Hook |

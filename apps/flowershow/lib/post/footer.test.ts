@@ -3,7 +3,7 @@ vi.mock('@/server/db', () => ({ default: {}, db: {} }));
 vi.mock('next/cache', () => ({
   unstable_cache: (fn: (...a: unknown[]) => unknown) => fn,
 }));
-import { collectionSpecs, loadPostFooter } from './footer';
+import { collectionSpecs, loadPostFooter, MAX_FOOTER_ITEMS } from './footer';
 
 type Row = {
   id: string;
@@ -65,7 +65,7 @@ function fakeDb() {
   return { blob: { findMany } };
 }
 
-const args = (pagePath: string, tags: string[] = []) => ({
+const args = (pagePath: string) => ({
   siteId: 's',
   collection: {
     dir: 'blog',
@@ -74,7 +74,6 @@ const args = (pagePath: string, tags: string[] = []) => ({
     hostPath: null,
   },
   pagePath,
-  tags,
   siteHostname: 'site.example',
   files: rows.map((r) => `/${r.path}`),
   locale: 'en-US',
@@ -84,29 +83,29 @@ const args = (pagePath: string, tags: string[] = []) => ({
 describe('loadPostFooter', () => {
   it('previous is older, next is newer; read more is same-tag first, then recent, avoiding prev/next', async () => {
     const db = fakeDb();
-    const f = await loadPostFooter(args('blog/b.md', ['x']), db);
-    expect(f.previous?.title).toBe('A');
-    expect(f.next?.title).toBe('C');
-    // same tag: C (avoided, next) and A (avoided, previous); then E, D; avoided fill the rest
-    expect(f.readMore.map((i) => i.title)).toEqual(['E', 'D', 'C']);
+    const f = (await loadPostFooter(args('blog/c.md'), db))!;
+    expect(f.previous?.title).toBe('B');
+    expect(f.next?.title).toBe('D');
+    // same tag (Tag table): A; then E; the avoided D fills the rest
+    expect(f.readMore.map((i) => i.title)).toEqual(['A', 'E', 'D']);
     expect(f.authors.get('ann')).toMatchObject({
       name: 'Ann Author',
       url: '/people/ann',
     });
   });
-  it('same-tag posts come first', async () => {
-    const f = await loadPostFooter(args('blog/e.md', ['x']), fakeDb());
-    expect(f.readMore.map((i) => i.title)).toEqual(['C', 'A', 'B']);
+  it("same-tag posts come first, by the post's own Tag-table tags", async () => {
+    const f = (await loadPostFooter(args('blog/a.md'), fakeDb()))!;
+    expect(f.readMore.map((i) => i.title)).toEqual(['C', 'E', 'D']);
   });
   it('drafts are never neighbours or cards; the post itself never a card', async () => {
-    const f = await loadPostFooter(args('blog/e.md'), fakeDb());
+    const f = (await loadPostFooter(args('blog/e.md'), fakeDb()))!;
     expect(f.next).toBeNull();
     expect(f.previous?.title).toBe('D');
     expect(f.readMore.map((i) => i.title)).toEqual(['C', 'B', 'A']);
   });
-  it('bounded: one folder scan, one folder tag map (only with tags), one by-id fetch of at most five rows', async () => {
+  it('bounded: one folder scan, one folder tag map, one by-id fetch of at most five rows', async () => {
     const db = fakeDb();
-    await loadPostFooter(args('blog/c.md', ['x', 'y']), db);
+    await loadPostFooter(args('blog/c.md'), db);
     const calls = db.blob.findMany.mock.calls.map((c: any[]) => c[0]);
     const scans = calls.filter(
       (c: any) => c.where.path?.startsWith === 'blog/',
@@ -118,20 +117,42 @@ describe('loadPostFooter', () => {
       path: true,
       tags: { select: { tag: true } },
     });
-    const db2 = fakeDb();
-    await loadPostFooter(args('blog/c.md'), db2);
-    expect(
-      db2.blob.findMany.mock.calls.some((c: any[]) => c[0].where.tags),
-    ).toBe(false); // no tag map without tags
     expect(byId).toHaveLength(1);
     expect(byId[0].where.id.in.length).toBeLessThanOrEqual(5);
     for (const c of calls) expect(c.select).not.toHaveProperty('content');
   });
   it('a post not in the index (a draft) still gets read-more cards, no neighbours', async () => {
-    const f = await loadPostFooter(args('blog/f.md'), fakeDb());
+    const f = (await loadPostFooter(args('blog/f.md'), fakeDb()))!;
     expect(f.previous).toBeNull();
     expect(f.next).toBeNull();
     expect(f.readMore.map((i) => i.title)).toEqual(['E', 'D', 'C']);
+  });
+});
+
+describe('loadPostFooter cap', () => {
+  it('no footer above MAX_FOOTER_ITEMS pages', async () => {
+    const many = Array.from({ length: MAX_FOOTER_ITEMS + 1 }, (_, i) =>
+      row(`m${i}`, `big/p${i}.md`, { title: `P${i}`, date: '2026-01-01' }),
+    );
+    const db = {
+      blob: {
+        findMany: vi.fn(async ({ where }: any) =>
+          where.tags ? [] : where.id?.in ? [] : many,
+        ),
+      },
+    };
+    expect(
+      await loadPostFooter(
+        {
+          ...args('big/p0.md'),
+          collection: { ...args('x').collection, dir: 'big' },
+        },
+        db,
+      ),
+    ).toBeNull();
+    expect(
+      db.blob.findMany.mock.calls.some((c: any[]) => c[0].where.id?.in),
+    ).toBe(false);
   });
 });
 

@@ -7,15 +7,19 @@ export type PostHero = {
   src: string;
   alt: string;
   caption: string | null;
-  /** Width / height, clamped; null when the intrinsic size is unknown (CSS default 16/9). */
-  ratio: number | null;
+  /** The intrinsic size when the site knows it (site images); unknown for external URLs. */
   width?: number;
   height?: number;
 };
 
-/** Never taller than 4:3: a square or portrait hero would push the text below the fold (it is cropped, object-fit: cover). */
-const MIN_RATIO = 4 / 3;
-const MAX_RATIO = 21 / 9;
+/**
+ * A cover must look like a cover. When the size is known, smaller or squarer
+ * images (a logo, an icon, a portrait) are not shown: the post keeps them as
+ * its social card. Unknown sizes render at their natural size, uncropped,
+ * never upscaled, with a capped height (CSS), so a bad `image` is harmless.
+ */
+export const MIN_COVER_WIDTH = 600;
+export const MIN_COVER_RATIO = 1.2;
 
 const text = (v: unknown): string | null =>
   typeof v === 'string' && v.trim() ? v.trim() : null;
@@ -52,20 +56,51 @@ function bodyOf(content: string): string {
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-/** Does the body reference this file name (as a whole file name, any case)? */
+/** `%20`-style escapes decoded one by one (a stray `%` never throws). */
+const decodePercent = (s: string) =>
+  s.replace(/(?:%[0-9a-f]{2})+/gi, (m) => {
+    try {
+      return decodeURIComponent(m);
+    } catch {
+      return m;
+    }
+  });
+
+/**
+ * Does the body reference this file name (as a whole file name, any case),
+ * in any form: `![[x.png]]`, `![[path/x.png|300]]`, `![](x%20y.png)`,
+ * `![](<x y.png>)`, `<img src="x.png">`, a bare URL?
+ */
 function bodyShows(body: string, src: string): boolean {
-  let name: string;
+  const name = decodePercent(pathnameOf(src).split('/').pop() ?? '');
+  if (!name) return false;
+  const text = decodePercent(body.replace(/&amp;/g, '&'));
+  return new RegExp(
+    `(?:^|[/\\[(<\\s"'=|])${escapeRe(name)}(?=$|[\\])>\\s"'#?|])`,
+    'i',
+  ).test(text);
+}
+
+/** The site's intrinsic size for a site image URL: the longest dimensions-map key its path ends with (a path prefix such as /@user/site does not matter). */
+function knownSize(
+  src: string,
+  siteHostname: string,
+  dimensions: ImageDimensionsMap | undefined,
+): { width: number; height: number } | undefined {
+  if (!dimensions) return undefined;
+  let path: string;
   try {
     const u = new URL(src);
-    name = decodeURIComponent(u.pathname.split('/').pop() ?? '');
+    if (u.host !== siteHostname) return undefined;
+    path = decodePercent(u.pathname);
   } catch {
-    return false;
+    return undefined;
   }
-  if (!name) return false;
-  return new RegExp(
-    `(?:^|[/\\[(\\s"'=|])${escapeRe(name)}(?=$|[\\])\\s"'#?|])`,
-    'i',
-  ).test(body);
+  if (dimensions[path]) return dimensions[path];
+  let best: string | undefined;
+  for (const key of Object.keys(dimensions))
+    if (path.endsWith(key) && (!best || key.length > best.length)) best = key;
+  return best ? dimensions[best] : undefined;
 }
 
 /**
@@ -106,23 +141,18 @@ export function resolvePostHero({
   // External images too must look like image files: a page URL would be a broken LCP image
   if (!src || !IMAGE_EXT_RE.test(pathnameOf(src))) return null;
   if (bodyShows(bodyOf(body), src)) return null;
-  let dims: { width: number; height: number } | undefined;
-  try {
-    const u = new URL(src);
-    if (u.host === siteHostname)
-      dims = dimensions?.[decodeURIComponent(u.pathname)];
-  } catch {
-    // resolveListingImage only returns absolute URLs
-  }
-  const ratio =
-    dims && dims.width > 0 && dims.height > 0
-      ? Math.min(MAX_RATIO, Math.max(MIN_RATIO, dims.width / dims.height))
-      : null;
+  const dims = knownSize(src, siteHostname, dimensions);
+  if (
+    dims &&
+    (dims.width < MIN_COVER_WIDTH ||
+      dims.height <= 0 ||
+      dims.width / dims.height < MIN_COVER_RATIO)
+  )
+    return null;
   return {
     src,
     alt: text(m.imageAlt) ?? '',
     caption: text(m.imageCaption),
-    ratio,
     ...(dims ? { width: dims.width, height: dims.height } : {}),
   };
 }

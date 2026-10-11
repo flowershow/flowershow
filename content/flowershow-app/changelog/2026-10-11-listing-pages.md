@@ -20,7 +20,7 @@ You can now list the pages of any folder without MDX or components. Add `layout:
 - **Grouping**: `group: year`, `month`, `folder` or any field (`group: team`) adds a heading before each group.
 - **Dates in your language** with the new `locale` setting.
 - **Clear errors**: a wrong key shows a card that names it and suggests the fix.
-- **Posts that look like posts**: every page in a `blog/` or `posts/` folder (or a `layout: list` folder sorted by date) gets a reading column, a big title with your description, the author's photo and the date, your `image` as a cover, and at the end its tags, previous and next links and three "Read more" cards (same tag first). Works in `.md` and `.mdx`. See [[post-pages|Post pages]].
+- **Posts that look like posts**: every dated page in a `blog/` or `posts/` folder (or in a `layout: list` folder of dated pages) gets a reading column, a big title with your description, the author's photo and the date, your `image` as a cover, and at the end its tags, previous and next links and three "Read more" cards (same tag first). Works in `.md` and `.mdx`. See [[post-pages|Post pages]].
 
 ![[assets/changelog-post-pages.webp]]
 
@@ -33,7 +33,7 @@ See [[listings|Listing pages]]. The `<List />` component keeps working; the docs
 - A `blog/` or `posts/` README, index page or folder note with only prose now gets a generated list under it, in a reading-width column. Add `list: false` to its frontmatter to keep it as before. See [A blog with nothing to write](/docs/reference/listings#a-blog-with-nothing-to-write).
 - ```` ```list ```` and ```` ```blog ```` code blocks now render as lists. To show one as code, wrap it in four backticks.
 - `draft: true` in frontmatter now hides a page from listings, the RSS feed and the sitemap, and asks search engines not to index it. Worth checking if you imported posts from Hugo, Jekyll or Astro that still carry it. See [Which pages are listed](/docs/reference/listings#which-pages-are-listed).
-- Pages in a `blog/` or `posts/` folder, or in a `layout: list` folder sorted by date, now use the post layout: a narrower column, tags at the end instead of under the title, and new previous/next and "Read more" links. **The `image` in a post's frontmatter now shows as a cover** unless the post already shows it in its text; add `showImage: false` to a post to hide it (the image stays its social card), `layout: default` to keep a page as it was, or `postLayout: false` to the folder's README for the whole folder. See [Turning it off](/docs/reference/post-pages#turning-it-off).
+- Dated pages in a `blog/` or `posts/` folder, or in a `layout: list` folder of mostly dated pages, now use the post layout: a narrower column, tags at the end instead of under the title, and new previous/next and "Read more" links. **The `image` in a post's frontmatter now shows as a cover**, uncropped, unless the post already shows it in its text or it is a small or square image such as a logo; add `showImage: false` to a post to hide it (the image stays its social card), `layout: default` to keep a page as it was, or `postLayout: false` to the folder's README for the whole folder. See [Turning it off](/docs/reference/post-pages#turning-it-off).
 - Author names link only to a page whose name matches exactly, preferring `people/` and `authors/` folders. See [Author pages](/docs/guides/author-pages).
 
 **Fixes**
