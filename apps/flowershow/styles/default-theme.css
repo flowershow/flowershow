@@ -2040,18 +2040,21 @@
     }
   }
 
-  /* people (Linear, Obsidian): 4 / 3 / 2 columns, square portraits, initials
-     on the same tinted tile as grid monograms when there is no photo */
+  /* people (Linear, Obsidian): up to 4 columns, never narrower than 9rem, so
+     4 / 3 / 2 at the default content widths and 2 on a phone, also inside a
+     theme's narrower column; square portraits; initials on the same tinted
+     tile as grid monograms when there is no photo */
   .list-component:where(.list-component--people) {
+    --_people-gap: 1.5rem;
     display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--list-gap, 2rem 1.25rem);
-    @media (min-width: 768px) {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-      gap: var(--list-gap, 2.5rem 1.5rem);
-    }
-    @media (min-width: 1024px) {
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(
+        auto-fill,
+        minmax(max(9rem, calc((100% - 3 * var(--_people-gap)) / 4)), 1fr)
+      );
+    gap: var(--list-gap, 2.5rem var(--_people-gap));
+    @media (max-width: 639px) {
+      --_people-gap: 1.25rem;
+      gap: var(--list-gap, 2rem var(--_people-gap));
     }
   }
   :where(.list-component--people)

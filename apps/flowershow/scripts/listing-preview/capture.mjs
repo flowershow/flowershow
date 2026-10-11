@@ -79,8 +79,8 @@ async function open(name, opts = {}) {
     'section.list-component--grid',
     (g) => ({
       cols: getComputedStyle(g).gridTemplateColumns.split(' ').length,
-      heights: [...g.querySelectorAll('.list-component-item-media')].map(
-        (m) => Math.round(m.getBoundingClientRect().height),
+      heights: [...g.querySelectorAll('.list-component-item-media')].map((m) =>
+        Math.round(m.getBoundingClientRect().height),
       ),
     }),
   );
@@ -150,7 +150,95 @@ async function open(name, opts = {}) {
   console.log(`check avatars: ${sizes.join(', ')}`);
   await page.close();
 }
-for (const name of ['zero-config-blog', 'grid-blog', 'long-titles']) {
+// B2 (design 4.9): compact columns line up; an inline compact teaser has no
+// headings; people are 4 columns with initials tiles the size of photos; the
+// featured hero is a 58% split in a wide grid and stacked on a 44rem list page.
+{
+  const page = await open('compact-category');
+  const xs = await page.$$eval(
+    'section.list-component--compact > article',
+    (rows) => {
+      const x = (el) => (el ? Math.round(el.getBoundingClientRect().x) : null);
+      return [
+        '.list-component-item-date',
+        '.list-component-item-meta-value',
+        '.list-component-item-headline',
+      ].map((sel) => [...new Set(rows.map((r) => x(r.querySelector(sel))))]);
+    },
+  );
+  if (xs.some((col) => col.length !== 1 || col[0] === null))
+    failures.push(
+      `compact-category: columns do not line up (${JSON.stringify(xs)})`,
+    );
+  console.log(
+    `check compact columns: x ${xs.map((c) => c.join('/')).join(', ')}`,
+  );
+  await page.close();
+}
+{
+  const page = await open('compact-teaser');
+  const headings = await page.$$eval(
+    '.list-component-group-heading',
+    (h) => h.length,
+  );
+  if (headings !== 0)
+    failures.push(
+      `compact-teaser: inline compact has ${headings} group headings`,
+    );
+  console.log(`check compact teaser: ${headings} group headings`);
+  await page.close();
+}
+{
+  const page = await open('people-grid');
+  const { cols, sizes } = await page.$eval(
+    'section.list-component--people',
+    (g) => ({
+      cols: getComputedStyle(g).gridTemplateColumns.split(' ').length,
+      sizes: [
+        ...new Set(
+          [...g.querySelectorAll('.list-component-item-media')].map((m) => {
+            const r = m.getBoundingClientRect();
+            return `${Math.round(r.width)}x${Math.round(r.height)}`;
+          }),
+        ),
+      ],
+    }),
+  );
+  if (cols !== 4)
+    failures.push(`people-grid @1440: expected 4 columns, got ${cols}`);
+  if (sizes.length !== 1)
+    failures.push(
+      `people-grid: portraits and initials tiles differ (${sizes.join(', ')})`,
+    );
+  console.log(`check people @1440: ${cols} columns, media ${sizes.join(', ')}`);
+  await page.close();
+}
+for (const [name, split] of [
+  ['grid-featured', true],
+  ['list-featured', false],
+]) {
+  const page = await open(name);
+  const share = await page.$eval('.list-component-item--featured', (a) => {
+    const m = a.querySelector('.list-component-item-media');
+    return Math.round(
+      (m.getBoundingClientRect().width / a.getBoundingClientRect().width) * 100,
+    );
+  });
+  if (split ? share < 55 || share > 61 : share !== 100)
+    failures.push(
+      `${name}: featured image is ${share}% of the hero (expected ${split ? '58' : '100'}%)`,
+    );
+  console.log(`check ${name}: featured image ${share}% wide`);
+  await page.close();
+}
+for (const name of [
+  'zero-config-blog',
+  'grid-blog',
+  'long-titles',
+  'compact-archive',
+  'people-team',
+  'grid-featured',
+]) {
   const page = await open(name, { width: 390 });
   const overflow = await page.evaluate(
     () =>
