@@ -72,6 +72,8 @@ export interface SiteConfig {
   /** @deprecated Use `siteName` instead. Still honored as a fallback for existing configs. */
   title?: string;
   description?: string;
+  /** BCP 47 tag for listing dates, e.g. "de-DE". Default en-US. */
+  locale?: string;
   image?: string;
   logo?: string;
   favicon?: string;
