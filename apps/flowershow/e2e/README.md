@@ -56,7 +56,7 @@ npx playwright test --project=teardown
 e2e/
 ├── fixtures/        # Markdown/MDX content seeded into DB + MinIO
 │   ├── test-site/      # free, premium and password sites
-│   └── listings-demo/  # listings site (list blocks, layout: list, zero-config blog/posts)
+│   └── listings-demo/  # listings site (list blocks, layout: list, zero-config blog/posts, compact/people/featured/grouping)
 ├── helpers/
 │   └── seed.ts      # Seed/teardown logic, shared base-URL constants
 ├── specs/           # Test files

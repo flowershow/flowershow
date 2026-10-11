@@ -1,6 +1,6 @@
 ---
 title: Listing pages
-description: "A blog index, a grid of projects or the latest posts on your home page, from any folder, in plain Markdown."
+description: "A blog index, a grid of projects, a compact archive, a team page or the latest posts on your home page, from any folder, in plain Markdown."
 ---
 
 Everything on this page is fenced blocks and frontmatter. You don't need MDX or components, and it works the same in `.md` and `.mdx` pages.
@@ -103,15 +103,17 @@ Every key works in a ```` ```list ```` or ```` ```blog ```` block and in a `list
 | Key | Values | Default | What it does |
 | --- | --- | --- | --- |
 | `from` | folder path | `blog` for ```` ```blog ````; the page's own folder for `layout: list`; required for ```` ```list ```` | The folder to list, including its subfolders. Must be a folder, not a page. |
-| `view` | `list`, `grid` | `list` | Rows with a small thumbnail, or a grid of cards. See [Views](#views). |
-| `sort` | `<field> [asc\|desc]` or `-<field>` | `date desc` | Order of items. `date` means the item's date (see [fields](#choosing-what-each-card-shows-fields)). `title`, `path` or any frontmatter field. |
+| `view` | `list`, `grid`, `compact`, `people` | `list` | Rows with a small thumbnail, a grid of cards, one-line date + title rows, or portraits. See [Views](#views). |
+| `sort` | `<field> [asc\|desc]` or `-<field>` | `date desc` (`title` in `people`) | Order of items. `date` means the item's date (see [fields](#choosing-what-each-card-shows-fields)). `title`, `path` or any frontmatter field. |
 | `limit` | number | none | Show at most this many items and never paginate. For teasers. |
 | `pageSize` | number or `none` | `20` on `layout: list` and zero-config pages; none in blocks | Items per page. A list with neither `limit` nor `pageSize` shows at most 200 items. |
 | `where` | map of field to value(s) | none | Keep only matching items. See [Filtering](#filtering-with-where). |
 | `fields` | map of slot to field, or a list | per view | Which frontmatter field fills each part of a card. See [fields](#choosing-what-each-card-shows-fields). |
-| `media` | `thumb`, `thumb right`, `cover`, `none` | `thumb` in `list` (on the left), `cover` in `grid` | How images are shown: a thumbnail beside the text (left unless you write `thumb right`), a cover above it, or no images. |
-| `ratio` | `16/9`, `3/2`, `4/3`, `1/1`, `3/4` | `3/2` for thumbnails, `16/9` for covers | Shape of the image box. `16:9` works too. |
+| `media` | `thumb`, `thumb right`, `cover`, `none` | `thumb` in `list` (on the left), `cover` in `grid` and `people`, `none` in `compact` | How images are shown: a thumbnail beside the text (left unless you write `thumb right`), a cover above it, or no images. |
+| `ratio` | `16/9`, `3/2`, `4/3`, `1/1`, `3/4` | `3/2` for thumbnails, `16/9` for covers, `1/1` in `people` | Shape of the image box. `16:9` works too. |
 | `defaultImage` | image path, `[[wikilink]]` or `none` | unset | Image for items that don't have one, found relative to the listing page. `none` turns off the letter tiles in a grid (see [Views](#views)). |
+| `featured` | `0`, `1` (`true` works too) | `0` | `1` shows one item as a large hero above the rest, on page 1: the first item with `featured: true` in its frontmatter, otherwise the first item (the latest post with the default sort). `list` and `grid` only. See [A featured post](#a-featured-post). |
+| `group` | `none`, `year`, `month`, `day`, `folder` or a field name | `none`; `year` for `compact` on `layout: list` and zero-config pages | A heading before each group, each group once. See [Grouping](#grouping). |
 
 Keys are case-insensitive (`pagesize` works). A few natural guesses are read silently: `dir` and `folder` mean `from`, `layout` inside a block means `view`, `cards` means `grid`, `sortBy` with `sortDirection` means `sort`, and `sort: -date` means newest first.
 
@@ -176,6 +178,97 @@ defaultImage: "[[assets/project-placeholder.png]]"
 ````
 
 Quote a wiki link value (`"[[cover.png]]"`) to keep it valid YAML in other tools; unquoted works too.
+
+**`compact`** is one line per item: the date in a column, then the title. No images, no summaries. Good for archives, talks and references. See [An archive](#an-archive-compact).
+
+**`people`** shows portraits in up to four columns (two on phones), each with a name, a role and a short bio. See [A team page](#a-team-page-people).
+
+## An archive (`compact`)
+
+````markdown
+---
+title: Archive
+layout: list
+list:
+  from: blog
+  view: compact
+  pageSize: 50
+---
+````
+
+![A compact archive: one line per post, the date in a column on the left and the title beside it, under a heading per year](/assets/docs-listings-compact-archive.webp)
+
+On a `layout: list` or zero-config page, `compact` groups items under a heading per year. A block is not grouped unless you set `group`, so a three-line teaser on your home page has no headings:
+
+````markdown
+```blog
+view: compact
+limit: 3
+```
+````
+
+Each item is one line: no images, summaries or authors, even if `fields` asks for them. The date column is as wide as the longest date in the list, so long dates in other languages ("30 de set. de 2026") never run into the titles. The first `meta` field gets its own column between the date and the title, like a category column in a table (it's hidden on phones):
+
+````markdown
+```blog
+view: compact
+fields:
+  meta: [category]
+```
+````
+
+## A team page (`people`)
+
+Make one page per person in a folder (`team/ada.md`, `team/grace.md`), then:
+
+````markdown
+```list
+from: team
+view: people
+```
+````
+
+![A team page: square portraits with name, role and a short bio under each, grouped under Engineering and Leadership headings; a person without a photo gets their initials](/assets/docs-listings-people-team.webp)
+
+Each card shows the person's `avatar` (or `image`, `photo`) as a square portrait, `title` as the name, `role` under it and `bio` (or `description`) as two lines. People without a photo get their initials on a tinted square of the same size. People are sorted by name; give each page an `order:` number and add `sort: order` to choose the order yourself. `media: thumb` shows small portraits beside the text, one person per row. `group: team` puts everyone under a heading for their team.
+
+The page above is a `layout: list` page with `view: people` and `group: team`. A single `team.md` with a table can't be listed: a list shows one page per item.
+
+## A featured post
+
+`featured: 1` (or `featured: true`) shows one item as a hero above the rest, on page 1: a large image beside the title, summary and meta line on wide screens, stacked on phones and in a reading-width column; a full-width text block if the item has no image. The item is the first one with `featured: true` in its frontmatter, otherwise the first item in the list's order (the latest post with the default `sort`). It isn't repeated below. A magazine-style home page is a grid with a featured post:
+
+````markdown
+```blog
+view: grid
+featured: 1
+limit: 7
+fields:
+  eyebrow: category
+```
+````
+
+![A magazine-style home page: a featured post with a large image on the left and its category, title, description, date and author on the right, above a grid of cards](/assets/docs-listings-grid-featured.webp)
+
+A block with `limit` always shows its hero, also on `?page=2` of the page it sits on; a paginated list shows it on its own first page only. `featured` works in `list` and `grid`; other views ignore it.
+
+## Grouping
+
+`group` adds a heading before each group of items. Items are ordered by group first, then by `sort` within each group, so every heading appears once:
+
+- `year`, `month` ("September 2026") or `day` ("Sep 18, 2026") group by the item's date, newest group first (oldest first with `sort: date asc`). Undated items go last, under "Undated".
+- `folder` groups by the first subfolder under `from`.
+- Any other name groups by that frontmatter field (the first value of a list), in alphabetical order, with items that don't have it last under "Other". The field name matches in any case (`group: Team` reads `team:`), and values that differ only in case or accents (`Design`, `design`) form one group, headed by the most common spelling.
+
+````markdown
+```list
+from: projects
+view: grid
+group: status
+```
+````
+
+Group headings stay out of the table of contents. With `featured: 1`, the hero sits above the first heading. When a group continues on the next page, its heading is repeated there.
 
 ## Which pages are listed
 
@@ -244,7 +337,7 @@ List block has problems
 • No folder "posts" with pages. Folders with pages: blog, notes.
 • Unknown key "perPage". Use "pageSize".
 • Unknown key "image". Use "media: cover" (to choose which field holds the image, use "fields: { image: <key> }").
-Keys: from, view, sort, limit, pageSize, where, fields, media, ratio, defaultImage.
+Keys: from, view, sort, limit, pageSize, where, fields, media, ratio, defaultImage, featured, group.
 ```
 
 Other messages you may see:
@@ -305,9 +398,10 @@ or, for the whole page, `layout: list` with `list: { pageSize: 5, fields: { eyeb
 Lists use the same `.list-component-*` classes as `<List />`, plus attributes that say which view and image style a list uses:
 
 ```text
-section.list-component.list-component--list|--grid[data-view][data-media][data-media-side][data-ratio]
-  article.list-component-item
-    .list-component-item-media            (image, or the letter tile: .list-component-item-media--placeholder > .list-component-item-monogram)
+section.list-component.list-component--list|--grid|--compact|--people[data-view][data-media][data-media-side][data-ratio]
+  h2.list-component-group-heading       (with group)
+  article.list-component-item[.list-component-item--featured]
+    .list-component-item-media            (image, or a tile: .list-component-item-media--placeholder > .list-component-item-monogram in grid, .list-component-item-initials in people)
     .list-component-item-content
       .list-component-item-eyebrow
       h3.list-component-item-headline
@@ -325,11 +419,11 @@ Most of the look is set with custom properties, in your `custom.css`:
   --list-thumb-order: 2;          /* every list thumbnail on the right */
   --list-card-min: 14rem;         /* narrower grid cards, more columns */
   --list-media-placeholder: #f3efe6; /* letter tile background */
-  --list-monogram-color: #8a6d3b; /* letter colour */
+  --list-monogram-color: #8a6d3b; /* letter (and initials) colour */
 }
 ```
 
-The full list: `--list-max-width`, `--list-gap`, `--list-card-min`, `--list-card-radius`, `--list-card-border`, `--list-card-bg`, `--list-card-hover-bg`, `--list-media-ratio`, `--list-media-placeholder`, `--list-monogram-color`, `--list-thumb-width`, `--list-thumb-order`, `--list-avatar-shape`, `--list-meta-color`, `--list-eyebrow-color`, `--list-rule-color`.
+The full list: `--list-max-width`, `--list-gap`, `--list-card-min`, `--list-card-radius`, `--list-card-border`, `--list-card-bg`, `--list-card-hover-bg`, `--list-media-ratio`, `--list-media-placeholder`, `--list-monogram-color`, `--list-thumb-width`, `--list-thumb-order`, `--list-avatar-shape`, `--list-meta-color`, `--list-eyebrow-color`, `--list-rule-color`, `--list-compact-meta-width` (the `compact` category column, `9em`). `--list-avatar-shape: 50%` makes people portraits round.
 
 Meta values show without labels. Add one with CSS:
 

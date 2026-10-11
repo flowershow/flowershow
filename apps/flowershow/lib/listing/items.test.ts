@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canonicalGroupKeys,
   folderHasPages,
   groupKey,
   itemTitle,
@@ -195,7 +196,56 @@ describe('sort (4.5)', () => {
   });
 });
 
+describe('group keys that differ only in case or accents', () => {
+  it('sort contiguously and share the most common spelling', () => {
+    const rows = [
+      row('t/ann.md', { title: 'Ann', team: 'Design' }),
+      row('t/bob.md', { title: 'Bob', team: 'design' }),
+      row('t/cat.md', { title: 'Cat', team: 'Design' }),
+      row('t/dan.md', { title: 'Dan', team: 'Eng' }),
+      row('t/eve.md', { title: 'Eve', team: 'design' }),
+      row('t/fay.md', { title: 'Fay', team: 'Désign' }),
+      row('t/gus.md', { title: 'Gus', team: 'Design' }),
+    ];
+    const s = spec({
+      from: 't',
+      sort: { field: 'title', direction: 'asc' },
+      group: { by: 'field', field: 'team' },
+    });
+    const sorted = selectListingRows(rows, s, TODAY);
+    expect(paths(sorted)).toEqual([
+      't/ann.md',
+      't/bob.md',
+      't/cat.md',
+      't/eve.md',
+      't/fay.md',
+      't/gus.md',
+      't/dan.md',
+    ]);
+    expect(canonicalGroupKeys(sorted.map((r) => groupKey(r, s)!))).toEqual([
+      ...Array(6).fill('Design'),
+      'Eng',
+    ]);
+  });
+  it('ties go to the first spelling in code-point order; Other stays apart', () => {
+    expect(canonicalGroupKeys(['eng', 'Eng', '', 'ENG'])).toEqual([
+      'ENG',
+      'ENG',
+      '',
+      'ENG',
+    ]);
+  });
+});
+
 describe('groupKey', () => {
+  it('matches the frontmatter key ignoring case, preferring an exact match', () => {
+    const s = spec({ from: 't', group: { by: 'field', field: 'Team' } });
+    expect(groupKey(row('t/a.md', { team: 'Eng' }), s)).toBe('Eng');
+    expect(groupKey(row('t/a.md', { team: 'Eng', Team: 'Ops' }), s)).toBe(
+      'Ops',
+    );
+    expect(groupKey(row('t/a.md', {}), s)).toBe('');
+  });
   it('time units from the date slot, folder, field', () => {
     const r = row('blog/tutorials/x.md', {
       date: '2026-09-18',

@@ -61,6 +61,7 @@ export default function remarkListing(options: RemarkListingOptions) {
 
     let paginationClaimed = options.paginationClaimed === true;
     let listings = 0;
+    let heroClaimed = false;
     const currentPath = options.filePath.replace(/^\/+/, '');
     const locale = options.locale ?? DEFAULT_LOCALE;
     const today = options.today ?? new Date().toISOString().slice(0, 10);
@@ -130,10 +131,8 @@ export default function remarkListing(options: RemarkListingOptions) {
         let positions = index.ids
           .map((_, i) => i)
           .filter((i) => index.paths[i] !== currentPath);
-        const featuredFirst =
-          spec.featured === 1 &&
-          (options.page ?? 1) <= 1 &&
-          positions.length > 0;
+        // The block's own page decides (a `limit` block is always page 1), not the host page's ?page=
+        const featuredFirst = spec.featured === 1 && positions.length > 0;
         if (spec.featured === 1 && positions.length) {
           const promoted =
             positions.find((i) => index.featured.includes(i)) ?? positions[0]!;
@@ -165,13 +164,14 @@ export default function remarkListing(options: RemarkListingOptions) {
           spec.defaultImage && spec.media !== 'none'
             ? resolveListingImage(spec.defaultImage, currentPath, ctx)
             : null;
+        const posById = new Map(index.ids.map((id, i) => [id, i]));
         const items = rows.map((row) => {
           const own = toListingItem(row, ctx);
           const it =
             fallbackImage && !own.image
               ? { ...own, image: fallbackImage }
               : own;
-          const pos = index.ids.indexOf(row.id);
+          const pos = posById.get(row.id) ?? -1;
           return index.groups
             ? {
                 ...it,
@@ -190,6 +190,9 @@ export default function remarkListing(options: RemarkListingOptions) {
               files: options.files,
             })
           : [];
+        const hero = featuredFirst && slice.page === 1;
+        const wasClaimed = heroClaimed;
+        if (hero) heroClaimed = true;
         return renderListing({
           spec,
           page: { ...slice, items },
@@ -198,7 +201,8 @@ export default function remarkListing(options: RemarkListingOptions) {
           locale,
           label,
           notes,
-          featuredFirst: featuredFirst && slice.page === 1,
+          featuredFirst: hero,
+          featuredPriority: hero && !wasClaimed,
         });
       } catch (error) {
         console.error('Error rendering listing:', error);

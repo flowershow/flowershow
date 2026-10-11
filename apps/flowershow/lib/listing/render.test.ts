@@ -549,7 +549,7 @@ describe('renderListingError', () => {
   });
 });
 
-describe.skip('[B2] compact, people, featured, grouping', () => {
+describe('[B2] compact, people, featured, grouping', () => {
   it('compact: date + title, no media', async () => {
     const body = await html(
       renderListing(
@@ -617,6 +617,31 @@ describe.skip('[B2] compact, people, featured, grouping', () => {
       )!.textContent,
     ).toBe('GH');
   });
+  it('people initials skip punctuation and emoji: the first letter or digit of each word', async () => {
+    const people = spec({
+      view: 'people',
+      fields: DEFAULT_FIELDS.people,
+      media: 'cover',
+      ratio: '1/1',
+    });
+    const body = await html(
+      renderListing(
+        input({
+          spec: people,
+          page: page(
+            ['Ann (CEO)', '🌸 Bea', 'émile zola', '(?)'].map((title) =>
+              item({ title, image: null, date: null, authorHandles: [] }),
+            ),
+          ),
+        }),
+      ),
+    );
+    expect(
+      [...body.querySelectorAll('.list-component-item-initials')].map(
+        (e) => e.textContent,
+      ),
+    ).toEqual(['AC', 'B', 'ÉZ', '']);
+  });
   it('featured: only the first item of the page the plugin marks, hero sizes, no placeholder, above the first group', async () => {
     const items = [
       item({ url: '/f', group: '2025' }),
@@ -651,6 +676,28 @@ describe.skip('[B2] compact, people, featured, grouping', () => {
         .querySelector('.list-component-item--featured listing-image')!
         .getAttribute('sizes'),
     ).toBe('(min-width: 768px) 58vw, 100vw');
+  });
+  it("featured hero images load eagerly; only the page's first hero is fetched at high priority", async () => {
+    const render = (featuredPriority: boolean) =>
+      html(
+        renderListing(
+          input({
+            spec: spec({ view: 'grid', featured: 1, media: 'cover' }),
+            featuredFirst: true,
+            featuredPriority,
+            page: page([item({ url: '/f' }), item({ url: '/a' })]),
+          }),
+        ),
+      );
+    const imgs = (body: Element) =>
+      [
+        ...body.querySelectorAll('.list-component-item-media listing-image'),
+      ].map(
+        (i) =>
+          `${i.getAttribute('loading')}/${i.getAttribute('fetchpriority')}`,
+      );
+    expect(imgs(await render(true))).toEqual(['eager/high', 'null/null']);
+    expect(imgs(await render(false))).toEqual(['eager/null', 'null/null']);
   });
   it('grouping: flat headings before each group, out of the ToC', async () => {
     const items = [

@@ -83,12 +83,13 @@ const partsToNodes = (parts: ListingFieldPart[]) =>
     p.href ? el('a', [], [text(p.text)], { href: p.href }) : text(p.text),
   ]);
 
+/** First letter or digit of the first two words that have one ("Ann (CEO)" → "AC"). */
 function initials(name: string): string {
   return name
     .split(/\s+/)
-    .filter(Boolean)
+    .flatMap((w) => w.match(/[\p{L}\p{N}]/u) ?? [])
     .slice(0, 2)
-    .map((w) => w[0]!.toUpperCase())
+    .map((c) => c.toLocaleUpperCase())
     .join('');
 }
 
@@ -148,6 +149,8 @@ function renderAuthors(
 type ItemCtx = {
   authors: Map<string, ResolvedAuthor>;
   featured: boolean;
+  /** This hero is the page's first: fetch its image at high priority. */
+  priority: boolean;
   showMedia: boolean;
   /** Grid with at least one image: cards without one get a monogram tile. */
   monogram: boolean;
@@ -174,6 +177,12 @@ function renderMedia(
               alt: '',
               sizes: mediaSizes(spec, ctx.featured),
               variant: 'media',
+              ...(ctx.featured
+                ? {
+                    loading: 'eager',
+                    ...(ctx.priority ? { fetchPriority: 'high' } : {}),
+                  }
+                : {}),
             }),
           ],
           { href: item.url, tabIndex: '-1', ariaHidden: 'true' },
@@ -347,6 +356,8 @@ export type RenderListingInput = {
   label?: string;
   notes?: string[];
   featuredFirst?: boolean;
+  /** The featured hero is the page's first, so its image gets fetchPriority high. */
+  featuredPriority?: boolean;
 };
 
 export function renderListing({
@@ -358,6 +369,7 @@ export function renderListing({
   label,
   notes = [],
   featuredFirst = false,
+  featuredPriority = false,
 }: RenderListingInput): RootContent {
   const empty = el('p', ['list-component-empty'], [text('Nothing here yet.')]);
   if (page.total === 0 && notes.length === 0) return empty;
@@ -385,6 +397,7 @@ export function renderListing({
       renderItem(it, spec, {
         authors,
         featured,
+        priority: featured && featuredPriority,
         showMedia,
         monogram: monogramTiles,
         locale,

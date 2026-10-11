@@ -12,9 +12,7 @@ import { chromium } from '@playwright/test';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const preview = path.resolve(here, '../../.listing-preview');
-const out = path.resolve(
-  process.argv[2] ?? path.join(preview, 'shots'),
-);
+const out = path.resolve(process.argv[2] ?? path.join(preview, 'shots'));
 const only = process.argv[3] ? new RegExp(process.argv[3]) : null;
 const MAX_BYTES = 300 * 1024;
 mkdirSync(out, { recursive: true });
@@ -79,8 +77,8 @@ async function open(name, opts = {}) {
     'section.list-component--grid',
     (g) => ({
       cols: getComputedStyle(g).gridTemplateColumns.split(' ').length,
-      heights: [...g.querySelectorAll('.list-component-item-media')].map(
-        (m) => Math.round(m.getBoundingClientRect().height),
+      heights: [...g.querySelectorAll('.list-component-item-media')].map((m) =>
+        Math.round(m.getBoundingClientRect().height),
       ),
     }),
   );
@@ -150,7 +148,147 @@ async function open(name, opts = {}) {
   console.log(`check avatars: ${sizes.join(', ')}`);
   await page.close();
 }
-for (const name of ['zero-config-blog', 'grid-blog', 'long-titles']) {
+// B2 (design 4.9): compact columns line up; an inline compact teaser has no
+// headings; people are 4 columns with initials tiles the size of photos; the
+// featured hero is a 58% split in a wide grid and stacked on a 44rem list page.
+{
+  const page = await open('compact-category');
+  const xs = await page.$$eval(
+    'section.list-component--compact > article',
+    (rows) => {
+      const x = (el) => (el ? Math.round(el.getBoundingClientRect().x) : null);
+      return [
+        '.list-component-item-date',
+        '.list-component-item-meta-value',
+        '.list-component-item-headline',
+      ].map((sel) => [...new Set(rows.map((r) => x(r.querySelector(sel))))]);
+    },
+  );
+  if (xs.some((col) => col.length !== 1 || col[0] === null))
+    failures.push(
+      `compact-category: columns do not line up (${JSON.stringify(xs)})`,
+    );
+  console.log(
+    `check compact columns: x ${xs.map((c) => c.join('/')).join(', ')}`,
+  );
+  await page.close();
+}
+// Long locale dates (pt-BR "30 de set. de 2026") never run under the title,
+// and every row's title starts at the same x
+for (const name of [
+  'compact-archive',
+  'compact-archive-pt',
+  'compact-category',
+])
+  for (const width of [1440, 390]) {
+    const page = await open(name, { width });
+    const { overlaps, starts } = await page.$$eval(
+      'section.list-component--compact > article',
+      (rows) => {
+        // Text boxes: the date can spill out of its cell (nowrap) and the
+        // headline box is wider than its text; meta cells clip
+        const box = (r, sel) => {
+          const el = r.querySelector(sel);
+          if (!el || /meta-value|eyebrow/.test(sel))
+            return el?.getBoundingClientRect();
+          const range = document.createRange();
+          range.selectNodeContents(el);
+          return range.getBoundingClientRect();
+        };
+        const visible = (b) => b && b.width > 0;
+        let overlaps = 0;
+        const starts = new Set();
+        for (const r of rows) {
+          const h = box(r, '.list-component-item-headline');
+          starts.add(Math.round(h.x));
+          for (const sel of [
+            '.list-component-item-date',
+            '.list-component-item-meta-value',
+            '.list-component-item-eyebrow',
+          ]) {
+            const b = box(r, sel);
+            if (visible(b) && b.right > h.left + 0.5) overlaps++;
+          }
+        }
+        return { overlaps, starts: [...starts] };
+      },
+    );
+    if (overlaps)
+      failures.push(
+        `${name} @${width}: ${overlaps} date/meta cells overlap the title`,
+      );
+    if (starts.length !== 1)
+      failures.push(`${name} @${width}: titles start at ${starts.join(', ')}`);
+    console.log(
+      `check ${name} @${width}: ${overlaps} overlaps, titles at x ${starts.join('/')}`,
+    );
+    await page.close();
+  }
+{
+  const page = await open('compact-teaser');
+  const headings = await page.$$eval(
+    '.list-component-group-heading',
+    (h) => h.length,
+  );
+  if (headings !== 0)
+    failures.push(
+      `compact-teaser: inline compact has ${headings} group headings`,
+    );
+  console.log(`check compact teaser: ${headings} group headings`);
+  await page.close();
+}
+{
+  const page = await open('people-grid');
+  const { cols, sizes } = await page.$eval(
+    'section.list-component--people',
+    (g) => ({
+      cols: getComputedStyle(g).gridTemplateColumns.split(' ').length,
+      sizes: [
+        ...new Set(
+          [...g.querySelectorAll('.list-component-item-media')].map((m) => {
+            const r = m.getBoundingClientRect();
+            return `${Math.round(r.width)}x${Math.round(r.height)}`;
+          }),
+        ),
+      ],
+    }),
+  );
+  if (cols !== 4)
+    failures.push(`people-grid @1440: expected 4 columns, got ${cols}`);
+  if (sizes.length !== 1)
+    failures.push(
+      `people-grid: portraits and initials tiles differ (${sizes.join(', ')})`,
+    );
+  console.log(`check people @1440: ${cols} columns, media ${sizes.join(', ')}`);
+  await page.close();
+}
+for (const [name, split] of [
+  ['grid-featured', true],
+  ['list-featured', false],
+]) {
+  const page = await open(name);
+  const share = await page.$eval('.list-component-item--featured', (a) => {
+    const m = a.querySelector('.list-component-item-media');
+    if (!m) return 0;
+    return Math.round(
+      (m.getBoundingClientRect().width / a.getBoundingClientRect().width) * 100,
+    );
+  });
+  if (split ? share < 55 || share > 61 : share !== 100)
+    failures.push(
+      `${name}: featured image is ${share}% of the hero (expected ${split ? '58' : '100'}%)`,
+    );
+  console.log(`check ${name}: featured image ${share}% wide`);
+  await page.close();
+}
+for (const name of [
+  'zero-config-blog',
+  'grid-blog',
+  'long-titles',
+  'compact-archive',
+  'people-team',
+  'grid-featured',
+]) {
   const page = await open(name, { width: 390 });
   const overflow = await page.evaluate(
     () =>

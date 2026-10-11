@@ -18,6 +18,8 @@ export type Scenario = {
   path: string | null;
   markdown: string;
   page?: number;
+  /** Date and month-name locale (default en-US). */
+  locale?: string;
   about?: string;
   /** Render the legacy MDX <List /> with these props instead (theme back-compat). */
   legacy?: {
@@ -269,6 +271,154 @@ export const SCENARIOS: Scenario[] = [
       '```list\nfrom: projects\nview: grid\nratio: 1/1\nsort: title\nfields:\n  date: none\n```',
     ),
     shots: [{ file: 'grid-square' }],
+  },
+  {
+    name: 'compact-archive',
+    title: 'compact page: an archive grouped by year (the page-level default)',
+    slug: '/journal',
+    path: 'journal/README.md',
+    markdown: page(
+      'title: Journal\nlayout: list\nlist:\n  view: compact\n  pageSize: 50',
+    ),
+    shots: [
+      { file: 'compact-archive' },
+      { file: 'compact-archive-mobile', width: 390 },
+      { file: 'dark-compact', dark: true },
+      ...themeShots('compact', [['letterpress', 390]]),
+    ],
+  },
+  {
+    name: 'compact-archive-pt',
+    title: 'compact page in pt-BR: long locale dates stay clear of the titles',
+    slug: '/journal',
+    path: 'journal/README.md',
+    locale: 'pt-BR',
+    markdown: page(
+      'title: Journal\nlayout: list\nlist:\n  view: compact\n  pageSize: 50',
+    ),
+    shots: [
+      { file: 'compact-archive-pt' },
+      { file: 'compact-archive-pt-mobile', width: 390 },
+    ],
+  },
+  {
+    name: 'compact-teaser',
+    title: 'compact inline: a teaser with no year headings',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline('Home', '```blog\nview: compact\nlimit: 5\n```'),
+    shots: [{ file: 'compact-teaser' }],
+  },
+  {
+    name: 'compact-category',
+    title: 'compact with a category column (fields.meta)',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Home',
+      '```blog\nview: compact\nlimit: 10\nfields:\n  meta: [category]\n```',
+    ),
+    shots: [
+      { file: 'compact-category' },
+      { file: 'compact-category-mobile', width: 390 },
+    ],
+  },
+  {
+    name: 'people-team',
+    title: 'people page grouped by team (photos, and initials without one)',
+    slug: '/team',
+    path: 'team/README.md',
+    markdown: page(
+      'title: Team\nlayout: list\nlist:\n  view: people\n  group: team',
+    ),
+    shots: [
+      { file: 'people-team' },
+      { file: 'people-team-mobile', width: 390 },
+      { file: 'dark-people', dark: true },
+      ...themeShots('people', [['leaf', 390]]),
+    ],
+  },
+  {
+    name: 'people-grid',
+    title: 'people inline: 4 / 3 / 2 columns, sorted by name',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline('About us', '```list\nfrom: team\nview: people\n```'),
+    shots: [{ file: 'people-grid' }],
+  },
+  {
+    name: 'people-rows',
+    title: 'people with media: thumb (avatar-left rows)',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'About us',
+      '```list\nfrom: team\nview: people\nmedia: thumb\n```',
+    ),
+    shots: [{ file: 'people-rows' }],
+  },
+  {
+    name: 'grid-featured',
+    title:
+      'grid + featured: 1 (a magazine); the featured: true post is the hero',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Home',
+      '```blog\nview: grid\nfeatured: 1\nlimit: 7\nfields:\n  eyebrow: category\n```',
+    ),
+    shots: [
+      { file: 'grid-featured' },
+      { file: 'grid-featured-mobile', width: 390 },
+      { file: 'dark-featured', dark: true },
+      ...themeShots('featured'),
+    ],
+  },
+  {
+    name: 'list-featured',
+    title: 'list + featured: 1, inside the reading measure',
+    slug: '/blog',
+    path: 'blog/README.md',
+    markdown: page(
+      'title: Blog\nlayout: list\nlist:\n  featured: 1\n  pageSize: 6',
+    ),
+    shots: [
+      { file: 'list-featured' },
+      { file: 'list-featured-mobile', width: 390 },
+    ],
+  },
+  {
+    name: 'featured-text-only',
+    title: 'featured without an image: a full-width text hero',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Notes',
+      '```list\nfrom: notes\nview: grid\nfeatured: 1\n```',
+    ),
+    shots: [{ file: 'featured-text-only' }],
+  },
+  {
+    name: 'group-by-field',
+    title: 'group by a field: projects by status (each group once)',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Projects',
+      '```list\nfrom: projects\nview: grid\ngroup: status\nfields:\n  date: none\n```',
+    ),
+    shots: [{ file: 'group-by-field' }],
+  },
+  {
+    name: 'list-grouped-month',
+    title: 'list grouped by month',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Home',
+      '```blog\ngroup: month\nmedia: none\nlimit: 10\n```',
+    ),
+    shots: [{ file: 'list-grouped-month' }],
   },
   {
     name: 'legacy-list',

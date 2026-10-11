@@ -5,14 +5,20 @@ export type ListingImageProps = {
   alt?: string;
   sizes?: string;
   variant?: string;
+  /** "eager" for a featured hero, which is usually above the fold. */
+  loading?: string;
+  /** "high" for the page's first featured hero only. */
+  fetchPriority?: string;
 };
 
-/** Listing thumbnails and author avatars (lib/listing/render.ts). Never zoomable. */
+/** Listing thumbnails and author avatars (lib/listing/render.ts). Never zoomable; lazy except a featured hero. */
 export default function ListingImage({
   src,
   alt = '',
   sizes,
   variant = 'media',
+  loading,
+  fetchPriority,
 }: ListingImageProps) {
   if (!src) return null;
   if (variant === 'avatar') {
@@ -35,7 +41,8 @@ export default function ListingImage({
       alt={alt}
       fill
       sizes={sizes ?? '100vw'}
-      loading="lazy"
+      loading={loading === 'eager' ? 'eager' : 'lazy'}
+      {...(fetchPriority === 'high' ? { fetchPriority: 'high' as const } : {})}
       style={{ objectFit: 'cover' }}
     />
   );

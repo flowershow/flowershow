@@ -67,10 +67,19 @@ const URLS: Array<[name: string, slug: string, page?: number]> = [
   ['case', '/case'],
   ['nested', '/nested'],
   ['mdx-page', '/mdx-page'],
+  ['mdx-people', '/mdx-people'],
   ['thumb-right', '/thumb-right'],
   ['default-image', '/default-image'],
   ['no-monogram', '/no-monogram'],
   ['text-grid', '/text-grid'],
+  ['compact-teaser', '/compact-teaser'],
+  ['by-month', '/by-month'],
+  ['people', '/people'],
+  ['team', '/team'],
+  ['team-file', '/team-file'],
+  ['magazine', '/magazine'],
+  ['magazine-page-2', '/magazine', 2],
+  ['latest-hero', '/latest-hero'],
 ];
 
 it('renders the e2e listings fixture', async () => {
@@ -175,6 +184,22 @@ it('renders the e2e listings fixture', async () => {
         'section.list-component > article .list-component-item-headline a',
       ),
       pages: texts('.list-component-pagination-pages > *'),
+      view: doc
+        .querySelector('section.list-component')
+        ?.getAttribute('data-view'),
+      groups: texts('h2.list-component-group-heading'),
+      groupIds: doc.querySelectorAll('h2.list-component-group-heading[id]')
+        .length,
+      featured: texts(
+        '.list-component-item--featured .list-component-item-headline a',
+      ),
+      featuredMedia: doc.querySelectorAll(
+        '.list-component-item--featured .list-component-item-media',
+      ).length,
+      initials: texts('.list-component-item-initials'),
+      meta: texts('.list-component-item-meta-value'),
+      eyebrows: texts('.list-component-item-eyebrow').slice(0, 3),
+      dates: texts('.list-component-item-date').slice(0, 3),
       errors: texts('.list-component-error--block'),
       placeholders: doc.querySelectorAll(
         '.list-component-item-media--placeholder',

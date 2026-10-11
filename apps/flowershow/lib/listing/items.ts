@@ -99,6 +99,17 @@ function unwrapNested(v: unknown): unknown {
   return v;
 }
 const stripWiki = (s: string) => extractWikiLinkTarget(s.trim()) ?? s.trim();
+/** A frontmatter value by key: the exact key, else the first key equal to it ignoring case. */
+function metaValue(
+  m: Record<string, unknown> | null | undefined,
+  key: string,
+): unknown {
+  if (!m) return undefined;
+  if (key in m) return m[key];
+  const lower = key.toLowerCase();
+  const hit = Object.keys(m).find((k) => k.toLowerCase() === lower);
+  return hit === undefined ? undefined : m[hit];
+}
 const basename = (p: string) =>
   p.slice(p.lastIndexOf('/') + 1).replace(MARKDOWN_RE, '');
 
@@ -186,7 +197,7 @@ export function groupKey(
     return rel.includes('/') ? rel.slice(0, rel.indexOf('/')) : '';
   }
   if (g.by === 'field') {
-    const v = unwrapNested(row.metadata?.[g.field]);
+    const v = unwrapNested(metaValue(row.metadata, g.field));
     const first = Array.isArray(v) ? v[0] : v;
     if (first == null || first === '' || typeof first === 'object') return '';
     return typeof first === 'boolean'
@@ -259,6 +270,37 @@ function compareGroupKeys(
     return (a < b ? -1 : 1) * (dir === 'desc' ? -1 : 1);
   }
   return collator.compare(a, b);
+}
+
+/**
+ * Field and folder group keys that differ only in case or accents ("Design",
+ * "design") form one group, labelled with the most common spelling (ties: the
+ * first in code-point order), so each group gets one heading.
+ */
+export function canonicalGroupKeys(keys: string[]): string[] {
+  const classes: Array<{ counts: Map<string, number>; label: string }> = [];
+  const classOf = new Map<string, (typeof classes)[number]>();
+  for (const k of keys) {
+    let c = classOf.get(k);
+    if (!c) {
+      c = classes.find((x) => collator.compare(x.label, k) === 0);
+      if (!c) {
+        c = { counts: new Map(), label: k };
+        classes.push(c);
+      }
+      classOf.set(k, c);
+    }
+    c.counts.set(k, (c.counts.get(k) ?? 0) + 1);
+  }
+  for (const c of classes) {
+    let best = c.label;
+    for (const [k, n] of c.counts) {
+      const bn = c.counts.get(best)!;
+      if (n > bn || (n === bn && k < best)) best = k;
+    }
+    c.label = best;
+  }
+  return keys.map((k) => classOf.get(k)!.label);
 }
 
 export function selectListingRows(

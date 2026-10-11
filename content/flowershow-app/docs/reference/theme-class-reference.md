@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **306 styled class selectors**:
-**304 stable semantic hooks** and **2 non-contract
+and currently documents **311 styled class selectors**:
+**309 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -277,6 +277,7 @@ section.list-component[.list-component--list | --grid | --compact | --people][da
 ├─ article.list-component-item[.list-component-item--featured] / .list-component-skeleton-item (legacy only)
 │  ├─ .list-component-item-media > a.list-component-item-media-link > img.list-component-item-media-img (item image or defaultImage)
 │  │  | .list-component-item-media.list-component-item-media--placeholder[aria-hidden] > span.list-component-item-monogram (grid card without an image when another card has one; off with defaultImage: none)
+│  │  | .list-component-item-media.list-component-item-media--placeholder[aria-hidden] > span.list-component-item-initials (people view, no photo)
 │  └─ .list-component-item-content
 │     ├─ .list-component-item-eyebrow > span
 │     ├─ .list-component-item-headline > a.list-component-item-headline-link
@@ -296,8 +297,10 @@ section.list-component[.list-component--list | --grid | --compact | --people][da
 | Class | Kind |
 | --- | --- |
 | <code>.list-component</code> | Hook |
+| <code>.list-component--compact</code> | Variant |
 | <code>.list-component--grid</code> | Variant |
 | <code>.list-component--list</code> | Variant |
+| <code>.list-component--people</code> | Variant |
 | <code>.list-component-empty</code> | Hook |
 | <code>.list-component-error</code> | Hook |
 | <code>.list-component-error--block</code> | Variant |
@@ -306,16 +309,19 @@ section.list-component[.list-component--list | --grid | --compact | --people][da
 | <code>.list-component-error-title</code> | Hook |
 | <code>.list-component-group-heading</code> | Hook |
 | <code>.list-component-item</code> | Hook |
+| <code>.list-component-item--featured</code> | Variant |
 | <code>.list-component-item-author</code> | Hook |
 | <code>.list-component-item-author-avatar</code> | Hook |
 | <code>.list-component-item-authors</code> | Hook |
 | <code>.list-component-item-authors-more</code> | Hook |
 | <code>.list-component-item-avatars</code> | Hook |
 | <code>.list-component-item-content</code> | Hook |
+| <code>.list-component-item-date</code> | Hook |
 | <code>.list-component-item-eyebrow</code> | Hook |
 | <code>.list-component-item-footnote</code> | Hook |
 | <code>.list-component-item-headline</code> | Hook |
 | <code>.list-component-item-headline-link</code> | Hook |
+| <code>.list-component-item-initials</code> | Hook |
 | <code>.list-component-item-media</code> | Hook |
 | <code>.list-component-item-media--placeholder</code> | Variant |
 | <code>.list-component-item-media-img</code> | Hook |
