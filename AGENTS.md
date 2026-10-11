@@ -99,6 +99,8 @@ Single-context repo — one `CONTEXT.md` + `docs/adr/` at root. See `docs/agents
 
 Every user-facing change must be recorded in the changelog, but **a change is not an entry**. The changelog is written for users: one entry per thing worth announcing. If the change introduces or meaningfully updates a feature users need to understand or configure, also create or update a docs page.
 
+To write or review a tutorial, how-to or feature overview page, use the `write-tutorial` skill (`.claude/skills/write-tutorial/SKILL.md`): doc-type choice, template, Flowershow specifics and a 10-check rubric.
+
 ### Changelog entry
 
 1. **Extend before you add.** Check `content/flowershow-app/changelog/` (and open PRs) for an entry from the last few days on the same theme. If one exists, add your change to it.
