@@ -1,7 +1,7 @@
 ---
 title: Blog indexes and lists of pages in plain Markdown
 date: 2026-10-11
-description: "A blog/ folder now lists itself, and a ```blog block or layout: list shows any folder as a blog index or a grid. Works in .md."
+description: "A blog/ folder now lists itself, and a ```blog block or layout: list shows any folder as a blog index, a grid, a compact archive or a team page. Works in .md."
 authors:
   - rufuspollock
 image: "[[assets/changelog-listing-pages.webp]]"
@@ -14,6 +14,10 @@ You can now list the pages of any folder without MDX or components. Add `layout:
 - **Zero config**: newest first, with images, dates, descriptions and author names, 20 per page.
 - **Latest posts anywhere**: ```` ```blog ```` with `limit: 3` on your home page.
 - **List and grid views**: thumbnails on the left (or `media: thumb right`), covers in the grid, and a letter tile for grid cards without an image (or your own `defaultImage`). `sort`, `where` and `fields` choose what each card shows.
+- **Compact archives**: `view: compact` gives one line per post (date, then title), grouped by year on a `layout: list` page.
+- **Team pages**: `view: people` shows a folder of people as portraits with name, role and bio; people without a photo get their initials.
+- **A featured post**: `featured: 1` puts the post marked `featured: true` (or the latest) in a large hero above the rest; with `view: grid` that's a magazine-style home page.
+- **Grouping**: `group: year`, `month`, `folder` or any field (`group: team`) adds a heading before each group.
 - **Dates in your language** with the new `locale` setting.
 - **Clear errors**: a wrong key shows a card that names it and suggests the fix.
 
