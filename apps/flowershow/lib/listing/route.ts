@@ -158,11 +158,14 @@ export function virtualListingDir(
 /**
  * Whether the page body goes through the MDX pipeline, by the same rule as
  * renderPageContent (which calls it): `syntaxMode` (page frontmatter, then
- * site config) wins, and `auto` (the default) uses MDX for anything but `.md`.
+ * site config) `md` is Markdown, `auto` is Markdown for `.md` only, and
+ * anything else, including no setting at all, is MDX.
  */
 export function rendersAsMdx(path: string, renderMode?: string): boolean {
-  const mode = renderMode ?? 'auto';
-  return !(mode === 'md' || (mode === 'auto' && path.endsWith('.md')));
+  return !(
+    renderMode === 'md' ||
+    (renderMode === 'auto' && path.endsWith('.md'))
+  );
 }
 
 export function autoListingFor({

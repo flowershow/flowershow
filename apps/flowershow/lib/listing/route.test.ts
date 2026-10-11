@@ -191,12 +191,13 @@ describe('autoListingFor (cases 2 and 3)', () => {
         siteFilePaths: files,
         renderMode,
       });
-    expect(auto()).not.toBeNull(); // .md renders as Markdown: the fence stays raw HTML
-    expect(auto('auto')).not.toBeNull();
+    expect(auto('auto')).not.toBeNull(); // .md renders as Markdown: the fence stays raw HTML
     expect(auto('md')).not.toBeNull();
     expect(auto('mdx')).toBeNull(); // MDX parses the fence inside JSX: it renders
+    expect(auto()).toBeNull(); // no syntaxMode renders as MDX, as renderPageContent does
     expect(rendersAsMdx('blog/README.mdx', 'md')).toBe(false);
-    expect(rendersAsMdx('blog/README.mdx', undefined)).toBe(true);
+    expect(rendersAsMdx('blog/README.mdx', 'auto')).toBe(true);
+    expect(rendersAsMdx('blog/README.md', undefined)).toBe(true);
   });
   it('a folder note beside an attachments-only folder gets no listing (no error card on a published page)', () => {
     expect(
