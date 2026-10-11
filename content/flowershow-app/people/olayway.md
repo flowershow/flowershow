@@ -4,7 +4,7 @@ avatar: https://avatars.githubusercontent.com/olayway
 showEditLink: false
 showComments: false
 role: Product engineer
-bio: Core builder behind Flowershow, from the app and publishing flows to the tooling, docs and community support.
+bio: Core builder of the app, publishing, tooling and docs.
 order: 2
 core: true
 ---
