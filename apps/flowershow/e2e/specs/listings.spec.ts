@@ -24,8 +24,13 @@ test('zero-config blog folder (no README), page 1', async ({ page }) => {
   await expect(list.locator('.heading-link')).toHaveCount(0);
   await expect(list.locator('h3[id]')).toHaveCount(0);
   const thumb = list.locator('img.list-component-item-media-img').first();
-  await expect(thumb).toHaveAttribute('sizes', /160px/);
   await expect(thumb).toHaveAttribute('loading', 'lazy');
+  // 160px thumbnails on desktop (next/image drops `sizes` when unoptimized, as in
+  // dev and previews; the sizes value is pinned in lib/listing/render.test.ts)
+  expect(
+    (await list.locator('.list-component-item-media').first().boundingBox())
+      ?.width,
+  ).toBe(160);
   await expect(page.locator('.listing-page[data-view="list"]')).toBeVisible(); // one column for header, intro and list
   await expect(
     list.locator('.list-component-pagination-button--prev'),
@@ -75,10 +80,11 @@ test('authors resolve to people pages; unknown handles are plain text', async ({
   await expect(
     page.locator('a.list-component-item-author[href="/people/ada"]').first(),
   ).toContainText('Ada Lovelace');
+  // Avatars stack before the names: Ada's photo sits in the same authors group as her link
   await expect(
     page
       .locator(
-        'a.list-component-item-author[href="/people/ada"] img.list-component-item-author-avatar',
+        '.list-component-item-authors:has(a.list-component-item-author[href="/people/ada"]) img.list-component-item-author-avatar[src$="/people/assets/ada.jpg"]',
       )
       .first(),
   ).toBeVisible();
