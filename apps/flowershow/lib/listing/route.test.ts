@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hasIntroText,
   hasTocHeadings,
   autoListingFor,
   hasExplicitListing,
@@ -441,5 +442,20 @@ describe('listingFeedUrl (the feed link in a listing header)', () => {
     expect(listingFeedUrl(page({ sort: 'title' }), true)).toBeNull();
     expect(listingFeedUrl(page({ sort: 'date asc' }), true)).toBeNull();
     expect(listingFeedUrl({ kind: 'none' }, true)).toBeNull();
+  });
+});
+
+describe('hasIntroText (the intro slot of a listing page header)', () => {
+  it('no intro for frontmatter only, blank lines or comments', () => {
+    expect(hasIntroText('')).toBe(false);
+    expect(hasIntroText('---\ntitle: Blog\nlayout: list\n---\n')).toBe(false);
+    expect(hasIntroText('---\ntitle: Blog\n---\n\n   \n')).toBe(false);
+    expect(hasIntroText('---\ntitle: Blog\n---\n%% draft %%\n')).toBe(false);
+    expect(hasIntroText('---\ntitle: Blog\n---\n<!-- todo -->\n')).toBe(false);
+  });
+  it('an intro for any text, heading or image', () => {
+    expect(hasIntroText('---\ntitle: Blog\n---\nNotes, weekly.')).toBe(true);
+    expect(hasIntroText('## About')).toBe(true);
+    expect(hasIntroText('![[cover.png]]')).toBe(true);
   });
 });

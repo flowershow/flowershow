@@ -408,6 +408,15 @@ describe('toListingItem (4.4, Review Focus 2 and 3)', () => {
       'http://demo.flowershow.site/blog/assets/cover.jpg',
     );
   });
+  it('titles are plain text too: no code ticks or emphasis markers', () => {
+    const title = (t: string) =>
+      toListingItem(row('blog/a.md', { title: t }), ctx).title;
+    expect(title('`fl` now creates or syncs **automatically**')).toBe(
+      'fl now creates or syncs automatically',
+    );
+    expect(title('Array<string> helpers')).toBe('Array<string> helpers');
+    expect(title('2 * 3')).toBe('2 * 3');
+  });
   it('summaries are plain text: code spans keep their text, stray fences and emphasis go', () => {
     const summary = (description: string) =>
       toListingItem(row('blog/a.md', { title: 'A', description }), ctx).summary;
@@ -425,6 +434,13 @@ describe('toListingItem (4.4, Review Focus 2 and 3)', () => {
       summary('**Bold** and [a link](https://x.y) and [[Page|alias]]'),
     ).toBe('Bold and a link and alias');
     expect(summary('``')).toBeNull();
+    // hand-written descriptions keep text that only looks like html
+    expect(summary('Typed as Map<K, V> and Array<string>.')).toBe(
+      'Typed as Map<K, V> and Array<string>.',
+    );
+    expect(summary('Docs at <https://flowershow.app>.')).toBe(
+      'Docs at https://flowershow.app.',
+    );
   });
   it('image fallbacks: image → cover → heroImage → thumbnail → avatar; unquoted wiki links', () => {
     expect(

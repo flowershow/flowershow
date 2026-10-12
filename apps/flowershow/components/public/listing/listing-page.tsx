@@ -51,6 +51,7 @@ function ListingFeedLink({ href }: { href: string }) {
       href={href}
       type="application/rss+xml"
       title="RSS feed"
+      aria-label="RSS feed"
     >
       <RssIcon className="listing-page-feed-icon" aria-hidden="true" />
       <span className="listing-page-feed-label">RSS</span>

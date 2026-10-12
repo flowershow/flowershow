@@ -38,7 +38,11 @@ import { BlogLayout } from '@/components/public/layouts/blog';
 import { ListingPage } from '@/components/public/listing/listing-page';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
 import { renderPageListing } from '@/lib/listing/page-listing';
-import { listingFeedUrl, resolveListingRoute } from '@/lib/listing/route';
+import {
+  hasIntroText,
+  listingFeedUrl,
+  resolveListingRoute,
+} from '@/lib/listing/route';
 import { processMarkdown } from '@/lib/markdown';
 import { buildDemoSite } from './demo-site';
 
@@ -165,7 +169,7 @@ it('renders the e2e listings fixture', async () => {
             view={route.view}
             feedUrl={listingFeedUrl(route, true)}
             intro={content}
-            hasIntro={!!row!.content.replace(/^---[\s\S]*?\n---\n?/, '').trim()}
+            hasIntro={hasIntroText(row!.content)}
             listing={pageListing}
           />
         ) : (

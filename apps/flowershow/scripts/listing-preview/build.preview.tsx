@@ -118,7 +118,11 @@ import List from '@/components/public/mdx/list';
 import { ListingPage } from '@/components/public/listing/listing-page';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
 import { renderPageListing } from '@/lib/listing/page-listing';
-import { listingFeedUrl, resolveListingRoute } from '@/lib/listing/route';
+import {
+  hasIntroText,
+  listingFeedUrl,
+  resolveListingRoute,
+} from '@/lib/listing/route';
 import { processMarkdown } from '@/lib/markdown';
 
 const APP = path.resolve(__dirname, '../..');
@@ -333,7 +337,7 @@ async function renderScenario(s: Scenario): Promise<string> {
           view={route.view}
           feedUrl={listingFeedUrl(route, PREVIEW_RSS)}
           intro={content}
-          hasIntro={!!matter(s.markdown).content.trim()}
+          hasIntro={hasIntroText(s.markdown)}
           listing={pageListing}
         />
       ) : (

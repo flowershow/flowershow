@@ -314,6 +314,36 @@ for (const width of [1440, 768, 390]) {
   );
   await page.close();
 }
+// A long single author name never overflows a narrow meta line (it wraps
+// inside itself only when it is wider than the column)
+for (const width of [1440, 768, 390]) {
+  const page = await open('magazine-long-author', { width });
+  const over = await page.$$eval(
+    '.list-component-magazine-top .list-component-item-meta',
+    (metas) =>
+      metas
+        .filter((m) =>
+          [...m.querySelectorAll('*')].some(
+            (c) =>
+              c.getBoundingClientRect().right >
+              m.getBoundingClientRect().right + 0.5,
+          ),
+        )
+        .map((m) => m.textContent),
+  );
+  const named = await page.$$eval('.list-component-item-author', (a) =>
+    a.some((e) => e.textContent === 'Maximilian von Habsburg-Lothringen'),
+  );
+  if (!named) failures.push('magazine-long-author: the long name is missing');
+  if (over.length)
+    failures.push(
+      `magazine-long-author @${width}: meta overflows (${over.join(' | ')})`,
+    );
+  console.log(
+    `check magazine-long-author @${width}: ${over.length} overflowing meta lines`,
+  );
+  await page.close();
+}
 // magazine page: the rows below line up with the top grid (left edge, hero's
 // right edge), and the page title uses the cards' title font
 {

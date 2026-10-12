@@ -1,6 +1,6 @@
 import { encodeSlug, filePathToSlug } from '@flowershow/core';
 import matter from 'gray-matter';
-import type { Code, Heading, Html, Text } from 'mdast';
+import type { Code, Heading, Html, Root, Text } from 'mdast';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
@@ -107,6 +107,20 @@ function parseBody(content: string) {
   }
   const processor = unified().use(remarkParse).use(remarkObsidianComments);
   return processor.runSync(processor.parse(body));
+}
+
+/**
+ * Whether a listing page's own body shows anything above the list (so it gets
+ * the header's intro slot): not for frontmatter only, blank lines, `%%
+ * comments %%` or `<!-- comments -->`.
+ */
+export function hasIntroText(content: string): boolean {
+  return (parseBody(content) as Root).children.some(
+    (node) =>
+      !(
+        node.type === 'html' && /^\s*(?:<!--[\s\S]*?-->\s*)+$/.test(node.value)
+      ),
+  );
 }
 
 /**

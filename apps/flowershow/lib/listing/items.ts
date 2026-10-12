@@ -511,10 +511,12 @@ function plainSummary(value: string | null): string | null {
 export function toListingItem(row: ListingRow, ctx: ItemContext): ListingItem {
   const m = row.metadata ?? {};
   const f = ctx.fields;
-  const title =
+  const rawTitle =
     f.title === 'title'
       ? itemTitle(row)
       : (firstString(m, [f.title]) ?? itemTitle(row));
+  // Plain text, like summaries: "`fl` now syncs" shows as "fl now syncs"
+  const title = markdownToPlainText(rawTitle) || rawTitle;
   const date = f.date ? slotDate(row, f.date) : null;
   const dateKeys = new Set(['date', ...(f.date ? [f.date] : [])]);
   const dateInEyebrow = f.eyebrow.some((k) => dateKeys.has(k));

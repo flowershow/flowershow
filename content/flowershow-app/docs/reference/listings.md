@@ -43,9 +43,9 @@ Notes on building things, roughly weekly.
 
 The page shows its title, your intro, then every page in `blog/` and its subfolders, newest first, 20 per page, with "Newer" and "Older" links. Each item shows its title, description, image (if it has one), date and authors.
 
-The header holds the title, the page's `description` and your intro, with the opening paragraphs of the intro set like a standfirst; a thin rule then separates the header from the list. When your site has RSS on (`"enableRss": true` in `config.json`) and the list is newest first by date, the header also links your site's feed (`/rss.xml`) with a small RSS button. The feed is site-wide: it holds every dated page, so a people page or a list sorted by title gets no button. Listing pages don't show the site-wide comments box; add `showComments: true` to the page's frontmatter to get it back.
+The header holds the title, the page's `description` and your intro, with the first paragraph of the intro set like a standfirst; a thin rule then separates the header from the list. When your site has RSS on (`"enableRss": true` in `config.json`) and the list is newest first by date, the header also links your site's feed (`/rss.xml`) with a small RSS button. The feed is site-wide: it holds every dated page, so a people page or a list sorted by title gets no button. Listing pages don't show the site-wide comments box; add `showComments: true` to the page's frontmatter to get it back.
 
-Summaries are plain text: Markdown in a `description` (or in the opening sentence used when there is none) is shown without its syntax, so `` `fl publish` `` shows as fl publish and a stray ```` ``` ```` disappears.
+Titles and summaries are plain text: Markdown in a `title` or `description` (or in the opening sentence used when there is none) is shown without its syntax, so `` `fl publish` `` shows as fl publish, a stray ```` ``` ```` disappears and `<https://example.com>` shows as its address. Text that only looks like HTML, such as `Array<string>`, is kept.
 
 ![A layout: list page: title, intro, then the posts with thumbnails on the left](/assets/docs-listings-list-page-layout.webp)
 

@@ -74,6 +74,7 @@ import {
 } from '@/lib/listing/page-listing';
 import { listingCanonical, pageFromSearchParam } from '@/lib/listing/paginate';
 import {
+  hasIntroText,
   hasPaginatingBlock,
   hasTocHeadings,
   isAutoListingDirName,
@@ -1012,7 +1013,7 @@ export default async function SitePage(props: {
                 view={pageLevelRoute.view}
                 feedUrl={listingFeedUrl(pageLevelRoute, siteConfig?.enableRss)}
                 intro={compiledContent}
-                hasIntro={!!pageContent?.trim()}
+                hasIntro={hasIntroText(pageContent ?? '')}
                 listing={pageListing}
               >
                 <CanvasEnhancer />

@@ -222,7 +222,57 @@ describe('markdownToPlainText', () => {
       'Keep <b>this</b> and a < b > c.',
       'Keep this and a < b > c.',
     ],
-    ['backslash escapes', 'Costs \\*not\\* \\$5.', 'Costs *not* \\$5.'],
+    ['backslash escapes', 'Costs \\*not\\* \\$5.', 'Costs *not* $5.'],
+    [
+      'every CommonMark escape (ASCII punctuation)',
+      'a \\` b \\" c \\\' d \\! e \\/ f \\$ g \\_h\\_ i \\\\ j',
+      "a ` b \" c ' d ! e / f $ g _h_ i \\ j",
+    ],
+    [
+      'generics that look like tags',
+      'Takes Array<string> and Map<K, V>, returns Promise<void>.',
+      'Takes Array<string> and Map<K, V>, returns Promise<void>.',
+    ],
+    [
+      'autolinks become their address',
+      'See <https://x.y> or mail <rufus@example.com>.',
+      'See https://x.y or mail rufus@example.com.',
+    ],
+    [
+      'an element with its closing tag goes, its text stays',
+      'A <Callout type="tip">short note</Callout> and <span>this</span>.',
+      'A short note and this.',
+    ],
+    [
+      'a self-closing component that is not html stays',
+      'Use <List /> on a page.',
+      'Use <List /> on a page.',
+    ],
+    [
+      'lone stars are arithmetic, not emphasis',
+      '2 * 3 * 4 = 24, and *this* is em.',
+      '2 * 3 * 4 = 24, and this is em.',
+    ],
+    [
+      'underscores and bold by the flanking rule',
+      'snake_case_name, _em_, __bold__ and a _ b _ c.',
+      'snake_case_name, em, bold and a _ b _ c.',
+    ],
+    [
+      'code spans drop one space from each end only',
+      'see`  two  `here and `` `x` `` too',
+      'see two here and `x` too',
+    ],
+    [
+      'code span line endings become spaces',
+      'run `fl\npublish` now',
+      'run fl publish now',
+    ],
+    [
+      'html comments',
+      'Hi <!-- hidden --> there <!-- never closed',
+      'Hi there',
+    ],
     [
       'tags as written',
       'Tag notes inline with #tag, then browse.',

@@ -36,10 +36,11 @@ Every list looks better too, with nothing to change:
 - Listing pages keep the title, description and intro together above the rule, with a small RSS button when your site has a feed (`"enableRss": true`).
 - Posts without an image get a soft tile in your accent colour instead of a grey letter; magazine stories without one are clean text-only cards.
 - Covers get a hairline edge, and in dark mode they are dimmed slightly so white screenshots don't glare.
-- Summaries are plain text: no stray ```` ``` ```` or code ticks, and code text is kept, so sentences stay whole.
+- Titles and summaries are plain text: no stray ```` ``` ```` or code ticks, and code text is kept, so sentences stay whole. Text like `Array<string>` and `<https://…>` links are kept too.
 - Author names in "More posts" wrap onto a second line instead of being cut short.
 - A magazine page's title uses the same serif as its stories, and "Recent posts" lines up with the front page above it.
 - Listing pages no longer show the site-wide comments box or leave a blank gap above the footer.
+- **For themes and `custom.css`:** on listing pages your intro is now wrapped in `.listing-page-intro` and the list in `.listing-page-listing` (which draws the rule), and the title sits in `.page-header-title-row` with `.page-header-actions` when there is a feed link. `--list-rest-max-width` no longer defaults to `48rem`: the magazine's lower rows follow the front page grid, and the variable only caps them when you set it.
 
 See [A magazine front page](/docs/reference/listings#a-magazine-front-page-magazine) and [Styling](/docs/reference/listings#styling) in [[listings|Listing pages]].
 

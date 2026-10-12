@@ -1748,8 +1748,15 @@
     max-width: 100%;
     white-space: normal;
   }
+  /* Each name is a flex item: it moves to the next line whole, and only a
+     name wider than the whole column ("Maximilian von Habsburg-Lothringen" in
+     a narrow "More posts" column) shrinks and wraps inside itself, as a last
+     resort, instead of overflowing */
   :where(.list-component-item-author) {
-    white-space: nowrap;
+    min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
   }
   /* Its "·" sits in its own padding, so a second line of names starts past
      the clipped strip of the meta line (see the separator rule above) */
@@ -1802,17 +1809,22 @@
   }
   /* Dark mode: bright covers (white screenshots) are dimmed a little so they
      don't glare off a dark page; full brightness again on hover. Post heroes
-     too (below). Themes: --list-media-dim (1 turns it off). */
-  :root[data-theme="dark"]
+     too; people portraits are left as they are. Themes: --list-media-dim (1
+     turns it off). */
   :where(
-    .list-component[data-view] .list-component-item-media-img,
-    .post-hero-img
+    :root[data-theme="dark"]
+      .list-component[data-view]:not(.list-component--people)
+      .list-component-item-media-img,
+    :root[data-theme="dark"] .post-hero-img
   ) {
     filter: brightness(var(--list-media-dim, 0.88));
     transition: filter 0.2s ease;
   }
-  :root[data-theme="dark"]
-    :where(.list-component-item:hover .list-component-item-media-img) {
+  :where(
+    :root[data-theme="dark"]
+      .list-component-item:hover
+      .list-component-item-media-img
+  ) {
     filter: none;
   }
   /* Items without an image (where others have one, see render.ts): an empty
@@ -3533,8 +3545,8 @@
     width: 0.875rem;
     height: 0.875rem;
   }
-  /* The intro reads as the header's standfirst: its opening paragraphs (up to
-     the first heading) take the description's size and colour */
+  /* The intro's first paragraph reads as the header's standfirst (the
+     description's size and colour, a ~42rem measure); the rest is prose */
   .listing-page-intro {
     margin-top: 1rem;
 
@@ -3544,8 +3556,8 @@
     > :last-child {
       margin-bottom: 0;
     }
-    > p:not(:is(h1, h2, h3, h4, h5, h6) ~ p) {
-      margin-block: 0 0.75rem;
+    > p:first-child {
+      max-width: 42rem;
       font-size: var(--font-size-lg);
       line-height: 1.5;
       color: var(--color-foreground-500);
