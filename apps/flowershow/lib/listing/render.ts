@@ -106,16 +106,9 @@ function initials(name: string): string {
     .join('');
 }
 
-/** First letter or digit of a title, for a placeholder tile ('' if none). */
-function monogram(title: string): string {
-  return title.match(/[\p{L}\p{N}]/u)?.[0]?.toLocaleUpperCase() ?? '';
-}
-
 function renderAuthors(
   handles: string[],
   authors: Map<string, ResolvedAuthor>,
-  /** Every name in a title attribute, for meta lines cut with an ellipsis. */
-  withTitle = false,
 ): RootContent | null {
   if (handles.length === 0) return null;
   const resolved = handles.map(
@@ -158,7 +151,6 @@ function renderAuthors(
       ...names,
       ...more,
     ],
-    withTitle ? { title: resolved.map((a) => a.name).join(', ') } : {},
   );
 }
 
@@ -221,20 +213,22 @@ function renderMedia(
       ],
       { ariaHidden: 'true' },
     );
-  // Heroes are text-only without an image; "More posts" briefs just lose their thumbnail
-  if (ctx.placeholder && !ctx.featured && ctx.role !== 'brief') {
-    // A tile with the title's first letter keeps rows and columns aligned
-    // without looking like a broken image; decorative, so aria-hidden
-    const letter = monogram(item.title);
+  // Heroes and the magazine's side cards are text only without an image;
+  // "More posts" briefs just lose their thumbnail
+  if (
+    ctx.placeholder &&
+    !ctx.featured &&
+    ctx.role !== 'brief' &&
+    ctx.role !== 'card'
+  )
+    // An empty tile tinted with the accent keeps rows and columns aligned;
+    // no letter, so it never reads as a broken image. Decorative: aria-hidden
     return el(
       'div',
       ['list-component-item-media', 'list-component-item-media--placeholder'],
-      letter
-        ? [el('span', ['list-component-item-monogram'], [text(letter)])]
-        : [],
+      [],
       { ariaHidden: 'true' },
     );
-  }
   // defaultImage: none, or no item has an image: no media block
   return null;
 }
@@ -282,11 +276,7 @@ function renderItem(
         { dateTime: item.date },
       ),
     );
-  const by = renderAuthors(
-    item.authorHandles,
-    ctx.authors,
-    ctx.role === 'brief',
-  );
+  const by = renderAuthors(item.authorHandles, ctx.authors);
   if (by) meta.push(by);
   for (const f of item.meta)
     meta.push(
@@ -437,8 +427,8 @@ export function renderListing({
   const showMedia =
     spec.media !== 'none' && (share > 0 || spec.view === 'people');
   // Items without an image get a placeholder tile so rows and columns stay
-  // aligned: in a grid whenever any card has one (monogram tiles), in lists and
-  // the magazine only when most items do (a tile on most rows would be noise)
+  // aligned: in a grid whenever any card has one, in lists and the magazine's
+  // rows only when most items do (a tile on most rows would be noise)
   const placeholder =
     showMedia &&
     spec.defaultImage !== false &&

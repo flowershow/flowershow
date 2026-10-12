@@ -91,22 +91,49 @@ const TAG_LINE = /^#[^\s#]+(?:\s+#[^\s#]+)*$/;
 const INLINE_FIELD = /^[*_]*[\p{L}\p{N}_][\p{L}\p{N}_ -]*[*_]*::(?:\s|$)/u;
 const SETEXT_UNDERLINE = /^ {0,3}(?:=+|-{2,})\s*$/;
 
-function toPlainText(block: string): string {
-  return block
+/**
+ * Inline Markdown as the plain text a reader sees: link and wiki-link text,
+ * the text inside `code` spans (never dropped, so a sentence stays whole),
+ * emphasis without its markers; images, embeds, footnote refs and html tags
+ * removed, stray backtick runs (an unclosed ```` ``` ````) dropped, and
+ * whitespace collapsed. `#tags` are kept as written. For descriptions and
+ * listing excerpts, which are shown as plain text.
+ */
+export function markdownToPlainText(markdown: string): string {
+  // Code spans first (they bind tighter than everything else), kept aside so
+  // their text (`<List />`, `**x**`) is never read as html or emphasis
+  const code: string[] = [];
+  const text = markdown
+    .replace(
+      /(?<!`)(`+)(?!`)([\s\S]*?[^`])\1(?!`)/g,
+      (_, _ticks, c: string) => {
+        code.push(c.trim());
+        return `\uE000${code.length - 1}\uE000`;
+      },
+    )
+    .replace(/`+/g, '') // unclosed runs, e.g. "a ```blog block"
+    // backslash escapes: the character itself, kept aside like code
+    .replace(/\\([\\*_{}[\]()#+\-.!|~<>])/g, (_, ch: string) => {
+      code.push(ch);
+      return `\uE000${code.length - 1}\uE000`;
+    })
     .replace(/!\[\[[^\]]*\]\]/g, '') // embeds
     .replace(/!\[[^\]]*\]\([^)]*\)/g, '') // images
     .replace(/\[\[([^\]|]+)\|([^\]]+)\]\]/g, '$2') // [[target|alias]]
     .replace(/\[\[([^\]#]+)(#[^\]]*)?\]\]/g, '$1') // [[target#heading]]
     .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1') // [text](url)
     .replace(/\[\^[^\]]+\]/g, '') // footnote refs
-    .replace(/<[^>]+>/g, '') // inline html
-    .replace(/`([^`]*)`/g, '$1') // inline code
+    .replace(/<\/?[A-Za-z][^>]*>/g, '') // inline html
     .replace(/(\*\*|~~|==)(.+?)\1/g, '$2') // bold, strike, highlight
     .replace(/(^|[^\w*])\*([^*\n]+)\*(?=[^\w*]|$)/g, '$1$2') // *em*
-    .replace(/(^|[^\w])_([^_\n]+)_(?=[^\w]|$)/g, '$1$2') // _em_ (not snake_case)
+    .replace(/(^|[^\w])_([^_\n]+)_(?=[^\w]|$)/g, '$1$2'); // _em_ (not snake_case)
+  return text
+    .replace(/\uE000(\d+)\uE000/g, (_, i: string) => code[Number(i)] ?? '')
     .replace(/\s+/g, ' ')
     .trim();
 }
+
+const toPlainText = markdownToPlainText;
 
 const ABBREVIATIONS = /(?:^|\s)(?:e\.g|i\.e|etc|vs|cf|Dr|Mr|Mrs|Ms|St|No)\.$/i;
 const MIN_SUBTITLE = 50;
@@ -116,7 +143,7 @@ function splitSentences(text: string): string[] {
   let start = 0;
   // A sentence ends at . ! or ? (optionally followed by a closing quote or
   // bracket), then whitespace, then an uppercase letter, digit or opening quote.
-  const re = /[.!?]["'\u201d\u2019)\]]*\s+(?=["'\u201c\u2018(\[]?[A-Z0-9])/g;
+  const re = /[.!?]["'\u201d\u2019)\]]*\s+(?=["'\u201c\u2018([]?[A-Z0-9])/g;
   for (let m = re.exec(text); m; m = re.exec(text)) {
     const end = m.index + m[0].trimEnd().length;
     if (ABBREVIATIONS.test(text.slice(start, end))) continue;

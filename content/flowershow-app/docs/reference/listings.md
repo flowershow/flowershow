@@ -43,6 +43,10 @@ Notes on building things, roughly weekly.
 
 The page shows its title, your intro, then every page in `blog/` and its subfolders, newest first, 20 per page, with "Newer" and "Older" links. Each item shows its title, description, image (if it has one), date and authors.
 
+The header holds the title, the page's `description` and your intro, with the opening paragraphs of the intro set like a standfirst; a thin rule then separates the header from the list. When your site has RSS on (`"enableRss": true` in `config.json`) and the list is newest first by date, the header also links your site's feed (`/rss.xml`) with a small RSS button. The feed is site-wide: it holds every dated page, so a people page or a list sorted by title gets no button. Listing pages don't show the site-wide comments box; add `showComments: true` to the page's frontmatter to get it back.
+
+Summaries are plain text: Markdown in a `description` (or in the opening sentence used when there is none) is shown without its syntax, so `` `fl publish` `` shows as fl publish and a stray ```` ``` ```` disappears.
+
 ![A layout: list page: title, intro, then the posts with thumbnails on the left](/assets/docs-listings-list-page-layout.webp)
 
 Page-level options go in a `list:` map in the same frontmatter and use the same keys as a block (see [Options](#options)):
@@ -158,16 +162,16 @@ Authors show as small avatars and names linked to their author pages (see [[page
 
 ## Views
 
-**`list`** (the default) is one column of rows, each with a 3:2 thumbnail with square corners. The thumbnail sits on the left; `media: thumb right` puts it on the right. On a `layout: list` page the header, intro and list share one reading-width column. When at least half of the list's items have an image (counting every page, so page 2 looks like page 1), a row without one gets a plain neutral tile with the first letter of its title, so the text column stays lined up. With fewer, rows without an image are text only, lined up with the other rows' text. `defaultImage` shows your image instead of the tile, and `defaultImage: none` makes those rows text only. When no item has an image there is no image column at all. `media: cover` shows a wide image above each row's text; `media: none` gives plain text rows.
+**`list`** (the default) is one column of rows, each with a 3:2 thumbnail with square corners. The thumbnail sits on the left; `media: thumb right` puts it on the right. On a `layout: list` page the header, intro and list share one reading-width column. When at least half of the list's items have an image (counting every page, so page 2 looks like page 1), a row without one gets an empty tile, a soft wash of your theme's accent colour, so the text column stays lined up. With fewer, rows without an image are text only, lined up with the other rows' text. `defaultImage` shows your image instead of the tile, and `defaultImage: none` makes those rows text only. When no item has an image there is no image column at all. `media: cover` shows a wide image above each row's text; `media: none` gives plain text rows.
 
 **`grid`** shows cards in three columns on wide screens, two on tablets and one on phones. A `layout: list` grid page uses the full content width.
 
-![A grid of posts: a cover image, or a letter tile when a post has none, above each title, description, date and authors](/assets/docs-listings-grid-blog.webp)
+![A grid of posts: a cover image, or an accent-tinted tile when a post has none, above each title, description, date and authors](/assets/docs-listings-grid-blog.webp)
 
 How a grid handles items without an image:
 
 - **No item has an image:** text-only cards, with no image boxes.
-- **Some items have images:** the others get a tile tinted with your theme's accent colour, showing the first letter of the title, so the rows stay aligned. The tile is decorative (screen readers skip it). On phones, where the grid is one column, the tiles are hidden.
+- **Some items have images:** the others get an empty tile, a soft gradient of your theme's accent colour, so the rows stay aligned. It has no letter, so it never reads as a broken image. The tile is decorative (screen readers skip it). On phones, where the grid is one column, the tiles are hidden.
 - **`defaultImage: "[[cover.png]]"`** shows that image instead of the tile.
 - **`defaultImage: none`** turns the tiles off: those cards are text only.
 
@@ -243,9 +247,9 @@ Page 1 starts with three columns separated by thin rules:
 
 The rest follow under a "Recent posts" heading as list rows, with "Newer" and "Older" links when there are more pages. Page 2 and later pages are plain rows.
 
-Small sets keep a shape of their own instead of half-empty columns: one post is a centred hero, two put a story beside the hero, three put two stories beside it, and four put three "More posts" beside it. A post without an image still fits: the hero becomes a large title on its own, a "More posts" entry simply has no thumbnail, and a story gets a plain tile when at least half of the posts have an image (otherwise it is text only, as in a list). If no post has an image, the page is all text. On a tablet the hero goes on top with the columns below it; on a phone everything is one column.
+Small sets keep a shape of their own instead of half-empty columns: one post is a centred hero, two put a story beside the hero, three put two stories beside it, and four put three "More posts" beside it. A post without an image still fits: the hero becomes a large title on its own, a "More posts" entry simply has no thumbnail and a story is a clean text-only card. The rows under "Recent posts" follow the list rule (a tile when at least half of the posts have an image, text only otherwise). If no post has an image, the page is all text. Dates and author names in the "More posts" column wrap onto a second line rather than being cut short. On a tablet the hero goes on top with the columns below it; on a phone everything is one column.
 
-Titles use your site's body font (a serif in the default theme), like a newspaper. Rename or hide the two headings with `headings`:
+Titles use your site's body font (a serif in the default theme), like a newspaper, and so does the page title of a `layout: list` magazine page, so the page uses one type family. The "Recent posts" rows line up with the front page: they start at its left edge and end at the hero's right rule. Rename or hide the two headings with `headings`:
 
 ````markdown
 ```blog
@@ -437,7 +441,13 @@ or, for the whole page, `layout: list` with `list: { pageSize: 5, fields: { eyeb
 
 ## Styling
 
-Lists use the same `.list-component-*` classes as `<List />`, plus attributes that say which view and image style a list uses:
+Lists use the same `.list-component-*` classes as `<List />`, plus attributes that say which view and image style a list uses. A `layout: list` or zero-config page wraps them in a listing page:
+
+```text
+div.listing-page[data-view]
+  header.page-header > .page-header-title-row > h1.page-header-title, .page-header-actions > a.listing-page-feed-link
+  .rendered-mdx#mdxpage > .listing-page-intro (your text), .listing-page-listing (the rule, then the list)
+```
 
 ```text
 section.list-component.list-component--list|--grid|--compact|--people|--magazine[data-view][data-media][data-media-side][data-ratio]
@@ -448,7 +458,7 @@ section.list-component.list-component--list|--grid|--compact|--people|--magazine
   .list-component-magazine-rest           (magazine: h2.list-component-section-heading, then the rows)
   h2.list-component-group-heading       (with group)
   article.list-component-item[.list-component-item--featured]
-    .list-component-item-media            (image, or a tile: .list-component-item-media--placeholder > .list-component-item-monogram in list, grid and magazine, .list-component-item-initials in people)
+    .list-component-item-media            (image, or an empty tile: .list-component-item-media--placeholder; in people it holds .list-component-item-initials)
     .list-component-item-content
       .list-component-item-eyebrow
       h3.list-component-item-headline
@@ -467,7 +477,7 @@ Most of the look is set with custom properties, in your `custom.css`:
   --list-thumb-order: 2;          /* every list thumbnail on the right */
   --list-card-min: 14rem;         /* narrower grid cards, more columns */
   --list-media-placeholder: #f3efe6; /* placeholder tile background */
-  --list-monogram-color: #8a6d3b; /* letter (and initials) colour */
+  --list-media-dim: 1;            /* no dimming of covers in dark mode */
 }
 ```
 
@@ -475,14 +485,15 @@ Most of the look is set with custom properties, in your `custom.css`:
 | --- | --- | --- |
 | `--list-title-font` | the heading font; the body font (a serif) in `magazine` | Item titles, and the magazine's "More posts" and "Recent posts" headings |
 | `--list-max-width` | `44rem` | The reading column of `list` and `compact` pages |
-| `--list-rest-max-width` | `48rem` | The rows below a magazine front page |
+| `--list-rest-max-width` | none (the front page's grid) | A maximum width for the rows below a magazine front page |
 | `--list-gap` | per view | Space between grid cards and portraits |
 | `--list-card-min` | `17.5rem` | The narrowest a grid card gets (more columns when smaller) |
 | `--list-card-radius` | `0` | Image and card corners |
 | `--list-card-border`, `--list-card-bg`, `--list-card-hover-bg` | none | Grid card border and background |
 | `--list-media-ratio` | from `ratio` | The image box shape, for every list |
-| `--list-media-placeholder` | a light neutral (an accent tint in `grid`) | Placeholder tiles for items without an image |
-| `--list-monogram-color` | a muted grey (accent in `grid`) | The letter on placeholder tiles, and people initials |
+| `--list-media-placeholder` | a soft gradient of the accent into the background | Placeholder tiles for items without an image (and people without a photo) |
+| `--list-media-dim` | `0.88` | Brightness of list and post cover images in dark mode, so white screenshots don't glare (full brightness on hover); `1` turns it off |
+| `--list-monogram-color` | the accent | People initials |
 | `--list-thumb-width` | `180px` (`104px` on phones) | List thumbnails |
 | `--list-thumb-order` | `0` | `2` puts every list thumbnail on the right |
 | `--list-avatar-shape` | square portraits, round author photos | People portraits and the small author photos in the meta line; `50%` makes them all round |

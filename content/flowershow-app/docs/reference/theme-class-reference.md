@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **342 styled class selectors**:
-**340 stable semantic hooks** and **2 non-contract
+and currently documents **347 styled class selectors**:
+**345 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -205,6 +205,7 @@ main.page-main (structural wrapper)
 | <code>.contains-task-list</code> | Hook |
 | <code>.heading-link</code> | Hook |
 | <code>.page-header</code> | Hook |
+| <code>.page-header-actions</code> | Hook |
 | <code>.page-header-author-avatar</code> | Hook |
 | <code>.page-header-author-name</code> | Hook |
 | <code>.page-header-authors-avatars-container</code> | Hook |
@@ -224,6 +225,7 @@ main.page-main (structural wrapper)
 | <code>.page-header-reading-time-icon</code> | Hook |
 | <code>.page-header-tags</code> | Hook |
 | <code>.page-header-title</code> | Hook |
+| <code>.page-header-title-row</code> | Hook |
 | <code>.page-hero</code> | Hook |
 | <code>.page-hero-container</code> | Hook |
 | <code>.page-hero-content</code> | Hook |
@@ -323,7 +325,9 @@ Collection/blog listing cards, empty and error states, loading placeholders, and
 **DOM shape**
 
 ```text
-div.listing-page[data-view] (page-level list/compact pages only)
+div.listing-page[data-view] (page-level listings: layout: list, zero-config blog/posts)
+├─ header.page-header > .page-header-title-row > h1.page-header-title, .page-header-actions > a.listing-page-feed-link > svg.listing-page-feed-icon, span.listing-page-feed-label (feed link when the site has RSS on)
+└─ .page-body > .rendered-mdx#mdxpage > .listing-page-intro (the page's own text), .listing-page-listing (the rule, then the listing)
 section.list-component[.list-component--list | --grid | --compact | --people | --magazine][data-view][data-media][data-media-side][data-ratio][data-listing-notes]   (div without data-view for legacy <List />)
 ├─ .list-component-magazine-top[data-layout=solo|pair|trio|lead-more|full] (magazine, page 1)
 │  ├─ article.list-component-item.list-component-item--featured (the hero)
@@ -333,7 +337,7 @@ section.list-component[.list-component--list | --grid | --compact | --people | -
 ├─ h2.list-component-group-heading (optional, with group)
 ├─ article.list-component-item[.list-component-item--featured] / .list-component-skeleton-item (legacy only)
 │  ├─ .list-component-item-media > a.list-component-item-media-link > img.list-component-item-media-img (item image or defaultImage)
-│  │  | .list-component-item-media.list-component-item-media--placeholder[aria-hidden] > span.list-component-item-monogram (grid card, list row or magazine card without an image when another item has one; off with defaultImage: none)
+│  │  | .list-component-item-media.list-component-item-media--placeholder[aria-hidden] (empty accent-tinted tile: grid card, or list/magazine row when at least half the items have an image; off with defaultImage: none)
 │  │  | .list-component-item-media.list-component-item-media--placeholder[aria-hidden] > span.list-component-item-initials (people view, no photo)
 │  └─ .list-component-item-content
 │     ├─ .list-component-item-eyebrow > span
@@ -388,7 +392,6 @@ section.list-component[.list-component--list | --grid | --compact | --people | -
 | <code>.list-component-item-media-link</code> | Hook |
 | <code>.list-component-item-meta</code> | Hook |
 | <code>.list-component-item-meta-value</code> | Hook |
-| <code>.list-component-item-monogram</code> | Hook |
 | <code>.list-component-item-summary</code> | Hook |
 | <code>.list-component-magazine-more</code> | Hook |
 | <code>.list-component-magazine-rest</code> | Hook |
@@ -419,6 +422,10 @@ section.list-component[.list-component--list | --grid | --compact | --people | -
 | <code>.list-component-skeleton-media-placeholder</code> | Hook |
 | <code>.list-component-skeleton-summary</code> | Hook |
 | <code>.listing-page</code> | Hook |
+| <code>.listing-page-feed-icon</code> | Hook |
+| <code>.listing-page-feed-link</code> | Hook |
+| <code>.listing-page-intro</code> | Hook |
+| <code>.listing-page-listing</code> | Hook |
 
 ## Tag index and per-tag pages
 

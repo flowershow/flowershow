@@ -4,12 +4,12 @@ import {
   folderHasPages,
   groupKey,
   itemTitle,
+  type ListingRow,
   nearestFolders,
   resolveFolderCase,
   selectListingRows,
   slotDate,
   toListingItem,
-  type ListingRow,
 } from './items';
 import { DEFAULT_FIELDS, type ListingSpec } from './spec';
 
@@ -407,6 +407,24 @@ describe('toListingItem (4.4, Review Focus 2 and 3)', () => {
     expect(item.image).toBe(
       'http://demo.flowershow.site/blog/assets/cover.jpg',
     );
+  });
+  it('summaries are plain text: code spans keep their text, stray fences and emphasis go', () => {
+    const summary = (description: string) =>
+      toListingItem(row('blog/a.md', { title: 'A', description }), ctx).summary;
+    expect(
+      summary(
+        'A blog/ folder lists itself, and a ```blog block or layout: list shows any folder.',
+      ),
+    ).toBe(
+      'A blog/ folder lists itself, and a blog block or layout: list shows any folder.',
+    );
+    expect(summary('Add `<List />` inline with `fl publish`.')).toBe(
+      'Add <List /> inline with fl publish.',
+    );
+    expect(
+      summary('**Bold** and [a link](https://x.y) and [[Page|alias]]'),
+    ).toBe('Bold and a link and alias');
+    expect(summary('``')).toBeNull();
   });
   it('image fallbacks: image → cover → heroImage → thumbnail → avatar; unquoted wiki links', () => {
     expect(

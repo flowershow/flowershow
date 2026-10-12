@@ -42,6 +42,8 @@ export type ListingRoute =
       source: 'layout' | 'auto';
       view: ListingView;
       pageSize: number | null;
+      /** Newest first by date (not people): what the site's RSS feed holds. */
+      chronological: boolean;
     };
 
 export function isAutoListingDirName(dir: string): boolean {
@@ -233,7 +235,27 @@ function pageRoute(
     source,
     view: parsed.ok ? parsed.spec.view : 'list',
     pageSize: parsed.ok ? parsed.spec.pageSize : null,
+    chronological:
+      parsed.ok &&
+      parsed.spec.view !== 'people' &&
+      parsed.spec.sort.field === 'date' &&
+      parsed.spec.sort.direction === 'desc',
   };
+}
+
+/**
+ * The feed to link from a listing page's header. Flowershow has one feed per
+ * site (/rss.xml: every published, dated page, newest first), so it is offered
+ * on page-level listings that read like it: newest first by date, not a
+ * people page. Null when the site has RSS off.
+ */
+export function listingFeedUrl(
+  route: ListingRoute,
+  enableRss: boolean | undefined,
+): string | null {
+  if (!enableRss) return null;
+  if (route.kind === 'virtual') return '/rss.xml';
+  return route.kind === 'page' && route.chronological ? '/rss.xml' : null;
 }
 
 export function resolveListingRoute({

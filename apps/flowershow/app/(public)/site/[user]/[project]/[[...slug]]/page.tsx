@@ -64,6 +64,7 @@ import { pageHeaderBreadcrumbs } from '@/lib/breadcrumbs';
 import { readingTime } from '@/lib/reading-time';
 import { resolvePageScripts } from '@/lib/page-scripts';
 import { renderPageContent } from '@/lib/render-page-content';
+import { ListingPage } from '@/components/public/listing/listing-page';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
 import { resolveLocale } from '@/lib/listing/dates';
 import {
@@ -77,6 +78,7 @@ import {
   hasTocHeadings,
   isAutoListingDirName,
   type ListingRoute,
+  listingFeedUrl,
   mayBeListingRoute,
   resolveListingRoute,
 } from '@/lib/listing/route';
@@ -508,6 +510,7 @@ export default async function SitePage(props: {
                   title={virtualRoute.title}
                   listing={listing}
                   view="list"
+                  feedUrl={listingFeedUrl(virtualRoute, siteConfig?.enableRss)}
                 />
               </main>
             </div>
@@ -760,7 +763,11 @@ export default async function SitePage(props: {
   const normalizedRootDir = site?.rootDir
     ? `${site.rootDir.replace(/^(.?\/)+|\/+$/g, '')}/`
     : '';
-  const showPageComments = metadata?.showComments ?? siteConfig?.showComments;
+  // A listing index is not a page to discuss: the site-wide comments setting
+  // skips page-level listings (frontmatter showComments: true still shows them)
+  const showPageComments =
+    metadata?.showComments ??
+    (pageLevelRoute ? false : siteConfig?.showComments);
   const showBacklinks = siteConfig?.showBacklinks ?? true;
   const giscusConfig = siteConfig?.giscus;
   const activeSidebarPath = (() => {
@@ -851,6 +858,19 @@ export default async function SitePage(props: {
         dimensions: imageDimensions,
       })
     : null;
+
+  const pageHeaderProps = {
+    title: metadata?.title ?? '',
+    description: displayDescription(metadata) ?? '',
+    date: metadata?.date,
+    readingTime: pageReadingTime,
+    breadcrumbs,
+    showHero: heroConfig.showHero,
+    authors,
+    tags: showTags
+      ? frontmatterTags(metadata as Record<string, unknown> | null)
+      : undefined,
+  };
 
   return (
     <>
@@ -986,31 +1006,24 @@ export default async function SitePage(props: {
                 </div>
                 <CanvasEnhancer />
               </PostLayout>
+            ) : pageLevelRoute ? (
+              <ListingPage
+                {...pageHeaderProps}
+                view={pageLevelRoute.view}
+                feedUrl={listingFeedUrl(pageLevelRoute, siteConfig?.enableRss)}
+                intro={compiledContent}
+                hasIntro={!!pageContent?.trim()}
+                listing={pageListing}
+              >
+                <CanvasEnhancer />
+              </ListingPage>
             ) : (
-              <ListingPageWrapper view={pageLevelRoute?.view}>
-                <BlogLayout
-                  title={metadata?.title ?? ''}
-                  description={displayDescription(metadata) ?? ''}
-                  date={metadata?.date}
-                  readingTime={pageReadingTime}
-                  breadcrumbs={breadcrumbs}
-                  showHero={heroConfig.showHero}
-                  authors={authors}
-                  tags={
-                    showTags
-                      ? frontmatterTags(
-                          metadata as Record<string, unknown> | null,
-                        )
-                      : undefined
-                  }
-                >
-                  <div className="rendered-mdx" id="mdxpage">
-                    {compiledContent}
-                    {pageListing}
-                  </div>
-                  <CanvasEnhancer />
-                </BlogLayout>
-              </ListingPageWrapper>
+              <BlogLayout {...pageHeaderProps}>
+                <div className="rendered-mdx" id="mdxpage">
+                  {compiledContent}
+                </div>
+                <CanvasEnhancer />
+              </BlogLayout>
             )}
           </main>
 
@@ -1075,20 +1088,4 @@ export default async function SitePage(props: {
 
 function isPastLastPage(p?: { page: number; pageCount: number }): boolean {
   return p !== undefined && p.page > p.pageCount;
-}
-
-/** `.listing-page[data-view]` constrains page-level list pages to one column (default-theme.css). */
-function ListingPageWrapper({
-  view,
-  children,
-}: {
-  view?: string;
-  children: React.ReactNode;
-}) {
-  if (!view) return <>{children}</>;
-  return (
-    <div className="listing-page" data-view={view}>
-      {children}
-    </div>
-  );
 }

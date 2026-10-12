@@ -23,6 +23,8 @@ interface Props extends React.PropsWithChildren {
   }[];
   /** Frontmatter tags, rendered as a pill row in the header. */
   tags?: string[];
+  /** Links beside the title (a listing page's feed link); the title and these share one row. */
+  actions?: React.ReactNode;
 }
 
 export const BlogLayout: React.FC<Props> = ({
@@ -35,6 +37,7 @@ export const BlogLayout: React.FC<Props> = ({
   breadcrumbs,
   authors,
   tags,
+  actions,
 }) => {
   const parsedDate = safeDate(date);
 
@@ -76,7 +79,14 @@ export const BlogLayout: React.FC<Props> = ({
             </nav>
           )}
 
-          {title && <h1 className="page-header-title">{title}</h1>}
+          {actions ? (
+            <div className="page-header-title-row">
+              {title && <h1 className="page-header-title">{title}</h1>}
+              <div className="page-header-actions">{actions}</div>
+            </div>
+          ) : (
+            title && <h1 className="page-header-title">{title}</h1>
+          )}
 
           {description && (
             <p className="page-header-description">{description}</p>

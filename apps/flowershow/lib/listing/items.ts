@@ -1,4 +1,5 @@
 import {
+  markdownToPlainText,
   matchLinkTarget,
   normalizeFrontmatterTags,
   tagMatches,
@@ -502,6 +503,11 @@ function fieldParts(value: unknown, ctx: ItemContext): ListingFieldPart[] {
   });
 }
 
+/** A summary is shown as plain text: no Markdown or code syntax (computed or hand-written). */
+function plainSummary(value: string | null): string | null {
+  return value ? markdownToPlainText(value) || null : null;
+}
+
 export function toListingItem(row: ListingRow, ctx: ItemContext): ListingItem {
   const m = row.metadata ?? {};
   const f = ctx.fields;
@@ -533,7 +539,9 @@ export function toListingItem(row: ListingRow, ctx: ItemContext): ListingItem {
     date,
     dateInEyebrow,
     summary: f.summary
-      ? firstString(m, SUMMARY_FALLBACKS[f.summary] ?? [f.summary])
+      ? plainSummary(
+          firstString(m, SUMMARY_FALLBACKS[f.summary] ?? [f.summary]),
+        )
       : null,
     image: rawImage
       ? imageSrc(resolveTarget(rawImage, row.path, ctx), ctx.siteHostname)

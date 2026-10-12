@@ -31,6 +31,16 @@ Every list looks better too, with nothing to change:
 - Dates and authors in small uppercase letters (`--list-meta-transform: none` turns that off); group headings (`group: year`) in your accent colour.
 - `--list-title-font` switches every listing title to another font, e.g. a serif, from your `custom.css`.
 
+**Polish**
+
+- Listing pages keep the title, description and intro together above the rule, with a small RSS button when your site has a feed (`"enableRss": true`).
+- Posts without an image get a soft tile in your accent colour instead of a grey letter; magazine stories without one are clean text-only cards.
+- Covers get a hairline edge, and in dark mode they are dimmed slightly so white screenshots don't glare.
+- Summaries are plain text: no stray ```` ``` ```` or code ticks, and code text is kept, so sentences stay whole.
+- Author names in "More posts" wrap onto a second line instead of being cut short.
+- A magazine page's title uses the same serif as its stories, and "Recent posts" lines up with the front page above it.
+- Listing pages no longer show the site-wide comments box or leave a blank gap above the footer.
+
 See [A magazine front page](/docs/reference/listings#a-magazine-front-page-magazine) and [Styling](/docs/reference/listings#styling) in [[listings|Listing pages]].
 
 **Themes:** Leaf, Lessflowery and Letterpress set their own corner radius, so their images stay rounded. Lessflowery and Letterpress also give every listing title the same size, so the magazine hero is no bigger than the other titles there. On Lessflowery, Letterpress and Superstack a magazine page is narrower than the default theme's for now, so it shows the tablet layout. These will change when the themes are updated. If your `custom.css` sets `--list-card-radius`, it still wins.

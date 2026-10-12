@@ -35,9 +35,10 @@ vi.mock('next/image', () => ({
 }));
 
 import { BlogLayout } from '@/components/public/layouts/blog';
+import { ListingPage } from '@/components/public/listing/listing-page';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
 import { renderPageListing } from '@/lib/listing/page-listing';
-import { resolveListingRoute } from '@/lib/listing/route';
+import { listingFeedUrl, resolveListingRoute } from '@/lib/listing/route';
 import { processMarkdown } from '@/lib/markdown';
 import { buildDemoSite } from './demo-site';
 
@@ -124,7 +125,12 @@ it('renders the e2e listings fixture', async () => {
         route,
       });
       body = (
-        <VirtualListingPage title={route.title} listing={listing} view="list" />
+        <VirtualListingPage
+          title={route.title}
+          listing={listing}
+          view="list"
+          feedUrl={listingFeedUrl(route, true)}
+        />
       );
     } else {
       expect(row, `${slug}: no page and no zero-config folder`).not.toBeNull();
@@ -151,21 +157,23 @@ it('renders the e2e listings fixture', async () => {
               pageTitle: metadata?.title,
             })
           : null;
-      const layout = (
-        <BlogLayout title={metadata?.title ?? ''}>
-          <div className="rendered-mdx" id="mdxpage">
-            {content}
-            {pageListing}
-          </div>
-        </BlogLayout>
-      );
+      // Same shells as SitePage (the demo site has RSS on)
       body =
         route.kind === 'page' ? (
-          <div className="listing-page" data-view={route.view}>
-            {layout}
-          </div>
+          <ListingPage
+            title={metadata?.title ?? ''}
+            view={route.view}
+            feedUrl={listingFeedUrl(route, true)}
+            intro={content}
+            hasIntro={!!row!.content.replace(/^---[\s\S]*?\n---\n?/, '').trim()}
+            listing={pageListing}
+          />
         ) : (
-          layout
+          <BlogLayout title={metadata?.title ?? ''}>
+            <div className="rendered-mdx" id="mdxpage">
+              {content}
+            </div>
+          </BlogLayout>
         );
     }
     const html = renderToStaticMarkup(

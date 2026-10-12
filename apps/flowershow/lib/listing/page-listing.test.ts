@@ -18,6 +18,7 @@ describe('listingPaginatesByPage (self-canonical only when ?page changes the con
         source: 'auto',
         view: 'list',
         pageSize: 20,
+        chronological: true,
       }),
     ).toBe(true);
     expect(
@@ -28,6 +29,7 @@ describe('listingPaginatesByPage (self-canonical only when ?page changes the con
         source: 'layout',
         view: 'list',
         pageSize: null,
+        chronological: true,
       }),
     ).toBe(false);
     expect(listingPaginatesByPage({ kind: 'none' })).toBe(false);

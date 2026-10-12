@@ -115,9 +115,10 @@ import {
 } from '@/lib/post/route';
 import { frontmatterTags } from '@flowershow/core';
 import List from '@/components/public/mdx/list';
+import { ListingPage } from '@/components/public/listing/listing-page';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
 import { renderPageListing } from '@/lib/listing/page-listing';
-import { resolveListingRoute } from '@/lib/listing/route';
+import { listingFeedUrl, resolveListingRoute } from '@/lib/listing/route';
 import { processMarkdown } from '@/lib/markdown';
 
 const APP = path.resolve(__dirname, '../..');
@@ -125,6 +126,8 @@ const OUT = path.join(APP, '.listing-preview');
 const THEMES_DIR =
   process.env.THEMES_DIR ?? path.resolve(APP, '../../../themes');
 const LOCALE = 'en-US';
+/** The preview site has RSS on, so listing headers show their feed link. */
+const PREVIEW_RSS = true;
 
 /** Intrinsic sizes of the copied assets, keyed like the site's image-dimensions map. */
 const DIMENSIONS = Object.fromEntries(
@@ -283,7 +286,12 @@ async function renderScenario(s: Scenario): Promise<string> {
       publicUrl: s.slug,
     });
     body = (
-      <VirtualListingPage title={route.title} listing={listing} view="list" />
+      <VirtualListingPage
+        title={route.title}
+        listing={listing}
+        view="list"
+        feedUrl={listingFeedUrl(route, PREVIEW_RSS)}
+      />
     );
   } else {
     if (!s.path)
@@ -313,25 +321,27 @@ async function renderScenario(s: Scenario): Promise<string> {
             pageTitle: metadata.title,
           })
         : null;
-    const layout = (
-      <BlogLayout
-        title={metadata.title ?? ''}
-        description={metadata.description ?? ''}
-      >
-        <div className="rendered-mdx" id="mdxpage">
-          {content}
-          {pageListing}
-        </div>
-      </BlogLayout>
-    );
-    // Same wrapper as SitePage's ListingPageWrapper
+    const header = {
+      title: metadata.title ?? '',
+      description: metadata.description ?? '',
+    };
+    // Same shells as SitePage
     body =
       route.kind === 'page' ? (
-        <div className="listing-page" data-view={route.view}>
-          {layout}
-        </div>
+        <ListingPage
+          {...header}
+          view={route.view}
+          feedUrl={listingFeedUrl(route, PREVIEW_RSS)}
+          intro={content}
+          hasIntro={!!matter(s.markdown).content.trim()}
+          listing={pageListing}
+        />
       ) : (
-        layout
+        <BlogLayout {...header}>
+          <div className="rendered-mdx" id="mdxpage">
+            {content}
+          </div>
+        </BlogLayout>
       );
   }
   return wrap(body);

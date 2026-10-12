@@ -1623,7 +1623,7 @@
    All selectors are :where() so themes always win. Custom properties:
      --list-max-width, --list-gap, --list-card-min, --list-card-radius,
      --list-card-border, --list-card-bg, --list-card-hover-bg,
-     --list-media-ratio, --list-media-placeholder, --list-monogram-color,
+     --list-media-ratio, --list-media-placeholder, --list-monogram-color (people initials),
      --list-thumb-width, --list-thumb-order,
      --list-avatar-shape, --list-meta-color, --list-eyebrow-color,
      --list-rule-color, --list-compact-meta-width, --list-title-font,
@@ -1728,7 +1728,7 @@
   }
   /* compact date columns and people roles read as plain text, not labels */
   :where(.list-component--compact, .list-component--people)
-    .list-component-item-meta {
+  .list-component-item-meta {
     font-size: 0.875rem;
     font-weight: inherit;
     line-height: inherit;
@@ -1761,7 +1761,9 @@
     position: absolute;
     left: 0;
   }
-  :where(.list-component-item-author:has(+ .list-component-item-author))::after {
+  :where(
+    .list-component-item-author:has(+ .list-component-item-author)
+  )::after {
     content: ",";
     margin-right: 0.3em;
   }
@@ -1798,60 +1800,44 @@
   :where(.list-component[data-view]) .list-component-item-media-img {
     border-radius: var(--list-card-radius, 0);
   }
-  /* Grid cards without an image (in a grid where others have one): a tile tinted
-     with the theme accent, carrying the title's first letter, so rows stay
-     aligned and the card reads as deliberate rather than a broken image.
-     Decorative (aria-hidden). Themes: --list-media-placeholder, --list-monogram-color. */
+  /* Dark mode: bright covers (white screenshots) are dimmed a little so they
+     don't glare off a dark page; full brightness again on hover. Post heroes
+     too (below). Themes: --list-media-dim (1 turns it off). */
+  :root[data-theme="dark"]
+  :where(
+    .list-component[data-view] .list-component-item-media-img,
+    .post-hero-img
+  ) {
+    filter: brightness(var(--list-media-dim, 0.88));
+    transition: filter 0.2s ease;
+  }
+  :root[data-theme="dark"]
+    :where(.list-component-item:hover .list-component-item-media-img) {
+    filter: none;
+  }
+  /* Items without an image (where others have one, see render.ts): an empty
+     tile, a soft gradient of the theme accent into the background, so rows and
+     columns stay aligned and the gap reads as deliberate. No letter, so it
+     never looks like a broken image. Decorative (aria-hidden).
+     Themes: --list-media-placeholder. */
   :where(.list-component-item-media--placeholder) {
-    display: grid;
-    place-items: center;
     border-radius: var(--list-card-radius, 0);
     background: var(
       --list-media-placeholder,
       linear-gradient(
         135deg,
-        color-mix(in oklch, var(--color-accent) 7%, var(--color-background)),
-        color-mix(in oklch, var(--color-accent) 16%, var(--color-background))
+        color-mix(in oklch, var(--color-accent) 6%, var(--color-background)) 0%,
+        color-mix(in oklch, var(--color-accent) 18%, var(--color-background))
+          100%
       )
     );
-  }
-  /* In lists and the magazine the tile is neutral, not tinted: it holds the
-     column, it is not a picture */
-  :where(.list-component--list, .list-component--magazine)
-    .list-component-item-media--placeholder {
-    background: var(
-      --list-media-placeholder,
-      color-mix(in oklch, var(--color-foreground-500) 7%, var(--color-background))
-    );
-    box-shadow: none;
-  }
-  :where(.list-component--list, .list-component--magazine)
-    .list-component-item-monogram {
-    font-family: var(--_list-title-font);
-    font-size: 2rem;
-    font-weight: var(--font-weight-normal, 400);
-    color: var(
-      --list-monogram-color,
-      color-mix(in oklch, var(--color-foreground-500) 38%, var(--color-background))
-    );
-  }
-  :where(.list-component-item-monogram) {
-    font-family: var(--font-heading);
-    font-size: clamp(2.5rem, 4vw, 3.5rem);
-    font-weight: var(--font-weight-semibold);
-    line-height: 1;
-    color: var(
-      --list-monogram-color,
-      color-mix(in oklch, var(--color-accent) 70%, var(--color-background))
-    );
-    user-select: none;
   }
   /* list: thumbnail left (default) or right (media: thumb right →
      data-media-side="right", or --list-thumb-order: 2 from a theme); the
      image comes first in the DOM but is aria-hidden and out of the tab order,
      so the title is the first thing read. A row without an image is text only. */
   :where(.list-component--list, .list-component-magazine-rest)
-    .list-component-item {
+  .list-component-item {
     flex-direction: row;
     align-items: flex-start;
     gap: 1.25rem;
@@ -1864,9 +1850,9 @@
     min-width: 0;
   }
   :where(
-      .list-component--list[data-media="thumb"],
-      .list-component--magazine[data-media="thumb"]
-    ) {
+    .list-component--list[data-media="thumb"],
+    .list-component--magazine[data-media="thumb"]
+  ) {
     --_list-thumb: var(--list-thumb-width, 180px);
     @media (max-width: 639px) {
       --_list-thumb: var(--list-thumb-width, 104px);
@@ -1874,7 +1860,8 @@
   }
   :where(
       .list-component--list[data-media="thumb"],
-      .list-component--magazine[data-media="thumb"] .list-component-magazine-rest
+      .list-component--magazine[data-media="thumb"]
+        .list-component-magazine-rest
     )
     .list-component-item-media {
     order: var(--list-thumb-order, 0);
@@ -1882,9 +1869,9 @@
     width: var(--_list-thumb);
   }
   :where(
-      .list-component--list[data-media-side="right"],
-      .list-component--magazine[data-media-side="right"]
-    ) {
+    .list-component--list[data-media-side="right"],
+    .list-component--magazine[data-media-side="right"]
+  ) {
     --list-thumb-order: 2;
   }
   /* In a mixed list the text of a row without an image lines up with the
@@ -1903,14 +1890,16 @@
   }
   :where(
       .list-component--list[data-media="cover"],
-      .list-component--magazine[data-media="cover"] .list-component-magazine-rest
+      .list-component--magazine[data-media="cover"]
+        .list-component-magazine-rest
     )
     .list-component-item {
     flex-direction: column;
   }
   :where(
       .list-component--list[data-media="cover"],
-      .list-component--magazine[data-media="cover"] .list-component-magazine-rest
+      .list-component--magazine[data-media="cover"]
+        .list-component-magazine-rest
     )
     .list-component-item-media {
     width: 100%;
@@ -1951,7 +1940,7 @@
   :where(.list-component--grid) .list-component-item-media {
     width: 100%;
   }
-  /* One column: monogram tiles only align rows, so drop them */
+  /* One column: the tiles only align rows, so drop them */
   @media (max-width: 639px) {
     :where(.list-component--grid) .list-component-item-media--placeholder {
       display: none;
@@ -2144,7 +2133,7 @@
   /* people (Linear, Obsidian): up to 4 columns, never narrower than 9rem, so
      4 / 3 / 2 at the default content widths and 2 on a phone, also inside a
      theme's narrower column; square portraits; initials on the same tinted
-     tile as grid monograms when there is no photo */
+     tile as other listings' placeholders when there is no photo */
   .list-component:where(.list-component--people) {
     --_people-gap: 1.5rem;
     display: grid;
@@ -2182,6 +2171,10 @@
       .list-component-item-media--placeholder
     ) {
     border-radius: var(--list-avatar-shape, var(--list-card-radius, 0));
+  }
+  :where(.list-component--people) .list-component-item-media--placeholder {
+    display: grid;
+    place-items: center;
   }
   :where(.list-component-item-initials) {
     font-family: var(--font-heading);
@@ -2245,15 +2238,15 @@
   /* featured hero (list and grid; Ghost Headline, Casper): 16/9 image left
      (58%), text right and vertically centred when the listing is at least
      48rem wide; stacked (image on top) in a reading column or on a phone; a
-     full-width text block without an image; never a monogram tile. The
+     full-width text block without an image; never a placeholder tile. The
      container query (not the viewport) keeps the split out of a 44rem list. */
   :where(.list-component-item--featured) {
     grid-column: 1 / -1;
   }
   :where(
-      .list-component--list:has(> .list-component-item--featured),
-      .list-component--grid:has(> .list-component-item--featured)
-    ) {
+    .list-component--list:has(> .list-component-item--featured),
+    .list-component--grid:has(> .list-component-item--featured)
+  ) {
     container-type: inline-size;
   }
   :where(.list-component--list, .list-component--grid)
@@ -2276,7 +2269,7 @@
   }
   @container (min-width: 48rem) {
     :where(.list-component--list, .list-component--grid)
-    .list-component-item--featured {
+      .list-component-item--featured {
       flex-direction: row;
       align-items: center;
       gap: 2.5rem;
@@ -2483,22 +2476,8 @@
     .list-component-item-summary {
     display: none;
   }
-  /* one meta line, cut with an ellipsis, as on Substack */
-  :where(.list-component-magazine-top)
-    .list-component-item--brief
-    .list-component-item-meta {
-    display: block;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-  }
-  :where(.list-component-magazine-top)
-    .list-component-item--brief
-    .list-component-item-meta
-    > * {
-    display: inline;
-    white-space: nowrap;
-  }
+  /* The meta line wraps (date, then whole author names on the next line) and
+     is never cut: an author name never shows as "RUFU…" */
 
   /* section headings: "More posts" (column) and "Recent posts" (the rest) */
   /* two classes: .rendered-mdx h2 would otherwise set its own font and size */
@@ -2519,13 +2498,18 @@
     margin: 2.75rem 0 0.25rem;
     font-size: 1.5rem;
   }
-  /* below the top section the rows are a centred reading column
-     (--list-rest-max-width), with the pagination */
-  :where(.list-component--magazine)
-    > :is(.list-component-magazine-rest, .list-component-pagination) {
+  /* Below the top section the rows (and the pagination) line up with the
+     top's grid: from its left edge to the hero column's right rule on
+     desktop, full width on tablet and phone, under the hero of the two-column
+     and solo layouts. --list-rest-max-width caps it. */
+  /* (no specificity, so the per-layout rules below win in any order) */
+  :where(
+    .list-component--magazine > .list-component-magazine-rest,
+    .list-component--magazine > .list-component-pagination
+  ) {
+    --_mag-rest: 100%;
     width: 100%;
-    max-width: var(--list-rest-max-width, 48rem);
-    margin-inline: auto;
+    max-width: min(var(--_mag-rest), var(--list-rest-max-width, 100%));
   }
   :where(.list-component-magazine-rest) {
     display: flex;
@@ -2655,10 +2639,39 @@
       grid-template-areas: "hero";
       justify-content: center;
     }
+    /* under the hero column of the two-column layouts; centred under a solo hero */
+    :where(
+        .list-component-magazine-top:is(
+          [data-layout="pair"],
+          [data-layout="lead-more"]
+        )
+      ) ~ :is(.list-component-magazine-rest, .list-component-pagination) {
+      --_mag-rest: calc((100% - var(--_mag-gutter)) * 2 / 3);
+    }
+    :where(.list-component-magazine-top[data-layout="solo"])
+      ~ :is(.list-component-magazine-rest, .list-component-pagination) {
+      --_mag-rest: 46rem;
+      margin-inline: auto;
+    }
   }
 
   /* desktop: three columns, the hero in the middle */
   @container list-magazine (min-width: 60rem) {
+    /* side + hero of the 1 : 2.1 : 1 grid (two gutters), as on page 2 */
+    :where(
+        .list-component--magazine > .list-component-magazine-rest,
+        .list-component--magazine > .list-component-pagination
+      ) {
+      --_mag-rest: calc(
+        (100% - 2 * var(--_mag-gutter)) *
+        3.1 / 4.1 +
+        var(--_mag-gutter)
+      );
+    }
+    :where(.list-component-magazine-top[data-layout="trio"])
+      ~ :is(.list-component-magazine-rest, .list-component-pagination) {
+      --_mag-rest: 100%;
+    }
     :where(.list-component-magazine-top[data-layout="full"]) {
       grid-template-columns: minmax(0, 1fr) minmax(0, 2.1fr) minmax(0, 1fr);
       grid-template-areas: "side hero more";
@@ -2673,9 +2686,9 @@
     }
     :where(
         .list-component-magazine-top:is(
-            [data-layout="full"],
-            [data-layout="trio"]
-          )
+          [data-layout="full"],
+          [data-layout="trio"]
+        )
       )
       > .list-component-item--featured {
       padding-inline-start: var(--_mag-gutter);
@@ -3461,6 +3474,108 @@
   .page-header-image {
     border-radius: var(--radius);
     object-fit: contain;
+  }
+
+  /* ────────────────────────────────────────────────────
+   Listing page header (components/public/listing/listing-page.tsx): the
+   title with its feed link, the description, the page's own intro, then a
+   rule and the listing. Each rule is one class (or :where), so themes win.
+   .page-header-actions has room for more links (e.g. a subscribe button).
+   ──────────────────────────────────────────────────── */
+  :where(.listing-page) .page-header {
+    margin-bottom: 0;
+    padding-bottom: 0;
+    border-bottom-width: 0;
+  }
+  .page-header-title-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem 1.5rem;
+  }
+  .page-header-title-row > .page-header-title {
+    min-width: 0;
+  }
+  .page-header-actions {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.75rem;
+    padding-bottom: 0.25rem;
+  }
+  .listing-page-feed-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.3125rem 0.75rem;
+    border: 1px solid var(--color-foreground-200);
+    border-radius: 999px;
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: var(--font-weight-medium, 500);
+    line-height: 1;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--color-foreground-500);
+    transition:
+      color 0.15s ease,
+      border-color 0.15s ease;
+
+    &:hover,
+    &:focus-visible {
+      border-color: var(--color-accent);
+      color: var(--color-accent);
+    }
+  }
+  .listing-page-feed-icon {
+    width: 0.875rem;
+    height: 0.875rem;
+  }
+  /* The intro reads as the header's standfirst: its opening paragraphs (up to
+     the first heading) take the description's size and colour */
+  .listing-page-intro {
+    margin-top: 1rem;
+
+    > :first-child {
+      margin-top: 0;
+    }
+    > :last-child {
+      margin-bottom: 0;
+    }
+    > p:not(:is(h1, h2, h3, h4, h5, h6) ~ p) {
+      margin-block: 0 0.75rem;
+      font-size: var(--font-size-lg);
+      line-height: 1.5;
+      color: var(--color-foreground-500);
+
+      @media (min-width: 640px) {
+        font-size: var(--font-size-xl);
+      }
+    }
+    > p:last-child {
+      margin-bottom: 0;
+    }
+  }
+  /* The rule sits between the header (with the intro) and the listing */
+  .listing-page-listing {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    border-top: 1px solid var(--color-foreground-200);
+  }
+  /* A listing page ends with its list: no reserved prose height above the
+     footer; and its content is as wide as its header, so the rule, the
+     listing and the feed link share one right edge */
+  .listing-page .rendered-mdx:not(.is-plain) {
+    min-height: 0;
+    max-width: none;
+  }
+  /* One type family on a magazine page: the title in the cards' font */
+  :where(.listing-page[data-view="magazine"]) .page-header-title {
+    font-family: var(--list-title-font, var(--font-body));
+    font-weight: var(--font-weight-medium, 500);
+    letter-spacing: -0.015em;
   }
 
   /* ────────────────────────────────────────────────────
