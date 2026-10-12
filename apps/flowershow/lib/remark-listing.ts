@@ -190,7 +190,11 @@ export default function remarkListing(options: RemarkListingOptions) {
               files: options.files,
             })
           : [];
-        const hero = featuredFirst && slice.page === 1;
+        // the magazine view always opens page 1 with a hero, promoted or not
+        const hero =
+          (featuredFirst ||
+            (spec.view === 'magazine' && positions.length > 0)) &&
+          slice.page === 1;
         const wasClaimed = heroClaimed;
         if (hero) heroClaimed = true;
         return renderListing({

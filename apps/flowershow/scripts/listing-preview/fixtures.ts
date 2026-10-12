@@ -104,10 +104,25 @@ function row(p: string, metadata: Record<string, unknown>): Row {
   };
 }
 
+/** Non-webp images that real changelog entries use as their `image`. */
+const CHANGELOG_IMAGES = [
+  'canvas-v2-preview.png',
+  'changelog-page-live.png',
+  'changelog-timeline.png',
+  'obsidian-bases-cards.png',
+  'obsidian-canvas-demo.png',
+  'rss-feed-xml-browser.png',
+  'sidebar-navigation.png',
+  'umami-analytics.png',
+];
+
 /** Real image files copied into the preview's site/ folder (served where the resolved URLs point). */
 export const ASSETS: Array<[from: string, to: string]> = [
   ...readdirSync(path.join(CONTENT_DIR, 'assets'))
-    .filter((f) => /^changelog-.*\.webp$/.test(f))
+    // changelog screenshots, plus the other images changelog entries use
+    .filter(
+      (f) => /^changelog-.*\.webp$/.test(f) || CHANGELOG_IMAGES.includes(f),
+    )
     .map((f) => [`assets/${f}`, `assets/${f}`] as [string, string]),
   ['people/rufuspollock.jpeg', 'people/rufuspollock.jpeg'],
   ['people/olayway.jpeg', 'people/olayway.jpeg'],

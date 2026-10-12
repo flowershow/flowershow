@@ -9,7 +9,7 @@ import { CONTENT_DIR } from './fixtures';
  */
 export type Shot = {
   file: string;
-  width?: 1440 | 390;
+  width?: 1440 | 768 | 390;
   dark?: boolean;
   theme?: string;
   /** Crop to this element instead of the first screen. */
@@ -522,6 +522,80 @@ export const SCENARIOS: Scenario[] = [
       '```list\nfrom: notes\nview: grid\nfeatured: 1\n```',
     ),
     shots: [{ file: 'featured-text-only' }],
+  },
+  {
+    name: 'magazine-blog',
+    title:
+      'view: magazine on a layout: list page (hero, two cards, More posts, then Recent posts)',
+    slug: '/blog',
+    path: 'blog/README.md',
+    markdown: page(
+      'title: Blog\nlayout: list\nlist:\n  view: magazine',
+      'Notes on building Flowershow, roughly weekly.',
+    ),
+    shots: [
+      { file: 'magazine-blog' },
+      { file: 'magazine-blog-full', fullPage: true },
+      { file: 'magazine-blog-tablet', width: 768 },
+      { file: 'magazine-blog-mobile', width: 390 },
+      { file: 'magazine-blog-mobile-full', width: 390, fullPage: true },
+      { file: 'magazine-blog-dark', dark: true },
+      ...themeShots('magazine', [['leaf', 390]]),
+    ],
+  },
+  {
+    name: 'magazine-blog-page-2',
+    title: 'view: magazine, page 2 (plain rows, no top section)',
+    slug: '/blog',
+    path: 'blog/README.md',
+    page: 2,
+    markdown: page('title: Blog\nlayout: list\nlist:\n  view: magazine'),
+    shots: [{ file: 'magazine-blog-page-2' }],
+  },
+  ...([1, 2, 3, 4, 5] as const).map(
+    (n): Scenario => ({
+      name: `magazine-${n}`,
+      title: `view: magazine with ${n} post${n === 1 ? '' : 's'}`,
+      slug: '/',
+      path: 'README.md',
+      markdown: inline(
+        'Home',
+        `\`\`\`blog\nview: magazine\nlimit: ${n}\n\`\`\``,
+      ),
+      shots: [
+        { file: `magazine-${n}` },
+        { file: `magazine-${n}-mobile`, width: 390 },
+        ...(n === 3 || n === 5
+          ? [{ file: `magazine-${n}-tablet`, width: 768 as const }]
+          : []),
+      ],
+    }),
+  ),
+  {
+    name: 'magazine-text-only',
+    title: 'view: magazine where no item has an image',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Notes',
+      '```list\nfrom: notes\nview: magazine\nheadings:\n  more: Latest\n```',
+    ),
+    shots: [
+      { file: 'magazine-text-only' },
+      { file: 'magazine-text-only-mobile', width: 390 },
+    ],
+  },
+  {
+    name: 'magazine-mixed',
+    title:
+      'view: magazine where some items have no image (cards get a placeholder, briefs drop the thumbnail)',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Home',
+      '```list\nfrom: blog\nview: magazine\nfeatured: 0\nlimit: 12\nsort: title\n```',
+    ),
+    shots: [{ file: 'magazine-mixed', fullPage: true }],
   },
   {
     name: 'group-by-field',

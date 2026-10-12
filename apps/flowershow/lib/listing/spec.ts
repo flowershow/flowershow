@@ -14,15 +14,17 @@ export const ALL_LISTING_KEYS = [
   'defaultImage',
   'featured',
   'group',
+  'headings',
 ] as const;
 export type ListingKey = (typeof ALL_LISTING_KEYS)[number];
 export const LISTING_KEYS: readonly ListingKey[] = ALL_LISTING_KEYS;
-export type ListingView = 'list' | 'grid' | 'compact' | 'people';
+export type ListingView = 'list' | 'grid' | 'compact' | 'people' | 'magazine';
 export const LISTING_VIEWS: readonly ListingView[] = [
   'list',
   'grid',
   'compact',
   'people',
+  'magazine',
 ];
 export type ListingSort = { field: string; direction: 'asc' | 'desc' };
 export type ListingFields = {
@@ -62,6 +64,13 @@ export type ListingSpec = {
   defaultImage: string | false | null;
   featured: 0 | 1;
   group: ListingGroup;
+  /** Section headings of the magazine view (null hides one). */
+  headings: MagazineHeadings;
+};
+export type MagazineHeadings = { more: string | null; recent: string | null };
+export const DEFAULT_MAGAZINE_HEADINGS: MagazineHeadings = {
+  more: 'More posts',
+  recent: 'Recent posts',
 };
 export type ListingSource = 'list' | 'blog' | 'layout';
 export type SpecResult =
@@ -96,6 +105,7 @@ const BASE_FIELDS: ListingFields = {
 export const DEFAULT_FIELDS: Record<ListingView, ListingFields> = {
   list: BASE_FIELDS,
   grid: BASE_FIELDS,
+  magazine: BASE_FIELDS,
   people: {
     eyebrow: [],
     title: 'title',
@@ -118,6 +128,7 @@ export const DEFAULT_FIELDS: Record<ListingView, ListingFields> = {
 const DEFAULT_MEDIA: Record<ListingView, MediaShape> = {
   list: 'thumb',
   grid: 'cover',
+  magazine: 'thumb',
   people: 'cover',
   compact: 'none',
 };
@@ -145,6 +156,8 @@ const VIEW_ALIASES: Record<string, ListingView> = {
   table: 'compact',
   archive: 'compact',
   team: 'people',
+  newspaper: 'magazine',
+  substack: 'magazine',
 };
 
 const canon = (k: string) => k.toLowerCase().replace(/[-_\s]/g, '');
@@ -371,6 +384,40 @@ function parseGroup(
   return { by: 'field', field: v };
 }
 
+/** `headings: { more: Latest, recent: none }` or `headings: none` (magazine only). */
+function parseHeadings(
+  raw: unknown,
+  view: ListingView,
+  errors: string[],
+  notes: string[],
+): MagazineHeadings {
+  const headings = { ...DEFAULT_MAGAZINE_HEADINGS };
+  if (raw == null) return headings;
+  if (view !== 'magazine') {
+    notes.push(`"headings" is ignored in the ${view} view.`);
+    return headings;
+  }
+  if (isNone(raw)) return { more: null, recent: null };
+  if (!isPlainObject(raw)) {
+    errors.push(
+      '"headings" must be "more: <text>" and "recent: <text>" lines, or "none".',
+    );
+    return headings;
+  }
+  for (const [key, value] of Object.entries(raw)) {
+    const k = key.toLowerCase();
+    if (k !== 'more' && k !== 'recent') {
+      errors.push(`Unknown heading "${key}". Headings: more, recent.`);
+      continue;
+    }
+    if (isNone(value)) headings[k] = null;
+    else if (typeof value === 'string' || typeof value === 'number')
+      headings[k] = String(value).trim() || null;
+    else errors.push(`"headings.${k}" must be text or "none".`);
+  }
+  return headings;
+}
+
 export function parseListingSpec(
   input: unknown,
   opts: {
@@ -430,10 +477,6 @@ export function parseListingSpec(
     const resolved = VIEW_ALIASES[v] ?? v;
     if ((LISTING_VIEWS as readonly string[]).includes(resolved))
       view = resolved as ListingView;
-    else if (v === 'magazine')
-      errors.push(
-        `Unknown view "${String(values.view)}". Use "view: grid" with "featured: 1".`,
-      );
     else
       errors.push(
         `Unknown view "${String(values.view)}". Use ${LISTING_VIEWS.join(', ').replace(/, ([^,]*)$/, ' or $1')}.`,
@@ -604,7 +647,15 @@ export function parseListingSpec(
 
   const group = parseGroup(values.group, view, opts.source, errors);
 
-  let featured: 0 | 1 = 0;
+  // magazine always has a hero; featured: 0 keeps the list's order (no promotion)
+  let featured: 0 | 1 = view === 'magazine' ? 1 : 0;
+  if (
+    values.featured != null &&
+    (isNone(values.featured) ||
+      values.featured === 0 ||
+      values.featured === '0')
+  )
+    featured = 0;
   if (
     values.featured != null &&
     !isNone(values.featured) &&
@@ -616,13 +667,16 @@ export function parseListingSpec(
       values.featured === 1 ||
       values.featured === '1'
     ) {
-      if (view === 'list' || view === 'grid') featured = 1;
+      if (view === 'list' || view === 'grid' || view === 'magazine')
+        featured = 1;
       else notes.push(`"featured" is ignored in the ${view} view.`);
     } else
       errors.push(
         `"featured" must be 0 or 1 (got "${String(values.featured)}").`,
       );
   }
+
+  const headings = parseHeadings(values.headings, view, errors, notes);
 
   if (errors.length || from === null)
     return from === null
@@ -645,6 +699,7 @@ export function parseListingSpec(
       defaultImage,
       featured,
       group,
+      headings,
     },
     notes,
   };

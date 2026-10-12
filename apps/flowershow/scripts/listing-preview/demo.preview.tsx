@@ -79,6 +79,10 @@ const URLS: Array<[name: string, slug: string, page?: number]> = [
   ['team-file', '/team-file'],
   ['magazine', '/magazine'],
   ['magazine-page-2', '/magazine', 2],
+  ['magazine-view', '/magazine-view'],
+  ['magazine-view-page-2', '/magazine-view', 2],
+  ['magazine-small', '/magazine-small'],
+  ['mdx-magazine', '/mdx-magazine'],
   ['latest-hero', '/latest-hero'],
 ];
 

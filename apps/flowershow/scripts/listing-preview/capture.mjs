@@ -33,7 +33,10 @@ const failures = [];
 async function open(name, opts = {}) {
   const width = opts.width ?? 1440;
   const page = await browser.newPage({
-    viewport: { width, height: width === 390 ? 844 : 900 },
+    viewport: {
+      width,
+      height: width === 390 ? 844 : width === 768 ? 1024 : 900,
+    },
     deviceScaleFactor: 1,
     colorScheme: opts.dark ? 'dark' : 'light',
   });
@@ -281,6 +284,36 @@ for (const [name, split] of [
   console.log(`check ${name}: featured image ${share}% wide`);
   await page.close();
 }
+// magazine: three columns side by side at 1440 (hero in the middle), stacked at 390
+for (const width of [1440, 768, 390]) {
+  const page = await open('magazine-blog', { width });
+  const box = (sel) =>
+    page.$eval(sel, (e) => {
+      const r = e.getBoundingClientRect();
+      return { x: Math.round(r.x), y: Math.round(r.y), w: Math.round(r.width) };
+    });
+  const top = '.list-component-magazine-top';
+  const hero = await box(`${top} > .list-component-item--featured`);
+  const side = await box(`${top} > .list-component-magazine-side`);
+  const more = await box(`${top} > .list-component-magazine-more`);
+  const ok =
+    width === 1440
+      ? side.x < hero.x &&
+        hero.x < more.x &&
+        side.y === hero.y &&
+        hero.y === more.y
+      : width === 768
+        ? side.y > hero.y && side.y === more.y && side.x < more.x
+        : hero.y < side.y && side.y < more.y && side.x === more.x;
+  if (!ok)
+    failures.push(
+      `magazine-blog @${width}: unexpected columns ${JSON.stringify({ hero, side, more })}`,
+    );
+  console.log(
+    `check magazine-blog @${width}: hero ${hero.w}px, side ${side.w}px, more ${more.w}px`,
+  );
+  await page.close();
+}
 for (const name of [
   'zero-config-blog',
   'grid-blog',
@@ -288,6 +321,8 @@ for (const name of [
   'compact-archive',
   'people-team',
   'grid-featured',
+  'magazine-blog',
+  'magazine-text-only',
 ]) {
   const page = await open(name, { width: 390 });
   const overflow = await page.evaluate(

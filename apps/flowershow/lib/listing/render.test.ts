@@ -5,11 +5,16 @@ import { unified } from 'unified';
 import { describe, expect, it } from 'vitest';
 import type { ListingItem } from './items';
 import {
+  magazineSlots,
   renderListing,
   renderListingError,
   type RenderListingInput,
 } from './render';
-import { DEFAULT_FIELDS, type ListingSpec } from './spec';
+import {
+  DEFAULT_FIELDS,
+  DEFAULT_MAGAZINE_HEADINGS,
+  type ListingSpec,
+} from './spec';
 
 // ListingImage is an MDX JSX element; give it a visible stand-in for plain remark-rehype.
 const handlers = {
@@ -48,6 +53,7 @@ const spec = (o: Partial<ListingSpec> = {}): ListingSpec => ({
   defaultImage: null,
   featured: 0,
   group: { by: 'none' },
+  headings: DEFAULT_MAGAZINE_HEADINGS,
   ...o,
 });
 const item = (o: Partial<ListingItem> = {}): ListingItem => ({
@@ -110,7 +116,7 @@ describe('card anatomy (design section 6)', () => {
     const art = root.querySelector(':scope > article.list-component-item')!;
     expect(
       art.querySelector(
-        ':scope > .list-component-item-media > a.list-component-item-media-link[href="/blog/a"][tabindex="-1"][aria-hidden="true"] > listing-image[src="http://h/a.jpg"][variant="media"][sizes="(min-width: 640px) 160px, 88px"]',
+        ':scope > .list-component-item-media > a.list-component-item-media-link[href="/blog/a"][tabindex="-1"][aria-hidden="true"] > listing-image[src="http://h/a.jpg"][variant="media"][sizes="(min-width: 640px) 180px, 104px"]',
       ),
     ).not.toBeNull();
     const content = art.querySelector(':scope > .list-component-item-content')!;
@@ -229,13 +235,36 @@ describe('card anatomy (design section 6)', () => {
       by.querySelector('.list-component-item-authors-more')!.textContent,
     ).toBe('and 1 other');
   });
-  it('list: a row without an image collapses (no media, no placeholder); media none hides images', async () => {
+  it('list: a row without an image gets a placeholder tile when others have one; media none hides images', async () => {
     const body = await html(
       renderListing(
         input({ page: page([item(), item({ url: '/b', image: null })]) }),
       ),
     );
-    expect(body.querySelectorAll('.list-component-item-media')).toHaveLength(1);
+    expect(body.querySelectorAll('.list-component-item-media')).toHaveLength(2);
+    const tile = body.querySelector('.list-component-item-media--placeholder')!;
+    expect(tile.getAttribute('aria-hidden')).toBe('true');
+    expect(tile.textContent).toBe('A');
+    // defaultImage: none, or no item with an image: text-only rows
+    expect(
+      (
+        await html(
+          renderListing(
+            input({
+              spec: spec({ defaultImage: false }),
+              page: page([item(), item({ url: '/b', image: null })]),
+            }),
+          ),
+        )
+      ).querySelectorAll('.list-component-item-media'),
+    ).toHaveLength(1);
+    expect(
+      (
+        await html(
+          renderListing(input({ page: page([item({ image: null })]) })),
+        )
+      ).querySelector('.list-component-item-media'),
+    ).toBeNull();
     expect(
       (
         await html(renderListing(input({ spec: spec({ media: 'none' }) })))
@@ -341,7 +370,8 @@ describe('grid view and the no-image rule (UX M-2)', () => {
     };
     expect(await count(g)).toBe(1);
     expect(await count({ ...g, defaultImage: false })).toBe(0);
-    expect(await count({})).toBe(0); // list view: text-only rows
+    expect(await count({})).toBe(1); // list view: a neutral tile
+    expect(await count({ media: 'cover' })).toBe(0); // list covers: text-only rows
     const featuredFirstNoImage = page([
       item({ image: null }),
       item({ url: '/b' }),
@@ -544,7 +574,7 @@ describe('renderListingError', () => {
     expect(
       card.querySelector('.list-component-error-keys')!.textContent,
     ).toMatch(
-      /^Keys: from, view, sort, limit, pageSize, where, fields, media, ratio, defaultImage(, featured, group)?\.$/,
+      /^Keys: from, view, sort, limit, pageSize, where, fields, media, ratio, defaultImage, featured, group, headings\.$/,
     );
   });
 });
@@ -725,5 +755,197 @@ describe('[B2] compact, people, featured, grouping', () => {
         .querySelector('h2.list-component-group-heading')!
         .getAttribute('data-toc-ignore'),
     ).toBe('');
+  });
+});
+
+describe('magazine view', () => {
+  const mag = spec({ view: 'magazine', featured: 1 });
+  const posts = (
+    n: number,
+    o: (i: number) => Partial<ListingItem> = () => ({}),
+  ) =>
+    Array.from({ length: n }, (_, i) =>
+      item({ url: `/blog/${i + 1}`, title: `Post ${i + 1}`, ...o(i) }),
+    );
+  const render = async (
+    n: number,
+    o: Partial<RenderListingInput> = {},
+    each?: (i: number) => Partial<ListingItem>,
+  ) =>
+    html(
+      renderListing(
+        input({
+          spec: mag,
+          page: page(posts(n, each)),
+          featuredFirst: true,
+          ...o,
+        }),
+      ),
+    );
+  const titles = (root: Element | null, sel: string) =>
+    [
+      ...(root?.querySelectorAll(`${sel} .list-component-item-headline a`) ??
+        []),
+    ].map((a) => a.textContent);
+
+  it('magazineSlots: a layout of its own for each small set', () => {
+    expect(magazineSlots(0)).toBeNull();
+    expect(magazineSlots(1)).toEqual({ layout: 'solo', side: 0, more: 0 });
+    expect(magazineSlots(2)).toEqual({ layout: 'pair', side: 1, more: 0 });
+    expect(magazineSlots(3)).toEqual({ layout: 'trio', side: 2, more: 0 });
+    expect(magazineSlots(4)).toEqual({ layout: 'lead-more', side: 0, more: 3 });
+    expect(magazineSlots(5)).toEqual({ layout: 'full', side: 2, more: 2 });
+    expect(magazineSlots(8)).toEqual({ layout: 'full', side: 2, more: 5 });
+    expect(magazineSlots(20)).toEqual({ layout: 'full', side: 2, more: 5 });
+  });
+
+  it('page 1: hero, two side cards, five briefs, then Recent posts rows', async () => {
+    const body = await render(12, { featuredPriority: true });
+    const root = body.querySelector(
+      'section.list-component.list-component--magazine[data-view="magazine"]',
+    )!;
+    const top = root.querySelector(':scope > .list-component-magazine-top')!;
+    expect(top.getAttribute('data-layout')).toBe('full');
+    const hero = top.querySelector(
+      ':scope > article.list-component-item--featured',
+    )!;
+    expect(
+      hero.querySelector('.list-component-item-headline a')!.textContent,
+    ).toBe('Post 1');
+    const heroImg = hero.querySelector('listing-image')!;
+    expect(heroImg.getAttribute('loading')).toBe('eager');
+    expect(heroImg.getAttribute('fetchpriority')).toBe('high');
+    expect(
+      titles(top, '.list-component-magazine-side > .list-component-item--card'),
+    ).toEqual(['Post 2', 'Post 3']);
+    const more = top.querySelector('.list-component-magazine-more')!;
+    expect(
+      more.querySelector('h2.list-component-section-heading')!.textContent,
+    ).toBe('More posts');
+    expect(titles(more, '.list-component-item--brief')).toEqual([
+      'Post 4',
+      'Post 5',
+      'Post 6',
+      'Post 7',
+      'Post 8',
+    ]);
+    expect(
+      more
+        .querySelector('.list-component-item--brief listing-image')!
+        .getAttribute('sizes'),
+    ).toBe('72px');
+    const rest = root.querySelector(':scope > .list-component-magazine-rest')!;
+    const heading = rest.querySelector(
+      ':scope > h2.list-component-section-heading',
+    )!;
+    expect(heading.textContent).toBe('Recent posts');
+    expect(heading.id).toBe('listing-item-heading');
+    expect(heading.getAttribute('data-toc-ignore')).toBe('');
+    expect(titles(rest, ':scope > article')).toEqual([
+      'Post 9',
+      'Post 10',
+      'Post 11',
+      'Post 12',
+    ]);
+    // every item once, one hero
+    expect(root.querySelectorAll('article')).toHaveLength(12);
+    expect(
+      root.querySelectorAll('.list-component-item--featured'),
+    ).toHaveLength(1);
+  });
+
+  it('small sets: no empty columns and no Recent posts heading', async () => {
+    const layouts: Record<number, [string, number, number]> = {
+      1: ['solo', 0, 0],
+      2: ['pair', 1, 0],
+      3: ['trio', 2, 0],
+      5: ['full', 2, 2],
+    };
+    for (const [n, [layout, side, more]] of Object.entries(layouts)) {
+      const body = await render(Number(n));
+      const top = body.querySelector('.list-component-magazine-top')!;
+      expect(top.getAttribute('data-layout'), n).toBe(layout);
+      expect(
+        top.querySelectorAll('.list-component-item--card'),
+        n,
+      ).toHaveLength(side);
+      expect(
+        top.querySelectorAll('.list-component-item--brief'),
+        n,
+      ).toHaveLength(more);
+      expect(!!top.querySelector('.list-component-magazine-side'), n).toBe(
+        side > 0,
+      );
+      expect(!!top.querySelector('.list-component-magazine-more'), n).toBe(
+        more > 0,
+      );
+      expect(body.querySelector('.list-component-magazine-rest'), n).toBeNull();
+    }
+  });
+
+  it('items without images: card tiles, briefs without a thumbnail, a text-only hero', async () => {
+    const body = await render(6, {}, (i) =>
+      i % 2 === 0 ? { image: null } : {},
+    );
+    const hero = body.querySelector('.list-component-item--featured')!;
+    expect(hero.querySelector('.list-component-item-media')).toBeNull();
+    const cards = body.querySelectorAll('.list-component-item--card');
+    expect(cards[0]!.querySelector('listing-image')).not.toBeNull(); // Post 2
+    expect(
+      cards[1]!.querySelector('.list-component-item-media--placeholder')!
+        .textContent,
+    ).toBe('P'); // Post 3
+    const briefs = body.querySelectorAll('.list-component-item--brief');
+    expect(briefs[0]!.querySelector('listing-image')).not.toBeNull(); // Post 4
+    expect(briefs[1]!.querySelector('.list-component-item-media')).toBeNull(); // Post 5
+    // no item with an image: no media at all
+    const text = await render(6, {}, () => ({ image: null }));
+    expect(text.querySelector('.list-component-item-media')).toBeNull();
+    expect(text.querySelector('section')!.getAttribute('data-media')).toBe(
+      'none',
+    );
+  });
+
+  it('headings can be renamed or hidden', async () => {
+    const body = await render(10, {
+      spec: { ...mag, headings: { more: 'Latest', recent: null } },
+    });
+    expect(
+      [...body.querySelectorAll('.list-component-section-heading')].map(
+        (h) => h.textContent,
+      ),
+    ).toEqual(['Latest']);
+  });
+
+  it('page 2: plain rows, no top section, no heading; groups only in the rows', async () => {
+    const body = await render(4, {
+      page: {
+        ...page(posts(4)),
+        page: 2,
+        pageCount: 2,
+        total: 24,
+        paginated: true,
+      },
+    });
+    expect(body.querySelector('.list-component-magazine-top')).toBeNull();
+    expect(body.querySelector('.list-component-section-heading')).toBeNull();
+    expect(body.querySelector('.list-component-item--featured')).toBeNull();
+    expect(
+      body.querySelectorAll('.list-component-magazine-rest > article'),
+    ).toHaveLength(4);
+    expect(body.querySelector('nav.list-component-pagination')).not.toBeNull();
+    const grouped = await render(10, {}, (i) => ({
+      group: i < 9 ? '2026' : '2025',
+    }));
+    expect(
+      [...grouped.querySelectorAll('.list-component-group-heading')].map(
+        (h) => h.textContent,
+      ),
+    ).toEqual(['2026', '2025']);
+    expect(
+      grouped.querySelector(
+        '.list-component-magazine-top .list-component-group-heading',
+      ),
+    ).toBeNull();
   });
 });

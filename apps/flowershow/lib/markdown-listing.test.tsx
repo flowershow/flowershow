@@ -94,12 +94,12 @@ const opts = {
   listing: { page: 1, publicUrl: '/' },
 };
 
-async function md() {
-  return renderToStaticMarkup(await processMarkdown(SRC, opts));
+async function md(src = SRC) {
+  return renderToStaticMarkup(await processMarkdown(src, opts));
 }
-async function mdx() {
+async function mdx(src = SRC) {
   const result = await serialize({
-    source: protectNonMathDollars(protectWikiLinkAliases(SRC)),
+    source: protectNonMathDollars(protectWikiLinkAliases(src)),
     options: getMdxOptions(opts) as any,
   });
   if ('error' in result) throw result.error;
@@ -133,6 +133,12 @@ describe('list blocks: .md and .mdx render the same listing', () => {
     expect(canonical(section(await md()))).toBe(
       canonical(section(await mdx())),
     );
+  });
+  it('same HTML for a magazine block', async () => {
+    const src = '## Intro\n\n```blog\nview: magazine\n```\n';
+    const html = section(await md(src));
+    expect(html.querySelector('.list-component-magazine-top')).not.toBeNull();
+    expect(canonical(html)).toBe(canonical(section(await mdx(src))));
   });
   for (const [name, render] of [
     ['md', md],

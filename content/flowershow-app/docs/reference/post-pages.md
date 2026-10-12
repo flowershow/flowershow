@@ -95,7 +95,7 @@ The default styles are easy to override, and these CSS variables change the most
 | `--post-wide-max-width` | `64rem` | The width of "Read more" |
 | `--post-body-size` | `1.125rem` | Body text size |
 | `--post-hero-max-height` | `24rem` | The tallest a cover from another website can be |
-| `--post-hero-radius` | `0.5rem` | Cover image corners |
+| `--post-hero-radius` | `0` (same as `--list-card-radius`) | Cover image corners |
 | `--post-avatar-size` | `40px` | Byline photos |
 | `--post-meta-color` | muted text | Date, reading time, caption, "Previous"/"Next" |
 | `--post-eyebrow-color` | your accent colour | The section label |
