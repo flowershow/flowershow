@@ -26,6 +26,8 @@ list: false
 ---
 ```
 
+The posts themselves get a post layout (reading column, byline, cover image, previous/next and "Read more" cards). See [[post-pages|Post pages]].
+
 ## A blog index in one line
 
 Add `layout: list` to a folder's `README.md` to list that folder:

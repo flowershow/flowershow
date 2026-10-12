@@ -99,7 +99,21 @@ vi.mock('next/image', () => ({
   },
 }));
 
+import { imageSize } from 'image-size';
 import { BlogLayout } from '@/components/public/layouts/blog';
+import { PostLayout } from '@/components/public/layouts/post';
+import { PostFooterSection } from '@/components/public/layouts/post-footer';
+import { resolveAuthors } from '@/lib/listing/authors';
+import { pageHeaderBreadcrumbs } from '@/lib/breadcrumbs';
+import { resolvePostHero } from '@/lib/post/hero';
+import { loadDatedShares } from '@/lib/post/hosts';
+import {
+  datedShareDirs,
+  postFiles,
+  postHostPaths,
+  resolvePostRoute,
+} from '@/lib/post/route';
+import { frontmatterTags } from '@flowershow/core';
 import List from '@/components/public/mdx/list';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
 import { renderPageListing } from '@/lib/listing/page-listing';
@@ -112,7 +126,128 @@ const THEMES_DIR =
   process.env.THEMES_DIR ?? path.resolve(APP, '../../../themes');
 const LOCALE = 'en-US';
 
+/** Intrinsic sizes of the copied assets, keyed like the site's image-dimensions map. */
+const DIMENSIONS = Object.fromEntries(
+  ASSETS.flatMap(([from, to]) => {
+    try {
+      const d = imageSize(readFileSync(path.join(CONTENT_DIR, from)));
+      return d.width && d.height
+        ? [[`/${to}`, { width: d.width, height: d.height }]]
+        : [];
+    } catch {
+      return [];
+    }
+  }),
+);
+
+/** A post as SitePage renders it: the route resolver, PostLayout, its footer (awaited here, streamed in the app). */
+async function renderPost(s: Scenario): Promise<string> {
+  const { data: metadata } = matter(s.markdown);
+  if (metadata.date instanceof Date)
+    metadata.date = metadata.date.toISOString().slice(0, 10);
+  const pagePath = s.path!;
+  const files = postFiles(site.files);
+  const hostPaths = postHostPaths(pagePath, files);
+  const hosts = Object.fromEntries(
+    site.rows
+      .filter((r) => hostPaths.includes(r.path))
+      .map((r) => [r.path, r.metadata]),
+  );
+  const dirs = datedShareDirs({ pagePath, files, hosts });
+  const route = resolvePostRoute({
+    pagePath,
+    metadata,
+    files,
+    hosts,
+    datedShare: dirs.length ? await loadDatedShares('preview', dirs) : {},
+  });
+  if (route.kind !== 'post') throw new Error(`${s.name}: not a post`);
+  const body = await processMarkdown(s.markdown, {
+    files: site.files,
+    filePath: pagePath,
+    siteHostname: SITE_HOSTNAME,
+    siteId: 'preview',
+    permalinks: {},
+  });
+  const handles = Array.isArray(metadata.authors) ? metadata.authors : [];
+  const { db } = await import('@/server/db');
+  const authors = handles.length
+    ? await resolveAuthors(db as never, {
+        siteId: 'preview',
+        handles,
+        siteHostname: SITE_HOSTNAME,
+        files: site.files,
+      })
+    : [];
+  // The breadcrumb trail of a post in a folder: the folder, then the post
+  const crumbs = pageHeaderBreadcrumbs({
+    tree: [],
+    pagePath,
+    title: metadata.title,
+    section: route.collection
+      ? (site.rows.find((r) => r.path === route.collection!.hostPath)?.metadata
+          .title ??
+        route.collection.dir
+          .split('/')
+          .pop()!
+          .replace(/^./, (c) => c.toUpperCase()))
+      : undefined,
+  }).map((c, i) =>
+    i === 0 && route.collection
+      ? { ...c, href: `/${route.collection.dir}` }
+      : c,
+  );
+  const footer = route.collection
+    ? await PostFooterSection({
+        siteId: 'preview',
+        collection: route.collection,
+        pagePath,
+        siteHostname: SITE_HOSTNAME,
+        files: site.files,
+        permalinks: {},
+        locale: s.locale ?? LOCALE,
+      })
+    : null;
+  const html = renderToStaticMarkup(
+    <div className="site-layout no-nav">
+      <div className="site-body">
+        <div className="layout-inner">
+          <div className="layout-inner-center post-layout">
+            <main className="page-main">
+              <PostLayout
+                title={metadata.title ?? ''}
+                description={metadata.description ?? ''}
+                eyebrow={crumbs.slice(0, -1)}
+                authors={authors}
+                date={metadata.date}
+                locale={s.locale ?? LOCALE}
+                readingTime={s.readingTime}
+                hero={resolvePostHero({
+                  metadata,
+                  body: s.markdown,
+                  pagePath,
+                  files: site.files,
+                  siteHostname: SITE_HOSTNAME,
+                  dimensions: s.unknownSizes ? {} : DIMENSIONS,
+                })}
+                tags={frontmatterTags(metadata)}
+                after={footer}
+              >
+                <div className="rendered-mdx" id="mdxpage">
+                  {body}
+                </div>
+              </PostLayout>
+            </main>
+          </div>
+        </div>
+      </div>
+    </div>,
+  );
+  return html.replaceAll(`http://${SITE_HOSTNAME}/`, 'site/');
+}
+
 async function renderScenario(s: Scenario): Promise<string> {
+  if (s.post) return renderPost(s);
   const { data: metadata } = matter(s.markdown);
   if (s.legacy)
     return wrap(
@@ -298,10 +433,10 @@ it('builds the listing preview', async () => {
   const emitted = new Set<string>();
   for (const s of SCENARIOS) {
     const rendered = await renderScenario(s);
-    expect(rendered, s.name).toMatch(/list-component/);
+    expect(rendered, s.name).toMatch(s.post ? /post-page/ : /list-component/);
     for (const m of rendered.matchAll(/class="([^"]*)"/g))
       for (const c of m[1]!.split(/\s+/))
-        if (/^list(ing)?-/.test(c)) emitted.add(c);
+        if (/^(list(ing)?|post)-/.test(c)) emitted.add(c);
     writeFileSync(path.join(OUT, `${s.name}.html`), pageHtml(s, rendered));
   }
   // Tailwind drops @layer components rules whose classes it does not find in

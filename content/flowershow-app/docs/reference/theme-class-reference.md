@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **311 styled class selectors**:
-**309 stable semantic hooks** and **2 non-contract
+and currently documents **334 styled class selectors**:
+**332 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -239,6 +239,58 @@ main.page-main (structural wrapper)
 | <code>.pre-icon</code> | Hook |
 | <code>.pre-sr</code> | Hook |
 | <code>.rendered-mdx</code> | Hook |
+
+## Post pages
+
+Individual posts: dated pages in a `blog/` or `posts/` folder, pages of a folder listed by its own `layout: list` page that is a dated feed, or pages with `layout: post`. The header keeps the `.page-header-*` classes; tags move to the article footer. Custom properties: `--post-max-width`, `--post-wide-max-width`, `--post-body-size`, `--post-hero-max-height`, `--post-hero-radius`, `--post-avatar-size`, `--post-meta-color`, `--post-eyebrow-color`, `--post-rule-color`.
+
+**DOM shape**
+
+```text
+.layout-inner-center.post-layout
+└─ main.page-main
+   ├─ article.post-page[data-layout="post"]
+   │  ├─ header.page-header.post-header
+   │  │  ├─ nav.page-header-breadcrumbs.post-eyebrow (folders above the post)
+   │  │  ├─ h1.page-header-title
+   │  │  ├─ p.page-header-description.post-dek
+   │  │  ├─ .page-header-metadata-container.post-byline[data-avatars]
+   │  │  │  ├─ .page-header-authors-container.post-byline-authors
+   │  │  │  │  ├─ .page-header-authors-avatars-container.post-byline-avatars > img.page-header-author-avatar.post-byline-avatar
+   │  │  │  │  └─ .page-header-authors-names-container.post-byline-names > .page-header-author-name
+   │  │  │  └─ .post-byline-meta > .page-header-date > time, .page-header-reading-time
+   │  │  └─ figure.post-hero > img.post-hero-img, figcaption.post-hero-caption
+   │  ├─ .page-body > .rendered-mdx#mdxpage
+   │  └─ footer.post-footer > .page-header-tags.post-tags > .tag-pill
+   ├─ nav.post-nav > a.post-nav-link.post-nav-link--prev | --next > .post-nav-label, .post-nav-title (or .post-nav-placeholder)
+   └─ section.post-read-more > h2.post-read-more-title, section.list-component.list-component--grid (the listing grid cards)
+```
+
+| Class | Kind |
+| --- | --- |
+| <code>.post-byline</code> | Hook |
+| <code>.post-byline-authors</code> | Hook |
+| <code>.post-byline-avatars</code> | Hook |
+| <code>.post-byline-meta</code> | Hook |
+| <code>.post-byline-names</code> | Hook |
+| <code>.post-dek</code> | Hook |
+| <code>.post-eyebrow</code> | Hook |
+| <code>.post-footer</code> | Hook |
+| <code>.post-header</code> | Hook |
+| <code>.post-hero</code> | Hook |
+| <code>.post-hero-caption</code> | Hook |
+| <code>.post-hero-img</code> | Hook |
+| <code>.post-layout</code> | Hook |
+| <code>.post-nav</code> | Hook |
+| <code>.post-nav-label</code> | Hook |
+| <code>.post-nav-link</code> | Hook |
+| <code>.post-nav-link--next</code> | Variant |
+| <code>.post-nav-placeholder</code> | Hook |
+| <code>.post-nav-title</code> | Hook |
+| <code>.post-page</code> | Hook |
+| <code>.post-read-more</code> | Hook |
+| <code>.post-read-more-title</code> | Hook |
+| <code>.post-tags</code> | Hook |
 
 ## Table of contents
 

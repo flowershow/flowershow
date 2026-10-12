@@ -301,6 +301,47 @@ for (const name of [
   await page.close();
 }
 
+// Post pages (PR F): one 44rem column, a wider read-more band of 3 cards (1 on
+// phones), the hero inside the column, 40px byline avatars, no horizontal scroll.
+for (const width of [1440, 390]) {
+  const page = await open('post-full', { width });
+  const m = await page.evaluate(() => {
+    const w = (sel) =>
+      document.querySelector(sel)?.getBoundingClientRect().width ?? 0;
+    const grid = document.querySelector(
+      '.post-read-more .list-component--grid',
+    );
+    return {
+      article: w('article.post-page'),
+      hero: w('.post-hero-img'),
+      cols: grid
+        ? getComputedStyle(grid).gridTemplateColumns.split(' ').length
+        : 0,
+      avatar: w('.post-byline-avatar'),
+      overflow:
+        document.documentElement.scrollWidth -
+        document.documentElement.clientWidth,
+    };
+  });
+  const want = width === 1440 ? { article: 704, cols: 3 } : { cols: 1 };
+  if (want.article && m.article !== want.article)
+    failures.push(
+      `post-full @${width}: article ${m.article}px (expected ${want.article})`,
+    );
+  if (m.hero > m.article + 0.5)
+    failures.push(`post-full @${width}: hero wider than the column`);
+  if (m.cols !== want.cols)
+    failures.push(
+      `post-full @${width}: read-more has ${m.cols} columns (expected ${want.cols})`,
+    );
+  if (m.avatar !== 40)
+    failures.push(`post-full @${width}: byline avatar ${m.avatar}px`);
+  if (m.overflow > 0)
+    failures.push(`post-full @${width}: horizontal scroll ${m.overflow}px`);
+  console.log(`check post-full @${width}: ${JSON.stringify(m)}`);
+  await page.close();
+}
+
 let n = 0;
 for (const s of scenarios) {
   for (const shot of s.shots ?? []) {
@@ -309,16 +350,43 @@ for (const s of scenarios) {
     if (shot.theme && !(only && /theme-/.test(only.source))) continue;
     const page = await open(s.name, shot);
     const target = shot.selector ? page.locator(shot.selector).first() : page;
+    if (shot.from) {
+      // From an element's top to the end of the page
+      const y = await page.$eval(
+        shot.from,
+        (el) => el.getBoundingClientRect().top + window.scrollY - 24,
+      );
+      const h = await page.evaluate(
+        () => document.documentElement.scrollHeight,
+      );
+      const width = shot.width ?? 1440;
+      shot.clip = {
+        x: 0,
+        y: Math.max(0, y),
+        width,
+        height: h - Math.max(0, y),
+      };
+    }
     const png = path.join(out, `${shot.file}.png`);
     const jpg = path.join(out, `${shot.file}.jpg`);
     for (const f of [png, jpg])
       try {
         unlinkSync(f);
       } catch {}
-    await target.screenshot({ path: png });
+    const opts = shot.clip
+      ? { clip: shot.clip, fullPage: true }
+      : shot.fullPage
+        ? { fullPage: true }
+        : {};
+    await target.screenshot({ path: png, ...opts });
     if (statSync(png).size > MAX_BYTES) {
       unlinkSync(png);
-      await target.screenshot({ path: jpg, type: 'jpeg', quality: 80 });
+      await target.screenshot({
+        path: jpg,
+        type: 'jpeg',
+        quality: 80,
+        ...opts,
+      });
     }
     await page.close();
     n++;

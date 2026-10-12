@@ -37,7 +37,7 @@ npx playwright test --project=chromium --no-deps links-and-embeds
 # Run links-and-embeds against the premium custom-domain site only
 npx playwright test --project=custom-domain --no-deps links-and-embeds
 
-# Run the list block / layout: list specs against the listings demo site only
+# Run the list block / layout: list / post page specs against the listings demo site only
 npx playwright test --project=listings --no-deps listings
 
 # Capture listing screenshots into test-results/listing-screenshots/ (skipped unless set)
@@ -56,7 +56,7 @@ npx playwright test --project=teardown
 e2e/
 ├── fixtures/        # Markdown/MDX content seeded into DB + MinIO
 │   ├── test-site/      # free, premium and password sites
-│   └── listings-demo/  # listings site (list blocks, layout: list, zero-config blog/posts, compact/people/featured/grouping)
+│   └── listings-demo/  # listings site (list blocks, layout: list, zero-config blog/posts, compact/people/featured/grouping, post pages in post-demo/)
 ├── helpers/
 │   └── seed.ts      # Seed/teardown logic, shared base-URL constants
 ├── specs/           # Test files

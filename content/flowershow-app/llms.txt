@@ -38,6 +38,7 @@ fl ./my-notes     # publish a folder (or a single .md / .html file)
 - [Connector (MCP)](https://flowershow.app/docs/agents/mcp.md): publish from Claude and ChatGPT
 - [Getting started from the CLI](https://flowershow.app/docs/getting-started/from-cli.md)
 - [Listing pages](https://flowershow.app/docs/reference/listings.md): a blog index, a grid of projects, compact archives grouped by year, team pages and a featured post from any folder with one fenced block, layout: list, or nothing at all for a blog/ folder; works in .md
+- [Post pages](https://flowershow.app/docs/reference/post-pages.md): dated posts in a blog/ or posts/ folder (or a layout: list folder of dated pages) get a reading column, byline, cover image, previous/next and read-more cards; showImage, imageAlt, imageCaption, layout: post, postLayout: false/true
 - [Docs index](https://flowershow.app/docs/sitemap.md): every docs page with a one-line description, as Markdown
 - [Markdown access](https://flowershow.app/docs/agents/markdown-access.md): append `.md` to any Flowershow page URL to get its raw Markdown
 
