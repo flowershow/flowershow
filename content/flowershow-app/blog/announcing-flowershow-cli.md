@@ -1,5 +1,5 @@
 ---
-title: Publishing a local Markdown file shouldn’t feel like starting a project
+title: "Publish a Markdown file from your terminal"
 description: Publish markdown files directly from your terminal with the new Flowershow CLI.
 date: 2026-01-14
 authors:

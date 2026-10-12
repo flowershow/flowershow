@@ -1,5 +1,5 @@
 ---
-title: "Announcing URL Redirects"
+title: "URL redirects"
 date: 2025-10-20
 description: "Flowershow now supports URL redirects, making it easier to manage your content's URLs and maintain backwards compatibility."
 authors:

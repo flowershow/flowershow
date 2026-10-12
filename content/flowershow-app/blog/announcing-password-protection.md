@@ -1,5 +1,5 @@
 ---
-title: Password Protection Now Available for Premium Sites
+title: "Password protection for premium sites"
 description: Keep your content private and secure with password-protected sites. Control who can access your published content with a simple password.
 date: 2025-11-19
 authors:

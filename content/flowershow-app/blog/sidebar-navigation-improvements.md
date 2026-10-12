@@ -1,5 +1,5 @@
 ---
-title: "Sidebar Navigation: Now On by Default, Better on Mobile, and Route-Aware"
+title: "A better sidebar: on by default, mobile-friendly and route-aware"
 description: "A round-up of recent sidebar improvements — on by default for new sites, a redesigned mobile experience with breadcrumbs, and per-route visibility control."
 date: 2026-03-04
 authors:

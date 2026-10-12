@@ -1,5 +1,5 @@
 ---
-title: Full Giscus Configuration Is Now Supported
+title: "Full Giscus configuration support"
 description: Flowershow now supports customizing Giscus comments with themes, languages, reactions, and other settings.
 date: 2025-06-29
 authors:

@@ -1,5 +1,5 @@
 ---
-title: Full Text Search Now Available for Premium Sites
+title: "Full-text search for premium sites"
 description: Enable powerful search functionality on your Flowershow site and make it easier for your readers to find relevant content.
 date: 2025-04-24
 authors:

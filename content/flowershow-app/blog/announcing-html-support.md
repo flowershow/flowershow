@@ -1,6 +1,6 @@
 ---
-title: Announcing Raw HTML Support
-description: You can now publish .html files directly with Flowershow.
+title: "Publish raw HTML pages"
+description: "Have an HTML file and want a URL? Publish .html files as they are, with no Markdown wrapping or layout hacks, including pages exported from other tools or made with AI."
 date: 2026-01-28
 authors:
   - abeelha

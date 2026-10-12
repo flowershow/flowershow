@@ -1,5 +1,5 @@
 ---
-title: Flowerstall (Alpha) - Instant previews for Markdown geeks
+title: "Flowerstall (alpha): instant previews for Markdown"
 description: Point at a file, see it live, move on. An instant local preview server for your Markdown.
 date: 2026-01-26
 authors:

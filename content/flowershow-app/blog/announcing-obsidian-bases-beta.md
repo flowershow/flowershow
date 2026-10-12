@@ -1,6 +1,6 @@
 ---
-title: Obsidian Bases enters Beta
-description: Dynamic views for your notes are now in Beta!
+title: "Obsidian Bases support is now in beta"
+description: "Obsidian Bases on Flowershow move from alpha to beta: filter your notes and show them as tables, lists or cards, with formulas, straight from your existing metadata."
 date: 2026-01-25
 authors:
   - abeelha

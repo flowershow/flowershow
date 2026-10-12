@@ -1,5 +1,5 @@
 ---
-title: "Obsidian Plugin 4.0: Direct Publishing Without GitHub"
+title: "Obsidian plugin 4.0: publish without GitHub"
 description: The Flowershow Obsidian plugin now connects directly to Flowershow Cloud. No GitHub repository required. Simpler setup, faster publishing.
 date: 2026-01-31
 authors:

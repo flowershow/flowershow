@@ -1,5 +1,5 @@
 ---
-title: "Flowershow's Direction: Finding the Sweet Spot"
+title: "Flowershow's direction: finding the sweet spot"
 description: Reflections on Flowershow's product boundary, and why its strength is opinionated markdown publishing rather than becoming a lighter Astro.
 date: 2026-04-11
 authors:

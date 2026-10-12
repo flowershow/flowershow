@@ -1,5 +1,5 @@
 ---
-title: Moving My Personal Website to Flowershow — Part 1
+title: "Moving my personal website to Flowershow, part 1"
 date: 2025-05-19
 authors:
   - rufuspollock

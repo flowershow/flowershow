@@ -1,5 +1,5 @@
 ---
-title: "How to create great listing pages: a blog index, a project portfolio and a team page"
+title: "Build a blog, portfolio or team page"
 description: "Turn a folder of Markdown pages into a blog index, a grid of projects or a team page on Flowershow, with no code: a folder name or one line of frontmatter."
 date: 2026-10-11
 authors:
@@ -12,7 +12,7 @@ image: "[[assets/blog-listing-pages-tutorial.webp]]"
 
 You have a folder of pages (posts, projects, people) and you want a page that lists them: a blog index at `/blog`, a portfolio at `/projects`, a team page at `/team`. On Flowershow the folder does most of the work. A `blog/` folder lists itself, and any other folder's `README.md` becomes its index with one line of frontmatter.
 
-(If you only want a few items *inside* another page, like your three latest posts on the home page, see [[show-a-list-of-pages-anywhere|Show a list of pages anywhere]]: it's one block.)
+(If you only want a few items *inside* another page, like your three latest posts on the home page, see [[show-a-list-of-pages-anywhere|Show your latest posts anywhere]]: it's one block.)
 
 ## What you'll build
 
@@ -149,5 +149,5 @@ Each of these is one or two lines under `list:`; the [[listings|Listing pages]] 
 - **Headings per group**: `group: year`, or `group: status` for projects.
 - **What each card shows**: `fields`, e.g. `eyebrow: category` or `meta: [status]`.
 - **Styling**: CSS custom properties such as `--list-card-radius` in your `custom.css`; see [Styling](/docs/reference/listings#styling).
-- **A few items inside another page**: [[show-a-list-of-pages-anywhere|Show a list of pages anywhere]].
+- **A few items inside another page**: [[show-a-list-of-pages-anywhere|Show your latest posts anywhere]].
 - **Already have a Flowershow site, or use `<List />`?** What changed and how to switch: [[2026-10-11-listing-pages|the listing pages changelog entry]] and [Coming from the List component](/docs/reference/listings#coming-from-the-list-component).

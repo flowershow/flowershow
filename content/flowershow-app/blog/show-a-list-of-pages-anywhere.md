@@ -1,5 +1,5 @@
 ---
-title: "Show a list of pages anywhere: your latest posts on your home page in one block"
+title: "Show your latest posts anywhere"
 description: "Put your three newest blog posts on your home page, or a list of projects on your about page, with one Markdown block, and know when to use Obsidian Bases instead."
 date: 2026-10-11
 authors:
@@ -12,7 +12,7 @@ image: "[[assets/docs-listings-latest-three.webp]]"
 
 You want a short list of pages inside a page you already have: your three latest posts on the home page, your projects on your about page. On Flowershow that's one small block of Markdown, and it works on **any page**: the home page, an about page, a docs page, a blog post.
 
-(If you want a whole page that *is* the index, like `/blog` or a team page, see [[listing-pages-tutorial|How to create great listing pages]].)
+(If you want a whole page that *is* the index, like `/blog` or a team page, see [[listing-pages-tutorial|Build a blog, portfolio or team page]].)
 
 ## What you'll build
 
@@ -129,5 +129,5 @@ You should see a table with one row per matching post. Bases support on Flowersh
 
 - Cards instead of rows: `view: grid`. One line per post: `view: compact`. A big featured post on top: `featured: 1`. See [[listings|Listing pages]].
 - Only some posts, e.g. related posts at the end of a post: `where: { tags: [garden] }`. Hide dates for projects: `fields: { date: none }`. Both in [[listings|Listing pages]].
-- A whole page that lists a folder (`/blog`, a portfolio, a team page): [[listing-pages-tutorial|How to create great listing pages]].
+- A whole page that lists a folder (`/blog`, a portfolio, a team page): [[listing-pages-tutorial|Build a blog, portfolio or team page]].
 - Setting up a blog from scratch: [[publish-blog|Publishing a blog]].
