@@ -53,11 +53,24 @@ const ROWS = [
     permalink: null,
     metadata: { title: 'Two', date: '2026-09-17' },
   },
+  // eight more, so a magazine block fills its top section and has rest rows
+  ...Array.from({ length: 8 }, (_, i) => ({
+    id: String(i + 3),
+    path: `blog/p${i + 3}.md`,
+    appPath: `/blog/p${i + 3}`,
+    permalink: null,
+    metadata: {
+      title: `Post ${i + 3}`,
+      date: `2026-09-0${9 - i}`,
+      authors: ['ada'],
+      ...(i % 2 ? { image: 'https://x.org/b.jpg' } : {}),
+    },
+  })),
 ];
 vi.mock('@/lib/listing/query', () => ({
   queryListingIndex: async () => ({
-    ids: ['1', '2'],
-    paths: ['blog/intro.md', 'blog/two.md'],
+    ids: ROWS.map((r) => r.id),
+    paths: ROWS.map((r) => r.path),
     featured: [],
     groups: null,
   }),
@@ -94,12 +107,12 @@ const opts = {
   listing: { page: 1, publicUrl: '/' },
 };
 
-async function md() {
-  return renderToStaticMarkup(await processMarkdown(SRC, opts));
+async function md(src = SRC) {
+  return renderToStaticMarkup(await processMarkdown(src, opts));
 }
-async function mdx() {
+async function mdx(src = SRC) {
   const result = await serialize({
-    source: protectNonMathDollars(protectWikiLinkAliases(SRC)),
+    source: protectNonMathDollars(protectWikiLinkAliases(src)),
     options: getMdxOptions(opts) as any,
   });
   if ('error' in result) throw result.error;
@@ -132,6 +145,37 @@ describe('list blocks: .md and .mdx render the same listing', () => {
   it('same HTML for the listing section', async () => {
     expect(canonical(section(await md()))).toBe(
       canonical(section(await mdx())),
+    );
+  });
+  it('same HTML for a magazine block (hero, cards, briefs, section headings, rest rows)', async () => {
+    const src = '## Intro\n\n```blog\nview: magazine\n```\n\n## Recent posts\n';
+    for (const render of [md, mdx]) {
+      const doc = new DOMParser().parseFromString(
+        await render(src),
+        'text/html',
+      );
+      const s = doc.querySelector('section.list-component')!;
+      expect(
+        s
+          .querySelector('.list-component-magazine-top')!
+          .getAttribute('data-layout'),
+      ).toBe('full');
+      expect(s.querySelectorAll('.list-component-item--card')).toHaveLength(2);
+      expect(s.querySelectorAll('.list-component-item--brief')).toHaveLength(5);
+      expect(
+        s.querySelectorAll('.list-component-magazine-rest > article'),
+      ).toHaveLength(2);
+      expect(
+        [...s.querySelectorAll('h2.list-component-section-heading')].map(
+          (h) => h.textContent,
+        ),
+      ).toEqual(['More posts', 'Recent posts']);
+      // no ids or anchors on listing headings; the page's own heading keeps its slug
+      expect(s.querySelectorAll('[id], .heading-link')).toHaveLength(0);
+      expect(doc.querySelector('h2#recent-posts')).not.toBeNull();
+    }
+    expect(canonical(section(await md(src)))).toBe(
+      canonical(section(await mdx(src))),
     );
   });
   for (const [name, render] of [

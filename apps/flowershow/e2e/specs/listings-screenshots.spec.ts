@@ -22,6 +22,8 @@ const shots: Array<[name: string, url: string, selector?: string]> = [
   ['people', '/people'],
   ['team-by-group', '/team'],
   ['magazine', '/magazine'],
+  ['magazine-view', '/magazine-view'],
+  ['magazine-small', '/magazine-small'],
   ['home-latest-3', '/'],
   ['podcast-where', '/podcast'],
   ['error-card', '/errors', '.list-component-error--block'],

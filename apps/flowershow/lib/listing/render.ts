@@ -9,6 +9,8 @@ import { LISTING_KEYS, type ListingSpec } from './spec';
 
 export const LISTING_HEADLINE_CLASS = 'list-component-item-headline';
 export const LISTING_GROUP_HEADING_CLASS = 'list-component-group-heading';
+/** The magazine view's "More posts" and "Recent posts" headings. */
+export const LISTING_SECTION_HEADING_CLASS = 'list-component-section-heading';
 /** Set so rehype-slug skips listing headings; removed by rehype-listing-headings. */
 export const LISTING_HEADING_PLACEHOLDER_ID = 'listing-item-heading';
 
@@ -29,15 +31,26 @@ const el = (
   }) as unknown as RootContent;
 const text = (value: string): PhrasingContent => ({ type: 'text', value });
 
+/** How an item is laid out: a list row, or one of the magazine top's slots. */
+type ItemRole = 'row' | 'hero' | 'card' | 'brief';
+
 /** next/image `sizes` per view and media shape (design section 6). */
-function mediaSizes(spec: ListingSpec, featured: boolean): string {
+function mediaSizes(
+  spec: ListingSpec,
+  featured: boolean,
+  role: ItemRole,
+): string {
+  if (role === 'hero') return '(min-width: 1024px) 50vw, 100vw';
+  if (role === 'card')
+    return '(min-width: 1024px) 25vw, (min-width: 640px) 50vw, 100vw';
+  if (role === 'brief') return '72px';
   if (featured) return '(min-width: 768px) 58vw, 100vw';
   if (spec.view === 'grid')
     return '(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw';
   if (spec.view === 'people')
     return spec.media === 'thumb' ? '96px' : '(min-width: 1024px) 25vw, 50vw';
   return spec.media === 'thumb'
-    ? '(min-width: 640px) 160px, 88px'
+    ? '(min-width: 640px) 180px, 104px'
     : '(min-width: 768px) 44rem, 100vw';
 }
 
@@ -93,7 +106,7 @@ function initials(name: string): string {
     .join('');
 }
 
-/** First letter or digit of a title, for a grid card without an image ('' if none). */
+/** First letter or digit of a title, for a placeholder tile ('' if none). */
 function monogram(title: string): string {
   return title.match(/[\p{L}\p{N}]/u)?.[0]?.toLocaleUpperCase() ?? '';
 }
@@ -101,6 +114,8 @@ function monogram(title: string): string {
 function renderAuthors(
   handles: string[],
   authors: Map<string, ResolvedAuthor>,
+  /** Every name in a title attribute, for meta lines cut with an ellipsis. */
+  withTitle = false,
 ): RootContent | null {
   if (handles.length === 0) return null;
   const resolved = handles.map(
@@ -143,6 +158,7 @@ function renderAuthors(
       ...names,
       ...more,
     ],
+    withTitle ? { title: resolved.map((a) => a.name).join(', ') } : {},
   );
 }
 
@@ -152,9 +168,10 @@ type ItemCtx = {
   /** This hero is the page's first: fetch its image at high priority. */
   priority: boolean;
   showMedia: boolean;
-  /** Grid with at least one image: cards without one get a monogram tile. */
-  monogram: boolean;
+  /** Some items have an image: the others get a placeholder tile (grid, list, magazine cards). */
+  placeholder: boolean;
   locale: string;
+  role: ItemRole;
 };
 
 function renderMedia(
@@ -164,6 +181,7 @@ function renderMedia(
 ): RootContent | null {
   if (!ctx.showMedia) return null;
   if (item.image) {
+    const eager = ctx.featured || ctx.role === 'hero';
     return el(
       'div',
       ['list-component-item-media'],
@@ -175,9 +193,9 @@ function renderMedia(
             image({
               src: item.image,
               alt: '',
-              sizes: mediaSizes(spec, ctx.featured),
+              sizes: mediaSizes(spec, ctx.featured, ctx.role),
               variant: 'media',
-              ...(ctx.featured
+              ...(eager
                 ? {
                     loading: 'eager',
                     ...(ctx.priority ? { fetchPriority: 'high' } : {}),
@@ -203,8 +221,9 @@ function renderMedia(
       ],
       { ariaHidden: 'true' },
     );
-  if (ctx.monogram && !ctx.featured) {
-    // A tinted tile with the title's first letter keeps grid rows aligned
+  // Heroes are text-only without an image; "More posts" briefs just lose their thumbnail
+  if (ctx.placeholder && !ctx.featured && ctx.role !== 'brief') {
+    // A tile with the title's first letter keeps rows and columns aligned
     // without looking like a broken image; decorative, so aria-hidden
     const letter = monogram(item.title);
     return el(
@@ -216,7 +235,7 @@ function renderMedia(
       { ariaHidden: 'true' },
     );
   }
-  // List rows (and grids with defaultImage: none) without an image: no media block
+  // defaultImage: none, or no item has an image: no media block
   return null;
 }
 
@@ -263,7 +282,11 @@ function renderItem(
         { dateTime: item.date },
       ),
     );
-  const by = renderAuthors(item.authorHandles, ctx.authors);
+  const by = renderAuthors(
+    item.authorHandles,
+    ctx.authors,
+    ctx.role === 'brief',
+  );
   if (by) meta.push(by);
   for (const f of item.meta)
     meta.push(
@@ -278,6 +301,9 @@ function renderItem(
     [
       'list-component-item',
       ...(ctx.featured ? ['list-component-item--featured'] : []),
+      ...(ctx.role === 'card' || ctx.role === 'brief'
+        ? [`list-component-item--${ctx.role}`]
+        : []),
     ],
     children,
   );
@@ -358,7 +384,38 @@ export type RenderListingInput = {
   featuredFirst?: boolean;
   /** The featured hero is the page's first, so its image gets fetchPriority high. */
   featuredPriority?: boolean;
+  /**
+   * Share (0–1) of the whole listing's items that have an image, across all
+   * pages; defaults to the share on this page.
+   */
+  imageShare?: number;
 };
+
+/** Placeholder tiles only where most items have a picture: at least this share. */
+export const PLACEHOLDER_MIN_IMAGE_SHARE = 0.5;
+
+export type MagazineLayout = 'solo' | 'pair' | 'trio' | 'lead-more' | 'full';
+/** At most this many items in the magazine's "More posts" column. */
+export const MAGAZINE_MORE_MAX = 5;
+
+/**
+ * How the magazine's top section uses the first `n` items of page 1: the hero,
+ * then `side` cards (the left column), then `more` briefs (the right column).
+ * Small sets get a layout of their own instead of half-empty columns.
+ */
+export function magazineSlots(n: number): {
+  layout: MagazineLayout;
+  side: number;
+  more: number;
+} | null {
+  if (n <= 0) return null;
+  if (n === 1) return { layout: 'solo', side: 0, more: 0 };
+  if (n === 2) return { layout: 'pair', side: 1, more: 0 };
+  if (n === 3) return { layout: 'trio', side: 2, more: 0 };
+  // one card beside a hero and one brief would leave two thin columns
+  if (n === 4) return { layout: 'lead-more', side: 0, more: 3 };
+  return { layout: 'full', side: 2, more: Math.min(n - 3, MAGAZINE_MORE_MAX) };
+}
 
 export function renderListing({
   spec,
@@ -370,22 +427,98 @@ export function renderListing({
   notes = [],
   featuredFirst = false,
   featuredPriority = false,
+  imageShare,
 }: RenderListingInput): RootContent {
   const empty = el('p', ['list-component-empty'], [text('Nothing here yet.')]);
   if (page.total === 0 && notes.length === 0) return empty;
-  const anyImage = page.items.some((i) => i.image);
+  const share =
+    imageShare ??
+    page.items.filter((i) => i.image).length / Math.max(1, page.items.length);
   const showMedia =
-    spec.media !== 'none' && (anyImage || spec.view === 'people');
-  // All-or-nothing grid media: if any card has an image, the rest get a monogram
-  const monogramTiles =
-    spec.view === 'grid' && showMedia && spec.defaultImage !== false;
+    spec.media !== 'none' && (share > 0 || spec.view === 'people');
+  // Items without an image get a placeholder tile so rows and columns stay
+  // aligned: in a grid whenever any card has one (monogram tiles), in lists and
+  // the magazine only when most items do (a tile on most rows would be noise)
+  const placeholder =
+    showMedia &&
+    spec.defaultImage !== false &&
+    (spec.view === 'grid' ||
+      ((spec.view === 'magazine' ||
+        (spec.view === 'list' && spec.media === 'thumb')) &&
+        share >= PLACEHOLDER_MIN_IMAGE_SHARE));
+  const base = { authors, showMedia, placeholder, locale };
   const children: RootContent[] = [];
   if (page.items.length === 0) children.push(empty);
+
+  // magazine: page 1 opens with the hero, side cards and "More posts"
+  const slots =
+    spec.view === 'magazine' && page.page === 1
+      ? magazineSlots(page.items.length)
+      : null;
+  let rest = page.items;
+  if (slots) {
+    const [hero, ...others] = page.items;
+    const side = others.slice(0, slots.side);
+    const more = others.slice(slots.side, slots.side + slots.more);
+    rest = others.slice(slots.side + slots.more);
+    const top: RootContent[] = [
+      renderItem(hero!, spec, {
+        ...base,
+        featured: true,
+        priority: featuredPriority,
+        role: 'hero',
+      }),
+    ];
+    if (side.length)
+      top.push(
+        el(
+          'div',
+          ['list-component-magazine-side'],
+          side.map((it) =>
+            renderItem(it, spec, {
+              ...base,
+              featured: false,
+              priority: false,
+              role: 'card',
+            }),
+          ),
+        ),
+      );
+    if (more.length)
+      top.push(
+        el(
+          'div',
+          ['list-component-magazine-more'],
+          [
+            ...(spec.headings.more ? [sectionHeading(spec.headings.more)] : []),
+            ...more.map((it) =>
+              renderItem(it, spec, {
+                ...base,
+                featured: false,
+                priority: false,
+                role: 'brief',
+              }),
+            ),
+          ],
+        ),
+      );
+    children.push(
+      el('div', ['list-component-magazine-top'], top, {
+        dataLayout: slots.layout,
+      }),
+    );
+  }
+
+  const rows: RootContent[] =
+    slots && rest.length && spec.headings.recent
+      ? [sectionHeading(spec.headings.recent)]
+      : [];
   let lastGroup: string | null = null;
-  page.items.forEach((it, i) => {
-    const featured = featuredFirst && i === 0;
+  rest.forEach((it, i) => {
+    // the magazine's hero is in the top section; its rows are never heroes
+    const featured = featuredFirst && i === 0 && spec.view !== 'magazine';
     if (!featured && it.group !== null && it.group !== lastGroup) {
-      children.push(
+      rows.push(
         el('h2', [LISTING_GROUP_HEADING_CLASS], [text(it.group)], {
           id: LISTING_HEADING_PLACEHOLDER_ID,
           dataTocIgnore: '',
@@ -393,19 +526,24 @@ export function renderListing({
       );
       lastGroup = it.group;
     }
-    children.push(
+    rows.push(
       renderItem(it, spec, {
-        authors,
+        ...base,
         featured,
         priority: featured && featuredPriority,
-        showMedia,
-        monogram: monogramTiles,
-        locale,
+        role: 'row',
       }),
     );
   });
+  if (spec.view === 'magazine') {
+    if (rows.length)
+      children.push(el('div', ['list-component-magazine-rest'], rows));
+  } else children.push(...rows);
   if (page.paginated && page.pageCount > 1)
     children.push(renderPagination(page, spec, publicUrl));
+  // Root classes, spelled out so Tailwind's content scan keeps their rules:
+  // list-component--list list-component--grid list-component--compact
+  // list-component--people list-component--magazine
   return el(
     'section',
     ['list-component', `list-component--${spec.view}`, 'not-prose'],
@@ -422,6 +560,12 @@ export function renderListing({
     },
   );
 }
+
+const sectionHeading = (title: string) =>
+  el('h2', [LISTING_SECTION_HEADING_CLASS], [text(title)], {
+    id: LISTING_HEADING_PLACEHOLDER_ID,
+    dataTocIgnore: '',
+  });
 
 export function renderListingError(
   errors: string[],

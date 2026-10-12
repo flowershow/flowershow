@@ -88,7 +88,8 @@ export function collectionSpecs(
     ? parsed.spec
     : (parseListingSpec(undefined, opts) as { ok: true; spec: ListingSpec })
         .spec;
-  const ownFields = base.view === 'list' || base.view === 'grid';
+  const ownFields =
+    base.view === 'list' || base.view === 'grid' || base.view === 'magazine';
   // Same from/where/sort/date slot/group as the collection page, so the cached index is shared
   const index = { ...base, from: collection.dir, fromRelative: false };
   const cards: ListingSpec = {

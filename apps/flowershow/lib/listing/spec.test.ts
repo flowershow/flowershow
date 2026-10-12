@@ -41,6 +41,7 @@ describe('presets and from', () => {
       defaultImage: null,
       featured: 0,
       group: { by: 'none' },
+      headings: { more: 'More posts', recent: 'Recent posts' },
     });
   });
   it('```list requires from; dir/folder are aliases; ./ is relative', () => {
@@ -131,9 +132,9 @@ describe('keys: case-insensitive, aliases, hints', () => {
     ]);
     expect(errs(blog({ zzz: 1 }))).toEqual(['Unknown key "zzz".']);
   });
-  it('unknown views list all four', () => {
+  it('unknown views list all five', () => {
     expect(errs(blog({ view: 'masonry' }))).toEqual([
-      'Unknown view "masonry". Use list, grid, compact or people.',
+      'Unknown view "masonry". Use list, grid, compact, people or magazine.',
     ]);
   });
   it('reports YAML that is not a map, or does not parse', () => {
@@ -373,8 +374,41 @@ describe('[B2] compact, people, featured, group', () => {
       media: 'cover',
       ratio: '1/1',
     });
-    expect(errs(blog({ view: 'magazine' }))).toEqual([
-      'Unknown view "magazine". Use "view: grid" with "featured: 1".',
+  });
+  it('magazine: a hero by default, list fields and thumbnails, headings', () => {
+    expect(ok(blog({ view: 'magazine' }))).toMatchObject({
+      view: 'magazine',
+      featured: 1,
+      media: 'thumb',
+      ratio: '3/2',
+      fields: DEFAULT_FIELDS.list,
+      headings: { more: 'More posts', recent: 'Recent posts' },
+    });
+    expect(ok(blog({ view: 'Substack' })).view).toBe('magazine');
+    // featured: 0 keeps the hero but does not promote a featured: true post
+    expect(ok(blog({ view: 'magazine', featured: 0 })).featured).toBe(0);
+    expect(ok(blog({ view: 'magazine', featured: false })).featured).toBe(0);
+    expect(
+      ok(
+        blog({
+          view: 'magazine',
+          headings: { more: 'Latest', recent: 'none' },
+        }),
+      ).headings,
+    ).toEqual({ more: 'Latest', recent: null });
+    expect(ok(blog({ view: 'magazine', headings: 'none' })).headings).toEqual({
+      more: null,
+      recent: null,
+    });
+    expect(errs(blog({ view: 'magazine', headings: { side: 'x' } }))).toEqual([
+      'Unknown heading "side". Headings: more, recent.',
+    ]);
+    expect(errs(blog({ view: 'magazine', headings: 'Latest' }))).toEqual([
+      '"headings" must be "more: <text>" and "recent: <text>" lines, or "none".',
+    ]);
+    const r = blog({ view: 'grid', headings: { more: 'Latest' } });
+    expect(r.ok && r.notes).toEqual([
+      '"headings" is ignored in the grid view.',
     ]);
   });
   it('group values', () => {

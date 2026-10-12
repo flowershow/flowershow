@@ -25,12 +25,12 @@ test('zero-config blog folder (no README), page 1', async ({ page }) => {
   await expect(list.locator('h3[id]')).toHaveCount(0);
   const thumb = list.locator('img.list-component-item-media-img').first();
   await expect(thumb).toHaveAttribute('loading', 'lazy');
-  // 160px thumbnails on desktop (next/image drops `sizes` when unoptimized, as in
+  // 180px thumbnails on desktop (next/image drops `sizes` when unoptimized, as in
   // dev and previews; the sizes value is pinned in lib/listing/render.test.ts)
   expect(
     (await list.locator('.list-component-item-media').first().boundingBox())
       ?.width,
-  ).toBe(160);
+  ).toBe(180);
   await expect(page.locator('.listing-page[data-view="list"]')).toBeVisible(); // one column for header, intro and list
   await expect(
     list.locator('.list-component-pagination-button--prev'),
@@ -555,6 +555,164 @@ test('magazine = grid + featured: the featured: true post is the hero, once', as
     page.locator('.list-component-item-headline a', { hasText: /^Post 10:/ }),
   ).toHaveCount(1);
   await expect(page.locator('.list-component-item--featured')).toHaveCount(1);
+});
+
+test('view: magazine on a layout: list page: hero, cards, More posts, Recent posts', async ({
+  page,
+}) => {
+  await page.goto('/magazine-view');
+  const root = page.locator('section.list-component--magazine');
+  const top = root.locator('.list-component-magazine-top');
+  await expect(top).toHaveAttribute('data-layout', 'full');
+  // the featured: true post is the hero, not repeated
+  const hero = top.locator('> article.list-component-item--featured');
+  await expect(hero.locator('.list-component-item-headline a')).toHaveText(
+    /^Post 10:/,
+  );
+  await expect(hero.locator('.list-component-item-media img')).toHaveAttribute(
+    'loading',
+    'eager',
+  );
+  await expect(
+    page.locator('.list-component-item-headline a', { hasText: /^Post 10:/ }),
+  ).toHaveCount(1);
+  await expect(top.locator('.list-component-item--card')).toHaveCount(2);
+  await expect(top.locator('.list-component-item--brief')).toHaveCount(5);
+  await expect(
+    top.locator(
+      '.list-component-magazine-more > h2.list-component-section-heading',
+    ),
+  ).toHaveText('More posts');
+  const rest = root.locator('.list-component-magazine-rest');
+  await expect(rest.locator('> h2.list-component-section-heading')).toHaveText(
+    'Recent posts',
+  );
+  await expect(rest.locator('> article')).toHaveCount(4);
+  // section headings stay out of anchors and the ToC
+  await expect(root.locator('h2[id], h3[id]')).toHaveCount(0);
+  // square images; the three columns sit side by side at 1440
+  const radius = await hero
+    .locator('.list-component-item-media')
+    .evaluate((m) => getComputedStyle(m).borderRadius);
+  expect(radius).toBe('0px');
+  const side = (await top
+    .locator('.list-component-magazine-side')
+    .boundingBox())!;
+  const heroBox = (await hero.boundingBox())!;
+  const more = (await top
+    .locator('.list-component-magazine-more')
+    .boundingBox())!;
+  expect(side.x).toBeLessThan(heroBox.x);
+  expect(heroBox.x).toBeLessThan(more.x);
+  expect(Math.abs(side.y - heroBox.y)).toBeLessThan(2);
+  // rows without an image get a placeholder tile beside the others
+  await expect(
+    root.locator('.list-component-item-media--placeholder').first(),
+  ).toBeVisible();
+  await expect(
+    root.locator('a.list-component-pagination-button--next'),
+  ).toHaveAttribute('href', '/magazine-view?page=2');
+});
+
+test('view: magazine, page 2 is plain rows', async ({ page }) => {
+  await page.goto('/magazine-view?page=2');
+  const root = page.locator('section.list-component--magazine');
+  await expect(root.locator('.list-component-magazine-top')).toHaveCount(0);
+  await expect(root.locator('.list-component-section-heading')).toHaveCount(0);
+  await expect(
+    root.locator('.list-component-magazine-rest > article'),
+  ).toHaveCount(12);
+});
+
+test('view: magazine pages 1–3 hold every post once; the promoted post is not on page 2', async ({
+  page,
+}) => {
+  const hrefs = async (url: string) => {
+    await page.goto(url);
+    return page
+      .locator('section.list-component .list-component-item-headline a')
+      .evaluateAll((as) => as.map((a) => a.getAttribute('href')!));
+  };
+  const magazine = [
+    ...(await hrefs('/magazine-view')),
+    ...(await hrefs('/magazine-view?page=2')),
+    ...(await hrefs('/magazine-view?page=3')),
+  ];
+  const page2 = await hrefs('/magazine-view?page=2');
+  expect(
+    page2.some((h) => h.endsWith('/blog/post-10')),
+    'the featured post is only on page 1',
+  ).toBe(false);
+  // the same folder as the zero-config /blog index (20 + 8 posts)
+  const blog = [...(await hrefs('/blog')), ...(await hrefs('/blog?page=2'))];
+  expect(blog).toHaveLength(28);
+  expect(new Set(magazine).size, 'no post twice').toBe(magazine.length);
+  expect([...magazine].sort()).toEqual([...blog].sort());
+});
+
+test('view: magazine stacks on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/magazine-view');
+  const top = page.locator('.list-component-magazine-top');
+  const hero = (await top
+    .locator('> .list-component-item--featured')
+    .boundingBox())!;
+  const side = (await top
+    .locator('.list-component-magazine-side')
+    .boundingBox())!;
+  const more = (await top
+    .locator('.list-component-magazine-more')
+    .boundingBox())!;
+  expect(side.y).toBeGreaterThan(hero.y + hero.height - 1);
+  expect(more.y).toBeGreaterThan(side.y + side.height - 1);
+  expect(
+    await page.evaluate(
+      () => document.documentElement.scrollWidth - window.innerWidth,
+    ),
+  ).toBeLessThanOrEqual(0);
+});
+
+test('view: magazine small sets and items without images', async ({ page }) => {
+  await page.goto('/magazine-small');
+  const tops = page.locator('.list-component-magazine-top');
+  await expect(tops).toHaveCount(5);
+  await expect(tops.nth(0)).toHaveAttribute('data-layout', 'solo');
+  await expect(tops.nth(1)).toHaveAttribute('data-layout', 'pair');
+  await expect(tops.nth(2)).toHaveAttribute('data-layout', 'trio');
+  await expect(tops.nth(3)).toHaveAttribute('data-layout', 'full');
+  await expect(
+    tops.nth(3).locator('.list-component-section-heading'),
+  ).toHaveText('Latest');
+  await expect(tops.nth(3).locator('.list-component-item--brief')).toHaveCount(
+    2,
+  );
+  for (const i of [0, 1, 2, 3])
+    await expect(
+      page
+        .locator('section.list-component--magazine')
+        .nth(i)
+        .locator('.list-component-magazine-rest'),
+    ).toHaveCount(0);
+  // notes/ has no images: no media boxes at all
+  const text = page.locator('section.list-component--magazine').nth(4);
+  await expect(text).toHaveAttribute('data-media', 'none');
+  await expect(text.locator('.list-component-item-media')).toHaveCount(0);
+  await expect(text.locator('.list-component-item--featured')).toHaveCount(1);
+});
+
+test('view: magazine in an .mdx page', async ({ page }) => {
+  await page.goto('/mdx-magazine');
+  const top = page.locator(
+    'section.list-component--magazine .list-component-magazine-top',
+  );
+  await expect(top).toHaveAttribute('data-layout', 'full');
+  await expect(
+    top.locator(
+      '> .list-component-item--featured .list-component-item-headline a',
+    ),
+  ).toHaveText(/^Post 10:/);
+  await expect(top.locator('.list-component-item--card')).toHaveCount(2);
+  await expect(top.locator('.list-component-item--brief')).toHaveCount(3);
 });
 
 test('an inline featured block keeps its hero on ?page=2 of its page', async ({

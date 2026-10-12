@@ -105,17 +105,18 @@ Every key works in a ```` ```list ```` or ```` ```blog ```` block and in a `list
 | Key | Values | Default | What it does |
 | --- | --- | --- | --- |
 | `from` | folder path | `blog` for ```` ```blog ````; the page's own folder for `layout: list`; required for ```` ```list ```` | The folder to list, including its subfolders. Must be a folder, not a page. |
-| `view` | `list`, `grid`, `compact`, `people` | `list` | Rows with a small thumbnail, a grid of cards, one-line date + title rows, or portraits. See [Views](#views). |
+| `view` | `list`, `grid`, `compact`, `people`, `magazine` | `list` | Rows with a thumbnail, a grid of cards, one-line date + title rows, portraits, or a newspaper-style front page. See [Views](#views). |
 | `sort` | `<field> [asc\|desc]` or `-<field>` | `date desc` (`title` in `people`) | Order of items. `date` means the item's date (see [fields](#choosing-what-each-card-shows-fields)). `title`, `path` or any frontmatter field. |
 | `limit` | number | none | Show at most this many items and never paginate. For teasers. |
 | `pageSize` | number or `none` | `20` on `layout: list` and zero-config pages; none in blocks | Items per page. A list with neither `limit` nor `pageSize` shows at most 200 items. |
 | `where` | map of field to value(s) | none | Keep only matching items. See [Filtering](#filtering-with-where). |
 | `fields` | map of slot to field, or a list | per view | Which frontmatter field fills each part of a card. See [fields](#choosing-what-each-card-shows-fields). |
-| `media` | `thumb`, `thumb right`, `cover`, `none` | `thumb` in `list` (on the left), `cover` in `grid` and `people`, `none` in `compact` | How images are shown: a thumbnail beside the text (left unless you write `thumb right`), a cover above it, or no images. |
+| `media` | `thumb`, `thumb right`, `cover`, `none` | `thumb` in `list` and `magazine` (on the left), `cover` in `grid` and `people`, `none` in `compact` | How images are shown: a thumbnail beside the text (left unless you write `thumb right`), a cover above it, or no images. In `magazine` it sets the rows below the front page; `none` turns off every image. |
 | `ratio` | `16/9`, `3/2`, `4/3`, `1/1`, `3/4` | `3/2` for thumbnails, `16/9` for covers, `1/1` in `people` | Shape of the image box. `16:9` works too. |
-| `defaultImage` | image path, `[[wikilink]]` or `none` | unset | Image for items that don't have one, found relative to the listing page. `none` turns off the letter tiles in a grid (see [Views](#views)). |
-| `featured` | `0`, `1` (`true` works too) | `0` | `1` shows one item as a large hero above the rest, on page 1: the first item with `featured: true` in its frontmatter, otherwise the first item (the latest post with the default sort). `list` and `grid` only. See [A featured post](#a-featured-post). |
+| `defaultImage` | image path, `[[wikilink]]` or `none` | unset | Image for items that don't have one, found relative to the listing page. `none` turns off the placeholder tiles (see [Views](#views)). |
+| `featured` | `0`, `1` (`true` works too) | `0`; `1` in `magazine` | `1` shows one item as a large hero above the rest, on page 1: the first item with `featured: true` in its frontmatter, otherwise the first item (the latest post with the default sort). `list`, `grid` and `magazine` only. See [A featured post](#a-featured-post). |
 | `group` | `none`, `year`, `month`, `day`, `folder` or a field name | `none`; `year` for `compact` on `layout: list` and zero-config pages | A heading before each group, each group once. See [Grouping](#grouping). |
+| `headings` | `more:` and `recent:` text, or `none` | `more: More posts`, `recent: Recent posts` | The two section headings of the `magazine` view; `none` hides one (or both). See [A magazine front page](#a-magazine-front-page-magazine). |
 
 Keys are case-insensitive (`pagesize` works). A few natural guesses are read silently: `dir` and `folder` mean `from`, `layout` inside a block means `view`, `cards` means `grid`, `sortBy` with `sortDirection` means `sort`, and `sort: -date` means newest first.
 
@@ -157,7 +158,7 @@ Authors show as small avatars and names linked to their author pages (see [[page
 
 ## Views
 
-**`list`** (the default) is one column of rows. The thumbnail sits on the left; `media: thumb right` puts it on the right. On a `layout: list` page the header, intro and list share one reading-width column. A row without an image is text only, lined up with the other rows' text. `media: cover` shows a wide image above each row's text; `media: none` gives plain text rows.
+**`list`** (the default) is one column of rows, each with a 3:2 thumbnail with square corners. The thumbnail sits on the left; `media: thumb right` puts it on the right. On a `layout: list` page the header, intro and list share one reading-width column. When at least half of the list's items have an image (counting every page, so page 2 looks like page 1), a row without one gets a plain neutral tile with the first letter of its title, so the text column stays lined up. With fewer, rows without an image are text only, lined up with the other rows' text. `defaultImage` shows your image instead of the tile, and `defaultImage: none` makes those rows text only. When no item has an image there is no image column at all. `media: cover` shows a wide image above each row's text; `media: none` gives plain text rows.
 
 **`grid`** shows cards in three columns on wide screens, two on tablets and one on phones. A `layout: list` grid page uses the full content width.
 
@@ -184,6 +185,8 @@ Quote a wiki link value (`"[[cover.png]]"`) to keep it valid YAML in other tools
 **`compact`** is one line per item: the date in a column, then the title. No images, no summaries. Good for archives, talks and references. See [An archive](#an-archive-compact).
 
 **`people`** shows portraits in up to four columns (two on phones), each with a name, a role and a short bio. See [A team page](#a-team-page-people).
+
+**`magazine`** opens page 1 like a newspaper front page: a big hero in the middle, two stories on the left and a "More posts" column on the right, then the rest as rows under "Recent posts". See [A magazine front page](#a-magazine-front-page-magazine).
 
 ## An archive (`compact`)
 
@@ -219,6 +222,43 @@ fields:
 ```
 ````
 
+## A magazine front page (`magazine`)
+
+````markdown
+---
+title: Blog
+layout: list
+list:
+  view: magazine
+---
+````
+
+![A magazine front page: two stories with large images on the left, a hero post with a big serif title in the middle, a More posts column with small square thumbnails on the right, separated by thin rules](/assets/docs-listings-magazine.webp)
+
+Page 1 starts with three columns separated by thin rules:
+
+- **In the middle, the hero**: the first post with `featured: true` in its frontmatter, otherwise the latest. A large image, then a big centred title, its description and a date and authors line.
+- **On the left, two stories**, each with a large image, its title, a one-line description and the date and authors.
+- **On the right, "More posts"**: up to five more, each with a title, the date and authors, and a small square thumbnail.
+
+The rest follow under a "Recent posts" heading as list rows, with "Newer" and "Older" links when there are more pages. Page 2 and later pages are plain rows.
+
+Small sets keep a shape of their own instead of half-empty columns: one post is a centred hero, two put a story beside the hero, three put two stories beside it, and four put three "More posts" beside it. A post without an image still fits: the hero becomes a large title on its own, a "More posts" entry simply has no thumbnail, and a story gets a plain tile when at least half of the posts have an image (otherwise it is text only, as in a list). If no post has an image, the page is all text. On a tablet the hero goes on top with the columns below it; on a phone everything is one column.
+
+Titles use your site's body font (a serif in the default theme), like a newspaper. Rename or hide the two headings with `headings`:
+
+````markdown
+```blog
+view: magazine
+limit: 8
+headings:
+  more: Latest
+  recent: none
+```
+````
+
+`featured: 0` keeps the layout but does not promote a `featured: true` post: the hero is simply the first in the list's order. `media: thumb right` puts the thumbnails of the rows below on the right.
+
 ## A team page (`people`)
 
 Make one page per person in a folder (`team/ada.md`, `team/grace.md`), then:
@@ -252,7 +292,7 @@ fields:
 
 ![A magazine-style home page: a featured post with a large image on the left and its category, title, description, date and author on the right, above a grid of cards](/assets/docs-listings-grid-featured.webp)
 
-A block with `limit` always shows its hero, also on `?page=2` of the page it sits on; a paginated list shows it on its own first page only. `featured` works in `list` and `grid`; other views ignore it.
+A block with `limit` always shows its hero, also on `?page=2` of the page it sits on; a paginated list shows it on its own first page only. `featured` works in `list`, `grid` and `magazine` (where it is on by default); other views ignore it.
 
 ## Grouping
 
@@ -339,7 +379,7 @@ List block has problems
 • No folder "posts" with pages. Folders with pages: blog, notes.
 • Unknown key "perPage". Use "pageSize".
 • Unknown key "image". Use "media: cover" (to choose which field holds the image, use "fields: { image: <key> }").
-Keys: from, view, sort, limit, pageSize, where, fields, media, ratio, defaultImage, featured, group.
+Keys: from, view, sort, limit, pageSize, where, fields, media, ratio, defaultImage, featured, group, headings.
 ```
 
 Other messages you may see:
@@ -400,10 +440,15 @@ or, for the whole page, `layout: list` with `list: { pageSize: 5, fields: { eyeb
 Lists use the same `.list-component-*` classes as `<List />`, plus attributes that say which view and image style a list uses:
 
 ```text
-section.list-component.list-component--list|--grid|--compact|--people[data-view][data-media][data-media-side][data-ratio]
+section.list-component.list-component--list|--grid|--compact|--people|--magazine[data-view][data-media][data-media-side][data-ratio]
+  .list-component-magazine-top[data-layout] (magazine, page 1: solo, pair, trio, lead-more or full)
+    article.list-component-item--featured  (the hero)
+    .list-component-magazine-side > article.list-component-item--card
+    .list-component-magazine-more > h2.list-component-section-heading, article.list-component-item--brief
+  .list-component-magazine-rest           (magazine: h2.list-component-section-heading, then the rows)
   h2.list-component-group-heading       (with group)
   article.list-component-item[.list-component-item--featured]
-    .list-component-item-media            (image, or a tile: .list-component-item-media--placeholder > .list-component-item-monogram in grid, .list-component-item-initials in people)
+    .list-component-item-media            (image, or a tile: .list-component-item-media--placeholder > .list-component-item-monogram in list, grid and magazine, .list-component-item-initials in people)
     .list-component-item-content
       .list-component-item-eyebrow
       h3.list-component-item-headline
@@ -416,16 +461,39 @@ Most of the look is set with custom properties, in your `custom.css`:
 
 ```css
 :root {
-  --list-card-radius: 0;          /* square images */
-  --list-thumb-width: 120px;      /* smaller list thumbnails */
+  --list-title-font: var(--font-body); /* serif titles, as in the magazine view */
+  --list-card-radius: 6px;        /* rounded images (square by default) */
+  --list-thumb-width: 140px;      /* smaller list thumbnails */
   --list-thumb-order: 2;          /* every list thumbnail on the right */
   --list-card-min: 14rem;         /* narrower grid cards, more columns */
-  --list-media-placeholder: #f3efe6; /* letter tile background */
+  --list-media-placeholder: #f3efe6; /* placeholder tile background */
   --list-monogram-color: #8a6d3b; /* letter (and initials) colour */
 }
 ```
 
-The full list: `--list-max-width`, `--list-gap`, `--list-card-min`, `--list-card-radius`, `--list-card-border`, `--list-card-bg`, `--list-card-hover-bg`, `--list-media-ratio`, `--list-media-placeholder`, `--list-monogram-color`, `--list-thumb-width`, `--list-thumb-order`, `--list-avatar-shape`, `--list-meta-color`, `--list-eyebrow-color`, `--list-rule-color`, `--list-compact-meta-width` (the `compact` category column, `9em`). `--list-avatar-shape: 50%` makes people portraits round.
+| Variable | Default | What it changes |
+| --- | --- | --- |
+| `--list-title-font` | the heading font; the body font (a serif) in `magazine` | Item titles, and the magazine's "More posts" and "Recent posts" headings |
+| `--list-max-width` | `44rem` | The reading column of `list` and `compact` pages |
+| `--list-rest-max-width` | `48rem` | The rows below a magazine front page |
+| `--list-gap` | per view | Space between grid cards and portraits |
+| `--list-card-min` | `17.5rem` | The narrowest a grid card gets (more columns when smaller) |
+| `--list-card-radius` | `0` | Image and card corners |
+| `--list-card-border`, `--list-card-bg`, `--list-card-hover-bg` | none | Grid card border and background |
+| `--list-media-ratio` | from `ratio` | The image box shape, for every list |
+| `--list-media-placeholder` | a light neutral (an accent tint in `grid`) | Placeholder tiles for items without an image |
+| `--list-monogram-color` | a muted grey (accent in `grid`) | The letter on placeholder tiles, and people initials |
+| `--list-thumb-width` | `180px` (`104px` on phones) | List thumbnails |
+| `--list-thumb-order` | `0` | `2` puts every list thumbnail on the right |
+| `--list-avatar-shape` | square portraits, round author photos | People portraits and the small author photos in the meta line; `50%` makes them all round |
+| `--list-meta-color` | muted text | The date and authors line (small uppercase letters) |
+| `--list-meta-transform` | `uppercase` | The meta line's letters; `none` keeps them as written |
+| `--list-eyebrow-color` | muted text | The eyebrow above the title |
+| `--list-group-color` | your accent colour mixed with the text colour, for contrast | Group headings (`group: year` and so on) |
+| `--list-rule-color` | a light hairline | Lines between rows and the magazine's column rules |
+| `--list-compact-meta-width` | `9em` | The `compact` category column |
+
+Post pages have their own `--post-*` variables (`--post-max-width`, `--post-wide-max-width`, `--post-body-size`, `--post-hero-max-height`, `--post-hero-radius`, `--post-avatar-size`, `--post-meta-color`, `--post-eyebrow-color`, `--post-rule-color`), which fall back to the list ones where they overlap. See [[post-pages|Post pages]].
 
 Meta values show without labels. Add one with CSS:
 

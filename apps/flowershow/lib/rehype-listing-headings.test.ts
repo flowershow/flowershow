@@ -19,4 +19,17 @@ describe('rehypeListingHeadings', () => {
       '<h3 class="list-component-item-headline">Intro</h3><h2 id="intro">Intro</h2>',
     );
   });
+  it('also strips them from magazine section headings', async () => {
+    const p = unified()
+      .use(rehypeSlug)
+      .use(rehypeListingHeadings)
+      .use(rehypeStringify);
+    const tree = fromHtml(
+      '<h2 class="list-component-section-heading" id="listing-item-heading">Recent posts</h2><h2>Recent posts</h2>',
+      { fragment: true },
+    );
+    expect(String(p.stringify((await p.run(tree)) as any))).toBe(
+      '<h2 class="list-component-section-heading">Recent posts</h2><h2 id="recent-posts">Recent posts</h2>',
+    );
+  });
 });

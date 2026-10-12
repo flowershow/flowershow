@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **334 styled class selectors**:
-**332 stable semantic hooks** and **2 non-contract
+and currently documents **342 styled class selectors**:
+**340 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -324,11 +324,16 @@ Collection/blog listing cards, empty and error states, loading placeholders, and
 
 ```text
 div.listing-page[data-view] (page-level list/compact pages only)
-section.list-component[.list-component--list | --grid | --compact | --people][data-view][data-media][data-media-side][data-ratio][data-listing-notes]   (div without data-view for legacy <List />)
+section.list-component[.list-component--list | --grid | --compact | --people | --magazine][data-view][data-media][data-media-side][data-ratio][data-listing-notes]   (div without data-view for legacy <List />)
+├─ .list-component-magazine-top[data-layout=solo|pair|trio|lead-more|full] (magazine, page 1)
+│  ├─ article.list-component-item.list-component-item--featured (the hero)
+│  ├─ .list-component-magazine-side > article.list-component-item.list-component-item--card
+│  └─ .list-component-magazine-more > h2.list-component-section-heading, article.list-component-item.list-component-item--brief
+├─ .list-component-magazine-rest (magazine: the remaining rows, after h2.list-component-section-heading)
 ├─ h2.list-component-group-heading (optional, with group)
 ├─ article.list-component-item[.list-component-item--featured] / .list-component-skeleton-item (legacy only)
 │  ├─ .list-component-item-media > a.list-component-item-media-link > img.list-component-item-media-img (item image or defaultImage)
-│  │  | .list-component-item-media.list-component-item-media--placeholder[aria-hidden] > span.list-component-item-monogram (grid card without an image when another card has one; off with defaultImage: none)
+│  │  | .list-component-item-media.list-component-item-media--placeholder[aria-hidden] > span.list-component-item-monogram (grid card, list row or magazine card without an image when another item has one; off with defaultImage: none)
 │  │  | .list-component-item-media.list-component-item-media--placeholder[aria-hidden] > span.list-component-item-initials (people view, no photo)
 │  └─ .list-component-item-content
 │     ├─ .list-component-item-eyebrow > span
@@ -352,6 +357,7 @@ section.list-component[.list-component--list | --grid | --compact | --people][da
 | <code>.list-component--compact</code> | Variant |
 | <code>.list-component--grid</code> | Variant |
 | <code>.list-component--list</code> | Variant |
+| <code>.list-component--magazine</code> | Variant |
 | <code>.list-component--people</code> | Variant |
 | <code>.list-component-empty</code> | Hook |
 | <code>.list-component-error</code> | Hook |
@@ -361,6 +367,8 @@ section.list-component[.list-component--list | --grid | --compact | --people][da
 | <code>.list-component-error-title</code> | Hook |
 | <code>.list-component-group-heading</code> | Hook |
 | <code>.list-component-item</code> | Hook |
+| <code>.list-component-item--brief</code> | Variant |
+| <code>.list-component-item--card</code> | Variant |
 | <code>.list-component-item--featured</code> | Variant |
 | <code>.list-component-item-author</code> | Hook |
 | <code>.list-component-item-author-avatar</code> | Hook |
@@ -382,6 +390,10 @@ section.list-component[.list-component--list | --grid | --compact | --people][da
 | <code>.list-component-item-meta-value</code> | Hook |
 | <code>.list-component-item-monogram</code> | Hook |
 | <code>.list-component-item-summary</code> | Hook |
+| <code>.list-component-magazine-more</code> | Hook |
+| <code>.list-component-magazine-rest</code> | Hook |
+| <code>.list-component-magazine-side</code> | Hook |
+| <code>.list-component-magazine-top</code> | Hook |
 | <code>.list-component-pagination</code> | Hook |
 | <code>.list-component-pagination-button</code> | Hook |
 | <code>.list-component-pagination-button--next</code> | Variant |
@@ -396,6 +408,7 @@ section.list-component[.list-component--list | --grid | --compact | --people][da
 | <code>.list-component-pagination-page-button--current</code> | Variant |
 | <code>.list-component-pagination-page-button--other</code> | Variant |
 | <code>.list-component-pagination-pages</code> | Hook |
+| <code>.list-component-section-heading</code> | Hook |
 | <code>.list-component-skeleton</code> | Hook |
 | <code>.list-component-skeleton-content</code> | Hook |
 | <code>.list-component-skeleton-eyebrow</code> | Hook |

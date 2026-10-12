@@ -319,3 +319,93 @@ describe('[B2] featured and grouping in the plugin', () => {
     expect(JSON.stringify(tree)).toContain('"September 2026"');
   });
 });
+
+describe('magazine in the plugin', () => {
+  const layout = (tree: any) =>
+    JSON.stringify(tree).match(/"dataLayout":"([a-z-]+)"/)?.[1] ?? null;
+  const heroTitle = (tree: any) => {
+    const hero = JSON.stringify(tree).split('list-component-item--featured')[1];
+    return hero?.match(/"value":"(Post \d+)"/)?.[1] ?? null;
+  };
+  it('promotes the featured: true post to the hero by default; featured: 0 keeps the order', async () => {
+    const tree = await run('```blog\nview: magazine\nlimit: 8\n```');
+    expect(fetchRowsByIds.mock.calls[0]![2]).toEqual([
+      'r7',
+      'r0',
+      'r1',
+      'r2',
+      'r3',
+      'r4',
+      'r5',
+      'r6',
+    ]);
+    expect(layout(tree)).toBe('full');
+    expect(heroTitle(tree)).toBe('Post 7');
+    fetchRowsByIds.mockClear();
+    const plain = await run(
+      '```blog\nview: magazine\nfeatured: 0\nlimit: 8\n```',
+    );
+    expect(fetchRowsByIds.mock.calls[0]![2]).toEqual([
+      'r0',
+      'r1',
+      'r2',
+      'r3',
+      'r4',
+      'r5',
+      'r6',
+      'r7',
+    ]);
+    // still a hero, just not promoted
+    expect(heroTitle(plain)).toBe('Post 0');
+    expect(
+      (JSON.stringify(plain).match(/list-component-item--featured/g) ?? [])
+        .length,
+    ).toBe(1);
+  });
+  it('a paginated magazine has its front page on page 1 only; the promoted post is not repeated', async () => {
+    const md = '```blog\nview: magazine\npageSize: 10\n```';
+    const p1 = await run(md, { page: 1 });
+    expect(layout(p1)).toBe('full');
+    expect(fetchRowsByIds.mock.calls[0]![2][0]).toBe('r7');
+    fetchRowsByIds.mockClear();
+    const p2 = await run(md, { page: 2 });
+    expect(layout(p2)).toBeNull();
+    const ids2 = fetchRowsByIds.mock.calls[0]![2];
+    expect(ids2).not.toContain('r7');
+    // page 1 was r7, r0–r6, r8, r9
+    expect(ids2).toEqual(Array.from({ length: 10 }, (_, k) => `r${k + 10}`));
+  });
+  it('the image decision covers the whole listing, not one page', async () => {
+    // only the first 12 posts (page 1 and part of page 2) have an image: 12 of 25 is under half
+    const imgs = rows.map((r, i) =>
+      i < 12 ? 'https://img.example/x.png' : null,
+    );
+    queryListingIndex.mockResolvedValue({ ...index(), images: imgs });
+    const withImages = rows.map((r, i) => ({
+      ...r,
+      metadata: { ...r.metadata, ...(i < 12 ? { image: imgs[i] } : {}) },
+    }));
+    fetchRowsByIds.mockImplementation(async (_d, _s, ids) =>
+      ids.map((id) => withImages.find((r) => r.id === id)!),
+    );
+    const md = '```blog\npageSize: 10\n```';
+    const p1 = JSON.stringify(await run(md, { page: 1 }));
+    const p3 = JSON.stringify(await run(md, { page: 3 }));
+    fetchRowsByIds.mockImplementation(async (_d, _s, ids) =>
+      ids.map((id) => rows.find((r) => r.id === id)!),
+    );
+    // page 1 is all images, page 3 has none: both keep the thumbnail column, neither gets tiles
+    expect(p1).toContain('"dataMedia":"thumb"');
+    expect(p3).toContain('"dataMedia":"thumb"');
+    expect(p1).not.toContain('list-component-item-media--placeholder');
+    expect(p3).not.toContain('list-component-item-media--placeholder');
+    // 13 of 25 with images: tiles on every page
+    queryListingIndex.mockResolvedValue({
+      ...index(),
+      images: rows.map((_, i) => (i < 13 ? 'https://img.example/x.png' : null)),
+    });
+    expect(JSON.stringify(await run(md, { page: 3 }))).toContain(
+      'list-component-item-media--placeholder',
+    );
+  });
+});
