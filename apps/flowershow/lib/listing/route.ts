@@ -15,6 +15,7 @@ import { folderHasPages } from './items';
 import {
   implicitListingFrom,
   type ListingView,
+  parseListingBlock,
   parseListingSpec,
 } from './spec';
 
@@ -78,6 +79,22 @@ export function hasExplicitListing(
   return found;
 }
 
+/**
+ * Whether the body has a ```list / ```blog block that paginates (a valid
+ * `pageSize`, no `limit`), so `?page=N` changes the page: generateMetadata
+ * cannot see the rendered blocks, so it asks this for the canonical URL. A
+ * fence inside an MDX JSX element is not seen (its canonical stays page 1).
+ */
+export function hasPaginatingBlock(content: string): boolean {
+  let found = false;
+  visit(parseBody(content), 'code', (node: Code) => {
+    if (found || (node.lang !== 'list' && node.lang !== 'blog')) return;
+    const parsed = parseListingBlock(node.lang, node.value);
+    if (parsed.ok && parsed.spec.pageSize != null) found = true;
+  });
+  return found;
+}
+
 /** The page body as mdast (frontmatter and Obsidian `%% comments %%` removed), as both pipelines see it. */
 function parseBody(content: string) {
   let body = content;
@@ -129,13 +146,12 @@ export function mayBeListingRoute({
 }
 
 const plain = (files: string[]) => files.map((f) => f.replace(/^\/+/, ''));
-const folderSlug = (dir: string) =>
+/** The URL of a folder's listing page (as ingestion would slug its index). */
+export const listingDirSlug = (dir: string) =>
   encodeSlug(filePathToSlug(`${dir}/index.md`));
 
-export function virtualListingDir(
-  slug: string,
-  siteFilePaths: string[],
-): string | null {
+/** Every blog/posts folder (at any depth) with Markdown pages and no README/index: each gets a generated listing page. */
+export function virtualListingDirs(siteFilePaths: string[]): string[] {
   const paths = plain(siteFilePaths);
   const dirs = new Set<string>();
   for (const p of paths) {
@@ -146,13 +162,20 @@ export function virtualListingDir(
       if (isAutoListingDirName(d)) dirs.add(d);
     }
   }
-  for (const dir of dirs) {
-    if (folderSlug(dir) !== slug) continue;
-    if (paths.some((p) => dirOf(p) === dir && INGESTION_INDEX_RE.test(p)))
-      return null;
-    return dir;
-  }
-  return null;
+  return [...dirs].filter(
+    (dir) => !paths.some((p) => dirOf(p) === dir && INGESTION_INDEX_RE.test(p)),
+  );
+}
+
+export function virtualListingDir(
+  slug: string,
+  siteFilePaths: string[],
+): string | null {
+  return (
+    virtualListingDirs(siteFilePaths).find(
+      (dir) => listingDirSlug(dir) === slug,
+    ) ?? null
+  );
 }
 
 /**

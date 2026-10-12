@@ -282,7 +282,7 @@ A page is listed when it is in the `from` folder or any folder below it, and:
 - it doesn't have `publish: false`;
 - it doesn't have `draft: true`.
 
-A **draft** stays reachable at its URL (so you can share it for review) but is left out of list blocks, `layout: list` and zero-config pages, the RSS feed and the sitemap, and asks search engines not to index it. The older `<List />` component, search, tag pages and the sidebar still show it; add `publish: false` to hide a page everywhere.
+A **draft** stays reachable at its URL (so you can share it for review) but is left out of everything that lists pages: list blocks, `layout: list` and zero-config pages, the older `<List />` component, changelog timelines, the RSS feed, the sitemap, site search, tag pages and the sidebar. It also asks search engines not to index it. To take a page off the site entirely, use `publish: false` instead.
 
 Pages hidden from the sidebar with `contentHide` are still listed.
 
@@ -312,7 +312,7 @@ For anything more (`or`, `not`, comparisons, formulas), use [[obsidian-bases|Obs
 
 ## Pagination
 
-Pages are `?page=2`, `?page=3` and so on; page 1 is the plain URL. A `layout: list` or zero-config page shows 20 per page; a block shows everything, up to 200 items, unless you set `limit` or `pageSize`. Only one list per page can paginate: give any other list a `limit`. On a `layout: list` page, use `pageSize`, not `limit`.
+Pages are `?page=2`, `?page=3` and so on; page 1 is the plain URL. A `layout: list` or zero-config page shows 20 per page; a block shows everything, up to 200 items, unless you set `limit` or `pageSize`. Only one list per page can paginate: give any other list a `limit`. On a `layout: list` page, use `pageSize`, not `limit`. A page number past the last page is a 404. In a changelog timeline, where `?page=` pages through the entries, a block with `pageSize` shows its first page only; its other pages are on the entry's own page.
 
 Lists on `layout: list` and zero-config pages are always in the page's HTML when it loads. A block in an `.mdx` page appears after the page loads, like other MDX content, so prefer `.md` for pages that list things.
 

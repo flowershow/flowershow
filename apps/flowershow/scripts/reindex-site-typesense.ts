@@ -45,6 +45,7 @@ import {
   ListObjectsV2Command,
   S3Client,
 } from '@aws-sdk/client-s3';
+import { isDraft } from '@flowershow/core';
 import { PrismaClient } from '@prisma/client';
 import matter from 'gray-matter';
 import { Client as TypesenseClient } from 'typesense';
@@ -356,6 +357,13 @@ async function reindexSite(siteId: string, dryRun: boolean) {
       // Skip files with publish: false (worker deletes these, we just skip)
       if (metadata.publish === false) {
         console.log(`    [SKIP] ${filePath} — publish: false`);
+        skipped++;
+        continue;
+      }
+
+      // Drafts are never in search (matches worker behavior)
+      if (isDraft(metadata)) {
+        console.log(`    [SKIP] ${filePath} — draft: true`);
         skipped++;
         continue;
       }

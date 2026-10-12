@@ -145,12 +145,13 @@ describe('toChangelogEntries', () => {
     row('changelog/2026-03-01-c.md', { title: 'C' }),
     row('changelog/undated.md', { title: 'Undated' }),
     row('changelog/2026-02-01-hidden.md', { title: 'Hidden', publish: false }),
+    row('changelog/2026-02-02-draft.md', { title: 'Draft', draft: true }),
     row('changelog/sub/2026-05-01-nested.md', { title: 'Nested' }),
     row('changelog/image.png', null),
     row('blog/2026-04-01-other.md', { title: 'Other' }),
   ];
 
-  it('keeps direct md children only, excludes README, unpublished, nested and other folders', () => {
+  it('keeps direct md children only, excludes README, unpublished, drafts, nested and other folders', () => {
     const titles = toChangelogEntries(rows, 'changelog').map((e) => e.title);
     expect(titles).toEqual(['C', 'B', 'Undated']);
   });

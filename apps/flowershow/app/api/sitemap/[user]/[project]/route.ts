@@ -1,8 +1,8 @@
 import { SitemapParamsSchema } from '@flowershow/api-contract';
-import { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { getSiteUrl } from '@/lib/get-site-url';
-import { isDraft } from '@/lib/listing/rules';
+import { notDraftSql } from '@/lib/listing/draft-sql';
+import { listingDirSlug, virtualListingDirs } from '@/lib/listing/route';
 import { escapeXml } from '@/lib/rss';
 import { hasSiteAccess } from '@/lib/site-access';
 import { isSiteOwnHost, redirectToSiteOwnHost } from '@/lib/site-host';
@@ -35,18 +35,6 @@ export async function GET(
     },
     include: {
       user: true,
-      blobs: {
-        where: {
-          OR: [{ path: { endsWith: '.md' } }, { path: { endsWith: '.mdx' } }],
-          metadata: { not: Prisma.AnyNull },
-        },
-        select: {
-          appPath: true,
-          updatedAt: true,
-          permalink: true,
-          metadata: true,
-        },
-      },
       // Only the `/tags` index is included in the sitemap (not per-tag pages) —
       // enough to make the tag overview indexable without flooding the sitemap.
       _count: { select: { tags: true } },
@@ -75,19 +63,58 @@ export async function GET(
   const siteUrl = getSiteUrl(site);
   const loc = (url: string) => `<loc>${escapeXml(url)}</loc>`;
 
-  // Create XML sitemap
-  // `draft: true` pages stay reachable by URL but are not advertised.
-  const listedBlobs = site.blobs.filter(
-    (b) => !isDraft(b.metadata as Record<string, unknown> | null),
-  );
-  const xmlItems = listedBlobs.map((blob) => {
-    if (blob.appPath === '/') return '';
-    const permalink = (blob.permalink ?? blob.appPath)?.replace(/^\//, '');
+  // Markdown pages. `listed`: processed (metadata present) and not a draft.
+  // `draft: true` pages stay reachable by URL but are not advertised; the
+  // filter runs in SQL so no page metadata is loaded. Unlisted rows are kept
+  // only so a draft or unprocessed page at a folder's URL still claims it.
+  const rows = await prisma.$queryRaw<
+    {
+      path: string;
+      app_path: string | null;
+      permalink: string | null;
+      updated_at: Date;
+      listed: boolean;
+    }[]
+  >`
+    SELECT "path", "app_path", "permalink", "updated_at",
+      ("metadata" IS NOT NULL AND "metadata" <> 'null'::jsonb AND ${notDraftSql()}) AS "listed"
+    FROM "Blob"
+    WHERE "site_id" = ${site.id}
+      AND ("path" LIKE '%.md' OR "path" LIKE '%.mdx')
+  `;
+  const listedRows = rows.filter((r) => r.listed);
+  const xmlItems = listedRows.map((blob) => {
+    if (blob.app_path === '/') return '';
+    const permalink = (blob.permalink ?? blob.app_path)?.replace(/^\//, '');
     return `<url>
       ${loc(`${siteUrl}/${permalink}`)}
-      <lastmod>${blob.updatedAt.toISOString()}</lastmod>
+      <lastmod>${blob.updated_at.toISOString()}</lastmod>
     </url>`;
   });
+
+  // Generated listing pages of README-less blog/ and posts/ folders: no Blob
+  // of their own, so add them when no page claims the URL and the folder has
+  // at least one listed page (lastmod: its newest).
+  const claimed = new Set(
+    rows.flatMap((r) => [r.app_path, r.permalink]).filter(Boolean),
+  );
+  const listingItems = virtualListingDirs(rows.map((r) => r.path)).flatMap(
+    (dir) => {
+      const slug = listingDirSlug(dir);
+      if (claimed.has(slug)) return [];
+      const inDir = listedRows.filter((r) => r.path.startsWith(`${dir}/`));
+      if (inDir.length === 0) return [];
+      const lastmod = new Date(
+        Math.max(...inDir.map((r) => r.updated_at.getTime())),
+      );
+      return [
+        `<url>
+      ${loc(`${siteUrl}${slug}`)}
+      <lastmod>${lastmod.toISOString()}</lastmod>
+    </url>`,
+      ];
+    },
+  );
 
   // The `/tags` index, only when the site actually has tags and the tags
   // feature is enabled (showTags defaults to on). Uses DB config only — the
@@ -108,7 +135,7 @@ export async function GET(
     <url>
       ${loc(siteUrl)}
       <lastmod>${site.updatedAt.toISOString()}</lastmod>
-    </url>${xmlItems.join('')}${tagsIndexItem}
+    </url>${xmlItems.join('')}${listingItems.join('')}${tagsIndexItem}
 </urlset>`;
 
   return new Response(xml, {

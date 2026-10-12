@@ -1,10 +1,11 @@
+import { Prisma } from '@prisma/client';
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mocks must be declared before the imports they affect (vi.mock is hoisted)
 
 vi.mock('@/server/db', () => ({
-  default: { site: { findFirst: vi.fn() } },
+  default: { site: { findFirst: vi.fn() }, $queryRaw: vi.fn() },
 }));
 
 vi.mock('@/lib/get-site-url', () => ({
@@ -15,6 +16,20 @@ import prisma from '@/server/db';
 import { GET } from './route';
 
 const findFirst = prisma.site.findFirst as ReturnType<typeof vi.fn>;
+const queryRaw = prisma.$queryRaw as unknown as ReturnType<typeof vi.fn>;
+
+/** A Markdown page row as the route's raw query returns it. */
+const row = (
+  path: string,
+  appPath: string | null,
+  o: { permalink?: string | null; listed?: boolean; updatedAt?: Date } = {},
+) => ({
+  path,
+  app_path: appPath,
+  permalink: o.permalink ?? null,
+  updated_at: o.updatedAt ?? new Date(0),
+  listed: o.listed ?? true,
+});
 
 // The site's own host in the test env (NEXT_PUBLIC_SITE_DOMAIN=test.localhost).
 const SITE_HOST = 'notes-victim.test.localhost';
@@ -37,12 +52,12 @@ const passwordSite = {
   subdomain: 'notes-victim',
   customDomain: null,
   updatedAt: new Date(0),
-  blobs: [],
   _count: { tags: 0 },
 };
 
 beforeEach(() => {
   vi.clearAllMocks();
+  queryRaw.mockResolvedValue([]);
 });
 
 describe('GET /api/sitemap — password gate', () => {
@@ -68,17 +83,13 @@ describe('GET /api/sitemap — output escaping', () => {
   const publicSite = { ...passwordSite, privacyMode: 'PUBLIC' };
 
   it('escapes a malicious permalink so it cannot inject markup', async () => {
-    findFirst.mockResolvedValue({
-      ...publicSite,
-      blobs: [
-        {
-          appPath: '/a',
-          updatedAt: new Date(0),
-          permalink:
-            'a</loc></url><x:script xmlns:x="http://www.w3.org/1999/xhtml">alert(1)</x:script><url><loc>b&c',
-        },
-      ],
-    });
+    findFirst.mockResolvedValue(publicSite);
+    queryRaw.mockResolvedValue([
+      row('a.md', '/a', {
+        permalink:
+          'a</loc></url><x:script xmlns:x="http://www.w3.org/1999/xhtml">alert(1)</x:script><url><loc>b&c',
+      }),
+    ]);
 
     const res = await GET(makeReq(), makeParams());
     const body = await res.text();
@@ -128,29 +139,64 @@ describe('GET /api/sitemap — bound to the site own host', () => {
 });
 
 describe('GET /api/sitemap — drafts', () => {
-  it('lists published pages and leaves out draft: true pages', async () => {
-    findFirst.mockResolvedValue({
-      ...passwordSite,
-      privacyMode: 'PUBLIC',
-      blobs: [
-        {
-          appPath: '/a',
-          updatedAt: new Date(0),
-          permalink: null,
-          metadata: { title: 'A' },
-        },
-        {
-          appPath: '/d',
-          updatedAt: new Date(0),
-          permalink: null,
-          metadata: { title: 'D', draft: true },
-        },
-      ],
-    });
+  const publicSite = { ...passwordSite, privacyMode: 'PUBLIC' };
+
+  it('filters drafts in SQL and lists only listed pages', async () => {
+    findFirst.mockResolvedValue(publicSite);
+    queryRaw.mockResolvedValue([
+      row('a.md', '/a'),
+      row('d.md', '/d', { listed: false }),
+    ]);
 
     const body = await (await GET(makeReq(), makeParams())).text();
 
     expect(body).toContain('<loc>http://site.test/a</loc>');
     expect(body).not.toContain('http://site.test/d<');
+    // No page metadata is loaded: the draft check is a JSON path condition
+    const [strings, ...values] = queryRaw.mock.calls[0]!;
+    const { sql } = Prisma.sql(strings as TemplateStringsArray, ...values);
+    expect(sql).toContain(`->>'draft'`);
+    expect(sql).not.toMatch(/SELECT[^]*"metadata",/);
+  });
+});
+
+describe('GET /api/sitemap — generated listing pages', () => {
+  const publicSite = { ...passwordSite, privacyMode: 'PUBLIC' };
+
+  it('adds README-less blog/ and posts/ folders, with their newest page as lastmod', async () => {
+    findFirst.mockResolvedValue(publicSite);
+    queryRaw.mockResolvedValue([
+      row('blog/a.md', '/blog/a', { updatedAt: new Date('2026-01-01') }),
+      row('blog/2026/b.md', '/blog/2026/b', {
+        updatedAt: new Date('2026-02-01'),
+      }),
+      row('My Blog/posts/p.md', '/My+Blog/posts/p'),
+    ]);
+
+    const body = await (await GET(makeReq(), makeParams())).text();
+
+    expect(body).toContain(
+      '<loc>http://site.test/blog</loc>\n      <lastmod>2026-02-01T00:00:00.000Z</lastmod>',
+    );
+    expect(body).toContain('<loc>http://site.test/My+Blog/posts</loc>');
+  });
+
+  it('skips folders with an index page, a folder note, or only drafts', async () => {
+    findFirst.mockResolvedValue(publicSite);
+    queryRaw.mockResolvedValue([
+      row('withreadme/blog/README.md', '/withreadme/blog'),
+      row('withreadme/blog/c.md', '/withreadme/blog/c'),
+      row('fn/blog.md', '/fn/blog', { listed: false }), // a draft folder note still claims the URL
+      row('fn/blog/z.md', '/fn/blog/z'),
+      row('drafts/blog/x.md', '/drafts/blog/x', { listed: false }),
+    ]);
+
+    const body = await (await GET(makeReq(), makeParams())).text();
+
+    expect(
+      body.match(/<loc>http:\/\/site\.test\/withreadme\/blog<\/loc>/g),
+    ).toHaveLength(1); // the README page itself, not a second generated entry
+    expect(body).not.toContain('<loc>http://site.test/fn/blog</loc>');
+    expect(body).not.toContain('<loc>http://site.test/drafts/blog</loc>');
   });
 });

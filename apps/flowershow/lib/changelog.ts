@@ -1,3 +1,4 @@
+import { isDraft } from '@flowershow/core';
 import { displayDescription } from '@/lib/page-description';
 import { ensureLeadingSlash, normalizeAuthors, safeDate } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
@@ -175,7 +176,8 @@ export function toChangelogEntries(
         dirOf(r.path) === folder &&
         MARKDOWN_RE.test(r.path) &&
         !isFolderIndexPath(r.path) &&
-        r.metadata?.publish !== false,
+        r.metadata?.publish !== false &&
+        !isDraft(r.metadata),
     )
     .map((r) => {
       const m = r.metadata ?? ({} as PageMetadata);

@@ -733,3 +733,25 @@ test('handleMessage - a root _footer.md is an ordinary indexed page', async () =
   expect(calls.upsert).toBe(1);
   expect(calls.deleted).toEqual([]);
 });
+
+test('handleMessage - a draft page is stored and tagged but not searchable', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense, calls } = createTypesenseMock();
+  const msg = putMessage('blog/wip.md');
+
+  await handleMessage({
+    msg,
+    storage: createR2Storage('---\ndraft: true\ntags: [x]\n---\n# WIP'),
+    sql,
+    typesense,
+    env: {},
+  });
+
+  expect(msg.ack).toHaveBeenCalled();
+  expect(queries.some((q) => q.text.startsWith('INSERT INTO "Blob"'))).toBe(
+    true,
+  );
+  expect(calls.upsert).toBe(0);
+  // A page that became a draft loses its earlier search document
+  expect(calls.deleted).toEqual([{ siteId: 'site-1', id: 'blob-1' }]);
+});
