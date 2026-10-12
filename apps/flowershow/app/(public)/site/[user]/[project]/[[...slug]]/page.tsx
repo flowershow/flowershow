@@ -23,7 +23,7 @@ import TableOfContents from '@/components/public/table-of-contents';
 import { env } from '@/env.mjs';
 import { isAnnotationsEnabled } from '@/lib/annotations/enabled';
 import { getConfig } from '@/lib/app-config';
-import type { Node } from '@/lib/build-site-tree';
+import { type Node, withoutDrafts } from '@/lib/build-site-tree';
 import {
   Feature,
   isFeatureEnabled,
@@ -50,7 +50,13 @@ import {
   TagIndexPage,
   TagListingPage,
 } from '@/components/public/tags/tag-views';
-import { isChangelogDirName, parsePageParam } from '@/lib/changelog';
+import {
+  dirOf,
+  isChangelogDir,
+  isChangelogDirName,
+  isFolderIndexPath,
+  parsePageParam,
+} from '@/lib/changelog';
 import { resolveChangelogContext } from '@/lib/changelog-context';
 import { hasVersionSections } from '@/lib/changelog-file';
 import { anonRobots } from '@/lib/anonymous-site';
@@ -61,13 +67,13 @@ import { renderPageContent } from '@/lib/render-page-content';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
 import { resolveLocale } from '@/lib/listing/dates';
 import {
-  isListingPageOutOfRange,
   listingPaginatesByPage,
   renderPageListing,
   resolveMetadataListingRoute,
 } from '@/lib/listing/page-listing';
 import { listingCanonical, pageFromSearchParam } from '@/lib/listing/paginate';
 import {
+  hasPaginatingBlock,
   hasTocHeadings,
   isAutoListingDirName,
   type ListingRoute,
@@ -178,10 +184,16 @@ export async function generateMetadata(props: {
     notFound();
   }
 
-  // Page-level listings (layout: list, zero-config): self-canonical per page and
-  // noindex past the last page. The body is loaded only for an auto listing (a
-  // README with its own block is not one), so SitePage and this agree. Ordinary
+  // Page-level listings (layout: list, zero-config) and pages with a paginating
+  // inline block are self-canonical per page; SitePage 404s past the last
+  // page. The body is loaded only for an auto listing (a README with its own
+  // block is not one) or on ?page=2+, so SitePage and this agree. Ordinary
   // pages skip the site path query (mayBeListingRoute is false for them).
+  let bodyPromise: Promise<string | null> | undefined;
+  const loadBody = () =>
+    (bodyPromise ??= blob
+      ? api.site.getBlobContent.query({ id: blob.id }).catch(() => null)
+      : Promise.resolve(null));
   const listingCandidate = mayBeListingRoute({
     slug: decodedSlug,
     blobPath: blob?.path ?? null,
@@ -203,30 +215,24 @@ export async function generateMetadata(props: {
           changelogKind: isChangelogFallback ? 'index' : null,
           renderMode: metadata?.syntaxMode ?? siteConfig?.syntaxMode,
         },
-        async () =>
-          blob
-            ? await api.site.getBlobContent
-                .query({ id: blob.id })
-                .catch(() => null)
-            : null,
+        loadBody,
       );
-  const pageLevelListing = listingRoute.kind !== 'none';
   const pageParam = (await props.searchParams)?.page;
-  const noindex =
-    isDraft(metadata as Record<string, unknown> | null) ||
-    (pageLevelListing &&
-      (await isListingPageOutOfRange({
-        siteId: site.id,
-        rootDir: site.rootDir,
-        filePath:
-          blob?.path ??
-          (listingRoute.kind === 'virtual'
-            ? `${listingRoute.dir}/index.md`
-            : ''),
-        siteFilePaths,
-        route: listingRoute,
-        page: pageFromSearchParam(pageParam),
-      })));
+  // A changelog index pages its timeline by ?page= (its intro's blocks are
+  // fixed), so each page is its own canonical whatever the intro holds
+  const isChangelogIndex =
+    isChangelogFallback ||
+    (!!blob &&
+      isFolderIndexPath(blob.path) &&
+      isChangelogDir(dirOf(blob.path), metadata));
+  const paginatesByPage =
+    isChangelogIndex ||
+    listingPaginatesByPage(listingRoute) ||
+    (!!blob &&
+      /\.mdx?$/i.test(blob.path) &&
+      pageFromSearchParam(pageParam) > 1 &&
+      hasPaginatingBlock((await loadBody()) ?? ''));
+  const noindex = isDraft(metadata as Record<string, unknown> | null);
 
   const siteName = resolveSiteName(siteConfig, site.projectName);
   const tagListingTitle = isTagListingRoute
@@ -293,11 +299,7 @@ export async function generateMetadata(props: {
       image,
     }),
     alternates: {
-      canonical: listingCanonical(
-        url,
-        listingPaginatesByPage(listingRoute),
-        pageParam,
-      ),
+      canonical: listingCanonical(url, paginatesByPage, pageParam),
       ...(siteConfig?.enableRss && {
         types: {
           'application/rss+xml': `${siteUrl}/rss.xml`,
@@ -306,7 +308,7 @@ export async function generateMetadata(props: {
     },
     // metadataBase: new URL(siteUrl),
     // Open review pages stay out of search results.
-    // Drafts and out-of-range listing pages too.
+    // Drafts too.
     ...(annotationsOn || noindex
       ? { robots: { index: false, follow: false } }
       : {}),
@@ -479,6 +481,7 @@ export default async function SitePage(props: {
       changelogKind: changelog?.kind ?? null,
     });
     if (virtualRoute.kind === 'virtual') {
+      let paginated: { page: number; pageCount: number } | undefined;
       const listing = await renderPageListing({
         site,
         filePath: `${virtualRoute.dir}/index.md`,
@@ -489,7 +492,11 @@ export default async function SitePage(props: {
         page: listingPageNumber,
         publicUrl: decodedSlug,
         locale,
+        onPaginate: (info) => {
+          paginated = info;
+        },
       });
+      if (isPastLastPage(paginated)) notFound();
       return (
         <>
           <UrlNormalizer />
@@ -624,6 +631,12 @@ export default async function SitePage(props: {
     blob.permalink || blob.appPath || blob.path,
   );
 
+  // The one paginating listing (page-level or inline) reports its page, so a
+  // page past its last page is a 404, as on the changelog
+  let paginated: { page: number; pageCount: number } | undefined;
+  const onPaginate = (info: { page: number; pageCount: number }) => {
+    paginated = info;
+  };
   const compiledContent = await renderPageContent({
     blob,
     site,
@@ -642,6 +655,8 @@ export default async function SitePage(props: {
       publicUrl: listingPublicUrl,
       locale,
       paginationClaimed: pageLevelRoute?.pageSize != null,
+      // A changelog index's `?page=` is the timeline's: its intro's blocks are fixed
+      ...(changelog?.kind === 'index' ? { static: true } : { onPaginate }),
     },
   });
   const pageListing = pageLevelRoute
@@ -656,8 +671,10 @@ export default async function SitePage(props: {
         publicUrl: listingPublicUrl,
         pageTitle: metadata?.title,
         locale,
+        onPaginate,
       })
     : null;
+  if (isPastLastPage(paginated)) notFound();
 
   const scopedCss = await generateScopedCss(pageContent ?? '', '#mdxpage');
 
@@ -809,6 +826,9 @@ export default async function SitePage(props: {
       .catch(() => []);
   }
 
+  // Drafts stay out of the sidebar; breadcrumbs use the full tree
+  const sidebarItems = showSidebar ? withoutDrafts(siteTree ?? []) : [];
+
   const breadcrumbs = showBreadcrumbs
     ? pageHeaderBreadcrumbs({
         tree: siteTree ?? [],
@@ -845,7 +865,7 @@ export default async function SitePage(props: {
       {chromeMarker}
       {annotationsOverlay}
 
-      {showSidebar && <SidebarMobileNav items={siteTree!} prefix={''} />}
+      {showSidebar && <SidebarMobileNav items={sidebarItems} prefix={''} />}
 
       {showHero && (
         <Hero
@@ -867,7 +887,7 @@ export default async function SitePage(props: {
       >
         {showSidebar && (
           <div className="layout-inner-left">
-            <SidebarDesktop items={siteTree!} />
+            <SidebarDesktop items={sidebarItems} />
           </div>
         )}
 
@@ -1051,6 +1071,10 @@ export default async function SitePage(props: {
       </div>
     </>
   );
+}
+
+function isPastLastPage(p?: { page: number; pageCount: number }): boolean {
+  return p !== undefined && p.page > p.pageCount;
 }
 
 /** `.listing-page[data-view]` constrains page-level list pages to one column (default-theme.css). */

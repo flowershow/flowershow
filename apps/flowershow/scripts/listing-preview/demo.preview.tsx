@@ -36,10 +36,7 @@ vi.mock('next/image', () => ({
 
 import { BlogLayout } from '@/components/public/layouts/blog';
 import { VirtualListingPage } from '@/components/public/listing/virtual-listing-page';
-import {
-  isListingPageOutOfRange,
-  renderPageListing,
-} from '@/lib/listing/page-listing';
+import { renderPageListing } from '@/lib/listing/page-listing';
 import { resolveListingRoute } from '@/lib/listing/route';
 import { processMarkdown } from '@/lib/markdown';
 import { buildDemoSite } from './demo-site';
@@ -80,6 +77,8 @@ const URLS: Array<[name: string, slug: string, page?: number]> = [
   ['magazine', '/magazine'],
   ['magazine-page-2', '/magazine', 2],
   ['latest-hero', '/latest-hero'],
+  ['inline-paginated-page-2', '/inline-paginated', 2],
+  ['inline-paginated-page-99', '/inline-paginated', 99],
 ];
 
 it('renders the e2e listings fixture', async () => {
@@ -97,7 +96,13 @@ it('renders the e2e listings fixture', async () => {
       siteFilePaths: site.files,
       changelogKind: null,
     });
+    // As SitePage: the paginating listing reports its page; past the last one is a 404
+    let paginated: { page: number; pageCount: number } | undefined;
+    const onPaginate = (info: { page: number; pageCount: number }) => {
+      paginated = info;
+    };
     const common = {
+      onPaginate,
       site: { id: 'demo' },
       siteHostname: HOST,
       siteFilePaths: site.files,
@@ -129,6 +134,7 @@ it('renders the e2e listings fixture', async () => {
           publicUrl: slug,
           locale: 'en-US',
           paginationClaimed: route.kind === 'page' && route.pageSize != null,
+          onPaginate,
         },
       });
       const pageListing =
@@ -164,18 +170,7 @@ it('renders the e2e listings fixture', async () => {
     const doc = new JSDOM(html).window.document;
     const texts = (sel: string) =>
       [...doc.querySelectorAll(sel)].map((e) => e.textContent?.trim());
-    const outOfRange =
-      route.kind === 'none'
-        ? false
-        : await isListingPageOutOfRange({
-            siteId: 'demo',
-            filePath:
-              row?.path ??
-              (route.kind === 'virtual' ? `${route.dir}/index.md` : ''),
-            siteFilePaths: site.files,
-            route,
-            page: pageNo,
-          });
+    const outOfRange = isPastLastPage(paginated);
     report[`${name}${pageNo > 1 ? `?page=${pageNo}` : ''}`] = {
       route: route.kind,
       outOfRange,
@@ -226,3 +221,7 @@ it('renders the e2e listings fixture', async () => {
   writeFileSync(path.join(OUT, 'report.json'), JSON.stringify(report, null, 2));
   console.log(`demo dry run → ${OUT}/report.json`);
 });
+
+function isPastLastPage(p?: { page: number; pageCount: number }): boolean {
+  return p !== undefined && p.page > p.pageCount;
+}

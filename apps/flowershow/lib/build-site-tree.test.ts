@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { SiteTree } from './build-site-tree';
-import { buildSiteTree } from './build-site-tree';
+import { buildSiteTree, withoutDrafts } from './build-site-tree';
 
 type TestMetadata = {
   title: string;
@@ -425,5 +425,31 @@ describe('Site Tree', () => {
         },
       ],
     });
+  });
+});
+
+describe('withoutDrafts (sidebar)', () => {
+  it('drops draft pages and folders left with only drafts', () => {
+    const tree = buildSiteTree([
+      { path: 'a.md', appPath: '/a', metadata: { title: 'A' } },
+      { path: 'd.md', appPath: '/d', metadata: { title: 'D', draft: true } },
+      {
+        path: 'wip/x.md',
+        appPath: '/wip/x',
+        metadata: { title: 'X', draft: 'true' },
+      },
+      { path: 'docs/y.md', appPath: '/docs/y', metadata: { title: 'Y' } },
+      {
+        path: 'docs/z.md',
+        appPath: '/docs/z',
+        metadata: { title: 'Z', draft: true },
+      },
+    ] as any[]);
+    const pruned = withoutDrafts(tree.children);
+    expect(JSON.stringify(pruned)).not.toMatch(
+      /"path":"(d\.md|wip|docs\/z\.md)"/,
+    );
+    expect(pruned.map((n) => n.path)).toEqual(['docs', 'a.md']);
+    expect(tree.children.map((n) => n.path)).toContain('d.md'); // the input is not mutated
   });
 });

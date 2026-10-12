@@ -1,6 +1,6 @@
 import type { Blob as DbBlob } from '@prisma/client';
 import { PageMetadata } from '@/server/api/types';
-import { encodeSlug } from '@flowershow/core';
+import { encodeSlug, isDraft } from '@flowershow/core';
 
 type Meta = PageMetadata | null;
 
@@ -169,3 +169,16 @@ function compareNodes<M>(
 }
 
 const toLabel = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
+
+/**
+ * The tree without `draft: true` pages, and without folders left empty, for
+ * the sidebar. Breadcrumbs keep the full tree, so a draft page (reachable by
+ * URL) still finds its own trail.
+ */
+export function withoutDrafts<M>(nodes: Array<Node<M>>): Array<Node<M>> {
+  return nodes.flatMap((n): Array<Node<M>> => {
+    if (isFile(n)) return isDraft(n.metadata) ? [] : [n];
+    const children = withoutDrafts(n.children);
+    return children.length ? [{ ...n, children }] : [];
+  });
+}

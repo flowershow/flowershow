@@ -1,9 +1,6 @@
-import { dirOf } from '@/lib/changelog';
-import { resolveFolderCase } from '@/lib/listing/items';
-import { queryListingIndex } from '@/lib/listing/query';
 import { processMarkdown } from '@/lib/markdown';
+import type { ListingRenderContext } from '@/lib/remark-listing';
 import { type ListingRoute, resolveListingRoute } from './route';
-import { parseListingSpec } from './spec';
 
 type PageLevelRoute = Extract<
   ListingRoute,
@@ -31,6 +28,7 @@ export async function renderPageListing(args: {
   publicUrl: string;
   pageTitle?: string;
   locale: string;
+  onPaginate?: ListingRenderContext['onPaginate'];
 }) {
   return processMarkdown('', {
     filePath: args.filePath,
@@ -44,48 +42,9 @@ export async function renderPageListing(args: {
       page: args.page,
       publicUrl: args.publicUrl,
       locale: args.locale,
+      onPaginate: args.onPaginate,
     },
   });
-}
-
-/** For `noindex`: is `page` past the last page of this page-level listing? Mirrors remark-listing's folder resolution and self-exclusion. */
-export async function isListingPageOutOfRange(args: {
-  siteId: string;
-  rootDir?: string | null;
-  filePath: string;
-  siteFilePaths: string[];
-  route: ListingRoute;
-  page: number;
-  today?: string;
-}): Promise<boolean> {
-  if (args.page <= 1 || args.route.kind === 'none') return false;
-  const implicit = implicitOf(args.route);
-  const parsed = parseListingSpec(implicit.options, {
-    source: 'layout',
-    defaultFrom: implicit.defaultFrom,
-    rootDir: args.rootDir ?? undefined,
-  });
-  if (!parsed.ok || parsed.spec.pageSize == null) return false;
-  const pageSize = parsed.spec.pageSize;
-  const currentPath = args.filePath.replace(/^\/+/, '');
-  const joined = parsed.spec.fromRelative
-    ? [dirOf(currentPath), parsed.spec.from].filter(Boolean).join('/')
-    : parsed.spec.from;
-  const spec = {
-    ...parsed.spec,
-    from: resolveFolderCase(joined, args.siteFilePaths),
-  };
-  try {
-    const index = await queryListingIndex({
-      siteId: args.siteId,
-      spec,
-      today: args.today ?? new Date().toISOString().slice(0, 10),
-    });
-    const count = index.paths.filter((p) => p !== currentPath).length;
-    return args.page > Math.max(1, Math.ceil(count / pageSize));
-  } catch {
-    return false;
-  }
 }
 
 /** Only then does `?page=N` change the content, so only then is it its own canonical. */

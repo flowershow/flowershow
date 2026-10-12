@@ -39,7 +39,9 @@ import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { checkIfBranchExists } from '@/lib/github';
 import { isEmoji } from '@/lib/is-emoji';
 import { resolveAuthors } from '@/lib/listing/authors';
+import { draftBlobIds, notDraftSql } from '@/lib/listing/draft-sql';
 import type { ListingDb } from '@/lib/listing/query';
+import { isDraft } from '@/lib/listing/rules';
 import {
   type ChangelogBlobRow,
   dirOf,
@@ -1430,6 +1432,7 @@ export const siteRouter = createTRPCRouter({
                 AND "extension" IN ('md', 'mdx')
                 AND "app_path" IS NOT NULL
                 AND ("metadata"->>'publish') IS DISTINCT FROM 'false'
+                AND ${notDraftSql()}
               ORDER BY
                 ("metadata"->>'date')::timestamp DESC NULLS LAST,
                 "metadata"->>'title' ASC NULLS LAST
@@ -2588,16 +2591,20 @@ export const siteRouter = createTRPCRouter({
 
       return await unstable_cache(
         async (input) => {
-          const rows = await ctx.db.tag.findMany({
-            where: { siteId: input.siteId },
-            select: { tag: true, identity: true, blobId: true },
-          });
+          const [rows, drafts] = await Promise.all([
+            ctx.db.tag.findMany({
+              where: { siteId: input.siteId },
+              select: { tag: true, identity: true, blobId: true },
+            }),
+            // Drafts' tags do not count (a draft is never listed)
+            draftBlobIds(ctx.db, input.siteId),
+          ]);
 
           // Aggregate by identity so `#Book` and `#book` count as one tag.
           const byId = new Map<string, { tag: string; blobs: Set<string> }>();
           for (const row of rows) {
             const id = row.identity;
-            if (!id) continue;
+            if (!id || drafts.has(row.blobId)) continue;
             const entry = byId.get(id);
             if (entry) {
               entry.blobs.add(row.blobId);
@@ -2672,6 +2679,8 @@ export const siteRouter = createTRPCRouter({
                 ? String(v)
                 : undefined;
           const pages = rows
+            // A draft is reachable by URL but never listed
+            .filter(({ blob }) => !isDraft(blob.metadata))
             .map(({ blob }) => {
               const metadata = blob.metadata as Record<string, unknown> | null;
               const href = blob.permalink ?? blob.appPath;

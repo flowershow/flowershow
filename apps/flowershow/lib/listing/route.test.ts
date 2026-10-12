@@ -7,7 +7,10 @@ import {
   mayBeListingRoute,
   rendersAsMdx,
   resolveListingRoute,
+  hasPaginatingBlock,
+  listingDirSlug,
   virtualListingDir,
+  virtualListingDirs,
 } from './route';
 
 const files = [
@@ -116,6 +119,45 @@ describe('virtualListingDir (case 1)', () => {
     expect(virtualListingDir('/empty/blog', files)).toBeNull();
     expect(virtualListingDir('/withreadme/blog', files)).toBeNull();
     expect(virtualListingDir('/articles', ['/articles/a.md'])).toBeNull();
+  });
+});
+
+describe('hasPaginatingBlock (canonical of ?page=N for inline blocks)', () => {
+  it('a valid pageSize without limit paginates; limit, errors and other code do not', () => {
+    expect(hasPaginatingBlock('Intro\n\n```blog\npageSize: 5\n```')).toBe(true);
+    expect(
+      hasPaginatingBlock(
+        '---\ntitle: x\n---\n```list\nfrom: notes\npageSize: 2\n```',
+      ),
+    ).toBe(true);
+    expect(hasPaginatingBlock('```blog\nlimit: 2\npageSize: 5\n```')).toBe(
+      false,
+    );
+    expect(hasPaginatingBlock('```blog\npageSize: none\n```')).toBe(false);
+    expect(hasPaginatingBlock('```blog\nlimit: 3\n```')).toBe(false);
+    expect(hasPaginatingBlock('```blog\nveiw: grid\npageSize: 5\n```')).toBe(
+      false,
+    );
+    expect(hasPaginatingBlock('```yaml\npageSize: 5\n```')).toBe(false);
+    expect(hasPaginatingBlock('%%\n```blog\npageSize: 5\n```\n%%')).toBe(false);
+  });
+});
+
+describe('virtualListingDirs (sitemap)', () => {
+  it('every README-less blog/posts folder with pages, at any depth', () => {
+    expect(virtualListingDirs(files).sort()).toEqual(
+      [
+        'My Blog/posts',
+        'Posts',
+        'blog',
+        'fn/blog',
+        'lower/blog',
+        'vault/Blog',
+      ].sort(),
+    );
+    expect(virtualListingDirs(files).map(listingDirSlug)).toContain(
+      '/My+Blog/posts',
+    );
   });
 });
 

@@ -43,7 +43,8 @@ vi.mock('@/lib/content-store', () => ({
 
 // ── Imports ───────────────────────────────────────────────────────
 
-import { tagIdentity } from '@flowershow/core';
+import { isDraft, tagIdentity } from '@flowershow/core';
+import { Prisma } from '@prisma/client';
 import { fetchFile } from '@/lib/content-store';
 import { customCssVersion } from '@/lib/custom-css';
 import { appRouter } from '@/server/api/root';
@@ -176,6 +177,14 @@ function createMockDb({
   tags?: MockTag[];
 } = {}) {
   return {
+    // Only draftBlobIds runs raw SQL by default: emulate it from the blobs
+    $queryRaw: vi.fn(async (...args: any[]): Promise<any[]> => {
+      const strings = args[0] as TemplateStringsArray;
+      if (!strings.join('?').includes('SELECT "id" FROM "Blob"')) return [];
+      return blobs
+        .filter((b) => isDraft(b.metadata))
+        .map((b) => ({ id: b.id }));
+    }) as ReturnType<typeof vi.fn>,
     blob: {
       findFirst: vi.fn(async (args: any) => {
         const w = args?.where ?? {};
@@ -787,6 +796,25 @@ describe('site.getListComponentItems', () => {
     ];
     expect(strings.join('?').replace(/\s+/g, ' ')).toContain(
       `("metadata"->>'publish') IS DISTINCT FROM 'false'`,
+    );
+  });
+
+  it('excludes draft: true pages in SQL', async () => {
+    const db = createMockDb({ blobs: [] });
+    db.$queryRaw = vi.fn(async () => []);
+    const caller = createCaller(db);
+    await caller.site.getListComponentItems({
+      siteId: 'site-1',
+      dir: '/blog',
+      slots: {},
+    });
+    const [strings, ...values] = db.$queryRaw.mock.calls[0] as unknown as [
+      TemplateStringsArray,
+      ...unknown[],
+    ];
+    const { sql } = Prisma.sql(strings, ...values);
+    expect(sql).toContain(
+      `lower(btrim("metadata"->>'draft', E' \\t\\r\\n')) IS DISTINCT FROM 'true'`,
     );
   });
 });
@@ -1538,6 +1566,22 @@ describe('site.getTagIndex', () => {
     expect(result).toEqual([{ tag: 'book', count: 1 }]);
   });
 
+  it("leaves out drafts' tags", async () => {
+    const blobs = [
+      makeBlob({ id: 'b1' }),
+      makeBlob({ id: 'd1', metadata: { title: 'D', draft: true } }),
+    ];
+    const tags = [
+      makeTag({ blobId: 'b1', tag: 'book' }),
+      makeTag({ blobId: 'd1', tag: 'book' }),
+      makeTag({ blobId: 'd1', tag: 'secret' }),
+    ];
+    const caller = createCaller(createMockDb({ blobs, tags }));
+    expect(await caller.site.getTagIndex({ siteId: 'site-1' })).toEqual([
+      { tag: 'book', count: 1 },
+    ]);
+  });
+
   it('returns an empty array when the site has no tags', async () => {
     const caller = createCaller(createMockDb({ tags: [] }));
     expect(await caller.site.getTagIndex({ siteId: 'site-1' })).toEqual([]);
@@ -1621,6 +1665,27 @@ describe('site.getPagesByTag', () => {
       '1984',
       'Brave New World',
     ]);
+  });
+
+  it('leaves out draft: true pages', async () => {
+    const blobs = [
+      makeBlob({ id: 'b1', appPath: '/a', metadata: { title: 'A' } }),
+      makeBlob({
+        id: 'd1',
+        appPath: '/d',
+        metadata: { title: 'D', draft: 'true' },
+      }),
+    ];
+    const tags = [
+      makeTag({ blobId: 'b1', tag: 'book' }),
+      makeTag({ blobId: 'd1', tag: 'book' }),
+    ];
+    const caller = createCaller(createMockDb({ blobs, tags }));
+    const result = await caller.site.getPagesByTag({
+      siteId: 'site-1',
+      tag: 'book',
+    });
+    expect(result.map((p) => p.href)).toEqual(['/a']);
   });
 
   it('prefers permalink over appPath for the href', async () => {

@@ -32,12 +32,16 @@ See [[listings|Listing pages]]. The `<List />` component keeps working; the docs
 
 - A `blog/` or `posts/` README, index page or folder note with only prose now gets a generated list under it, in a reading-width column. Add `list: false` to its frontmatter to keep it as before. See [A blog with nothing to write](/docs/reference/listings#a-blog-with-nothing-to-write).
 - ```` ```list ```` and ```` ```blog ```` code blocks now render as lists. To show one as code, wrap it in four backticks.
-- `draft: true` in frontmatter now hides a page from listings, the RSS feed and the sitemap, and asks search engines not to index it. Worth checking if you imported posts from Hugo, Jekyll or Astro that still carry it. See [Which pages are listed](/docs/reference/listings#which-pages-are-listed).
+- `draft: true` in frontmatter now hides a page from listings (including `<List />` and changelog timelines), the RSS feed, the sitemap, site search, tag pages and the sidebar, and asks search engines not to index it. The page itself stays reachable at its URL. Worth checking if you imported posts from Hugo, Jekyll or Astro that still carry it. See [Which pages are listed](/docs/reference/listings#which-pages-are-listed).
 - Dated pages in a `blog/` or `posts/` folder, or in a `layout: list` folder of mostly dated pages, now use the post layout: a narrower column, tags at the end instead of under the title, and new previous/next and "Read more" links. **The `image` in a post's frontmatter now shows as a cover**, uncropped, unless the post already shows it in its text or it is a small or square image such as a logo; add `showImage: false` to a post to hide it (the image stays its social card), `layout: default` to keep a page as it was, or `postLayout: false` to the folder's README for the whole folder. See [Turning it off](/docs/reference/post-pages#turning-it-off).
 - Author names link only to a page whose name matches exactly, preferring `people/` and `authors/` folders. See [Author pages](/docs/guides/author-pages).
 
 **Fixes**
 
+- A page number past the last page of a list (`?page=99`) is now a 404, as on the changelog, instead of an empty page.
+- Pages 2 and on of a paginated list block now point search engines at themselves rather than at page 1.
+- Generated `blog/` and `posts/` listing pages (folders without a README) are now in the sitemap.
+- A list block inside a changelog entry no longer shows page links on the changelog timeline.
 - `<List />` no longer lists pages marked `publish: false`.
 - `<List />` pagination shows one `...` per gap instead of one per hidden page.
 - The RSS feed no longer fails when a post has an unusual `title`, `author` or `description` (a number, or a wiki link).

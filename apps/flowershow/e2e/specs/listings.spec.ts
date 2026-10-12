@@ -63,14 +63,49 @@ test('zero-config blog folder, page 2, canonical and junk params', async ({
     await expect(a).not.toHaveAttribute('href', /utm_source/);
 });
 
-test('bad and out-of-range pages', async ({ page }) => {
+test('bad and out-of-range pages: past the last page is a 404, like the changelog', async ({
+  page,
+}) => {
   await page.goto('/blog?page=abc');
   await expect(items(page)).toHaveCount(20);
-  await page.goto('/blog?page=99');
+  expect((await page.goto('/blog?page=99'))?.status()).toBe(404);
+  expect((await page.goto('/archive?page=99'))?.status()).toBe(404); // layout: list
+  expect((await page.goto('/inline-paginated?page=99'))?.status()).toBe(404); // inline block
+  expect((await page.goto('/inline-paginated?page=3'))?.status()).toBe(200);
+});
+
+test('a paginated inline block: pages 2+ are their own canonical', async ({
+  page,
+}) => {
+  await page.goto('/inline-paginated?page=2');
+  await expect(items(page)).toHaveCount(10);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    /\/inline-paginated\?page=2$/,
+  );
+  await page.goto('/limit-note?page=2'); // a limit block does not paginate
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    /\/limit-note$/,
+  );
+});
+
+test('changelog index: a list block in an entry is a fixed first page with no page links', async ({
+  page,
+}) => {
+  await page.goto('/changelog');
+  const entry = page.locator('li.changelog-entry', {
+    hasText: 'A reading list in a changelog entry',
+  });
+  await expect(entry.locator('section.list-component > article')).toHaveCount(
+    2,
+  );
+  await expect(entry.locator('nav.list-component-pagination')).toHaveCount(0);
+  // On the entry's own page the block paginates as usual
+  await page.goto('/changelog/2026-09-02-reading-list');
   await expect(
-    page.locator('section.list-component > p.list-component-empty'),
-  ).toHaveText('Nothing here yet.');
-  await expect(page.locator('nav.list-component-pagination')).toBeVisible();
+    page.locator('a.list-component-pagination-button--next[rel="next"]'),
+  ).toHaveAttribute('href', '/changelog/2026-09-02-reading-list?page=2');
 });
 
 test('authors resolve to people pages; unknown handles are plain text', async ({
@@ -371,7 +406,7 @@ test('page-level listings are in the initial HTML, even on an .mdx page (tech M6
   }
 });
 
-test('drafts: reachable, noindex, not in the sitemap; out-of-range pages are noindex', async ({
+test('drafts: reachable, noindex, not in the sitemap, tag pages or search listings', async ({
   page,
   request,
 }) => {
@@ -380,14 +415,22 @@ test('drafts: reachable, noindex, not in the sitemap; out-of-range pages are noi
     'content',
     /noindex/,
   );
-  expect(await (await request.get('/sitemap.xml')).text()).not.toContain(
-    'draft-post',
-  );
-  await page.goto('/blog?page=99');
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-    'content',
-    /noindex/,
-  );
+  const sitemap = await (await request.get('/sitemap.xml')).text();
+  expect(sitemap).not.toContain('draft-post');
+  await page.goto('/tags/featured');
+  await expect(page.locator('main')).toContainText('Post 03');
+  await expect(page.getByText('Draft post')).toHaveCount(0);
+});
+
+test('sitemap: generated README-less listing pages are listed', async ({
+  request,
+}) => {
+  const sitemap = await (await request.get('/sitemap.xml')).text();
+  expect(sitemap).toMatch(/<loc>[^<]*\/blog<\/loc>/);
+  expect(sitemap).toMatch(/<loc>[^<]*\/notes\/posts<\/loc>/);
+  expect(sitemap.match(/<loc>https?:\/\/[^/<]+\/posts<\/loc>/g)).toHaveLength(
+    1,
+  ); // posts/README.md is a page: listed once, not again as a generated one
 });
 
 test('case-insensitive folder, nested blocks, MDX page', async ({ page }) => {

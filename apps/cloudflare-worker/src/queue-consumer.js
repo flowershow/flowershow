@@ -4,6 +4,7 @@ import {
   extractInlineTags,
   filePathToSlug,
   frontmatterTags,
+  isDraft,
   mergePageTags,
   PAGE_FILE_EXTENSIONS,
   tagIdentity,
@@ -215,15 +216,20 @@ async function processMarkdownFile({
     await syncLinks(sql, siteId, blobId, markdown);
     const tags = extractTags(body, metadata);
     await syncTags(sql, siteId, blobId, tags);
-    await indexInTypesense({
-      typesense,
-      siteId,
-      blobId,
-      path,
-      body,
-      metadata,
-      tags,
-    });
+    if (isDraft(metadata)) {
+      // A draft is reachable by URL but never in search: drop any earlier document
+      await removeFromTypesense({ typesense, siteId, blobId });
+    } else {
+      await indexInTypesense({
+        typesense,
+        siteId,
+        blobId,
+        path,
+        body,
+        metadata,
+        tags,
+      });
+    }
     await updatePublishFile(sql, publishId, path, 'success');
   } catch (e) {
     console.error('Error in processMarkdownFile:', {
@@ -580,6 +586,15 @@ function getUnixTimestamp(value) {
   if (value == null || value === '') return null;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date.getTime() / 1000;
+}
+
+async function removeFromTypesense({ typesense, siteId, blobId }) {
+  if (!typesense) return;
+  try {
+    await typesense.collections(siteId).documents(`${blobId}`).delete();
+  } catch (_) {
+    // Not indexed (e.g. a draft from the start)
+  }
 }
 
 async function indexInTypesense({

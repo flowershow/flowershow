@@ -227,6 +227,40 @@ describe('remarkListing', () => {
       section.children.filter((c: any) => c.data?.hName === 'article'),
     ).toHaveLength(5);
   });
+  it('static (embedded in a changelog index): a pageSize block is its first page, with no page links', async () => {
+    const onPaginate = vi.fn();
+    const tree = await run('```blog\npageSize: 5\n```', {
+      static: true,
+      page: 3,
+      onPaginate,
+    });
+    const section = tree.children[0];
+    expect(
+      section.children.filter((c: any) => c.data?.hName === 'article'),
+    ).toHaveLength(5);
+    expect(JSON.stringify(section)).not.toContain('list-component-pagination');
+    expect(JSON.stringify(section)).toContain('/blog/p0"'); // page 1, not the host's ?page=3
+    expect(onPaginate).not.toHaveBeenCalled();
+    // Still one pageSize block per body, as on the entry's own page
+    const t2 = await run(
+      '```blog\npageSize: 5\n```\n\n```blog\npageSize: 5\n```',
+      {
+        static: true,
+      },
+    );
+    expect(JSON.stringify(t2.children[1])).toContain(
+      'Only one list per page can paginate',
+    );
+  });
+  it('reports the paginating block (page and page count) so the route can 404 past the end', async () => {
+    const onPaginate = vi.fn();
+    await run('```blog\nlimit: 2\n```\n\n```blog\npageSize: 10\n```', {
+      page: 4,
+      onPaginate,
+    });
+    expect(onPaginate).toHaveBeenCalledTimes(1);
+    expect(onPaginate).toHaveBeenCalledWith({ page: 4, pageCount: 3 });
+  });
   it('page-level errors use the settings heading', async () => {
     expect(
       JSON.stringify(

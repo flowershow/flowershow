@@ -30,6 +30,14 @@ export type ListingRenderContext = {
     pageTitle?: string;
   };
   paginationClaimed?: boolean;
+  /**
+   * The body is embedded in another page (a changelog index entry): a
+   * `pageSize` block shows its first page only, with no page links, since
+   * `?page=` belongs to the host page.
+   */
+  static?: boolean;
+  /** Called with the block that paginates (if any), so the route can 404 a page past its last page. */
+  onPaginate?: (info: { page: number; pageCount: number }) => void;
   today?: string;
 };
 export type RemarkListingOptions = ListingRenderContext & {
@@ -106,7 +114,7 @@ export default function remarkListing(options: RemarkListingOptions) {
             heading,
           );
         const parsed = result.spec;
-        const spec = {
+        let spec = {
           ...parsed,
           from: resolveFrom(parsed.from, parsed.fromRelative),
         };
@@ -122,6 +130,9 @@ export default function remarkListing(options: RemarkListingOptions) {
               heading,
             );
           paginationClaimed = true;
+          // Embedded: the first page as a fixed list, no page links
+          if (options.static)
+            spec = { ...spec, limit: spec.pageSize, pageSize: null };
         }
         const index = await queryListingIndex({
           siteId: options.siteId,
@@ -139,6 +150,11 @@ export default function remarkListing(options: RemarkListingOptions) {
           positions = [promoted, ...positions.filter((i) => i !== promoted)];
         }
         const slice = sliceListing(positions, spec, options.page ?? 1);
+        if (slice.paginated)
+          options.onPaginate?.({
+            page: slice.page,
+            pageCount: slice.pageCount,
+          });
         const notes = slice.capped
           ? [
               ...result.notes,
