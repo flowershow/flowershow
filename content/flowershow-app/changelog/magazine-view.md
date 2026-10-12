@@ -33,4 +33,4 @@ Every list looks better too, with nothing to change:
 
 See [A magazine front page](/docs/reference/listings#a-magazine-front-page-magazine) and [Styling](/docs/reference/listings#styling) in [[listings|Listing pages]].
 
-**Themes:** Leaf, Lessflowery and Letterpress set their own corner radius, so their images stay rounded. Lessflowery and Letterpress also give every listing title the same size, so the magazine hero is no bigger than the other titles there. On Lessflowery, Letterpress and Superstack a magazine page is narrower than the default theme's for now, so it shows the tablet layout. These will change when the themes are updated. If your `custom.css` sets `--list-card-radius`, it still wins.
+**Themes:** the official themes support the magazine view from `v0.1.10`: square images, the full three-column front page and properly sized hero titles. Leaf keeps a 2px corner on its bordered grid cards. If you pin a theme version (`theme: leaf@v0.1.9`), move to `v0.1.10` or later. If your `custom.css` sets `--list-card-radius`, it still wins.
