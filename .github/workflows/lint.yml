@@ -5,9 +5,19 @@ on:
     branches:
       - main
       - staging
+    paths:
+      - '**'
+      - '!content/**'
+      # imported by apps/flowershow/lib/preview-canvas.ts
+      - 'content/flowershow-app/docs/canvas-demo.canvas'
   push:
     branches:
       - staging
+    paths:
+      - '**'
+      - '!content/**'
+      # imported by apps/flowershow/lib/preview-canvas.ts
+      - 'content/flowershow-app/docs/canvas-demo.canvas'
 
 jobs:
   lint:

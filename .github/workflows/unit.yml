@@ -3,8 +3,18 @@ name: Unit Tests
 on:
   push:
     branches: [main, staging]
+    paths:
+      - '**'
+      - '!content/**'
+      # imported by apps/flowershow/lib/preview-canvas.ts
+      - 'content/flowershow-app/docs/canvas-demo.canvas'
   pull_request:
     branches: [main, staging]
+    paths:
+      - '**'
+      - '!content/**'
+      # imported by apps/flowershow/lib/preview-canvas.ts
+      - 'content/flowershow-app/docs/canvas-demo.canvas'
 jobs:
   test:
     timeout-minutes: 15
