@@ -1739,12 +1739,31 @@
   :where(.list-component-item-meta) > * {
     white-space: nowrap;
   }
+  /* Names wrap onto a new line in narrow columns instead of overflowing; each
+     name stays whole and the comma stays with the name before it */
   :where(.list-component-item-authors) {
     display: inline-flex;
+    flex-wrap: wrap;
     align-items: center;
+    max-width: 100%;
+    white-space: normal;
   }
-  :where(.list-component-item-author + .list-component-item-author)::before {
-    content: ",\00a0";
+  :where(.list-component-item-author) {
+    white-space: nowrap;
+  }
+  /* Its "·" sits in its own padding, so a second line of names starts past
+     the clipped strip of the meta line (see the separator rule above) */
+  :where(.list-component-item-meta) > .list-component-item-authors {
+    position: relative;
+    padding-left: var(--_list-sep);
+  }
+  :where(.list-component-item-meta) > .list-component-item-authors::before {
+    position: absolute;
+    left: 0;
+  }
+  :where(.list-component-item-author:has(+ .list-component-item-author))::after {
+    content: ",";
+    margin-right: 0.3em;
   }
   :where(.list-component-item-authors-more) {
     margin-left: 0.3em;
@@ -2478,6 +2497,7 @@
     .list-component-item-meta
     > * {
     display: inline;
+    white-space: nowrap;
   }
 
   /* section headings: "More posts" (column) and "Recent posts" (the rest) */
