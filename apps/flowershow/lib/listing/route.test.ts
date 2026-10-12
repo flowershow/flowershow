@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  hasIntroText,
   hasTocHeadings,
   autoListingFor,
   hasExplicitListing,
@@ -9,6 +10,7 @@ import {
   resolveListingRoute,
   hasPaginatingBlock,
   listingDirSlug,
+  listingFeedUrl,
   virtualListingDir,
   virtualListingDirs,
 } from './route';
@@ -280,6 +282,7 @@ describe('resolveListingRoute (precedence table)', () => {
       source: 'layout',
       view: 'grid',
       pageSize: 20,
+      chronological: true,
     });
   });
   it('auto cases are page-level list views', () => {
@@ -414,5 +417,45 @@ describe('hasTocHeadings (a page-level listing hides an empty ToC)', () => {
     expect(hasTocHeadings('```list\nfrom: blog\n```')).toBe(false);
     expect(hasTocHeadings('```md\n## not a heading\n```')).toBe(false);
     expect(hasTocHeadings('%%\n## hidden\n%%')).toBe(false);
+  });
+});
+
+describe('listingFeedUrl (the feed link in a listing header)', () => {
+  const page = (list: unknown) =>
+    route({
+      slug: '/blog',
+      blob: { path: 'blog/README.md' },
+      metadata: { layout: 'list', list },
+    });
+  it('newest-first listings link the site feed when RSS is on', () => {
+    expect(listingFeedUrl(page(undefined), true)).toBe('/rss.xml');
+    expect(listingFeedUrl(page({ view: 'magazine' }), true)).toBe('/rss.xml');
+    expect(listingFeedUrl(page({ view: 'compact' }), true)).toBe('/rss.xml');
+    expect(
+      listingFeedUrl({ kind: 'virtual', dir: 'blog', title: 'Blog' }, true),
+    ).toBe('/rss.xml');
+  });
+  it('none with RSS off, for people, other sorts or no listing', () => {
+    expect(listingFeedUrl(page(undefined), false)).toBeNull();
+    expect(listingFeedUrl(page(undefined), undefined)).toBeNull();
+    expect(listingFeedUrl(page({ view: 'people' }), true)).toBeNull();
+    expect(listingFeedUrl(page({ sort: 'title' }), true)).toBeNull();
+    expect(listingFeedUrl(page({ sort: 'date asc' }), true)).toBeNull();
+    expect(listingFeedUrl({ kind: 'none' }, true)).toBeNull();
+  });
+});
+
+describe('hasIntroText (the intro slot of a listing page header)', () => {
+  it('no intro for frontmatter only, blank lines or comments', () => {
+    expect(hasIntroText('')).toBe(false);
+    expect(hasIntroText('---\ntitle: Blog\nlayout: list\n---\n')).toBe(false);
+    expect(hasIntroText('---\ntitle: Blog\n---\n\n   \n')).toBe(false);
+    expect(hasIntroText('---\ntitle: Blog\n---\n%% draft %%\n')).toBe(false);
+    expect(hasIntroText('---\ntitle: Blog\n---\n<!-- todo -->\n')).toBe(false);
+  });
+  it('an intro for any text, heading or image', () => {
+    expect(hasIntroText('---\ntitle: Blog\n---\nNotes, weekly.')).toBe(true);
+    expect(hasIntroText('## About')).toBe(true);
+    expect(hasIntroText('![[cover.png]]')).toBe(true);
   });
 });

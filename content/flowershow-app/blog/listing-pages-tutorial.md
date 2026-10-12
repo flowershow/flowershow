@@ -21,7 +21,7 @@ Three index pages, each made from a folder of ordinary Markdown pages:
 1. **A blog index** at `/blog`: every post, newest first, 20 per page. The blog you're reading is one: [flowershow.app/blog](/blog).
    ![A blog index: the title, then posts with a thumbnail on the left and their description, date and authors](/assets/docs-listings-zero-config-blog.webp)
 2. **A project portfolio** at `/projects`: a grid of cards with cover images.
-   ![A grid of cards, each with a cover image, or a letter tile when there is none, above the title and description](/assets/docs-listings-grid-blog.webp)
+   ![A grid of cards, each with a cover image, or an accent-tinted tile when there is none, above the title and description](/assets/docs-listings-grid-blog.webp)
 3. **A team page** at `/team`: portraits with names, roles and short bios. Here is a live one, listing the `people/` folder of this site:
 
 ```list
@@ -100,7 +100,7 @@ list:
 Things I'm building, or have built.
 ```
 
-`layout: list` makes this page the index of its own folder. `view: grid` under `list:` turns the rows into cards. Publish and open `/projects`. You should see a grid of cards (pages without a `date` are sorted by title): three across on a wide screen, two on a tablet, one on a phone. If some projects have an image and others don't, the others get a tile with their first letter, so the rows stay lined up.
+`layout: list` makes this page the index of its own folder. `view: grid` under `list:` turns the rows into cards. Publish and open `/projects`. You should see a grid of cards (pages without a `date` are sorted by title): three across on a wide screen, two on a tablet, one on a phone. If some projects have an image and others don't, the others get a tile tinted with your accent colour, so the rows stay lined up.
 
 ## Step 4: Make a team page with `view: people`
 

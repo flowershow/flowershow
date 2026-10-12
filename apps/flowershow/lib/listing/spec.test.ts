@@ -316,7 +316,7 @@ describe('media and ratio', () => {
       ok(blog({ defaultImage: 'a.png', fields: { image: 'cover' } })),
     ).toMatchObject({ defaultImage: 'a.png', fields: { image: 'cover' } });
   });
-  it('defaultImage: none (or false) turns monogram tiles off; no "ignored" note', () => {
+  it('defaultImage: none (or false) turns placeholder tiles off; no "ignored" note', () => {
     expect(ok(blog({ defaultImage: 'none' })).defaultImage).toBe(false);
     expect(ok(blog({ defaultImage: 'None' })).defaultImage).toBe(false);
     expect(

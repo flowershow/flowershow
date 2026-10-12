@@ -48,7 +48,8 @@ describe('renderReadMoreCards', () => {
     );
     expect(html.match(/<article class="list-component-item"/g)).toHaveLength(3);
     expect(html).toContain('<img class="list-component-item-media-img"');
-    expect(html).toContain('list-component-item-monogram');
+    expect(html).toContain('list-component-item-media--placeholder');
+    expect(html).not.toContain('list-component-item-monogram');
     expect(html).not.toMatch(/<h3[^>]* id=/);
     expect(html).toContain(
       '<a class="list-component-item-author" href="/people/ann">Ann</a>',

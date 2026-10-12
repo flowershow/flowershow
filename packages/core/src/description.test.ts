@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'vitest';
-import { extractDescription } from './description';
+import { extractDescription, markdownToPlainText } from './description';
 
 describe('extractDescription', () => {
   test('returns the opening sentence, not the whole paragraph', () => {
@@ -177,5 +177,108 @@ describe('extractDescription', () => {
         ),
       ).toBe('Use std::vector for dynamic arrays in modern C++ code.');
     });
+  });
+});
+
+describe('markdownToPlainText', () => {
+  test.each([
+    [
+      'a stray fence run',
+      'A blog/ folder lists itself, and a ```blog block or layout: list shows any folder.',
+      'A blog/ folder lists itself, and a blog block or layout: list shows any folder.',
+    ],
+    [
+      'a double-backtick span holding a fence',
+      'Put a ```` ```blog ```` block on any page.',
+      'Put a ```blog block on any page.',
+    ],
+    [
+      'inline code at the end of a sentence',
+      'Tag pages work inline with `#tag`.',
+      'Tag pages work inline with #tag.',
+    ],
+    [
+      'inline code that looks like html',
+      'Use the `<List />` component inline with Markdown.',
+      'Use the <List /> component inline with Markdown.',
+    ],
+    [
+      'emphasis inside code is left alone',
+      'Write `**bold**` for **bold**.',
+      'Write **bold** for bold.',
+    ],
+    [
+      'links, wikilinks and emphasis',
+      'See [the docs](https://x.y), [[Page|this page]] and _why_.',
+      'See the docs, this page and why.',
+    ],
+    [
+      'images and embeds',
+      '![alt](a.png) Intro ![[b.png]] text.',
+      'Intro text.',
+    ],
+    [
+      'html tags but not comparisons',
+      'Keep <b>this</b> and a < b > c.',
+      'Keep this and a < b > c.',
+    ],
+    ['backslash escapes', 'Costs \\*not\\* \\$5.', 'Costs *not* $5.'],
+    [
+      'every CommonMark escape (ASCII punctuation)',
+      'a \\` b \\" c \\\' d \\! e \\/ f \\$ g \\_h\\_ i \\\\ j',
+      "a ` b \" c ' d ! e / f $ g _h_ i \\ j",
+    ],
+    [
+      'generics that look like tags',
+      'Takes Array<string> and Map<K, V>, returns Promise<void>.',
+      'Takes Array<string> and Map<K, V>, returns Promise<void>.',
+    ],
+    [
+      'autolinks become their address',
+      'See <https://x.y> or mail <rufus@example.com>.',
+      'See https://x.y or mail rufus@example.com.',
+    ],
+    [
+      'an element with its closing tag goes, its text stays',
+      'A <Callout type="tip">short note</Callout> and <span>this</span>.',
+      'A short note and this.',
+    ],
+    [
+      'a self-closing component that is not html stays',
+      'Use <List /> on a page.',
+      'Use <List /> on a page.',
+    ],
+    [
+      'lone stars are arithmetic, not emphasis',
+      '2 * 3 * 4 = 24, and *this* is em.',
+      '2 * 3 * 4 = 24, and this is em.',
+    ],
+    [
+      'underscores and bold by the flanking rule',
+      'snake_case_name, _em_, __bold__ and a _ b _ c.',
+      'snake_case_name, em, bold and a _ b _ c.',
+    ],
+    [
+      'code spans drop one space from each end only',
+      'see`  two  `here and `` `x` `` too',
+      'see two here and `x` too',
+    ],
+    [
+      'code span line endings become spaces',
+      'run `fl\npublish` now',
+      'run fl publish now',
+    ],
+    [
+      'html comments',
+      'Hi <!-- hidden --> there <!-- never closed',
+      'Hi there',
+    ],
+    [
+      'tags as written',
+      'Tag notes inline with #tag, then browse.',
+      'Tag notes inline with #tag, then browse.',
+    ],
+  ])('%s', (_name, input, expected) => {
+    expect(markdownToPlainText(input)).toBe(expected);
   });
 });

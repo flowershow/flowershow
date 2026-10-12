@@ -1,6 +1,6 @@
 import { encodeSlug, filePathToSlug } from '@flowershow/core';
 import matter from 'gray-matter';
-import type { Code, Heading, Html, Text } from 'mdast';
+import type { Code, Heading, Html, Root, Text } from 'mdast';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
@@ -42,6 +42,8 @@ export type ListingRoute =
       source: 'layout' | 'auto';
       view: ListingView;
       pageSize: number | null;
+      /** Newest first by date (not people): what the site's RSS feed holds. */
+      chronological: boolean;
     };
 
 export function isAutoListingDirName(dir: string): boolean {
@@ -105,6 +107,20 @@ function parseBody(content: string) {
   }
   const processor = unified().use(remarkParse).use(remarkObsidianComments);
   return processor.runSync(processor.parse(body));
+}
+
+/**
+ * Whether a listing page's own body shows anything above the list (so it gets
+ * the header's intro slot): not for frontmatter only, blank lines, `%%
+ * comments %%` or `<!-- comments -->`.
+ */
+export function hasIntroText(content: string): boolean {
+  return (parseBody(content) as Root).children.some(
+    (node) =>
+      !(
+        node.type === 'html' && /^\s*(?:<!--[\s\S]*?-->\s*)+$/.test(node.value)
+      ),
+  );
 }
 
 /**
@@ -233,7 +249,27 @@ function pageRoute(
     source,
     view: parsed.ok ? parsed.spec.view : 'list',
     pageSize: parsed.ok ? parsed.spec.pageSize : null,
+    chronological:
+      parsed.ok &&
+      parsed.spec.view !== 'people' &&
+      parsed.spec.sort.field === 'date' &&
+      parsed.spec.sort.direction === 'desc',
   };
+}
+
+/**
+ * The feed to link from a listing page's header. Flowershow has one feed per
+ * site (/rss.xml: every published, dated page, newest first), so it is offered
+ * on page-level listings that read like it: newest first by date, not a
+ * people page. Null when the site has RSS off.
+ */
+export function listingFeedUrl(
+  route: ListingRoute,
+  enableRss: boolean | undefined,
+): string | null {
+  if (!enableRss) return null;
+  if (route.kind === 'virtual') return '/rss.xml';
+  return route.kind === 'page' && route.chronological ? '/rss.xml' : null;
 }
 
 export function resolveListingRoute({

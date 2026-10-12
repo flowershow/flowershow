@@ -14,6 +14,9 @@ test('zero-config blog folder (no README), page 1', async ({ page }) => {
   await expect(page).toHaveTitle(/^Blog/);
   await expect(page.locator('main h1').first()).toHaveText('Blog');
   await expect(page.locator('.layout-inner-left')).toHaveCount(0); // no sidebar, like the changelog fallback
+  await expect(
+    page.locator('.page-header .listing-page-feed-link'),
+  ).toHaveAttribute('href', '/rss.xml'); // the site has RSS on
   const list = page.locator('section.list-component.list-component--list');
   await expect(items(page)).toHaveCount(20);
   await expect(
@@ -158,13 +161,13 @@ test('projects grid: nested indexes, cards without images have no media, whole c
       .locator('.list-component-item-meta-value[data-field="status"]'),
   ).toHaveText('Shipped');
   await expect(cards.locator('time')).toHaveCount(0); // fields.date: none
-  // Alpha has an image, so Beta and Gamma get a decorative monogram tile (all-or-nothing media)
+  // Alpha has an image, so Beta and Gamma get a decorative tinted tile, with no letter (all-or-nothing media)
   await expect(cards.locator('.list-component-item-media')).toHaveCount(3);
   await expect(
     cards.locator(
-      '.list-component-item-media--placeholder[aria-hidden="true"] .list-component-item-monogram',
+      '.list-component-item-media--placeholder[aria-hidden="true"]',
     ),
-  ).toHaveText(['B', 'G']);
+  ).toHaveText(['', '']);
   await expect(
     cards.nth(2).locator('.list-component-item-media img'),
   ).toBeVisible();
@@ -213,14 +216,16 @@ test('defaultImage fills cards without an image', async ({ page }) => {
   ); // Beta, via defaultImage
 });
 
-test('grid without monograms: defaultImage none, or no item with an image', async ({
+test('grid without placeholder tiles: defaultImage none, or no item with an image', async ({
   page,
 }) => {
   await page.goto('/no-monogram');
   const cards = page.locator('section.list-component--grid > article');
   await expect(cards).toHaveCount(3);
   await expect(cards.locator('.list-component-item-media')).toHaveCount(1);
-  await expect(page.locator('.list-component-item-monogram')).toHaveCount(0);
+  await expect(
+    page.locator('.list-component-item-media--placeholder'),
+  ).toHaveCount(0);
   await page.goto('/text-grid');
   await expect(
     page.locator('section.list-component--grid[data-media="none"] > article'),
@@ -319,9 +324,24 @@ test('prose-only posts/README gets the listing appended; ToC ignores items', asy
   await expect(
     page.locator('.list-component-item-headline a').first(),
   ).toHaveText('Third note');
-  await expect(page.locator('#mdxpage > :last-child')).toHaveClass(
-    /list-component/,
-  ); // after the prose
+  // the prose is the header's intro, above the rule; the listing follows it
+  await expect(page.locator('.listing-page-intro')).toContainText(
+    'Shorter notes, collected here.',
+  );
+  await expect(
+    page.locator('#mdxpage > .listing-page-listing > section.list-component'),
+  ).toHaveCount(1);
+  const intro = (await page.locator('.listing-page-intro').boundingBox())!;
+  const rule = (await page.locator('.listing-page-listing').boundingBox())!;
+  expect(intro.y + intro.height).toBeLessThanOrEqual(rule.y);
+  // excerpts are plain text: no fences or code ticks, code text kept
+  await expect(
+    items(page)
+      .filter({ hasText: 'Second note' })
+      .locator('.list-component-item-summary'),
+  ).toHaveText(
+    'A blog block lists posts, and layout: list lists a folder inline with <List />.',
+  );
   await expect(
     page.locator('.page-toc-container', { hasText: 'Third note' }),
   ).toHaveCount(0);
@@ -482,6 +502,8 @@ test('grouping: by month, out of the ToC; each team heading once', async ({
     page.locator('.page-toc-container', { hasText: '2026' }),
   ).toHaveCount(0);
   await page.goto('/team');
+  // a people page is not a feed: no RSS link in its header
+  await expect(page.locator('.listing-page-feed-link')).toHaveCount(0);
   await expect(page.locator('h2.list-component-group-heading')).toHaveText([
     'Design',
     'Eng',
@@ -550,7 +572,9 @@ test('magazine = grid + featured: the featured: true post is the hero, once', as
   await expect(hero.locator('.list-component-item-eyebrow')).toHaveText(
     'Compilers',
   );
-  await expect(hero.locator('.list-component-item-monogram')).toHaveCount(0);
+  await expect(
+    hero.locator('.list-component-item-media--placeholder'),
+  ).toHaveCount(0);
   await expect(
     page.locator('.list-component-item-headline a', { hasText: /^Post 10:/ }),
   ).toHaveCount(1);
@@ -609,6 +633,33 @@ test('view: magazine on a layout: list page: hero, cards, More posts, Recent pos
   await expect(
     root.locator('.list-component-item-media--placeholder').first(),
   ).toBeVisible();
+  // the rows line up with the top grid: same left edge, the hero's right edge
+  const restBox = (await rest.boundingBox())!;
+  const topBox = (await top.boundingBox())!;
+  expect(Math.abs(restBox.x - topBox.x)).toBeLessThan(1);
+  expect(
+    Math.abs(restBox.x + restBox.width - (heroBox.x + heroBox.width)),
+  ).toBeLessThan(2);
+  // one type family: the page title uses the cards' title font
+  const fontOf = (sel: string) =>
+    page
+      .locator(sel)
+      .first()
+      .evaluate((e) => getComputedStyle(e).fontFamily);
+  expect(await fontOf('.page-header-title')).toBe(
+    await fontOf('.list-component-item--card .list-component-item-headline'),
+  );
+  // "More posts" meta lines wrap instead of cutting author names
+  for (const meta of await top
+    .locator('.list-component-item--brief .list-component-item-meta')
+    .all())
+    expect(await meta.evaluate((m) => m.scrollWidth <= m.clientWidth + 1)).toBe(
+      true,
+    );
+  // the header links the site feed
+  await expect(
+    page.locator('.page-header-actions a.listing-page-feed-link'),
+  ).toHaveAttribute('href', '/rss.xml');
   await expect(
     root.locator('a.list-component-pagination-button--next'),
   ).toHaveAttribute('href', '/magazine-view?page=2');

@@ -6,9 +6,9 @@ import { describe, expect, it } from 'vitest';
 import type { ListingItem } from './items';
 import {
   magazineSlots,
+  type RenderListingInput,
   renderListing,
   renderListingError,
-  type RenderListingInput,
 } from './render';
 import {
   DEFAULT_FIELDS,
@@ -244,7 +244,7 @@ describe('card anatomy (design section 6)', () => {
     expect(body.querySelectorAll('.list-component-item-media')).toHaveLength(2);
     const tile = body.querySelector('.list-component-item-media--placeholder')!;
     expect(tile.getAttribute('aria-hidden')).toBe('true');
-    expect(tile.textContent).toBe('A');
+    expect(tile.textContent).toBe(''); // a tinted tile, never a letter
     // defaultImage: none, or no item with an image: text-only rows
     expect(
       (
@@ -310,7 +310,7 @@ describe('grid view and the no-image rule (UX M-2)', () => {
         .getAttribute('sizes'),
     ).toBe('(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw');
   });
-  it('mixed grid: a card without an image gets a decorative monogram tile (all-or-nothing media)', async () => {
+  it('mixed grid: a card without an image gets a decorative tinted tile (all-or-nothing media)', async () => {
     const body = await html(
       renderListing(
         input({
@@ -326,43 +326,16 @@ describe('grid view and the no-image rule (UX M-2)', () => {
     )!;
     expect(tile.getAttribute('aria-hidden')).toBe('true');
     expect(tile.querySelector('listing-image, img')).toBeNull();
-    expect(
-      tile.querySelector('.list-component-item-monogram')!.textContent,
-    ).toBe('B');
+    expect(tile.childNodes).toHaveLength(0); // no letter: it never reads as a broken image
   });
-  it('a monogram is the first letter or digit of the title; none if the title has neither', async () => {
-    const body = await html(
-      renderListing(
-        input({
-          spec: grid,
-          page: page([
-            item(),
-            item({ url: '/b', image: null, title: 'économie notes' }),
-            item({ url: '/c', image: null, title: '“1984”, again' }),
-            item({ url: '/d', image: null, title: '***' }),
-          ]),
-        }),
-      ),
-    );
-    expect(
-      [
-        ...body.querySelectorAll(
-          '.list-component-item-media--placeholder .list-component-item-monogram',
-        ),
-      ].map((e) => e.textContent),
-    ).toEqual(['É', '1']);
-    expect(
-      body.querySelectorAll('.list-component-item-media--placeholder'),
-    ).toHaveLength(3); // no letter: the tinted tile alone
-  });
-  it('no monograms with defaultImage: none, in the list view, or for a featured card', async () => {
+  it('no tiles with defaultImage: none, with list covers, or for a featured card', async () => {
     const mixed = page([item(), item({ url: '/b', image: null })]);
     const count = async (o: Partial<ListingSpec>, featuredFirst = false) =>
       (
         await html(
           renderListing(input({ spec: spec(o), page: mixed, featuredFirst })),
         )
-      ).querySelectorAll('.list-component-item-monogram').length;
+      ).querySelectorAll('.list-component-item-media--placeholder').length;
     const g = {
       view: 'grid' as const,
       media: 'cover' as const,
@@ -370,7 +343,7 @@ describe('grid view and the no-image rule (UX M-2)', () => {
     };
     expect(await count(g)).toBe(1);
     expect(await count({ ...g, defaultImage: false })).toBe(0);
-    expect(await count({})).toBe(1); // list view: a neutral tile
+    expect(await count({})).toBe(1); // list view: the same tinted tile
     expect(await count({ media: 'cover' })).toBe(0); // list covers: text-only rows
     const featuredFirstNoImage = page([
       item({ image: null }),
@@ -387,7 +360,7 @@ describe('grid view and the no-image rule (UX M-2)', () => {
             }),
           ),
         )
-      ).querySelectorAll('.list-component-item-monogram').length,
+      ).querySelectorAll('.list-component-item-media--placeholder').length,
     ).toBe(0);
   });
   it('list thumbnails: data-media-side left by default, right on request; only for thumb', async () => {
@@ -883,7 +856,7 @@ describe('magazine view', () => {
     }
   });
 
-  it('items without images: card tiles, briefs without a thumbnail, a text-only hero', async () => {
+  it('items without images: text-only cards and briefs, a text-only hero', async () => {
     const body = await render(6, {}, (i) =>
       i % 2 === 0 ? { image: null } : {},
     );
@@ -891,13 +864,19 @@ describe('magazine view', () => {
     expect(hero.querySelector('.list-component-item-media')).toBeNull();
     const cards = body.querySelectorAll('.list-component-item--card');
     expect(cards[0]!.querySelector('listing-image')).not.toBeNull(); // Post 2
-    expect(
-      cards[1]!.querySelector('.list-component-item-media--placeholder')!
-        .textContent,
-    ).toBe('P'); // Post 3
+    // Post 3: a clean text-only card, not a tile, even though most posts have images
+    expect(cards[1]!.querySelector('.list-component-item-media')).toBeNull();
     const briefs = body.querySelectorAll('.list-component-item--brief');
     expect(briefs[0]!.querySelector('listing-image')).not.toBeNull(); // Post 4
     expect(briefs[1]!.querySelector('.list-component-item-media')).toBeNull(); // Post 5
+    // the rows below keep the list rule: a tile when most posts have an image
+    const rows = await render(10, {}, (i) => (i === 9 ? { image: null } : {}));
+    const last = [
+      ...rows.querySelectorAll('.list-component-magazine-rest > article'),
+    ].at(-1)!;
+    expect(
+      last.querySelector('.list-component-item-media--placeholder'),
+    ).not.toBeNull();
     // no item with an image: no media at all
     const text = await render(6, {}, () => ({ image: null }));
     expect(text.querySelector('.list-component-item-media')).toBeNull();
@@ -984,7 +963,7 @@ describe('placeholder tiles follow the whole listing (imageShare)', () => {
         imageShare: 0.3,
       }),
     ).toBe(0);
-    // grids keep a monogram for every card once any card has an image
+    // grids keep a tile for every card once any card has an image
     expect(
       await tiles({
         spec: spec({ view: 'grid', media: 'cover', ratio: '16/9' }),

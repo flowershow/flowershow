@@ -284,12 +284,15 @@ export function buildSite(): { rows: Row[]; files: string[] } {
     ['rufuspollock', 'olayway'],
     ['olayway', 'abeelha', 'rufuspollock'],
     ['abeelha', 'olayway', 'rufuspollock', 'Guest Writer'],
+    // one long name (no author page): wraps only as a last resort
+    ['Maximilian von Habsburg-Lothringen'],
   ];
   const fieldImages = [
     'annotations',
     'breadcrumbs',
     'customize-your-site',
     'publish-without-an-account',
+    'annotations',
   ];
   for (const [i, authors] of authorSets.entries())
     rows.push(
@@ -299,6 +302,7 @@ export function buildSite(): { rows: Row[]; files: string[] } {
           'Pairing on the renderer',
           'Three of us on themes',
           'A team retro, with a guest',
+          'A guest post with a long byline',
         ][i],
         date: `2026-10-0${8 - i}`,
         description: `Written by ${authors.length} ${authors.length === 1 ? 'person' : 'people'}.`,

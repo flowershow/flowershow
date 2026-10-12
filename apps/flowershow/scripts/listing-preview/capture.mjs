@@ -314,6 +314,71 @@ for (const width of [1440, 768, 390]) {
   );
   await page.close();
 }
+// A long single author name never overflows a narrow meta line (it wraps
+// inside itself only when it is wider than the column)
+for (const width of [1440, 768, 390]) {
+  const page = await open('magazine-long-author', { width });
+  const over = await page.$$eval(
+    '.list-component-magazine-top .list-component-item-meta',
+    (metas) =>
+      metas
+        .filter((m) =>
+          [...m.querySelectorAll('*')].some(
+            (c) =>
+              c.getBoundingClientRect().right >
+              m.getBoundingClientRect().right + 0.5,
+          ),
+        )
+        .map((m) => m.textContent),
+  );
+  const named = await page.$$eval('.list-component-item-author', (a) =>
+    a.some((e) => e.textContent === 'Maximilian von Habsburg-Lothringen'),
+  );
+  if (!named) failures.push('magazine-long-author: the long name is missing');
+  if (over.length)
+    failures.push(
+      `magazine-long-author @${width}: meta overflows (${over.join(' | ')})`,
+    );
+  console.log(
+    `check magazine-long-author @${width}: ${over.length} overflowing meta lines`,
+  );
+  await page.close();
+}
+// magazine page: the rows below line up with the top grid (left edge, hero's
+// right edge), and the page title uses the cards' title font
+{
+  const page = await open('magazine-blog');
+  const m = await page.evaluate(() => {
+    const r = (sel) => document.querySelector(sel).getBoundingClientRect();
+    const font = (sel) =>
+      getComputedStyle(document.querySelector(sel)).fontFamily;
+    const top = r('.list-component-magazine-top');
+    const hero = r(
+      '.list-component-magazine-top > .list-component-item--featured',
+    );
+    const rest = r('.list-component-magazine-rest');
+    return {
+      left: Math.round(rest.left - top.left),
+      right: Math.round(rest.right - hero.right),
+      h1: font('.page-header-title'),
+      card: font('.list-component-item--card .list-component-item-headline'),
+      feed: !!document.querySelector(
+        '.page-header-actions .listing-page-feed-link',
+      ),
+    };
+  });
+  if (m.left !== 0 || Math.abs(m.right) > 1)
+    failures.push(
+      `magazine-blog @1440: rows not on the top grid (${JSON.stringify(m)})`,
+    );
+  if (m.h1 !== m.card)
+    failures.push(
+      `magazine-blog: page title font ${m.h1}, card titles ${m.card}`,
+    );
+  if (!m.feed) failures.push('magazine-blog: no feed link in the header');
+  console.log(`check magazine-blog rows and title: ${JSON.stringify(m)}`);
+  await page.close();
+}
 for (const name of [
   'zero-config-blog',
   'grid-blog',

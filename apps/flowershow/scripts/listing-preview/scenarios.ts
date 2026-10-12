@@ -572,6 +572,21 @@ export const SCENARIOS: Scenario[] = [
     }),
   ),
   {
+    name: 'magazine-long-author',
+    title:
+      'view: magazine with a long single author name in "More posts" (wraps inside only as a last resort)',
+    slug: '/',
+    path: 'README.md',
+    markdown: inline(
+      'Field notes',
+      '```list\nfrom: field-notes\nview: magazine\n```',
+    ),
+    shots: [
+      { file: 'magazine-long-author' },
+      { file: 'magazine-long-author-tablet', width: 768 },
+    ],
+  },
+  {
     name: 'magazine-text-only',
     title: 'view: magazine where no item has an image',
     slug: '/',

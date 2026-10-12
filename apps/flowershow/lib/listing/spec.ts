@@ -58,7 +58,7 @@ export type ListingSpec = {
   ratio: Ratio;
   /**
    * Image (path or [[wikilink]]) for items without one, resolved against the
-   * listing page; `false` (`defaultImage: none`) turns grid monogram tiles off;
+   * listing page; `false` (`defaultImage: none`) turns placeholder tiles off;
    * null (unset) keeps them.
    */
   defaultImage: string | false | null;

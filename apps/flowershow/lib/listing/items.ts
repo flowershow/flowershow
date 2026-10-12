@@ -1,4 +1,5 @@
 import {
+  markdownToPlainText,
   matchLinkTarget,
   normalizeFrontmatterTags,
   tagMatches,
@@ -502,13 +503,20 @@ function fieldParts(value: unknown, ctx: ItemContext): ListingFieldPart[] {
   });
 }
 
+/** A summary is shown as plain text: no Markdown or code syntax (computed or hand-written). */
+function plainSummary(value: string | null): string | null {
+  return value ? markdownToPlainText(value) || null : null;
+}
+
 export function toListingItem(row: ListingRow, ctx: ItemContext): ListingItem {
   const m = row.metadata ?? {};
   const f = ctx.fields;
-  const title =
+  const rawTitle =
     f.title === 'title'
       ? itemTitle(row)
       : (firstString(m, [f.title]) ?? itemTitle(row));
+  // Plain text, like summaries: "`fl` now syncs" shows as "fl now syncs"
+  const title = markdownToPlainText(rawTitle) || rawTitle;
   const date = f.date ? slotDate(row, f.date) : null;
   const dateKeys = new Set(['date', ...(f.date ? [f.date] : [])]);
   const dateInEyebrow = f.eyebrow.some((k) => dateKeys.has(k));
@@ -533,7 +541,9 @@ export function toListingItem(row: ListingRow, ctx: ItemContext): ListingItem {
     date,
     dateInEyebrow,
     summary: f.summary
-      ? firstString(m, SUMMARY_FALLBACKS[f.summary] ?? [f.summary])
+      ? plainSummary(
+          firstString(m, SUMMARY_FALLBACKS[f.summary] ?? [f.summary]),
+        )
       : null,
     image: rawImage
       ? imageSrc(resolveTarget(rawImage, row.path, ctx), ctx.siteHostname)
