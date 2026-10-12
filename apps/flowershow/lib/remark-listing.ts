@@ -36,8 +36,6 @@ export type ListingRenderContext = {
    * `?page=` belongs to the host page.
    */
   static?: boolean;
-  /** Shared across the bodies of one page, so MAX_LISTINGS_PER_PAGE bounds the whole page, not each body. */
-  budget?: { used: number };
   /** Called with the block that paginates (if any), so the route can 404 a page past its last page. */
   onPaginate?: (info: { page: number; pageCount: number }) => void;
   today?: string;
@@ -70,7 +68,7 @@ export default function remarkListing(options: RemarkListingOptions) {
     if (targets.length === 0 && !options.implicit) return;
 
     let paginationClaimed = options.paginationClaimed === true;
-    const budget = options.budget ?? { used: 0 };
+    let listings = 0;
     let heroClaimed = false;
     const currentPath = options.filePath.replace(/^\/+/, '');
     const locale = options.locale ?? DEFAULT_LOCALE;
@@ -82,7 +80,7 @@ export default function remarkListing(options: RemarkListingOptions) {
       label?: string,
     ): Promise<RootContent> => {
       try {
-        if (++budget.used > MAX_LISTINGS_PER_PAGE)
+        if (++listings > MAX_LISTINGS_PER_PAGE)
           return renderListingError(
             [
               `At most ${MAX_LISTINGS_PER_PAGE} lists per page; remove or combine some blocks.`,

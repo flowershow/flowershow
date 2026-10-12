@@ -113,7 +113,7 @@ describe('ChangelogIndexPage', () => {
     expect(first.textContent).toContain('ghost');
   });
 
-  it('renders entry bodies as embedded: static list blocks sharing one listing budget', async () => {
+  it('renders entry bodies as embedded: static list blocks, each with its own listing cap', async () => {
     await ChangelogIndexPage({ ...baseProps, page: 2 });
     const calls = vi.mocked(renderPageContent).mock.calls.map((c) => c[0]);
     expect(calls).toHaveLength(2);
@@ -121,7 +121,6 @@ describe('ChangelogIndexPage', () => {
       expect(c.listing?.static).toBe(true);
       expect(c.listing?.page).toBeUndefined(); // never the timeline's ?page=
     }
-    expect(calls[0]!.listing?.budget).toBe(calls[1]!.listing?.budget);
     expect(calls[0]!.listing?.publicUrl).toBe('/changelog/2026-01-02-entry-2');
   });
 

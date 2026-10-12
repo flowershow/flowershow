@@ -252,18 +252,6 @@ describe('remarkListing', () => {
       'Only one list per page can paginate',
     );
   });
-  it('a shared budget caps listings across the bodies of one page', async () => {
-    const budget = { used: 0 };
-    const md = Array.from({ length: 6 }, () => '```blog\nlimit: 1\n```').join(
-      '\n\n',
-    );
-    await run(md, { budget });
-    const tree = await run(md, { budget });
-    expect(queryListingIndex).toHaveBeenCalledTimes(10);
-    expect(JSON.stringify(tree.children[4])).toContain(
-      'At most 10 lists per page',
-    );
-  });
   it('reports the paginating block (page and page count) so the route can 404 past the end', async () => {
     const onPaginate = vi.fn();
     await run('```blog\nlimit: 2\n```\n\n```blog\npageSize: 10\n```', {

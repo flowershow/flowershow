@@ -32,7 +32,8 @@
  *   4. Fetches each markdown/mdx file
  *   5. Parses frontmatter and extracts title (matching worker logic)
  *   6. Looks up the Blob ID from the database (used as document ID)
- *   7. Upserts each document into Typesense
+ *   7. Upserts each document into Typesense (a `draft: true` page is not
+ *      indexed, and its earlier document, if any, is deleted)
  *   8. Reports summary of indexed/skipped/failed documents
  *
  * RELATED:
@@ -361,9 +362,19 @@ async function reindexSite(siteId: string, dryRun: boolean) {
         continue;
       }
 
-      // Drafts are never in search (matches worker behavior)
+      // Drafts are never in search (matches worker behavior): drop any
+      // document indexed before the page became a draft
       if (isDraft(metadata)) {
-        console.log(`    [SKIP] ${filePath} — draft: true`);
+        if (!dryRun) {
+          try {
+            await typesense.collections(siteId).documents(`${blobId}`).delete();
+          } catch {
+            // not indexed
+          }
+        }
+        console.log(
+          `    [SKIP] ${filePath} — draft: true${dryRun ? ' (would remove from search)' : ' (removed from search)'}`,
+        );
         skipped++;
         continue;
       }

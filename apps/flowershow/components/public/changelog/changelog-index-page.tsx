@@ -46,8 +46,8 @@ export async function ChangelogIndexPage(props: Props) {
   );
 
   // Entries are embedded here: their list blocks render as fixed first pages
-  // (`?page=` is the timeline's) and share one page's listing budget.
-  const listingBudget = { used: 0 };
+  // (`?page=` is the timeline's). Each entry keeps its own listing cap, so one
+  // entry never shows another's "too many lists" error.
   const bodies = await Promise.all(
     pageData.items.map(async (entry) => {
       const blob = await api.site.getBlobByPath
@@ -69,7 +69,7 @@ export async function ChangelogIndexPage(props: Props) {
         permalinksMapping: props.permalinksMapping,
         imageDimensions: props.imageDimensions,
         showTags: props.showTags,
-        listing: { static: true, budget: listingBudget, publicUrl: entry.url },
+        listing: { static: true, publicUrl: entry.url },
       });
     }),
   );

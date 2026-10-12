@@ -282,7 +282,7 @@ A page is listed when it is in the `from` folder or any folder below it, and:
 - it doesn't have `publish: false`;
 - it doesn't have `draft: true`.
 
-A **draft** stays reachable at its URL (so you can share it for review) but is left out of everything that lists pages: list blocks, `layout: list` and zero-config pages, the older `<List />` component, changelog timelines, the RSS feed, the sitemap, site search, tag pages and the sidebar. It also asks search engines not to index it. To take a page off the site entirely, use `publish: false` instead.
+A **draft** stays reachable at its URL (so you can share it for review) but is left out of list blocks, `layout: list` and zero-config pages, the older `<List />` component, changelog timelines, the RSS feed, the sitemap, site search, tag pages and the sidebar. It also asks search engines not to index it. Backlinks and the graph view still show it. To take a page off the site entirely, use `publish: false` instead.
 
 Pages hidden from the sidebar with `contentHide` are still listed.
 

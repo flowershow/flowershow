@@ -29,6 +29,10 @@ test('Changelog folder renders as a timeline', async ({ page, basePath }) => {
     await expect(page.locator('.changelog-entry-title').first()).toHaveText(
       'Entry 2',
     );
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+      'href',
+      /\/changelog\?page=2$/,
+    ); // each timeline page is its own canonical
   });
 });
 

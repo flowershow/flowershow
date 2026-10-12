@@ -50,7 +50,13 @@ import {
   TagIndexPage,
   TagListingPage,
 } from '@/components/public/tags/tag-views';
-import { isChangelogDirName, parsePageParam } from '@/lib/changelog';
+import {
+  dirOf,
+  isChangelogDir,
+  isChangelogDirName,
+  isFolderIndexPath,
+  parsePageParam,
+} from '@/lib/changelog';
 import { resolveChangelogContext } from '@/lib/changelog-context';
 import { hasVersionSections } from '@/lib/changelog-file';
 import { anonRobots } from '@/lib/anonymous-site';
@@ -212,7 +218,15 @@ export async function generateMetadata(props: {
         loadBody,
       );
   const pageParam = (await props.searchParams)?.page;
+  // A changelog index pages its timeline by ?page= (its intro's blocks are
+  // fixed), so each page is its own canonical whatever the intro holds
+  const isChangelogIndex =
+    isChangelogFallback ||
+    (!!blob &&
+      isFolderIndexPath(blob.path) &&
+      isChangelogDir(dirOf(blob.path), metadata));
   const paginatesByPage =
+    isChangelogIndex ||
     listingPaginatesByPage(listingRoute) ||
     (!!blob &&
       /\.mdx?$/i.test(blob.path) &&
