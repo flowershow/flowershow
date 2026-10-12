@@ -421,6 +421,15 @@ function resolveTarget(
   });
 }
 
+/** The item's image value as written (the `image` slot's field, then its fallbacks), not yet resolved. */
+export function rawListingImage(
+  m: Record<string, unknown> | null,
+  slot: string | null,
+): string | null {
+  if (!m || !slot) return null;
+  return firstString(m, IMAGE_FALLBACKS[slot] ?? [slot]);
+}
+
 /** An image value (path or [[wikilink]]) resolved like an item image, from `originPath`; null if it is not an image. */
 export function resolveListingImage(
   value: string,
@@ -510,8 +519,7 @@ export function toListingItem(row: ListingRow, ctx: ItemContext): ListingItem {
         : []
       : fieldParts(m[k], ctx),
   );
-  const imageKeys = f.image ? (IMAGE_FALLBACKS[f.image] ?? [f.image]) : [];
-  const rawImage = firstString(m, imageKeys);
+  const rawImage = rawListingImage(m, f.image);
   const authorKeys = f.authors
     ? (AUTHOR_FALLBACKS[f.authors] ?? [f.authors])
     : [];

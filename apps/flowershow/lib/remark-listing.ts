@@ -164,6 +164,22 @@ export default function remarkListing(options: RemarkListingOptions) {
           spec.defaultImage && spec.media !== 'none'
             ? resolveListingImage(spec.defaultImage, currentPath, ctx)
             : null;
+        // Image decisions (an image column, placeholder tiles) cover the whole
+        // listing, so every page of it looks the same
+        const imageShare =
+          spec.media === 'none'
+            ? 0
+            : fallbackImage
+              ? 1
+              : index.images
+                ? positions.filter((i) => {
+                    const raw = index.images![i];
+                    return (
+                      raw != null &&
+                      resolveListingImage(raw, index.paths[i]!, ctx) !== null
+                    );
+                  }).length / Math.max(1, positions.length)
+                : undefined;
         const posById = new Map(index.ids.map((id, i) => [id, i]));
         const items = rows.map((row) => {
           const own = toListingItem(row, ctx);
@@ -206,6 +222,7 @@ export default function remarkListing(options: RemarkListingOptions) {
           label,
           notes,
           featuredFirst: hero,
+          imageShare,
           featuredPriority: hero && !wasClaimed,
         });
       } catch (error) {

@@ -4,6 +4,7 @@ import {
   canonicalGroupKeys,
   groupKey,
   type ListingRow,
+  rawListingImage,
   selectListingRows,
 } from './items';
 import type { ListingSpec } from './spec';
@@ -16,6 +17,8 @@ export type ListingIndex = {
   paths: string[];
   featured: number[];
   groups: string[] | null;
+  /** Each item's image value as written (resolved by the caller), so image decisions cover the whole listing, not one page. */
+  images?: (string | null)[];
 };
 
 const ROW_SELECT = {
@@ -59,6 +62,7 @@ export function buildIndex(
     ids: rows.map((r) => r.id),
     paths: rows.map((r) => r.path),
     featured: rows.flatMap((r, i) => (isFeatured(r.metadata) ? [i] : [])),
+    images: rows.map((r) => rawListingImage(r.metadata, spec.fields.image)),
     groups:
       spec.group.by === 'none'
         ? null
@@ -71,7 +75,7 @@ export function buildIndex(
 /**
  * The folder's items, filtered and ordered (group first, then sort), cached per
  * site/folder/where/sort/date slot/group and invalidated by the site tag on
- * publish. Only ids, paths, featured positions and group keys are cached.
+ * publish. Only ids, paths, featured positions, group keys and raw image values are cached.
  */
 export async function queryListingIndex(
   { siteId, spec, today }: { siteId: string; spec: ListingSpec; today: string },
@@ -84,6 +88,7 @@ export async function queryListingIndex(
     where: Object.entries(spec.where).sort(([a], [b]) => (a < b ? -1 : 1)),
     sort: spec.sort,
     date: spec.fields.date,
+    image: spec.fields.image,
     group: spec.group,
     today: usesToday ? today : null,
   });
@@ -94,6 +99,7 @@ export async function queryListingIndex(
         where: [string, string[]][];
         sort: ListingSpec['sort'];
         date: string | null;
+        image: string | null;
         group: ListingSpec['group'];
       };
       const s = {
@@ -101,7 +107,7 @@ export async function queryListingIndex(
         where: Object.fromEntries(k.where),
         sort: k.sort,
         group: k.group,
-        fields: { ...spec.fields, date: k.date },
+        fields: { ...spec.fields, date: k.date, image: k.image },
       };
       const rows = await fetchFolderRows(db, {
         siteId: sid,

@@ -114,6 +114,8 @@ function monogram(title: string): string {
 function renderAuthors(
   handles: string[],
   authors: Map<string, ResolvedAuthor>,
+  /** Every name in a title attribute, for meta lines cut with an ellipsis. */
+  withTitle = false,
 ): RootContent | null {
   if (handles.length === 0) return null;
   const resolved = handles.map(
@@ -156,6 +158,7 @@ function renderAuthors(
       ...names,
       ...more,
     ],
+    withTitle ? { title: resolved.map((a) => a.name).join(', ') } : {},
   );
 }
 
@@ -279,7 +282,11 @@ function renderItem(
         { dateTime: item.date },
       ),
     );
-  const by = renderAuthors(item.authorHandles, ctx.authors);
+  const by = renderAuthors(
+    item.authorHandles,
+    ctx.authors,
+    ctx.role === 'brief',
+  );
   if (by) meta.push(by);
   for (const f of item.meta)
     meta.push(
@@ -377,7 +384,15 @@ export type RenderListingInput = {
   featuredFirst?: boolean;
   /** The featured hero is the page's first, so its image gets fetchPriority high. */
   featuredPriority?: boolean;
+  /**
+   * Share (0–1) of the whole listing's items that have an image, across all
+   * pages; defaults to the share on this page.
+   */
+  imageShare?: number;
 };
+
+/** Placeholder tiles only where most items have a picture: at least this share. */
+export const PLACEHOLDER_MIN_IMAGE_SHARE = 0.5;
 
 export type MagazineLayout = 'solo' | 'pair' | 'trio' | 'lead-more' | 'full';
 /** At most this many items in the magazine's "More posts" column. */
@@ -412,19 +427,25 @@ export function renderListing({
   notes = [],
   featuredFirst = false,
   featuredPriority = false,
+  imageShare,
 }: RenderListingInput): RootContent {
   const empty = el('p', ['list-component-empty'], [text('Nothing here yet.')]);
   if (page.total === 0 && notes.length === 0) return empty;
-  const anyImage = page.items.some((i) => i.image);
+  const share =
+    imageShare ??
+    page.items.filter((i) => i.image).length / Math.max(1, page.items.length);
   const showMedia =
-    spec.media !== 'none' && (anyImage || spec.view === 'people');
-  // All-or-nothing media: if any item has an image, the rest get a placeholder tile
+    spec.media !== 'none' && (share > 0 || spec.view === 'people');
+  // Items without an image get a placeholder tile so rows and columns stay
+  // aligned: in a grid whenever any card has one (monogram tiles), in lists and
+  // the magazine only when most items do (a tile on most rows would be noise)
   const placeholder =
-    (spec.view === 'grid' ||
-      spec.view === 'magazine' ||
-      (spec.view === 'list' && spec.media === 'thumb')) &&
     showMedia &&
-    spec.defaultImage !== false;
+    spec.defaultImage !== false &&
+    (spec.view === 'grid' ||
+      ((spec.view === 'magazine' ||
+        (spec.view === 'list' && spec.media === 'thumb')) &&
+        share >= PLACEHOLDER_MIN_IMAGE_SHARE));
   const base = { authors, showMedia, placeholder, locale };
   const children: RootContent[] = [];
   if (page.items.length === 0) children.push(empty);

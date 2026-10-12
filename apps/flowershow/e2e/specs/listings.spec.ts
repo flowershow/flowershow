@@ -581,6 +581,32 @@ test('view: magazine, page 2 is plain rows', async ({ page }) => {
   ).toHaveCount(12);
 });
 
+test('view: magazine pages 1–3 hold every post once; the promoted post is not on page 2', async ({
+  page,
+}) => {
+  const hrefs = async (url: string) => {
+    await page.goto(url);
+    return page
+      .locator('section.list-component .list-component-item-headline a')
+      .evaluateAll((as) => as.map((a) => a.getAttribute('href')!));
+  };
+  const magazine = [
+    ...(await hrefs('/magazine-view')),
+    ...(await hrefs('/magazine-view?page=2')),
+    ...(await hrefs('/magazine-view?page=3')),
+  ];
+  const page2 = await hrefs('/magazine-view?page=2');
+  expect(
+    page2.some((h) => h.endsWith('/blog/post-10')),
+    'the featured post is only on page 1',
+  ).toBe(false);
+  // the same folder as the zero-config /blog index (20 + 8 posts)
+  const blog = [...(await hrefs('/blog')), ...(await hrefs('/blog?page=2'))];
+  expect(blog).toHaveLength(28);
+  expect(new Set(magazine).size, 'no post twice').toBe(magazine.length);
+  expect([...magazine].sort()).toEqual([...blog].sort());
+});
+
 test('view: magazine stacks on a phone', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/magazine-view');

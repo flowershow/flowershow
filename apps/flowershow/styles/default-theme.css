@@ -1627,7 +1627,7 @@
      --list-thumb-width, --list-thumb-order,
      --list-avatar-shape, --list-meta-color, --list-eyebrow-color,
      --list-rule-color, --list-compact-meta-width, --list-title-font,
-     --list-group-color
+     --list-group-color, --list-meta-transform, --list-rest-max-width
    ──────────────────────────────────────────────────── */
 
   /* Page-level list/compact pages share one column (header, intro, listing) */
@@ -1723,7 +1723,7 @@
     font-weight: var(--font-weight-medium, 500);
     line-height: 1.6;
     letter-spacing: 0.06em;
-    text-transform: uppercase;
+    text-transform: var(--list-meta-transform, uppercase);
     color: var(--list-meta-color, var(--color-foreground-500));
   }
   /* compact date columns and people roles read as plain text, not labels */
@@ -1978,7 +1978,12 @@
     letter-spacing: 0.08em;
     text-transform: uppercase;
     line-height: 1.4;
-    color: var(--list-group-color, var(--color-accent));
+    /* the accent darkened (lightened in dark mode) towards the text colour:
+       plain #fb923c on white is about 2.3:1; this mix is above 4.5:1 */
+    color: var(
+      --list-group-color,
+      color-mix(in oklch, var(--color-accent) 60%, var(--color-foreground-900))
+    );
   }
   :where(.list-component-group-heading:first-child) {
     margin-top: 0;
@@ -2522,7 +2527,7 @@
   }
 
   /* phone: hero, then every other item as a row with a thumbnail on the right */
-  @container list-magazine (max-width: 35.99rem) {
+  @container list-magazine (width < 36rem) {
     :where(.list-component-magazine-top) {
       gap: 1.5rem;
     }

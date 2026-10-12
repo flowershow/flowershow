@@ -158,7 +158,7 @@ Authors show as small avatars and names linked to their author pages (see [[page
 
 ## Views
 
-**`list`** (the default) is one column of rows, each with a 3:2 thumbnail with square corners. The thumbnail sits on the left; `media: thumb right` puts it on the right. On a `layout: list` page the header, intro and list share one reading-width column. When some rows have an image, a row without one gets a plain neutral tile with the first letter of its title, so the text column stays lined up; `defaultImage` shows your image instead, and `defaultImage: none` makes those rows text only. When no row has an image there is no image column at all. `media: cover` shows a wide image above each row's text; `media: none` gives plain text rows.
+**`list`** (the default) is one column of rows, each with a 3:2 thumbnail with square corners. The thumbnail sits on the left; `media: thumb right` puts it on the right. On a `layout: list` page the header, intro and list share one reading-width column. When at least half of the list's items have an image (counting every page, so page 2 looks like page 1), a row without one gets a plain neutral tile with the first letter of its title, so the text column stays lined up. With fewer, rows without an image are text only, lined up with the other rows' text. `defaultImage` shows your image instead of the tile, and `defaultImage: none` makes those rows text only. When no item has an image there is no image column at all. `media: cover` shows a wide image above each row's text; `media: none` gives plain text rows.
 
 **`grid`** shows cards in three columns on wide screens, two on tablets and one on phones. A `layout: list` grid page uses the full content width.
 
@@ -239,11 +239,11 @@ Page 1 starts with three columns separated by thin rules:
 
 - **In the middle, the hero**: the first post with `featured: true` in its frontmatter, otherwise the latest. A large image, then a big centred title, its description and a date and authors line.
 - **On the left, two stories**, each with a large image, its title, a one-line description and the date and authors.
-- **On the right, "More posts"**: the next five, each with a title, the date and authors, and a small square thumbnail.
+- **On the right, "More posts"**: up to five more, each with a title, the date and authors, and a small square thumbnail.
 
 The rest follow under a "Recent posts" heading as list rows, with "Newer" and "Older" links when there are more pages. Page 2 and later pages are plain rows.
 
-Small sets keep a shape of their own instead of half-empty columns: one post is a centred hero, two put a story beside the hero, three put two stories beside it, and four put three "More posts" beside it. A post without an image still fits: the hero becomes a large title on its own, a story gets a plain tile, and a "More posts" entry simply has no thumbnail. If no post has an image, the page is all text. On a tablet the hero goes on top with the columns below it; on a phone everything is one column.
+Small sets keep a shape of their own instead of half-empty columns: one post is a centred hero, two put a story beside the hero, three put two stories beside it, and four put three "More posts" beside it. A post without an image still fits: the hero becomes a large title on its own, a "More posts" entry simply has no thumbnail, and a story gets a plain tile when at least half of the posts have an image (otherwise it is text only, as in a list). If no post has an image, the page is all text. On a tablet the hero goes on top with the columns below it; on a phone everything is one column.
 
 Titles use your site's body font (a serif in the default theme), like a newspaper. Rename or hide the two headings with `headings`:
 
@@ -487,8 +487,9 @@ Most of the look is set with custom properties, in your `custom.css`:
 | `--list-thumb-order` | `0` | `2` puts every list thumbnail on the right |
 | `--list-avatar-shape` | square portraits, round author photos | People portraits and the small author photos in the meta line; `50%` makes them all round |
 | `--list-meta-color` | muted text | The date and authors line (small uppercase letters) |
+| `--list-meta-transform` | `uppercase` | The meta line's letters; `none` keeps them as written |
 | `--list-eyebrow-color` | muted text | The eyebrow above the title |
-| `--list-group-color` | your accent colour | Group headings (`group: year` and so on) |
+| `--list-group-color` | your accent colour mixed with the text colour, for contrast | Group headings (`group: year` and so on) |
 | `--list-rule-color` | a light hairline | Lines between rows and the magazine's column rules |
 | `--list-compact-meta-width` | `9em` | The `compact` category column |
 

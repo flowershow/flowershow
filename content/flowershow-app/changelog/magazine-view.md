@@ -27,10 +27,10 @@ list:
 Every list looks better too, with nothing to change:
 
 - Larger 3:2 thumbnails (180px wide) with square corners, in lists, grids and post covers.
-- When some posts have an image, the others get a quiet placeholder tile, so titles stay lined up.
-- Dates and authors in small uppercase letters; group headings (`group: year`) in your accent colour.
+- When most posts have an image, the others get a quiet placeholder tile, so titles stay lined up.
+- Dates and authors in small uppercase letters (`--list-meta-transform: none` turns that off); group headings (`group: year`) in your accent colour.
 - `--list-title-font` switches every listing title to another font, e.g. a serif, from your `custom.css`.
 
 See [A magazine front page](/docs/reference/listings#a-magazine-front-page-magazine) and [Styling](/docs/reference/listings#styling) in [[listings|Listing pages]].
 
-**Themes:** Leaf, Lessflowery and Letterpress set their own corner radius, so their images stay rounded. On Lessflowery, Letterpress and Superstack a magazine page is narrower than the default theme's for now, so it shows the tablet layout until the themes are updated. If your `custom.css` sets `--list-card-radius`, it still wins.
+**Themes:** Leaf, Lessflowery and Letterpress set their own corner radius, so their images stay rounded. Lessflowery and Letterpress also give every listing title the same size, so the magazine hero is no bigger than the other titles there. On Lessflowery, Letterpress and Superstack a magazine page is narrower than the default theme's for now, so it shows the tablet layout. These will change when the themes are updated. If your `custom.css` sets `--list-card-radius`, it still wins.

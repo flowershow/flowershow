@@ -949,3 +949,56 @@ describe('magazine view', () => {
     ).toBeNull();
   });
 });
+
+describe('placeholder tiles follow the whole listing (imageShare)', () => {
+  const tiles = async (o: Partial<RenderListingInput>) =>
+    (await html(renderListing(input(o)))).querySelectorAll(
+      '.list-component-item-media--placeholder',
+    ).length;
+  const noImages = page([
+    item({ image: null }),
+    item({ url: '/b', image: null }),
+  ]);
+  it('a page without images still gets tiles when most of the listing has images', async () => {
+    expect(await tiles({ page: noImages, imageShare: 0.8 })).toBe(2);
+    const body = await html(
+      renderListing(input({ page: noImages, imageShare: 0.8 })),
+    );
+    expect(body.querySelector('section')!.getAttribute('data-media')).toBe(
+      'thumb',
+    );
+  });
+  it('fewer than half with an image: no tiles, rows without one are text only', async () => {
+    const mixed = page([item(), item({ url: '/b', image: null })]);
+    expect(await tiles({ page: mixed, imageShare: 0.4 })).toBe(0);
+    expect(await tiles({ page: mixed, imageShare: 0.5 })).toBe(1);
+    // magazine follows the same rule
+    expect(
+      await tiles({
+        spec: spec({ view: 'magazine', featured: 1 }),
+        page: page([
+          item(),
+          item({ url: '/b' }),
+          item({ url: '/c', image: null }),
+        ]),
+        imageShare: 0.3,
+      }),
+    ).toBe(0);
+    // grids keep a monogram for every card once any card has an image
+    expect(
+      await tiles({
+        spec: spec({ view: 'grid', media: 'cover', ratio: '16/9' }),
+        page: mixed,
+        imageShare: 0.1,
+      }),
+    ).toBe(1);
+  });
+  it('no image anywhere in the listing: no image column', async () => {
+    const body = await html(
+      renderListing(input({ page: noImages, imageShare: 0 })),
+    );
+    expect(body.querySelector('section')!.getAttribute('data-media')).toBe(
+      'none',
+    );
+  });
+});

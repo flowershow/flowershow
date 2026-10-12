@@ -64,7 +64,7 @@ describe('buildIndex and queryListingIndex', () => {
         path: 'b/new.md',
         appPath: '/b/new',
         permalink: null,
-        metadata: { date: '2026-01-01' },
+        metadata: { date: '2026-01-01', cover: '[[c.png]]' },
       },
     ]);
     const index = await queryListingIndex(
@@ -76,6 +76,8 @@ describe('buildIndex and queryListingIndex', () => {
       paths: ['b/new.md', 'b/old.md'],
       featured: [1],
       groups: null,
+      // raw image values (cover is an image fallback), resolved by remark-listing
+      images: ['[[c.png]]', null],
     });
   });
   it('group keys are stored when grouping (PR B2 uses them)', () => {
