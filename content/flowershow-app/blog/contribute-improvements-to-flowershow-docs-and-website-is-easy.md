@@ -3,7 +3,7 @@ date: 2025-01-12
 title: "Contributing to the Flowershow docs and website is easy"
 authors:
   - rufuspollock
-image: https://github.com/user-attachments/assets/91ecfcb8-877e-4a98-b42d-3b5452159ced
+image: /assets/covers/hiroshige-pheasant-with-chrysanthemums.webp
 description: Learn how to contribute to Flowershow website content, docs and tutorials.
 ---
 

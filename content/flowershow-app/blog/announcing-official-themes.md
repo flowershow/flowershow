@@ -1,7 +1,7 @@
 ---
 title: "Official Flowershow themes"
 description: "Introducing the official Flowershow themes repository - a curated collection of CSS themes to customize your Flowershow site."
-image: /assets/themes.png
+image: /assets/covers/hiroshige-titmouse-and-camellias-right-sparrow-and-wild-ro.webp
 date: 2025-08-21
 authors: ["olayway"]
 ---

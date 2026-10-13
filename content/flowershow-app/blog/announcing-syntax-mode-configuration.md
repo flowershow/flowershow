@@ -4,7 +4,7 @@ description: Flowershow now lets you choose how each page is rendered — Markdo
 date: 2025-11-09
 authors:
   - olayway
-image: /assets/md-and-mdx.png
+image: /assets/covers/hiroshige-eastern-grey-wagtail-and-rose.webp
 ---
 
 Flowershow now lets you control how each page is rendered — as plain Markdown or as MDX. Here’s what you need to know:

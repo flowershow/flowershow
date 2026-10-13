@@ -4,7 +4,7 @@ description: "Put your three newest blog posts on your home page, or a list of p
 date: 2026-10-11
 authors:
   - rufuspollock
-image: "[[assets/docs-listings-latest-three.webp]]"
+image: /assets/covers/hokusai-poppies-large-flowers-series.webp
 ---
 
 > [!tip] Using an AI assistant?

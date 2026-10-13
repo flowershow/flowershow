@@ -4,7 +4,7 @@ description: Point at a file, see it live, move on. An instant local preview ser
 date: 2026-01-26
 authors:
   - abeelha
-image: "[[flowerstall-logo.png]]"
+image: /assets/covers/hokusai-peonies-and-butterfly.webp
 showImage: false
 ---
 

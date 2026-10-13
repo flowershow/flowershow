@@ -4,7 +4,7 @@ date: 2025-05-19
 authors:
   - rufuspollock
 description: I’m migrating my personal website to Flowershow so I can write once and publish without shuffling files — no more 'two-copy' workflow slowing me down.
-image: /assets/moving-my-website-pt1.png
+image: /assets/covers/hiroshige-weeping-cherry-and-bluebird.webp
 ---
 
 https://youtu.be/5qtoko0S5nI

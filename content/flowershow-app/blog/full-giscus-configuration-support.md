@@ -4,7 +4,7 @@ description: Flowershow now supports customizing Giscus comments with themes, la
 date: 2025-06-29
 authors:
   - olayway
-image: /assets/comments.png
+image: /assets/covers/hiroshige-hibiscus-mutabilis-and-jay.webp
 ---
 
 ## What's New?

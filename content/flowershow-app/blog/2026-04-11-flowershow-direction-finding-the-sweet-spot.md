@@ -4,6 +4,7 @@ description: Reflections on Flowershow's product boundary, and why its strength 
 date: 2026-04-11
 authors:
   - rufuspollock
+image: /assets/covers/hiroshige-egrets-amid-irises-and-grasses.webp
 ---
 
 ## The Core Tension

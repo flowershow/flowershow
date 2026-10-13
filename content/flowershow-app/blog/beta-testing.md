@@ -4,6 +4,7 @@ date: 2025-02-19
 authors:
   - olayway
 description: The public launch of Flowershow Cloud is just around the corner, and we need your help to make it even better. Get early access now!
+image: /assets/covers/hiroshige-roses-and-sparrow.webp
 ---
 
 Hey everyone 👋!

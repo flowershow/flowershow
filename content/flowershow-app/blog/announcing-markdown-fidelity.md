@@ -4,6 +4,7 @@ description: "Flowershow now fully supports CommonMark and GitHub-Flavored Markd
 authors:
   - olayway
 date: 2025-11-10
+image: /assets/covers/hokusai-grasshopper-and-iris.webp
 ---
 
 When we created **Flowershow**, our mission was simple:

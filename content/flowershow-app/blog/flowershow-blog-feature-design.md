@@ -4,6 +4,7 @@ description: An early design note on how Flowershow's blog feature works — the
 date: 2023-05-18
 authors:
   - rufuspollock
+image: /assets/covers/hiroshige-morning-glories-and-bird.webp
 ---
 
 > [!warning] Historical design note, not current instructions

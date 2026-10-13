@@ -4,7 +4,7 @@ description: "A round-up of recent sidebar improvements — on by default for ne
 date: 2026-03-04
 authors:
   - olayway
-image: "[[new-sidebar.png]]"
+image: /assets/covers/hokusai-hydrangea-and-swallow.webp
 ---
 
 We've shipped a series of improvements to sidebar navigation that make it easier to set up, nicer to use on mobile, and more flexible for sites with mixed content.

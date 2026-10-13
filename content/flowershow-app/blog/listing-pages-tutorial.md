@@ -4,7 +4,7 @@ description: "Turn a folder of Markdown pages into a blog index, a grid of proje
 date: 2026-10-11
 authors:
   - rufuspollock
-image: "[[assets/blog-listing-pages-tutorial.webp]]"
+image: /assets/covers/hiroshige-swallow-and-wisteria.webp
 ---
 
 > [!tip] Using an AI assistant?

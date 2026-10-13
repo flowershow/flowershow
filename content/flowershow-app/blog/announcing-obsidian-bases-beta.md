@@ -4,7 +4,7 @@ description: "Obsidian Bases on Flowershow move from alpha to beta: filter your 
 date: 2026-01-25
 authors:
   - abeelha
-image: "[[obsidian-bases.png]]"
+image: /assets/covers/hokusai-chrysanthemums-and-honeybee.webp
 ---
 
 We are excited to announce that **Obsidian Bases** support has moved from Alpha to **Beta**! 🚀

@@ -4,6 +4,7 @@ date: 2025-10-20
 description: "Flowershow now supports URL redirects, making it easier to manage your content's URLs and maintain backwards compatibility."
 authors:
   - olayway
+image: /assets/covers/hiroshige-clematis-and-bird.webp
 ---
 
 We're excited to announce that Flowershow now supports URL redirects This feature allows you to easily redirect old URLs to new ones, helping you maintain backwards compatibility when restructuring your content.

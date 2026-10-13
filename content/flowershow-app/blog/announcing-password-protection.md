@@ -4,7 +4,7 @@ description: Keep your content private and secure with password-protected sites.
 date: 2025-11-19
 authors:
   - olayway
-image: /assets/password-protection-option.png
+image: /assets/covers/hiroshige-camellia-and-bullfinch.webp
 ---
 
 > [!info]

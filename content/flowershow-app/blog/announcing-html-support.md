@@ -4,7 +4,7 @@ description: "Have an HTML file and want a URL? Publish .html files as they are,
 date: 2026-01-28
 authors:
   - abeelha
-image: "[[html-support.png]]"
+image: /assets/covers/hiroshige-wisteria-and-white-headed-bird.webp
 ---
 
 We are excited to announce that **Flowershow** now supports raw `.html` file publishing! 🚀

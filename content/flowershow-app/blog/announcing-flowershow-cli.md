@@ -4,7 +4,7 @@ description: Publish markdown files directly from your terminal with the new Flo
 date: 2026-01-14
 authors:
   - abeelha
-image: "[[cli-launch.png]]"
+image: /assets/covers/hiroshige-japanese-white-eye-and-titmouse-on-a-camellia-br.webp
 ---
 
 Most things we write never turn into projects.

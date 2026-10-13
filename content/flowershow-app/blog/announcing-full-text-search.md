@@ -4,7 +4,7 @@ description: Enable powerful search functionality on your Flowershow site and ma
 date: 2025-04-24
 authors:
   - olayway
-image: /assets/fts.png
+image: /assets/covers/hokusai-poppies.webp
 ---
 
 We're excited to announce that full text search is now available for all premium Flowershow sites. Powered by Typesense and InstantSearch, this feature lets your readers quickly find content across your entire site.

@@ -4,6 +4,7 @@ description: "What options are there for publishing your Obsidian vault? We revi
 date: 2023-05-22
 authors:
   - rufuspollock
+image: /assets/covers/hokusai-cock-hen-and-nadeshiko-dianthus-superbus.webp
 ---
 
 Here we review the existing options for publishing an Obsidian vault, including official Obsidian Publish and the major alternatives.

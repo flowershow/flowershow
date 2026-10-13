@@ -2,7 +2,7 @@
 title: "What you can change in Flowershow theming, and who can"
 description: An honest map of the four layers of Flowershow theming — what a theme can change, what only a site owner can change, and what nobody can change without a pull request.
 date: 2026-08-08
-image: https://screenshotit.app/https://github.com/flowershow/themes@social
+image: /assets/covers/hiroshige-swallows-and-kingfisher-with-rose-mallows.webp
 authors:
   - rufuspollock
 ---

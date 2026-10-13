@@ -1,7 +1,7 @@
 ---
 title: "Obsidian Bases support (alpha)"
 description: Flowershow now supports Obsidian Bases in alpha — dynamic, queryable views of your notes with filters, formulas, and multiple layouts on your published site.
-image: "[[obsidian-bases.png]]"
+image: /assets/covers/hokusai-sparrows-and-chrysanthemums.webp
 authors:
   - "[[olayway]]"
 date: 2025-12-04
