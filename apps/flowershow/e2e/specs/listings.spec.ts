@@ -819,6 +819,11 @@ test('list page column: centred with its edit link, or the page column beside a 
   expect(listing.width).toBeLessThanOrEqual(44 * 16 + 1);
   expect(Math.abs(edit.x - listing.x)).toBeLessThan(2);
 
+  // A zero-config folder (no README) gets the same centred column
+  await page.goto('/blog');
+  const virtual = (await page.locator('.listing-page').boundingBox())!;
+  expect(virtual.width).toBeLessThanOrEqual(44 * 16 + 1);
+
   // A sidebar: the normal page column, lined up with the edit link
   await page.goto('/archive-sidebar');
   await expect(page.locator('.layout-inner-left')).toBeVisible();

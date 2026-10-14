@@ -505,7 +505,10 @@ export default async function SitePage(props: {
           <UrlNormalizer />
           {chromeMarker}
           <div className="layout-inner">
-            <div className="layout-inner-center">
+            <div
+              className="layout-inner-center listing-layout"
+              data-view="list"
+            >
               <main className="page-main">
                 <VirtualListingPage
                   title={virtualRoute.title}
