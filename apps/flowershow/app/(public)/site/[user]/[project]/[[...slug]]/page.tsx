@@ -505,7 +505,10 @@ export default async function SitePage(props: {
           <UrlNormalizer />
           {chromeMarker}
           <div className="layout-inner">
-            <div className="layout-inner-center">
+            <div
+              className="layout-inner-center listing-layout"
+              data-view="list"
+            >
               <main className="page-main">
                 <VirtualListingPage
                   title={virtualRoute.title}
@@ -912,7 +915,14 @@ export default async function SitePage(props: {
           </div>
         )}
 
-        <div className={clsx('layout-inner-center', isPost && 'post-layout')}>
+        <div
+          className={clsx(
+            'layout-inner-center',
+            isPost && 'post-layout',
+            pageLevelRoute && 'listing-layout',
+          )}
+          data-view={pageLevelRoute?.view}
+        >
           <main className="page-main">
             {changelog?.kind === 'index' ? (
               <>

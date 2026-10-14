@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **347 styled class selectors**:
-**345 stable semantic hooks** and **2 non-contract
+and currently documents **348 styled class selectors**:
+**346 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -325,7 +325,8 @@ Collection/blog listing cards, empty and error states, loading placeholders, and
 **DOM shape**
 
 ```text
-div.listing-page[data-view] (page-level listings: layout: list, zero-config blog/posts)
+.layout-inner-center.listing-layout[data-view] (page-level listings: the page column)
+└─ main.page-main > div.listing-page[data-view] (layout: list, zero-config blog/posts)
 ├─ header.page-header > .page-header-title-row > h1.page-header-title, .page-header-actions > a.listing-page-feed-link > svg.listing-page-feed-icon, span.listing-page-feed-label (feed link when the site has RSS on)
 └─ .page-body > .rendered-mdx#mdxpage > .listing-page-intro (the page's own text), .listing-page-listing (the rule, then the listing)
 section.list-component[.list-component--list | --grid | --compact | --people | --magazine][data-view][data-media][data-media-side][data-ratio][data-listing-notes]   (div without data-view for legacy <List />)
@@ -421,6 +422,7 @@ section.list-component[.list-component--list | --grid | --compact | --people | -
 | <code>.list-component-skeleton-media</code> | Hook |
 | <code>.list-component-skeleton-media-placeholder</code> | Hook |
 | <code>.list-component-skeleton-summary</code> | Hook |
+| <code>.listing-layout</code> | Hook |
 | <code>.listing-page</code> | Hook |
 | <code>.listing-page-feed-icon</code> | Hook |
 | <code>.listing-page-feed-link</code> | Hook |
