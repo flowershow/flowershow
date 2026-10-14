@@ -162,7 +162,7 @@ Authors show as small avatars and names linked to their author pages (see [[page
 
 ## Views
 
-**`list`** (the default) is one column of rows, each with a 3:2 thumbnail with square corners. The thumbnail sits on the left; `media: thumb right` puts it on the right. On a `layout: list` page the header, intro and list share one reading-width column. When at least half of the list's items have an image (counting every page, so page 2 looks like page 1), a row without one gets an empty tile, a soft wash of your theme's accent colour, so the text column stays lined up. With fewer, rows without an image are text only, lined up with the other rows' text. `defaultImage` shows your image instead of the tile, and `defaultImage: none` makes those rows text only. When no item has an image there is no image column at all. `media: cover` shows a wide image above each row's text; `media: none` gives plain text rows.
+**`list`** (the default) is one column of rows, each with a 3:2 thumbnail with square corners. The thumbnail sits on the left; `media: thumb right` puts it on the right. On a `layout: list` page without a sidebar, the header, intro, list and the edit link below it share one centred reading-width column, like a post. With a sidebar the page keeps the normal page column, so it lines up with the pages around it. When at least half of the list's items have an image (counting every page, so page 2 looks like page 1), a row without one gets an empty tile, a soft wash of your theme's accent colour, so the text column stays lined up. With fewer, rows without an image are text only, lined up with the other rows' text. `defaultImage` shows your image instead of the tile, and `defaultImage: none` makes those rows text only. When no item has an image there is no image column at all. `media: cover` shows a wide image above each row's text; `media: none` gives plain text rows.
 
 **`grid`** shows cards in three columns on wide screens, two on tablets and one on phones. A `layout: list` grid page uses the full content width.
 
@@ -484,7 +484,7 @@ Most of the look is set with custom properties, in your `custom.css`:
 | Variable | Default | What it changes |
 | --- | --- | --- |
 | `--list-title-font` | the heading font; the body font (a serif) in `magazine` | Item titles, and the magazine's "More posts" and "Recent posts" headings |
-| `--list-max-width` | `44rem` | The reading column of `list` and `compact` pages |
+| `--list-max-width` | `44rem` | The reading column of `list` and `compact` pages without a sidebar |
 | `--list-rest-max-width` | none (the front page's grid) | A maximum width for the rows below a magazine front page |
 | `--list-gap` | per view | Space between grid cards and portraits |
 | `--list-card-min` | `17.5rem` | The narrowest a grid card gets (more columns when smaller) |

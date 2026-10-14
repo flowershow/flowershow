@@ -1,6 +1,7 @@
 ---
 title: Archive
 layout: list
+showEditLink: true
 list:
   from: blog
   view: compact

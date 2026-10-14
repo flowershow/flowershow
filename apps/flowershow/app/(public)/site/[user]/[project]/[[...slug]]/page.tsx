@@ -912,7 +912,14 @@ export default async function SitePage(props: {
           </div>
         )}
 
-        <div className={clsx('layout-inner-center', isPost && 'post-layout')}>
+        <div
+          className={clsx(
+            'layout-inner-center',
+            isPost && 'post-layout',
+            pageLevelRoute && 'listing-layout',
+          )}
+          data-view={pageLevelRoute?.view}
+        >
           <main className="page-main">
             {changelog?.kind === 'index' ? (
               <>

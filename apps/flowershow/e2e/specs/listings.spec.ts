@@ -808,3 +808,24 @@ test('featured without a featured: true item promotes the latest; no image gives
     0,
   );
 });
+
+test('list page column: centred with its edit link, or the page column beside a sidebar', async ({
+  page,
+}) => {
+  // No sidebar: one reading column for the listing and the edit link
+  await page.goto('/archive');
+  const listing = (await page.locator('.listing-page').boundingBox())!;
+  const edit = (await page.locator('.page-edit-button').boundingBox())!;
+  expect(listing.width).toBeLessThanOrEqual(44 * 16 + 1);
+  expect(Math.abs(edit.x - listing.x)).toBeLessThan(2);
+
+  // A sidebar: the normal page column, lined up with the edit link
+  await page.goto('/archive-sidebar');
+  await expect(page.locator('.layout-inner-left')).toBeVisible();
+  const main = (await page.locator('main.page-main').boundingBox())!;
+  const listing2 = (await page.locator('.listing-page').boundingBox())!;
+  const edit2 = (await page.locator('.page-edit-button').boundingBox())!;
+  expect(Math.abs(listing2.x - main.x)).toBeLessThan(2);
+  expect(Math.abs(listing2.width - main.width)).toBeLessThan(2);
+  expect(Math.abs(edit2.x - listing2.x)).toBeLessThan(2);
+});

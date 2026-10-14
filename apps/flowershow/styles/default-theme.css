@@ -1630,8 +1630,22 @@
      --list-group-color, --list-meta-transform, --list-rest-max-width
    ──────────────────────────────────────────────────── */
 
-  /* Page-level list/compact pages share one column (header, intro, listing) */
-  :where(.listing-page[data-view="list"], .listing-page[data-view="compact"]) {
+  /* Page-level list/compact pages without a sidebar: one centred reading
+     column for the page and what follows it (edit link, backlinks,
+     comments), as on posts. With a sidebar they keep the normal page
+     column, so they line up with the pages around them. */
+  :where(
+    .layout-inner:not(.has-sidebar, .has-sidebar-and-toc)
+      > .listing-layout:is([data-view="list"], [data-view="compact"])
+      > main
+      > .listing-page
+  ),
+  :where(
+    .layout-inner:not(.has-sidebar, .has-sidebar-and-toc)
+      > .listing-layout:is([data-view="list"], [data-view="compact"])
+      > :not(main)
+  ) {
+    width: 100%;
     max-width: var(--list-max-width, 44rem);
     margin-inline: auto;
   }
