@@ -280,3 +280,69 @@ describe('computeFilesToDelete', () => {
     expect(result.map((b) => b.path)).toEqual(['notes/private.md']);
   });
 });
+
+describe('GitHubSyncWorkflow storage keys', () => {
+  it('writes and deletes under the "main" storage prefix, not the git branch', async () => {
+    vi.resetModules();
+    const uploadFile = vi.fn();
+    const deleteFile = vi.fn();
+    vi.doMock('../../src/storage.js', () => ({ uploadFile, deleteFile }));
+    vi.doMock('../../src/utils.js', () => ({
+      captureError: vi.fn(),
+      generateId: () => 'id',
+    }));
+    vi.doMock('../../src/github.js', () => ({
+      getGitHubInstallationToken: async () => 'token',
+      fetchGitHubConfig: async () => ({}),
+      fetchGitHubRepoTree: async () =>
+        makeTree([makeItem('page.md', 'sha1'), makeItem('img.png', 'sha2')]),
+      fetchGitHubFileRaw: async () => new ArrayBuffer(1),
+    }));
+    // Tagged-template SQL stub: the site exists and has one blob that is gone
+    // from the GitHub tree (so it gets deleted).
+    const sql = async (strings) => {
+      const query = strings.join('?');
+      if (query.includes('FROM "Site"')) return [{ id: 'site1' }];
+      if (query.includes('FROM "Blob"')) return [{ path: 'old.md', sha: 'x' }];
+      return [];
+    };
+    vi.doMock('../../src/clients.js', () => ({
+      getPostgresClient: () => sql,
+      getStorageClient: () => ({ type: 'r2' }),
+    }));
+
+    const { GitHubSyncWorkflow } = await import(
+      '../../src/github-sync-workflow.js'
+    );
+    const workflow = new GitHubSyncWorkflow();
+    workflow.env = { PUBLISH_FINALIZER_WORKFLOW: { create: vi.fn() } };
+
+    await workflow.run(
+      {
+        payload: {
+          publishId: 'pub1',
+          siteId: 'site1',
+          ghRepository: 'org/repo',
+          ghBranch: 'design-system-site',
+          rootDir: '',
+          githubInstallationId: '1',
+        },
+      },
+      { do: (_name, fn) => fn() },
+    );
+
+    expect(uploadFile.mock.calls.map((c) => c.slice(1, 4))).toEqual(
+      expect.arrayContaining([
+        ['site1', 'main', 'page.md'],
+        ['site1', 'main', 'img.png'],
+      ]),
+    );
+    expect(uploadFile).toHaveBeenCalledTimes(2);
+    expect(deleteFile).toHaveBeenCalledWith(
+      expect.anything(),
+      'site1',
+      'main',
+      'old.md',
+    );
+  });
+});

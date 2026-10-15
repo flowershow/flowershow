@@ -10,6 +10,9 @@ import { deleteFile, uploadFile } from './storage.js';
 import { captureError, generateId } from './utils.js';
 
 const BATCH_SIZE = 20;
+// Storage key segment for site content: `{siteId}/main/raw/{path}`. It is NOT
+// the git branch: the app reads every site from `main` regardless of ghBranch.
+const STORAGE_BRANCH = 'main';
 
 export class GitHubSyncWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
@@ -143,7 +146,7 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
             await Promise.all(
               batch.map(async (blob) => {
                 try {
-                  await deleteFile(storage, siteId, ghBranch, blob.path);
+                  await deleteFile(storage, siteId, STORAGE_BRANCH, blob.path);
                   deletedPaths.push(blob.path);
                 } catch (err) {
                   console.error(
@@ -204,7 +207,7 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
                 await uploadFile(
                   storage,
                   siteId,
-                  ghBranch,
+                  STORAGE_BRANCH,
                   filePath,
                   fileBuffer,
                   extension,
