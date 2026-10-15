@@ -23,6 +23,12 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
   const rawKey = msg.body.object.key;
   const { siteId, branch, path } = parseObjectKey(rawKey);
 
+  // The app serves content only from `{siteId}/main/raw/`. Ignore other
+  // prefixes (leftovers from syncs that wrote under the git branch): Blob rows
+  // are keyed by (siteId, path), so deleting a leftover would drop the live
+  // page's row.
+  if (branch !== 'main') return msg.ack();
+
   if (msg.body.action === 'DeleteObject') {
     const deleted = await sql`
       DELETE FROM "Blob"

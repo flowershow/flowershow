@@ -755,3 +755,49 @@ test('handleMessage - a draft page is stored and tagged but not searchable', asy
   // A page that became a draft loses its earlier search document
   expect(calls.deleted).toEqual([{ siteId: 'site-1', id: 'blob-1' }]);
 });
+
+// The app reads content only from `{siteId}/main/raw/`. Objects under any other
+// prefix (left over from GitHub syncs that wrote under the git branch) must not
+// touch Blob rows — deleting them would otherwise drop the live page's row,
+// which is keyed by (siteId, path) only.
+test('handleMessage - ignores DeleteObject under a non-main prefix', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense, calls } = createTypesenseMock();
+  const msg = {
+    body: {
+      action: 'DeleteObject',
+      object: { key: 'site-1/design-system-site/raw/README.md' },
+    },
+    ack: vi.fn(),
+  };
+
+  await handleMessage({ msg, storage: {}, sql, typesense, env: {} });
+
+  expect(msg.ack).toHaveBeenCalled();
+  expect(queries).toEqual([]);
+  expect(calls.deleted).toEqual([]);
+});
+
+test('handleMessage - ignores PutObject under a non-main prefix', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense, calls } = createTypesenseMock();
+  const msg = {
+    body: {
+      action: 'CopyObject',
+      object: { key: 'site-1/feat-x/raw/page.md' },
+    },
+    ack: vi.fn(),
+  };
+
+  await handleMessage({
+    msg,
+    storage: createR2Storage('# Hi'),
+    sql,
+    typesense,
+    env: {},
+  });
+
+  expect(msg.ack).toHaveBeenCalled();
+  expect(queries).toEqual([]);
+  expect(calls.upsert).toBe(0);
+});
