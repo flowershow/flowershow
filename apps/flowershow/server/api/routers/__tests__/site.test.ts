@@ -1919,3 +1919,43 @@ describe('site.getAuthors', () => {
     ).toEqual([{ key: 'b-j', name: 'Jane Doe', url: '/people/jane' }]);
   });
 });
+
+describe('site.getConfig — a bad config.json never 500s the site', () => {
+  beforeEach(() => {
+    vi.mocked(fetchFile).mockReset();
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  it('falls back to the dashboard config when config.json is not valid JSON', async () => {
+    vi.mocked(fetchFile).mockResolvedValue('{ "siteName": "Broken", ');
+    const db = createMockDb({
+      site: makeSite({ configJson: { siteName: 'From DB', showToc: false } }),
+    });
+    const caller = createCaller(db);
+
+    await expect(caller.site.getConfig({ siteId: 'site-1' })).resolves.toEqual({
+      siteName: 'From DB',
+      showToc: false,
+    });
+  });
+
+  it('drops a malformed field but keeps the rest of config.json', async () => {
+    vi.mocked(fetchFile).mockResolvedValue(
+      JSON.stringify({
+        siteName: 'From file',
+        footer: { navigation: [{ name: 'Blog', href: '/blog' }] },
+        showTags: false,
+        annotations: true,
+      }),
+    );
+    const db = createMockDb({ site: makeSite({ configJson: null }) });
+    const caller = createCaller(db);
+
+    await expect(caller.site.getConfig({ siteId: 'site-1' })).resolves.toEqual({
+      siteName: 'From file',
+      footer: { navigation: [] },
+      showTags: false,
+      annotations: true,
+    });
+  });
+});
