@@ -1,6 +1,6 @@
 # Annotations v2: UI refresh (stream A) and replies (stream B, later)
 
-Status: **Draft for Rufus's review, revised 2026-10-18 after his feedback.** No code yet. Epic `flowershow-1pr`. Stream A = `flowershow-1pr.10` (now). Stream B = `flowershow-1pr.11` (later, job stories first). Owner/login on site pages = spike `flowershow-1pr.12` (separate). Builds on [Phase 0](2026-10-03-page-annotation-phase-0-implementation.md) and [ADR 0015](../adr/0015-annotations-are-open-and-moderated-off-page.md).
+Status: **Agreed 2026-10-18; stream A in build** (A1 `flowershow-1pr.13`, A2 `flowershow-1pr.14`; owner sign-in `flowershow-1pr.15`). See §8 for decisions. Epic `flowershow-1pr`. Stream A = `flowershow-1pr.10` (now). Stream B = `flowershow-1pr.11` (later, job stories first). Owner/login on site pages = spike `flowershow-1pr.12` (separate). Builds on [Phase 0](2026-10-03-page-annotation-phase-0-implementation.md) and [ADR 0015](../adr/0015-annotations-are-open-and-moderated-off-page.md).
 
 Two streams:
 
@@ -155,16 +155,13 @@ Prior draft (2026-10-18, first version of this doc), **not agreed, input only**:
 
 Dashboard changes, email/notifications, realtime updates, edit/delete own note, @mentions, reactions, rich text in notes, annotating images/canvas/HTML pages, rate limiting beyond caps.
 
-## 8. Open questions for Rufus
+## 8. Decisions (2026-10-18)
 
-Stream A:
+Rufus delegated these; recorded here, all reversible.
 
-1. **Top bar under the navbar, sticky** on desktop and phone (36px), replacing the pill. OK, or non-sticky on phones to save space?
-2. **Wording:** "Open for feedback · 3 notes" and "notes" in the UI, keeping "comments" for Giscus. Or switch the UI to "comments" like everyone else?
-3. **Docked panel first, margin-aligned cards later** (alternative A). OK to start with the list?
-4. **Panel closed by default**, opened from the bar or by clicking a highlight. Or open by default when a page has notes?
-
-Stream B:
-
-5. Are the six job stories the right set? Any to drop for v1 (6 looks optional; 4 matters most for the agent loop)?
-6. Who may resolve: anyone on the page, the original reviewer only, or the owner only? Depends on the `1pr.12` spike.
+1. Top bar is sticky on desktop, not on phones (scrolls away to save space).
+2. UI word is "comments" (what readers expect, as in Google Docs); the feature and config key stay `annotations`. Giscus stays "reader comments" in docs.
+3. Simple list in page order first; Google Docs-style aligned cards later if the list proves cramped.
+4. Panel closed by default; the bar shows the count.
+5. The six draft job stories are the starting set for stream B, refined when B starts.
+6. Owner sign-in: build the redirect handshake from the spike (`flowershow-1pr.15`) after A1; stream B depends on it for who may resolve.

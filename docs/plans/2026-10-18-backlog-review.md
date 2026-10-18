@@ -13,6 +13,14 @@
 - **The trackers had drifted.** `.beads/` has been gitignored since 2026-06-22, so Rufus and Ola each have a separate database, while `AGENTS.md` says GitHub Issues is the tracker.
 - **Security debt:** on 2026-10-18 GitHub reports 168 Dependabot alerts on main (9 critical, 68 high).
 
+## Roadmap (now / next / later, set 2026-10-18)
+
+Encoded in beads as labels on epics: `bd list -l now`, `-l next`, `-l later`. `dn5` is blocked by `w1y` and `32c`.
+
+- **Now:** `5cr` publish reliability (#1357 done, `hi1`, `1z3`, `9ac`); `1pr` annotations v2 stream A (`1pr.13`, `1pr.14`), then owner sign-in (`1pr.15`).
+- **Next:** `w1y` anonymous publish and MCP hardening (`ctv`, `3fr`); `32c` marketing plan; `5qz` AI discoverability.
+- **Later:** `dn5` positioning and Product Hunt relaunch; `dbg` teams and orgs; `a3j`, `9ag`, `d8v` site-builder follow-ups (bugs only); `dlx`, `eiz`.
+
 ## Plan
 
 ### 1. Fix live breakage (this week)
@@ -43,9 +51,9 @@ Hold the positioning and Product Hunt session (`l0z`) and un-defer the launch ep
 
 Headline after launch: connector sign-in (`3fr`), which lets chats update claimed sites and opens the path to Premium.
 
-### 3. Annotations go/kill by about 2026-11-02
+### 3. Annotations: GO (decided 2026-10-18)
 
-The dogfood window (`1pr.3`) ends between 2026-10-19 and 2026-11-02. Decide before spending time on `1pr.4/.5/.8`. The changelog already presents the feature as finished.
+Rufus is using it daily. Next: UI refresh (stream A), then replies and resolving (stream B, job stories first). Design: [2026-10-18-annotations-v2-ux.md](2026-10-18-annotations-v2-ux.md).
 
 ### 4. Pause new site-builder features
 
