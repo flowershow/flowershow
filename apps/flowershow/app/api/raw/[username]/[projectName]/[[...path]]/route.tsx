@@ -1,6 +1,11 @@
 import { getContentType, isSiteChromeFile } from '@flowershow/core';
 import { type NextRequest, NextResponse } from 'next/server';
 import { env } from '@/env.mjs';
+import {
+  injectAnonBanner,
+  isAnonymousSite,
+  rawHtmlSafetyHeaders,
+} from '@/lib/anon-site-safety';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import {
@@ -113,12 +118,21 @@ export async function GET(
       if (!content) {
         return NextResponse.json({ error: 'Not found' }, { status: 404 });
       }
-      return new NextResponse(content, {
+      // Anonymous (unclaimed) sites: sandboxed (no forms, opaque origin) and
+      // labelled with a report-abuse notice (flowershow-ctv). Claimed: as-is.
+      const body = isAnonymousSite(site)
+        ? injectAnonBanner(
+            content,
+            `${req.nextUrl.protocol}//${req.headers.get('host')}/${encodedPath}`,
+          )
+        : content;
+      return new NextResponse(body, {
         status: 200,
         headers: {
           'Content-Type': 'text/html; charset=utf-8',
           'X-Content-Type-Options': 'nosniff',
           ...robotsHeaders,
+          ...rawHtmlSafetyHeaders(site),
         },
       });
     } catch {

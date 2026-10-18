@@ -29,10 +29,18 @@ test('Changelog folder renders as a timeline', async ({ page, basePath }) => {
     await expect(page.locator('.changelog-entry-title').first()).toHaveText(
       'Entry 2',
     );
+  });
+
+  await test.step('page 2 is its own canonical (full load)', async () => {
+    // Checked on a full load, like the listings specs: crawlers never
+    // client-navigate, and after a soft navigation in `next dev` the previous
+    // page's streamed <link rel="canonical"> can linger in <head> alongside the
+    // new one, which made this assertion flaky on main.
+    await page.goto(`${basePath}/changelog?page=2`);
     await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
       'href',
       /\/changelog\?page=2$/,
-    ); // each timeline page is its own canonical
+    );
   });
 });
 

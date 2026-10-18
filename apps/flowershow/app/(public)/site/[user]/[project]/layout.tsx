@@ -4,6 +4,7 @@ import type { Metadata } from 'next';
 import { notFound, redirect } from 'next/navigation';
 import Script from 'next/script';
 import { cache, type ReactNode } from 'react';
+import { AnonSiteNotice } from '@/components/public/anon-site-notice';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
 import { CustomHead } from '@/components/public/custom-head';
 import Footer from '@/components/public/footer';
@@ -12,6 +13,7 @@ import Nav, { CustomNavbar } from '@/components/public/nav';
 import { SiteProvider } from '@/components/public/site-context';
 import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { env } from '@/env.mjs';
+import { isAnonymousSite, reportAbuseUrl } from '@/lib/anon-site-safety';
 import { getConfig } from '@/lib/app-config';
 import { customCssHref } from '@/lib/custom-css';
 import {
@@ -223,6 +225,9 @@ export default async function PublicLayout(props: {
   const showSearch =
     isFeatureEnabled(Feature.Search, site) && !!siteConfig?.enableSearch;
   const cta = siteConfig?.nav?.cta;
+  // Anonymous (unclaimed) sites: visible notice + report-abuse links (flowershow-ctv).
+  const isAnon = isAnonymousSite({ userId: site.user.id });
+  const siteUrl = getSiteUrl(site);
   const showDefaultNav =
     !!siteConfig?.nav || !!siteConfig?.enableSearch || !!siteConfig?.social;
   // A custom navbar shows even when the site configures no default navbar.
@@ -335,6 +340,7 @@ export default async function PublicLayout(props: {
                 data-plan={!showBuiltWithButton && 'premium'}
                 className={clsx('site-layout', !showNav && 'no-nav')}
               >
+                {isAnon && <AnonSiteNotice siteUrl={siteUrl} />}
                 {site.isTemporary && site.anonymousOwnerId && (
                   <TemporarySiteBanner
                     siteId={site.id}
@@ -363,6 +369,9 @@ export default async function PublicLayout(props: {
                   social={social}
                   navigation={siteConfig?.footer?.navigation}
                   customContent={customFooter}
+                  reportAbuseUrl={
+                    isAnon ? reportAbuseUrl(`${siteUrl}/`) : undefined
+                  }
                 />
                 {showBuiltWithButton && <BuiltWithFloatingButton />}
                 {site.privacyMode === 'PASSWORD' && (

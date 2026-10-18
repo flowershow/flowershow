@@ -10,8 +10,9 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
-vi.mock('@/lib/anonymous-user', () => ({
-  ANONYMOUS_USER_ID: 'anon-user-id',
+vi.mock('@/lib/anonymous-user', async () => ({
+  ANONYMOUS_USER_ID: (await import('@/lib/anonymous-user-constants'))
+    .ANONYMOUS_USER_ID,
 }));
 
 vi.mock('@/lib/content-store', () => ({
@@ -27,6 +28,8 @@ vi.mock('@/lib/site-access', async (importOriginal) => {
   return { ...actual, hasSiteAccess: vi.fn(actual.hasSiteAccess) };
 });
 
+import { ANON_BANNER_ID, ANON_HTML_CSP } from '@/lib/anon-site-safety';
+import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user-constants';
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import { customCssVersion } from '@/lib/custom-css';
 import { hasSiteAccess } from '@/lib/site-access';
@@ -170,7 +173,7 @@ describe('GET /api/raw — anonymous sites', () => {
     id: 'site-anon',
     privacyMode: 'PUBLIC',
     tokenVersion: 1,
-    userId: 'anon-user-id',
+    userId: ANONYMOUS_USER_ID,
     isTemporary: true,
     expiresAt: null,
     subdomain: 'notes-victim',
@@ -215,6 +218,37 @@ describe('GET /api/raw — anonymous sites', () => {
     (fetchFile as ReturnType<typeof vi.fn>).mockResolvedValueOnce('<p>hi</p>');
     const html = await GET(makeReq('index.html'), makeParams('index.html'));
     expect(html.headers.get('x-robots-tag')).toBeNull();
+  });
+
+  it('sandboxes proxied HTML and injects the report-abuse banner (flowershow-ctv)', async () => {
+    findFirst.mockResolvedValue(anonSite);
+    (fetchFile as ReturnType<typeof vi.fn>).mockResolvedValueOnce(
+      '<html><body><form action="https://evil.example"></form></body></html>',
+    );
+    const res = await GET(makeReq('index.html'), makeParams('index.html'));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-security-policy')).toBe(ANON_HTML_CSP);
+    const body = await res.text();
+    expect(body).toContain(`id="${ANON_BANNER_ID}"`);
+    expect(body).toContain('Report abuse');
+    expect(body.indexOf(ANON_BANNER_ID)).toBeLessThan(body.indexOf('</body>'));
+  });
+
+  it('serves a claimed site HTML byte-for-byte with no CSP', async () => {
+    findFirst.mockResolvedValue({ ...anonSite, userId: 'owner-1' });
+    const html = '<html><body><form></form></body></html>';
+    (fetchFile as ReturnType<typeof vi.fn>).mockResolvedValueOnce(html);
+    const res = await GET(makeReq('index.html'), makeParams('index.html'));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('content-security-policy')).toBeNull();
+    expect(await res.text()).toBe(html);
+  });
+
+  it('adds no CSP to non-HTML redirects on an anonymous site', async () => {
+    findFirst.mockResolvedValue(anonSite);
+    const res = await GET(makeReq('page.md'), makeParams('page.md'));
+    expect(res.status).toBe(302);
+    expect(res.headers.get('content-security-policy')).toBeNull();
   });
 
   it('returns 404 for an expired anonymous site', async () => {
@@ -627,7 +661,7 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
   it('marks an anonymous site noindex and caps caching at its expiry', async () => {
     findFirst.mockResolvedValue({
       ...publicSite,
-      userId: 'anon-user-id',
+      userId: ANONYMOUS_USER_ID,
       isTemporary: true,
       expiresAt: new Date(Date.now() + 120_000),
     });
@@ -645,7 +679,7 @@ describe('GET /api/raw — custom.css is proxied as a cached stylesheet', () => 
   it('never edge-caches an anonymous site even without an expiry', async () => {
     findFirst.mockResolvedValue({
       ...publicSite,
-      userId: 'anon-user-id',
+      userId: ANONYMOUS_USER_ID,
       isTemporary: false,
       expiresAt: null,
     });
