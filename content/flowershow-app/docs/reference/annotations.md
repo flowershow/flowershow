@@ -8,7 +8,7 @@ Annotations let anyone with the link to your site select text on a page and leav
 Annotations are made for sharing drafts with colleagues and friends, for example a review site you send to a few people. Everyone who can open the page can read and add annotations, so think twice before turning them on for a public site. Pages with annotations on are hidden from search engines (`noindex, nofollow`).
 
 > [!note]
-> Annotations are not the same as [[comments|Comments]], which are public discussions at the bottom of a page, powered by Giscus and GitHub.
+> On the page, annotations are called **comments**: they're attached to the exact words. They're not the same as [[comments|reader comments]], which are public discussions at the bottom of a page, powered by Giscus and GitHub.
 
 ## Turning annotations on and off
 
@@ -38,21 +38,29 @@ annotations: false
 
 Annotations work on Markdown pages (`.md` and `.mdx`): the page body, plus the title and description in the page header. They aren't available on HTML pages, canvases or changelog timelines. Sites published without an account (`fl --anon`) can't use annotations yet; sign in and publish with `fl login` first.
 
-## Leaving an annotation
+## Leaving a comment
+
+When annotations are on, a slim bar under the site's navigation shows how many comments the page has ("3 comments", or "Open for comments" when there are none yet).
 
 1. Select some text in the page. On a phone, long-press to select.
-2. Tap **Annotate** (on a phone it floats near the bottom of the screen).
-3. Write your **Note** and click **Save annotation**. The first time, you can add your name; your browser remembers it and shows "Posting as …" with a way to change it. Without a name, the note shows as "Anonymous".
+2. Click **Comment** next to the selection (on a phone, tap the **Comment** button near the bottom of the screen).
+3. Type in **Add a comment…** and click **Post** (or press ⌘/Ctrl+Enter). The first time, you can add your name; your browser remembers it and shows "Posting as …" with a way to change it. Without a name, the comment shows as "Anonymous".
 
-The **Annotations on** button in the bottom-left corner shows how many open notes the page has and opens the list. Click a quote in the list to jump to it, or click highlighted text on the page to see its note. Press Escape to close the list.
+## Reading comments
+
+Click **Show comments** in the bar to open the list, in page order. Click a quote in the list to jump to its passage, or click highlighted text on the page to open its comment. Press Escape, click **Hide comments** or click ✕ to close the list.
+
+- **Wide screens:** the list docks on the right, beside the text, so it never covers what you're reading. The table of contents makes way while it's open.
+- **Tablets:** the list slides over the right side of the page.
+- **Phones:** the list opens as a sheet over the bottom of the screen. Tap highlighted text and the page scrolls so the passage sits above the sheet. Tap ✕ or swipe the sheet's top edge down to close it.
 
 Highlights on the page need a browser with the CSS Custom Highlight API. Without it, notes still appear in the list, just without highlighting.
 
 ## When the page changes
 
-Each annotation remembers the exact text it was attached to and a little of the text around it. When you republish, annotations follow their text even if it moved or changed slightly. If the text was rewritten or removed, the annotation stays in the list marked **Outdated**, so the note isn't lost.
+Each annotation remembers the exact text it was attached to and a little of the text around it. When you republish, annotations follow their text even if it moved or changed slightly. If the text was rewritten or removed, the comment moves to a collapsed **Not found on page** group at the bottom of the list, so the note isn't lost.
 
-When you've dealt with a note, mark it resolved (see below). Resolved notes are collapsed at the bottom of the list with a ✓.
+When you've dealt with a note, mark it resolved (see below). Resolved notes are collapsed at the bottom of the list under **Resolved**.
 
 ## Reading and resolving annotations with the CLI or an AI agent
 

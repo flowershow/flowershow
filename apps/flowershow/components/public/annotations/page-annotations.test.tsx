@@ -20,6 +20,7 @@ import PageAnnotations, {
   HIGHLIGHT_CSS,
   OPEN_CLASS,
   placeAddButton,
+  SHEET_QUERY,
 } from './page-annotations';
 
 const annotation = (over: Record<string, unknown> = {}) => ({
@@ -308,6 +309,137 @@ describe('PageAnnotations', () => {
     );
     delete (document as unknown as { caretPositionFromPoint?: unknown })
       .caretPositionFromPoint;
+  });
+
+  describe('on a phone (bottom sheet)', () => {
+    let scrollTo: ReturnType<typeof vi.fn>;
+    beforeEach(() => {
+      vi.stubGlobal(
+        'matchMedia',
+        vi.fn((query: string) => ({
+          matches: query === SHEET_QUERY || query === '(pointer: coarse)',
+          media: query,
+          addEventListener() {},
+          removeEventListener() {},
+        })),
+      );
+      scrollTo = vi.fn();
+      vi.stubGlobal('scrollTo', scrollTo);
+    });
+
+    it('tapping a highlight opens a sheet at its comment, lifts the passage above it and takes focus', async () => {
+      const root = mountContent();
+      vi.mocked(fetch).mockReturnValueOnce(
+        jsonResponse({ annotations: [annotation()] }),
+      );
+      renderOverlay();
+      await screen.findByText('1 comment');
+      const text = root.querySelector('p')!.firstChild!;
+      (
+        document as unknown as { caretPositionFromPoint: unknown }
+      ).caretPositionFromPoint = () => ({ offsetNode: text, offset: 12 });
+      fireEvent.click(root.querySelector('p')!, { clientX: 5, clientY: 5 });
+      const sheet = await screen.findByRole('dialog', { name: 'Comments' });
+      expect(sheet).toHaveClass('is-sheet');
+      expect(sheet).toHaveAttribute('aria-modal', 'false');
+      expect(within(sheet).getByText('Make it red').closest('li')).toHaveClass(
+        'is-focused',
+      );
+      expect(scrollTo).toHaveBeenCalledWith(
+        expect.objectContaining({ behavior: 'smooth' }),
+      );
+      expect(sheet).toHaveFocus();
+      delete (document as unknown as { caretPositionFromPoint?: unknown })
+        .caretPositionFromPoint;
+
+      fireEvent.click(
+        within(sheet).getByRole('button', { name: 'Close comments' }),
+      );
+      expect(screen.queryByRole('dialog', { name: 'Comments' })).toBeNull();
+      expect(
+        screen.getByRole('button', { name: 'Show comments' }),
+      ).toHaveFocus();
+    });
+
+    it('closes when the header is swiped down', async () => {
+      mountContent();
+      vi.mocked(fetch).mockReturnValueOnce(
+        jsonResponse({ annotations: [annotation()] }),
+      );
+      renderOverlay();
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Show comments' }),
+      );
+      const header = screen
+        .getByRole('dialog', { name: 'Comments' })
+        .querySelector('.fs-annotations-header')!;
+      fireEvent.touchStart(header, { touches: [{ clientY: 100 }] });
+      fireEvent.touchEnd(header, { changedTouches: [{ clientY: 120 }] });
+      expect(
+        screen.getByRole('dialog', { name: 'Comments' }),
+      ).toBeInTheDocument();
+      fireEvent.touchStart(header, { touches: [{ clientY: 100 }] });
+      fireEvent.touchEnd(header, { changedTouches: [{ clientY: 200 }] });
+      expect(screen.queryByRole('dialog', { name: 'Comments' })).toBeNull();
+    });
+
+    it('keeps the composer above the on-screen keyboard and focuses it', async () => {
+      const root = mountContent();
+      const listeners: Record<string, () => void> = {};
+      const viewport = {
+        height: 800,
+        offsetTop: 0,
+        addEventListener: (type: string, fn: () => void) => {
+          listeners[type] = fn;
+        },
+        removeEventListener() {},
+      };
+      vi.stubGlobal('visualViewport', viewport);
+      vi.stubGlobal('innerHeight', 800);
+      vi.mocked(fetch).mockReturnValueOnce(jsonResponse({ annotations: [] }));
+      renderOverlay();
+      await waitFor(() => expect(vi.mocked(fetch)).toHaveBeenCalled());
+      select(root);
+      fireEvent.click(await screen.findByRole('button', { name: 'Comment' }));
+      expect(scrollTo).toHaveBeenCalled();
+      const sheet = screen.getByRole('dialog', { name: 'Comments' });
+      expect(screen.getByLabelText('Comment')).toHaveFocus();
+      expect(sheet.style.getPropertyValue('--fs-keyboard-inset')).toBe('0px');
+      viewport.height = 450; // keyboard up
+      listeners.resize!();
+      expect(sheet.style.getPropertyValue('--fs-keyboard-inset')).toBe('350px');
+      expect(sheet.style.getPropertyValue('--fs-visible-height')).toBe('450px');
+    });
+  });
+
+  it('moves the Built with Flowershow badge left of the docked panel while it is open', async () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn((query: string) => ({
+        matches: query === '(min-width: 1280px)',
+        media: query,
+        addEventListener() {},
+        removeEventListener() {},
+      })),
+    );
+    mountContent();
+    const badge = document.createElement('a');
+    badge.id = 'built-with-button';
+    badge.style.setProperty('right', '32px', 'important');
+    document.body.appendChild(badge);
+    vi.mocked(fetch).mockReturnValueOnce(
+      jsonResponse({ annotations: [annotation()] }),
+    );
+    renderOverlay();
+    fireEvent.click(
+      await screen.findByRole('button', { name: 'Show comments' }),
+    );
+    expect(badge.style.getPropertyValue('right')).toContain(
+      '--fs-comments-panel-width',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Hide comments' }));
+    expect(badge.style.getPropertyValue('right')).toBe('32px');
+    expect(badge.style.getPropertyPriority('right')).toBe('important');
   });
 
   it('renders hostile note and name text as plain text', async () => {
