@@ -197,10 +197,11 @@ async function processMarkdownFile({
     const sha = await computeGitBlobSha(contentBytes);
     const size = contentBytes.length;
 
-    const { metadata, body, permalink, shouldPublish } = await parseMarkdown({
-      markdown,
-      path,
-    });
+    const { metadata, body, permalink, shouldPublish, frontmatterError } =
+      await parseMarkdown({
+        markdown,
+        path,
+      });
 
     if (!shouldPublish) {
       // Delete from R2; the resulting DeleteObject event drives Blob/Typesense cleanup.
@@ -236,7 +237,13 @@ async function processMarkdownFile({
         tags,
       });
     }
-    await updatePublishFile(sql, publishId, path, 'success');
+    // The page is live, but bad frontmatter is still an error the author must
+    // see (fl output, dashboard publish history).
+    if (frontmatterError) {
+      await updatePublishFile(sql, publishId, path, 'error', frontmatterError);
+    } else {
+      await updatePublishFile(sql, publishId, path, 'success');
+    }
   } catch (e) {
     console.error('Error in processMarkdownFile:', {
       error: { message: e.message, stack: e.stack, name: e.name },
@@ -371,12 +378,45 @@ export function safeExtractDescription(body, extract = extractDescription) {
   }
 }
 
+// A leading `---` ... `---` block, for stripping frontmatter gray-matter can't parse.
+const FRONTMATTER_BLOCK =
+  /^\uFEFF?---[^\n]*\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/;
+
+/**
+ * Split frontmatter from body. Invalid YAML must not drop the page
+ * (flowershow-hi1): fall back to empty frontmatter and the body without the
+ * block, and return the YAML error (first line, with its line:column) as
+ * `frontmatterError` for the caller to report. `publish: false` and
+ * `draft: true` lines are still honoured, so a broken block never makes a
+ * hidden page public.
+ */
+export function splitFrontmatter(markdown) {
+  try {
+    const { data, content } = matter(markdown, {});
+    return { frontmatter: data, body: content, frontmatterError: null };
+  } catch (error) {
+    const reason = String(error?.message ?? error).split('\n')[0];
+    const block = markdown.match(FRONTMATTER_BLOCK)?.[0] ?? '';
+    const frontmatter = {};
+    if (/^publish[ \t]*:[ \t]*false[ \t]*$/m.test(block)) {
+      frontmatter.publish = false;
+    }
+    if (/^draft[ \t]*:[ \t]*true[ \t]*$/m.test(block)) {
+      frontmatter.draft = true;
+    }
+    return {
+      frontmatter,
+      body: markdown.slice(block.length),
+      frontmatterError: `Invalid YAML frontmatter, so the page was published without it: ${reason}`,
+    };
+  }
+}
+
 export async function parseMarkdown({ markdown, path }) {
   let parsed;
+  const { frontmatter, body, frontmatterError } = splitFrontmatter(markdown);
 
   try {
-    const { data: frontmatter, content: body } = matter(markdown, {});
-
     /** @type {Array<'title' | 'description'>} */
     const computed = [];
 
@@ -431,6 +471,7 @@ export async function parseMarkdown({ markdown, path }) {
     body: parsed.body,
     permalink: normalizePermalink(metadata.permalink),
     shouldPublish: publish,
+    frontmatterError,
   };
 }
 
