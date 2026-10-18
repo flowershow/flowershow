@@ -2,7 +2,8 @@ import { devices, type Page } from '@playwright/test';
 import { expect, test } from '../helpers/fixtures';
 
 const PAGE = '/annotations-demo';
-const PILL = /^Annotations on · \d+ notes? · select text to add one$/;
+const HINT = 'Select text to comment';
+const PANEL = { name: 'Comments' } as const;
 
 // The page body can stream in after <main> first appears, so keep looking
 // until the text is there instead of searching once. <main> (#page-main) is the
@@ -32,15 +33,15 @@ test('A page can opt out with annotations: false', async ({
   page,
   basePath,
 }) => {
-  // Positive control: the site setting is on, so the sibling page does mount the overlay.
-  // Without this, an absent pill could just mean the overlay never loaded.
+  // Positive control: the site setting is on, so the sibling page does mount the bar.
+  // Without this, an absent bar could just mean the overlay never loaded.
   await page.goto(`${basePath}${PAGE}`);
-  await expect(page.getByRole('button', { name: PILL })).toBeVisible();
+  await expect(page.locator('.fs-comments-bar')).toContainText(HINT);
 
   await page.goto(`${basePath}/annotations-off`);
   await expect(page.locator('#mdxpage')).toBeVisible();
   await page.waitForLoadState('networkidle');
-  await expect(page.getByRole('button', { name: PILL })).toHaveCount(0);
+  await expect(page.locator('.fs-comments-bar')).toHaveCount(0);
   await expect(
     page.locator('meta[name="robots"][content*="noindex"]'),
   ).toHaveCount(0);
@@ -53,7 +54,7 @@ test('A visitor annotates; another visitor sees it; the page is noindex', async 
 }, testInfo) => {
   const note = `e2e note ${testInfo.project.name} ${Date.now()}`;
   await page.goto(`${basePath}${PAGE}`);
-  await expect(page.getByRole('button', { name: PILL })).toBeVisible();
+  await expect(page.locator('.fs-comments-bar')).toContainText(HINT);
   await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
     'content',
     /noindex/,
@@ -67,12 +68,12 @@ test('A visitor annotates; another visitor sees it; the page is noindex', async 
 
   await test.step('select text and save a note', async () => {
     await selectText(page, 'quick brown fox');
-    await page.getByRole('button', { name: 'Annotate', exact: true }).click();
-    await expect(page.getByLabel('Note', { exact: true })).toBeFocused();
-    await page.getByLabel('Note', { exact: true }).fill(note);
+    await page.getByRole('button', { name: 'Comment', exact: true }).click();
+    await expect(page.getByLabel('Comment', { exact: true })).toBeFocused();
+    await page.getByLabel('Comment', { exact: true }).fill(note);
     await page.getByLabel('Your name (optional)').fill('E2E Reviewer');
-    await page.getByRole('button', { name: 'Save annotation' }).click();
-    const panel = page.getByRole('complementary', { name: 'Annotations' });
+    await page.getByRole('button', { name: 'Post', exact: true }).click();
+    const panel = page.getByRole('complementary', PANEL);
     await expect(panel).toContainText(note);
     await expect(panel).toContainText('E2E Reviewer');
   });
@@ -83,28 +84,31 @@ test('A visitor annotates; another visitor sees it; the page is noindex', async 
 
   await test.step('the name is remembered for the next note', async () => {
     await selectText(page, 'quick brown fox');
-    await page.getByRole('button', { name: 'Annotate', exact: true }).click();
+    await page.getByRole('button', { name: 'Comment', exact: true }).click();
     await expect(page.getByText(/Posting as E2E Reviewer/)).toBeVisible();
     await page.getByRole('button', { name: 'Cancel' }).click();
   });
 
   await test.step('Escape closes the panel; clicking the highlight opens it again', async () => {
     await page.keyboard.press('Escape');
+    await expect(page.getByRole('complementary', PANEL)).toHaveCount(0);
+    // Focus goes back to the bar's toggle (1pr.6).
     await expect(
-      page.getByRole('complementary', { name: 'Annotations' }),
-    ).toHaveCount(0);
+      page.getByRole('button', { name: 'Show comments' }),
+    ).toBeFocused();
     await page
       .getByText('The quick brown fox jumps', { exact: false })
       .first()
       .click({ position: { x: 40, y: 8 } });
+    await expect(page.getByRole('complementary', PANEL)).toBeVisible();
     await expect(
-      page.getByRole('complementary', { name: 'Annotations' }),
-    ).toBeVisible();
+      page.getByRole('complementary', PANEL).locator('.is-focused'),
+    ).toHaveCount(1);
   });
 
   await test.step('a phrase in the page description can be annotated', async () => {
     await selectText(page, 'Header text counts');
-    await page.getByRole('button', { name: 'Annotate', exact: true }).click();
+    await page.getByRole('button', { name: 'Comment', exact: true }).click();
     await expect(
       page.locator('form.fs-annotations-form .fs-annotations-quote'),
     ).toHaveText('Header text counts');
@@ -118,12 +122,61 @@ test('A visitor annotates; another visitor sees it; the page is noindex', async 
     });
     const other = await context.newPage();
     await other.goto(`${basePath}${PAGE}`);
-    await other.getByRole('button', { name: PILL }).click();
-    await expect(
-      other.getByRole('complementary', { name: 'Annotations' }),
-    ).toContainText(note);
+    await other.getByRole('button', { name: 'Show comments' }).click();
+    await expect(other.getByRole('complementary', PANEL)).toContainText(note);
     await context.close();
   });
+});
+
+test('At 1440px the bar sticks under the navbar and the open panel sits beside the text', async ({
+  page,
+  basePath,
+}) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto(`${basePath}${PAGE}`);
+  const bar = page.locator('.fs-comments-bar');
+  await expect(bar).toContainText(HINT);
+  await page.waitForLoadState('networkidle');
+
+  // Make sure there is a comment, so the bar has its toggle.
+  if (
+    (await page.getByRole('button', { name: 'Show comments' }).count()) === 0
+  ) {
+    await selectText(page, 'quick brown fox');
+    await page.getByRole('button', { name: 'Comment', exact: true }).click();
+    await page.getByLabel('Comment', { exact: true }).fill('layout check');
+    await page.getByRole('button', { name: 'Post', exact: true }).click();
+    await expect(page.getByRole('complementary', PANEL)).toContainText(
+      'layout check',
+    );
+  } else {
+    await page.getByRole('button', { name: 'Show comments' }).click();
+  }
+
+  const panel = page.getByRole('complementary', PANEL);
+  await expect(panel).toBeVisible();
+  const panelBox = (await panel.boundingBox())!;
+  const textBox = (await page.locator('#page-main').boundingBox())!;
+  expect(textBox.x + textBox.width).toBeLessThanOrEqual(panelBox.x);
+
+  const barTopBefore = (await bar.boundingBox())!.y;
+  await page.mouse.wheel(0, 800);
+  await expect
+    .poll(async () => (await bar.boundingBox())!.y)
+    .toBeLessThanOrEqual(barTopBefore);
+  const navBottom = await page.evaluate(() => {
+    const nav = document.querySelector('.site-navbar');
+    return nav ? nav.getBoundingClientRect().bottom : 0;
+  });
+  expect(Math.round((await bar.boundingBox())!.y)).toBe(Math.round(navBottom));
+
+  await page.getByRole('button', { name: 'Hide comments' }).click();
+  await expect(panel).toHaveCount(0);
+  expect(
+    await page.evaluate(() =>
+      document.documentElement.classList.contains('fs-comments-open'),
+    ),
+  ).toBe(false);
 });
 
 test.describe('on a phone', () => {
@@ -131,17 +184,15 @@ test.describe('on a phone', () => {
   const { defaultBrowserType, ...pixel7 } = devices['Pixel 7'];
   test.use(pixel7);
 
-  test('Annotate floats above the bottom bars and saves a note', async ({
+  test('Comment floats above the bottom bars and saves a note', async ({
     page,
     basePath,
   }, testInfo) => {
     const note = `e2e phone note ${testInfo.project.name} ${Date.now()}`;
     await page.goto(`${basePath}${PAGE}`);
-    await expect(page.getByRole('button', { name: PILL })).toHaveText(
-      /^\d+ notes?$/,
-    );
+    await expect(page.locator('.fs-comments-bar')).toBeVisible();
     await selectText(page, 'quick brown fox');
-    const sheet = page.getByRole('button', { name: 'Annotate', exact: true });
+    const sheet = page.getByRole('button', { name: 'Comment', exact: true });
     await expect(sheet).toHaveClass(/is-touch/);
     const box = await sheet.boundingBox();
     const viewport = page.viewportSize();
@@ -150,19 +201,16 @@ test.describe('on a phone', () => {
       box && viewport && viewport.height - (box.y + box.height),
     ).toBeGreaterThan(50);
     await sheet.tap();
-    await page.getByLabel('Note', { exact: true }).fill(note);
-    await page.getByRole('button', { name: 'Save annotation' }).tap();
-    await expect(
-      page.getByRole('complementary', { name: 'Annotations' }),
-    ).toHaveCount(0); // closes after save on touch
-    // The Next.js dev-only overlay badge sits over the pill's corner on a
-    // phone-sized viewport and swallows taps; it doesn't exist in production.
+    await page.getByLabel('Comment', { exact: true }).fill(note);
+    await page.getByRole('button', { name: 'Post', exact: true }).tap();
+    await expect(page.getByRole('complementary', PANEL)).toHaveCount(0); // closes after save on touch
+    // The Next.js dev-only overlay badge can sit over page controls on a
+    // phone-sized viewport and swallow taps; it doesn't exist in production.
     await page.evaluate(() => {
       for (const el of document.querySelectorAll('nextjs-portal')) el.remove();
     });
-    await page.getByRole('button', { name: PILL }).tap();
-    await expect(
-      page.getByRole('complementary', { name: 'Annotations' }),
-    ).toContainText(note);
+    await page.evaluate(() => window.scrollTo(0, 0)); // the bar isn't sticky on phones
+    await page.getByRole('button', { name: 'Show comments' }).tap();
+    await expect(page.getByRole('complementary', PANEL)).toContainText(note);
   });
 });
