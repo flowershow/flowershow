@@ -30,3 +30,7 @@ Want to see it first? Open the [demo draft](https://annotations-demo-rufuspolloc
 > Here's a draft I'd love your feedback on: <link>. Select any text and tap **Annotate** to leave a note on it. No account needed, and adding your name is optional. Notes are visible to anyone with the link.
 
 Learn more in [[annotations|Annotations]].
+
+**Fixes**
+
+- You can now annotate the page title and description, not just the body. Before, selecting a phrase there showed no Annotate button, and selecting the whole description could attach the note to the wrong text.
