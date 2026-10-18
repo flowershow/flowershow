@@ -79,8 +79,8 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3(patch_hash=f99747fffebc5f7699100bb5c1d087b565fe92daccc48287872c6f4c9d9ac819)
       image-size:
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       postgres:
         specifier: ^3.4.4
         version: 3.4.8
@@ -465,8 +465,8 @@ importers:
         specifier: ^4.0.3
         version: 4.0.3(patch_hash=f99747fffebc5f7699100bb5c1d087b565fe92daccc48287872c6f4c9d9ac819)
       image-size:
-        specifier: ^2.0.2
-        version: 2.0.2
+        specifier: ^2.0.3
+        version: 2.0.3
       jsdom:
         specifier: ^27.4.0
         version: 27.4.0
@@ -7376,9 +7376,9 @@ packages:
     resolution: {integrity: sha512-BAg6QkE8W+TuQLrrw0Ugr7HegXduRuuj8/ti2kSOc+jz1dmx8/WNcjr6XGnq5YpDWxFwwaavqD0+jIUOKelTsw==}
     engines: {node: '>= 4'}
 
-  image-size@2.0.2:
-    resolution: {integrity: sha512-IRqXKlaXwgSMAMtpNzZa1ZAe8m+Sa1770Dhk8VkSsP9LS+iHD62Zd8FQKs8fbPiagBE7BzoFX23cxFnwshpV6w==}
-    engines: {node: '>=16.x'}
+  image-size@2.0.3:
+    resolution: {integrity: sha512-9BJAtVCBth+76NwqnEfWr3PiRnYhbquk6K/USuQ1GQajz5NgLzO7tNsnoNjHfO7LuftgkBf+CCH6j28hjMbIYQ==}
+    engines: {node: '>=18'}
     hasBin: true
 
   immer@9.0.21:
@@ -19104,7 +19104,7 @@ snapshots:
 
   ignore@7.0.6: {}
 
-  image-size@2.0.2: {}
+  image-size@2.0.3: {}
 
   immer@9.0.21: {}
 
@@ -24114,7 +24114,7 @@ snapshots:
   vite-plugin-storybook-nextjs@3.3.2(next@15.5.27(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.2.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(storybook@10.5.7(@types/react@19.2.2)(prettier@3.9.6)(react@19.2.1))(typescript@5.9.3)(vite@7.3.6(@types/node@26.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.23.12)(yaml@2.9.0)):
     dependencies:
       '@next/env': 16.3.0-preview.5
-      image-size: 2.0.2
+      image-size: 2.0.3
       magic-string: 0.30.21
       module-alias: 2.3.4
       next: 15.5.27(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.2.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
