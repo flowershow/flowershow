@@ -206,15 +206,18 @@ test.describe('on a phone', () => {
     await page.goto(`${basePath}${PAGE}`);
     await expect(page.locator('.fs-comments-bar')).toBeVisible();
     await selectText(page, 'quick brown fox');
-    const sheet = page.getByRole('button', { name: 'Comment', exact: true });
-    await expect(sheet).toHaveClass(/is-touch/);
-    const box = await sheet.boundingBox();
+    const addButton = page.getByRole('button', {
+      name: 'Comment',
+      exact: true,
+    });
+    await expect(addButton).toHaveClass(/is-touch/);
+    const box = await addButton.boundingBox();
     const viewport = page.viewportSize();
     // Above Android's Touch-to-Search bar, below the selection menu area.
     expect(
       box && viewport && viewport.height - (box.y + box.height),
     ).toBeGreaterThan(50);
-    await sheet.tap();
+    await addButton.tap();
     await page.getByLabel('Comment', { exact: true }).fill(note);
     await page.getByRole('button', { name: 'Post', exact: true }).tap();
     await expect(page.getByRole('dialog', PANEL)).toHaveCount(0); // closes after save on touch
