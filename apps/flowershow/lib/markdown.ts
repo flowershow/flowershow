@@ -89,6 +89,22 @@ export function protectWikiLinkAliases(content: string): string {
   );
 }
 
+const FRONTMATTER_BLOCK =
+  /^\uFEFF?---[^\n]*\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/;
+
+/**
+ * The page body without its frontmatter. Invalid YAML still strips the block
+ * so the page renders without it; the worker reports the error at publish
+ * (flowershow-hi1).
+ */
+export function stripFrontmatter(source: string): string {
+  try {
+    return matter(source, {}).content;
+  } catch {
+    return source.replace(FRONTMATTER_BLOCK, '');
+  }
+}
+
 // Process pure markdown files using unified
 export async function processMarkdown(
   _content: string,
@@ -97,7 +113,7 @@ export async function processMarkdown(
   const { filePath, files, siteHostname, permalinks } = options;
 
   // this strips out frontmatter, so that it's not inlined with the rest of the markdown file
-  const { content: rawContent } = matter(_content, {});
+  const rawContent = stripFrontmatter(_content);
 
   // Protect [[target|alias]] from GFM table cell splitting before unified parses,
   // and escape `$` that isn't part of a real math span so dollar signs in prose

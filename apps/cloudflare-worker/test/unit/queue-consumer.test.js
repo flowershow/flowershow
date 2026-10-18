@@ -801,3 +801,68 @@ test('handleMessage - ignores PutObject under a non-main prefix', async () => {
   expect(queries).toEqual([]);
   expect(calls.upsert).toBe(0);
 });
+
+// flowershow-hi1: invalid YAML frontmatter must not silently drop the page.
+
+test.each([
+  ['unquoted colon', '---\ntitle: foo: bar\n---\n# Hello\n\nBody text.'],
+  ['unclosed quote', '---\ntitle: "unclosed\n---\n# Hello\n\nBody text.'],
+  ['tab indentation', '---\ntitle: x\n\tdesc: y\n---\n# Hello\n\nBody text.'],
+])(
+  'parseMarkdown publishes a page with invalid frontmatter (%s) without it',
+  async (_, markdown) => {
+    const { metadata, body, shouldPublish, frontmatterError } =
+      await parseMarkdown({ markdown, path: 'readme.md' });
+
+    expect(shouldPublish).toBe(true);
+    expect(metadata.title).toBe('Hello');
+    expect(body).toBe('# Hello\n\nBody text.');
+    expect(frontmatterError).toMatch(/^Invalid YAML frontmatter.*\(\d+:\d+\)$/);
+  },
+);
+
+test('parseMarkdown with invalid frontmatter still honours publish: false and draft: true', async () => {
+  const hidden = await parseMarkdown({
+    markdown: '---\npublish: false\ntitle: foo: bar\n---\n# Secret',
+    path: 'secret.md',
+  });
+  expect(hidden.shouldPublish).toBe(false);
+  expect(hidden.frontmatterError).toBeTruthy();
+
+  const draft = await parseMarkdown({
+    markdown: '---\ndraft: true\ntitle: foo: bar\n---\n# WIP',
+    path: 'wip.md',
+  });
+  expect(draft.shouldPublish).toBe(true);
+  expect(draft.metadata.draft).toBe(true);
+});
+
+test('parseMarkdown with valid frontmatter has no frontmatterError', async () => {
+  const { frontmatterError } = await parseMarkdown({
+    markdown: '---\ntitle: "foo: bar"\n---\n# Hi',
+    path: 'ok.md',
+  });
+  expect(frontmatterError).toBeNull();
+});
+
+test('handleMessage - invalid frontmatter publishes the page and records a file error', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense, calls } = createTypesenseMock();
+  const msg = putMessage('README.md');
+  const storage = createR2Storage(
+    '---\ndescription: Publish: fast\n---\n# Readme\n\nHello.',
+  );
+  storage.client.head = async () => ({
+    customMetadata: { 'publish-id': 'pub-1' },
+  });
+
+  await handleMessage({ msg, storage, sql, typesense, env: {} });
+
+  expect(msg.ack).toHaveBeenCalled();
+  const insert = queries.find((q) => q.text.startsWith('INSERT INTO "Blob"'));
+  expect(insert.values[3]).toBe('/');
+  expect(calls.upsert).toBe(1);
+  const update = queries.find((q) => q.text.startsWith('UPDATE "PublishFile"'));
+  expect(update.text).toContain("status = 'error'");
+  expect(update.values[0]).toMatch(/^Invalid YAML frontmatter/);
+});
