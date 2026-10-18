@@ -14,6 +14,8 @@ interface FooterProps {
    * footer body: site name, copyright, social links and footer navigation.
    */
   customContent?: ReactNode;
+  /** Anonymous (unclaimed) sites only: adds a "Report abuse" link. */
+  reportAbuseUrl?: string;
 }
 
 export default async function Footer({
@@ -21,12 +23,14 @@ export default async function Footer({
   navigation,
   social,
   customContent,
+  reportAbuseUrl,
 }: FooterProps) {
   const defaultFooter = (
     <DefaultFooter
       siteName={siteName}
       navigation={navigation}
       social={social}
+      reportAbuseUrl={reportAbuseUrl}
     />
   );
 
@@ -55,6 +59,7 @@ function DefaultFooter({
   siteName,
   navigation,
   social,
+  reportAbuseUrl,
 }: Omit<FooterProps, 'customContent'>) {
   const currentYear = new Date().getFullYear();
 
@@ -72,6 +77,18 @@ function DefaultFooter({
             <p className="site-footer-copyright">
               &copy; {currentYear} {siteName}. All rights reserved.
             </p>
+            {reportAbuseUrl && (
+              <p className="site-footer-copyright">
+                <a
+                  href={reportAbuseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  data-testid="footer-report-abuse"
+                >
+                  Report abuse
+                </a>
+              </p>
+            )}
             {social && (
               <div className="site-footer-social-links">
                 {social.map(({ label, name, href }) => {

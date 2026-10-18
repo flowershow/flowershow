@@ -4,6 +4,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import type { PostHog } from 'posthog-node';
 import { env } from '@/env.mjs';
+import { ANON_PAGE_CSP, isAnonymousUsername } from './lib/anon-site-safety';
 import { SITE_ACCESS_COOKIE_NAME } from './lib/const';
 import type { InternalSite } from './lib/db/internal';
 import { getSiteUrl } from './lib/get-site-url';
@@ -176,6 +177,10 @@ export default async function middleware(req: NextRequest) {
     if (pathname === '/claim') {
       return rewrite(`/dragndrop${path}`, req, phBootstrap);
     }
+
+    if (pathname === '/report-abuse') {
+      return rewrite(`/dragndrop${path}`, req, phBootstrap);
+    }
   }
 
   // 7a) Root site domain (e.g. flowershow.me) — redirect to home
@@ -259,10 +264,13 @@ export default async function middleware(req: NextRequest) {
     );
     if (raw) return raw;
 
-    return rewrite(
-      `/site/${username}/${projectname}${pathname}${searchParams}`,
-      req,
-      phBootstrap,
+    return withAnonPageCsp(
+      rewrite(
+        `/site/${username}/${projectname}${pathname}${searchParams}`,
+        req,
+        phBootstrap,
+      ),
+      username,
     );
   }
 
@@ -330,6 +338,17 @@ export default async function middleware(req: NextRequest) {
 }
 
 /* ───────────────────────────── Helpers ───────────────────────────── */
+
+/**
+ * Anonymous (unclaimed) sites' rendered pages may not submit forms: raw HTML
+ * in their Markdown is not sanitised (flowershow-ctv). Claimed sites: unchanged.
+ */
+export function withAnonPageCsp(res: NextResponse, username: string) {
+  if (isAnonymousUsername(username)) {
+    res.headers.set('Content-Security-Policy', ANON_PAGE_CSP);
+  }
+  return res;
+}
 
 function rewrite(targetPath: string, req: NextRequest, ph?: PHBootstrap) {
   return withPHBootstrapCookie(

@@ -1,7 +1,12 @@
 import { CONTENT_TYPE_EXTENSIONS } from '@flowershow/core';
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { describe, expect, it } from 'vitest';
-import { rewriteRawIfNeeded, rewriteSocialCardIfNeeded } from './middleware';
+import { ANON_PAGE_CSP } from './lib/anon-site-safety';
+import {
+  rewriteRawIfNeeded,
+  rewriteSocialCardIfNeeded,
+  withAnonPageCsp,
+} from './middleware';
 
 const API_BASE = '/api/raw/victim/notes';
 
@@ -203,5 +208,17 @@ describe('rewriteSocialCardIfNeeded (flowershow-1o5)', () => {
     expect(go('/blog/_og')).toBeNull();
     expect(go('/_ogre')).toBeNull();
     expect(go('/about')).toBeNull();
+  });
+});
+
+describe('withAnonPageCsp (flowershow-ctv)', () => {
+  it('blocks form submission on anonymous site pages', () => {
+    const res = withAnonPageCsp(NextResponse.next(), 'anon');
+    expect(res.headers.get('content-security-policy')).toBe(ANON_PAGE_CSP);
+  });
+
+  it('leaves claimed site pages unchanged', () => {
+    const res = withAnonPageCsp(NextResponse.next(), 'alice');
+    expect(res.headers.get('content-security-policy')).toBeNull();
   });
 });
