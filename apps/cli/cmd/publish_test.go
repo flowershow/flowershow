@@ -74,6 +74,44 @@ func TestPublish_LinkedFolder_ExistingSite_Yes_Syncs(t *testing.T) {
 	}
 }
 
+// --- flowershow-hi1: a file that fails to process must not be reported as success ---
+
+func TestPublish_ProcessingError_ReportsFileAndFails(t *testing.T) {
+	f := setupFakeAPI(t, true, "notes")
+	dir := makeFolder(t, "whatever", "notes")
+	f.statusBlobs = []map[string]interface{}{
+		{"id": "1", "path": "README.md", "status": "error", "error": "Error parsing markdown: YAMLException: bad indentation", "extension": "md"},
+		{"id": "2", "path": "other.md", "status": "success", "error": nil, "extension": "md"},
+	}
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+	if err == nil {
+		t.Fatal("expected a non-nil error when a file failed to process")
+	}
+	if !strings.Contains(out, "README.md: Error parsing markdown: YAMLException") {
+		t.Errorf("expected the failing file and its error in output, got:\n%s", out)
+	}
+	if strings.Contains(out, "All files processed successfully") {
+		t.Errorf("must not claim success when a file failed, got:\n%s", out)
+	}
+}
+
+func TestPublish_ProcessingSuccess_ReportsSuccess(t *testing.T) {
+	f := setupFakeAPI(t, true, "notes")
+	dir := makeFolder(t, "whatever", "notes")
+	f.statusBlobs = []map[string]interface{}{
+		{"id": "1", "path": "README.md", "status": "success", "error": nil, "extension": "md"},
+	}
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if !strings.Contains(out, "All files processed successfully") {
+		t.Errorf("expected success message, got:\n%s", out)
+	}
+}
+
 // --- flowershow-ep6: failures must produce a non-nil error (non-zero exit) ---
 
 func TestPublish_NotAuthenticated_ReturnsError(t *testing.T) {

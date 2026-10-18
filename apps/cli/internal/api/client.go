@@ -102,12 +102,15 @@ type SyncFilesResponse struct {
 	PublishId string `json:"publishId,omitempty"`
 }
 
+// BlobStatus is one file of the latest publish, as returned by
+// GET /api/sites/id/:id/status (PublishFileStatus in @flowershow/api-contract).
+// Status is one of "uploading", "success", "error", "canceled", "expired".
 type BlobStatus struct {
-	ID         string  `json:"id"`
-	Path       string  `json:"path"`
-	SyncStatus string  `json:"syncStatus"`
-	SyncError  *string `json:"syncError"`
-	Extension  *string `json:"extension"`
+	ID        string  `json:"id"`
+	Path      string  `json:"path"`
+	Status    string  `json:"status"`
+	Error     *string `json:"error"`
+	Extension *string `json:"extension"`
 }
 
 type SiteStatusResponse struct {
