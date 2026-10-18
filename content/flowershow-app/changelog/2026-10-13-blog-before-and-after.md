@@ -40,3 +40,7 @@ list:
 We also tidied the page: shorter, sentence-case titles, a one-line intro that points to the [changelog](/changelog) for feature updates, and a link to subscribe instead of a full signup form.
 
 See [[magazine-view|A magazine front page for your blog]] for what the view does, and [[listings|Listing pages]] for every option.
+
+**Fixes**
+
+- Signing in with GitHub after signing up with Google (or the other way round, or after an email sign-in link) with the same verified email now takes you into your existing account instead of failing. If the email can't be verified, the login page tells you which sign-in method you used originally.
