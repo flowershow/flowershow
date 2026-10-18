@@ -93,7 +93,7 @@ import {
   postFiles,
   resolvePostRoute,
 } from '@/lib/post/route';
-import { resolveSiteAlias } from '@/lib/resolve-site-alias';
+import { resolveConfigRedirect } from '@/lib/config-redirect';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
 import { ensureLeadingSlash, normalizeAuthors } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
@@ -345,22 +345,14 @@ export default async function SitePage(props: {
   const showTags = siteConfig?.showTags ?? true;
 
   // Handle redirects if configured
-  if (siteConfig?.redirects) {
-    for (const r of siteConfig.redirects) {
-      // Simple string comparison for exact path matching
-      if (decodedSlug === ensureLeadingSlash(r.from)) {
-        const redirectUrl = site.customDomain
-          ? r.to
-          : `${resolveSiteAlias(
-              `/@${site.user?.username}/${site.projectName}`,
-              'to',
-            )}${r.to}`;
-
-        return r.permanent
-          ? permanentRedirect(redirectUrl)
-          : redirect(redirectUrl);
-      }
-    }
+  const configRedirect = resolveConfigRedirect(
+    siteConfig?.redirects,
+    decodedSlug,
+  );
+  if (configRedirect) {
+    return configRedirect.permanent
+      ? permanentRedirect(configRedirect.url)
+      : redirect(configRedirect.url);
   }
 
   const siteFilePaths = await api.site.getAllBlobPaths
