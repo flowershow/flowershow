@@ -10,6 +10,8 @@ import { expect, test } from '../helpers/fixtures';
 // project) get the same fixtures, so scripts must run on the Premium site only.
 const SCRIPT_FILE = 'page-script.js';
 const SCRIPT_SELECTOR = 'script[data-flowershow-page-script]';
+// The site root (index.md) loads its own fixture script, assets/home-script.js.
+const PAGE_SCRIPT_SELECTOR = `${SCRIPT_SELECTOR}[src$="/${SCRIPT_FILE}"]`;
 
 const isPremiumProject = () => test.info().project.name === 'custom-domain';
 
@@ -49,7 +51,7 @@ for (const { name, path } of [
       await page.locator('nav.site-navbar a', { hasText: 'Home' }).click();
       await expect(page).not.toHaveURL(new RegExp(`${path}$`));
       await expect(page.locator('#page-script-target')).toHaveCount(0);
-      await expect(page.locator(SCRIPT_SELECTOR)).toHaveCount(0);
+      await expect(page.locator(PAGE_SCRIPT_SELECTOR)).toHaveCount(0);
     });
 
     await test.step('runs again after client-side navigation back', async () => {
@@ -68,6 +70,49 @@ for (const { name, path } of [
     });
   });
 }
+
+// GH #1467: the site root page (index.md served at `/`) must run its page
+// scripts on a full page load too, not only after client-side navigation.
+for (const path of ['/', '/index']) {
+  test(`page scripts run on a full page load of the site root (${path})`, async ({
+    page,
+    basePath,
+  }) => {
+    test.skip(!isPremiumProject(), 'Page scripts are a Premium feature');
+
+    await page.goto(`${basePath}${path}`);
+    await expect(page.locator('#home-script-target')).toHaveText('enhanced');
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-home-script-runs',
+      '1',
+    );
+  });
+}
+
+test('page scripts run when navigating to the site root client-side', async ({
+  page,
+  basePath,
+}) => {
+  test.skip(!isPremiumProject(), 'Page scripts are a Premium feature');
+
+  await page.goto(`${basePath}/page-scripts`);
+  await expect(page.locator('#page-script-target')).toHaveText('enhanced');
+  await page.evaluate(() => {
+    (window as unknown as { __e2eMarker: boolean }).__e2eMarker = true;
+  });
+
+  await page.locator('nav.site-navbar a', { hasText: 'Home' }).click();
+  await expect(page.locator('#home-script-target')).toHaveText('enhanced');
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-home-script-runs',
+    '1',
+  );
+  expect(
+    await page.evaluate(
+      () => (window as unknown as { __e2eMarker?: boolean }).__e2eMarker,
+    ),
+  ).toBe(true);
+});
 
 test('pages without scripts frontmatter load no page scripts', async ({
   page,
