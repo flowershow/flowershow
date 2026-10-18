@@ -54,6 +54,8 @@ type fakeAPI struct {
 	annotationsOn    map[string]bool // site ID -> annotationsEnabled
 	openAnnotations  map[string]int  // site ID -> openAnnotations
 	syncAllUnchanged bool            // POST sync reports every file unchanged ("Already in sync")
+
+	statusBlobs []map[string]interface{} // files returned by GET /api/sites/id/:id/status
 }
 
 func (f *fakeAPI) anonCreateCount() int {
@@ -289,7 +291,14 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		}
 		writeJSON(w, 200, resp)
 	case strings.HasPrefix(path, "/api/sites/id/") && strings.HasSuffix(path, "/status"):
-		writeJSON(w, 200, map[string]interface{}{"siteId": "x", "status": "SUCCESS", "blobs": []interface{}{}})
+		// Mirrors StatusResponse in @flowershow/api-contract.
+		f.mu.Lock()
+		blobs := f.statusBlobs
+		f.mu.Unlock()
+		if blobs == nil {
+			blobs = []map[string]interface{}{}
+		}
+		writeJSON(w, 200, map[string]interface{}{"siteId": "x", "status": "complete", "blobs": blobs})
 	default:
 		writeJSON(w, 404, map[string]string{"message": "no route " + r.Method + " " + path})
 	}

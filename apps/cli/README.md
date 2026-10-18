@@ -186,7 +186,7 @@ fl --anon ./my-notes
 4. Site is created via the Flowershow API
 5. Presigned URLs are obtained for secure file uploads
 6. Files are uploaded directly to Cloudflare R2 storage
-7. CLI waits for markdown files to be processed
+7. CLI waits for markdown files to be processed. If any file fails to process (e.g. invalid YAML frontmatter), it lists each file with its error and exits non-zero, even though the rest of the site is published
 8. Site URL is displayed
 9. For folder mode, site name is saved to `.flowershow` in the folder for future runs
 
