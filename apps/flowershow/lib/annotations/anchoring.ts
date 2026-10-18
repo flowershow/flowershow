@@ -8,6 +8,8 @@ export const CONTEXT_LENGTH = 32;
 export const QUOTE_MAX = ANNOTATION_LIMITS.quote;
 /** Quotes longer than this are only matched verbatim: fuzzy search on them is slow and rarely right. */
 export const FUZZY_MAX_QUOTE = 256;
+/** Quotes shorter than this are only matched verbatim: a fuzzy match on a few characters lands on unrelated text. */
+export const FUZZY_MIN_QUOTE = 16;
 /** A fuzzy match must be at least this similar to the stored quote, or the note is outdated. */
 export const MIN_QUOTE_SIMILARITY = 0.8;
 
@@ -122,9 +124,12 @@ export function anchorSelector(
   ) {
     return { start, end };
   }
-  if (exact.length > FUZZY_MAX_QUOTE && !text.includes(exact)) return null;
+  const verbatimOnly =
+    exact.length > FUZZY_MAX_QUOTE || exact.length < FUZZY_MIN_QUOTE;
+  if (verbatimOnly && !text.includes(exact)) return null;
   const match = matchQuote(text, exact, { prefix, suffix, hint: start });
   if (!match) return null;
+  if (verbatimOnly && text.slice(match.start, match.end) !== exact) return null;
   if (
     textMatchScore(text.slice(match.start, match.end), exact) <
     MIN_QUOTE_SIMILARITY
