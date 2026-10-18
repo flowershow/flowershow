@@ -113,6 +113,26 @@ describe('GET /api/sites/:username/:projectname — exact name lookup', () => {
     expect(prisma.site.findFirst).not.toHaveBeenCalled();
   });
 
+  it('flags an unclaimed anonymous site for the middleware (flowershow-ctv)', async () => {
+    // The anonymous user's DB username is "anonymous", so only the id is reliable.
+    (prisma.site.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      id: 'site-anon',
+      subdomain: 'abc-anon',
+      customDomain: null,
+      projectName: 'abc',
+      privacyMode: 'PUBLIC',
+      tokenVersion: 0,
+      isTemporary: true,
+      expiresAt: null,
+      user: { username: 'anonymous', id: 'anon-user-id' },
+    });
+    const res = await GET(
+      makeRequest('_subdomain', 'abc-anon'),
+      makeParams('_subdomain', 'abc-anon'),
+    );
+    expect((await res.json()).anonymous).toBe(true);
+  });
+
   it('returns 404 for an expired anonymous site on the _subdomain lookup', async () => {
     (prisma.site.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
       id: 'site-anon',
@@ -183,6 +203,7 @@ describe('GET /api/sites/:username/:projectname — exact name lookup', () => {
       privacyMode: 'PASSWORD',
       tokenVersion: 3,
       user: { username: 'victim' },
+      anonymous: false,
     });
     for (const leaked of [
       'ghRepository',

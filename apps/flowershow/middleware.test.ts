@@ -214,12 +214,12 @@ describe('rewriteSocialCardIfNeeded (flowershow-1o5)', () => {
 
 describe('withAnonPageCsp (flowershow-ctv)', () => {
   it('blocks form submission on anonymous site pages', () => {
-    const res = withAnonPageCsp(NextResponse.next(), 'anon');
+    const res = withAnonPageCsp(NextResponse.next(), true);
     expect(res.headers.get('content-security-policy')).toBe(ANON_PAGE_CSP);
   });
 
   it('leaves claimed site pages unchanged', () => {
-    const res = withAnonPageCsp(NextResponse.next(), 'alice');
+    const res = withAnonPageCsp(NextResponse.next(), false);
     expect(res.headers.get('content-security-policy')).toBeNull();
   });
 });
