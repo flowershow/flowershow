@@ -46,13 +46,14 @@ vi.mock('@/lib/otel-logger', () => ({
   SeverityNumber: { ERROR: 17 },
 }));
 
-import { validateAccessToken } from '@/lib/cli-auth';
-import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
-import { deleteFile, generatePresignedUploadUrl } from '@/lib/content-store';
 import {
   ANONYMOUS_USER_ID,
   generateSiteClaimToken,
 } from '@/lib/anonymous-user';
+import { validateAccessToken } from '@/lib/cli-auth';
+import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
+import { deleteFile, generatePresignedUploadUrl } from '@/lib/content-store';
+import { markMcpInternal } from '@/lib/mcp/internal-request';
 import prisma from '@/server/db';
 import { POST } from './route';
 
@@ -387,6 +388,28 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       expect(prisma.publish.create).toHaveBeenCalledWith({
         data: { siteId: SITE_ID, source: 'cli', legacy: false },
       });
+    });
+
+    it('records MCP publishes with source mcp and publish_method mcp', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([]);
+
+      await POST(
+        markMcpInternal(
+          makeRequest({ files: [{ path: 'new.md', size: 100, sha: 'abc' }] }),
+          { userId: USER_ID },
+        ),
+        makeParams(SITE_ID),
+      );
+
+      expect(prisma.publish.create).toHaveBeenCalledWith({
+        data: { siteId: SITE_ID, source: 'mcp', legacy: false },
+      });
+      expect(posthogCapture).toHaveBeenCalledWith(
+        expect.objectContaining({
+          event: 'content_published',
+          properties: expect.objectContaining({ publish_method: 'mcp' }),
+        }),
+      );
     });
 
     it('creates a PublishFile with changeType "added" and status "uploading" for new files', async () => {

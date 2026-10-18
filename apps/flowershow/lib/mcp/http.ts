@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { NextRequest, NextResponse } from 'next/server';
 import { CLAIM_TOKEN_PREFIX } from '@/lib/anonymous-user';
@@ -11,7 +12,9 @@ import {
   SCOPE_SITES_WRITE,
 } from '@/lib/oauth/config';
 import { validateOAuthAccessToken } from '@/lib/oauth/tokens';
+import { getClientIp } from '@/lib/rate-limit';
 import { realMcpDeps } from './deps';
+import { anonCallerFrom } from './limits';
 import { MAX_REQUEST_BYTES, MAX_TOTAL_BYTES } from './publish';
 import { createFlowershowMcpServer, type McpMode } from './server';
 
@@ -200,14 +203,49 @@ export async function handleMcpRequest(
     parsedBody = message.body;
   }
 
-  const server = createFlowershowMcpServer(mode, realMcpDeps());
+  const deps =
+    mode.kind === 'anon'
+      ? realMcpDeps(
+          anonCallerFrom(
+            getClientIp(request.headers),
+            request.headers,
+            parsedBody,
+          ),
+        )
+      : realMcpDeps();
+  const server = createFlowershowMcpServer(mode, deps);
   const transport = new WebStandardStreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
     enableJsonResponse: true,
     maxRequestBodySize: MAX_REQUEST_BYTES,
   });
   await server.connect(transport);
-  return transport.handleRequest(request, { parsedBody });
+  const response = await transport.handleRequest(request, { parsedBody });
+  return mode.kind === 'anon' && isInitialize(parsedBody)
+    ? withSessionId(response)
+    : response;
+}
+
+function isInitialize(body: unknown): boolean {
+  return (body as { method?: unknown } | undefined)?.method === 'initialize';
+}
+
+/**
+ * Hand anonymous clients an MCP session id on initialize. The server stays
+ * stateless (the transport ignores the header); clients send the id back on
+ * every request, which lets per-caller limits tell apart users of a chat app
+ * that all call from the same IPs (lib/mcp/limits.ts). Anyone can mint new
+ * ids, so per-IP and global limits still apply.
+ */
+function withSessionId(response: Response): Response {
+  if (!response.ok || response.headers.has('mcp-session-id')) return response;
+  const headers = new Headers(response.headers);
+  headers.set('mcp-session-id', randomUUID());
+  return new Response(response.body, {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
 }
 
 /**
