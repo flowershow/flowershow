@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/server/db';
 import bcrypt from 'bcryptjs';
 import { randomBytes, createHash } from 'crypto';
+import { mcpInternalCaller } from '@/lib/mcp/internal-request';
 
 /** Minimum CLI version required to use the API */
 const MIN_CLI_VERSION = '1.0.0';
@@ -148,6 +149,11 @@ export function hashToken(token: string): string {
 export async function validateAccessToken(
   request: NextRequest,
 ): Promise<{ userId: string } | null> {
+  // In-process call from the MCP endpoint, which has already authenticated
+  // the user (see lib/mcp/internal-request.ts). Can't be set over HTTP.
+  const internal = mcpInternalCaller(request);
+  if (internal?.userId) return { userId: internal.userId };
+
   const authHeader = request.headers.get('authorization');
 
   if (!authHeader?.startsWith('Bearer ')) {

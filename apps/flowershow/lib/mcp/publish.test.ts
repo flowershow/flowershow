@@ -7,6 +7,7 @@ import {
   type PublishDeps,
   PublishError,
   publish,
+  siteNameFor,
 } from './publish';
 
 const ANON = {
@@ -21,6 +22,10 @@ const ANON = {
 function makeDeps(over: Partial<PublishDeps> = {}): PublishDeps {
   return {
     createAnonSite: vi.fn().mockResolvedValue(ANON),
+    createUserSite: vi.fn().mockResolvedValue({
+      siteId: 'site-new',
+      liveUrl: 'https://my-notes-alice.flowershow.me',
+    }),
     sync: vi.fn().mockImplementation(async (_siteId, files) => ({
       toUpload: files.map((f: { path: string }) => ({
         path: f.path,
@@ -77,7 +82,7 @@ describe('publish (anonymous)', () => {
         },
         { path: 'img/logo.png', size: 3, sha: gitBlobSha(png) },
       ],
-      'fs_claim_new',
+      { claimToken: 'fs_claim_new' },
     );
     expect(deps.upload).toHaveBeenCalledTimes(2);
     expect(deps.upload).toHaveBeenCalledWith(
@@ -86,7 +91,9 @@ describe('publish (anonymous)', () => {
       'text/html',
       'pub-1',
     );
-    expect(deps.status).toHaveBeenCalledWith('site-1', 'fs_claim_new');
+    expect(deps.status).toHaveBeenCalledWith('site-1', {
+      claimToken: 'fs_claim_new',
+    });
     expect(res).toMatchObject({
       liveUrl: ANON.liveUrl,
       siteId: 'site-1',
@@ -105,11 +112,9 @@ describe('publish (anonymous)', () => {
       deps,
     );
     expect(deps.createAnonSite).not.toHaveBeenCalled();
-    expect(deps.sync).toHaveBeenCalledWith(
-      'site-9',
-      expect.any(Array),
-      'fs_claim_old',
-    );
+    expect(deps.sync).toHaveBeenCalledWith('site-9', expect.any(Array), {
+      claimToken: 'fs_claim_old',
+    });
     expect(res.siteId).toBe('site-9');
     expect(res.claimToken).toBe('fs_claim_old');
     expect(res.liveUrl).toBe('https://notes-alice.flowershow.me');
@@ -306,7 +311,7 @@ describe('publish (base64)', () => {
     expect(deps.sync).toHaveBeenCalledWith(
       'site-1',
       [{ path: 'a.png', size: 4, sha: gitBlobSha(png) }],
-      'fs_claim_new',
+      { claimToken: 'fs_claim_new' },
     );
   });
 
@@ -388,39 +393,106 @@ describe('publish (failures after the site was created)', () => {
   });
 });
 
-describe('publish (account token)', () => {
-  it('publishes to the given site with the user token and no claim link', async () => {
-    const res = await publish(
-      { files: [html], siteId: 'site-u' },
-      { kind: 'user', token: 'fs_pat_x' },
-      deps,
-    );
+const USER = { kind: 'user' as const, userId: 'u1' };
+
+describe('publish (signed in)', () => {
+  it('publishes to the given site as the user, with no claim link', async () => {
+    const res = await publish({ files: [html], siteId: 'site-u' }, USER, deps);
     expect(deps.createAnonSite).not.toHaveBeenCalled();
-    expect(deps.sync).toHaveBeenCalledWith(
-      'site-u',
-      expect.any(Array),
-      'fs_pat_x',
-    );
+    expect(deps.createUserSite).not.toHaveBeenCalled();
+    expect(deps.sync).toHaveBeenCalledWith('site-u', expect.any(Array), {
+      userId: 'u1',
+    });
+    expect(deps.status).toHaveBeenCalledWith('site-u', { userId: 'u1' });
     expect(res.liveUrl).toBe('https://notes-alice.flowershow.me');
     expect(res.claimUrl).toBeUndefined();
+    expect(res.message).toMatch(/siteId site-u/);
   });
 
-  it('says the site is not theirs on 403 (not a claim-token message)', async () => {
+  it.each([403, 404])(
+    'answers %s the same way: not in your account (no existence leak)',
+    async (code) => {
+      deps = makeDeps({
+        sync: vi.fn().mockRejectedValue(new ApiError(code, 'x', 'x')),
+      });
+      await expect(
+        publish({ files: [html], siteId: 'other' }, USER, deps),
+      ).rejects.toThrow(/not found in your account.*list-sites/);
+    },
+  );
+
+  it('points to claim-site for an anonymous site given with its claimToken', async () => {
     deps = makeDeps({
       sync: vi.fn().mockRejectedValue(new ApiError(403, 'forbidden', 'x')),
     });
     await expect(
       publish(
-        { files: [html], siteId: 'other' },
-        { kind: 'user', token: 'fs_pat_x' },
+        { files: [html], siteId: 'anon-site', claimToken: 'fs_claim_x' },
+        USER,
         deps,
       ),
-    ).rejects.toThrow(/don't have access to this site/);
+    ).rejects.toThrow(/claim-site/);
   });
 
-  it('asks for a siteId (use list-sites) when none is given', async () => {
+  it('creates a new account site when no siteId is given, named after the first heading', async () => {
+    const res = await publish(
+      { files: [{ path: 'index.md', content: '# My Notes\n\nhello' }] },
+      USER,
+      deps,
+    );
+    expect(deps.createUserSite).toHaveBeenCalledWith('u1', 'My Notes');
+    expect(deps.sync).toHaveBeenCalledWith('site-new', expect.any(Array), {
+      userId: 'u1',
+    });
+    expect(res).toMatchObject({
+      siteId: 'site-new',
+      liveUrl: 'https://my-notes-alice.flowershow.me',
+    });
+    expect(res.claimUrl).toBeUndefined();
+  });
+
+  it('uses the given name', async () => {
+    await publish({ files: [html], name: 'Launch page' }, USER, deps);
+    expect(deps.createUserSite).toHaveBeenCalledWith('u1', 'Launch page');
+  });
+
+  it('rejects an invalid name before creating anything', async () => {
     await expect(
-      publish({ files: [html] }, { kind: 'user', token: 'fs_pat_x' }, deps),
-    ).rejects.toThrow(/list-sites/);
+      publish({ files: [html], name: 'a/b' }, USER, deps),
+    ).rejects.toThrow(/Invalid site name/);
+    expect(deps.createUserSite).not.toHaveBeenCalled();
+  });
+
+  it('gives the new siteId to retry with if the upload fails after creating', async () => {
+    deps = makeDeps({
+      upload: vi.fn().mockRejectedValue(new Error('boom')),
+    });
+    await expect(publish({ files: [html] }, USER, deps)).rejects.toThrow(
+      /siteId "site-new"/,
+    );
+  });
+});
+
+describe('siteNameFor', () => {
+  const enc = (path: string, text: string) => ({
+    path,
+    bytes: new TextEncoder().encode(text),
+  });
+  it.each([
+    [[enc('index.md', '---\ntitle: "From FM"\n---\n# Heading')], 'From FM'],
+    [[enc('index.md', 'intro\n\n## Sub\n# **Bold** title #')], 'Bold title'],
+    [
+      [enc('index.html', '<title>Page &amp; co</title><h1>x</h1>')],
+      'Page &amp; co',
+    ],
+    [
+      [enc('index.html', '<h1 class="x">Hello <em>there</em></h1>')],
+      'Hello there',
+    ],
+    [[enc('about.md', '# About'), enc('index.md', '# Home')], 'Home'],
+    [[enc('style.css', 'body{}')], 'site-abc123'],
+    [[enc('index.md', '# ///')], 'site-abc123'],
+  ])('%#', (files, expected) => {
+    expect(siteNameFor(undefined, files, () => 'abc123')).toBe(expected);
   });
 });

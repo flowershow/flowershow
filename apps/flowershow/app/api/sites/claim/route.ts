@@ -4,11 +4,7 @@ import {
 } from '@flowershow/api-contract';
 import { type NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
-import {
-  ANONYMOUS_USER_ID,
-  verifyOwnershipToken,
-  verifySiteClaimToken,
-} from '@/lib/anonymous-user';
+import { claimAnonSite } from '@/lib/claim-anon-site';
 import PostHogClient from '@/lib/server-posthog';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
@@ -79,84 +75,25 @@ export async function POST(request: NextRequest) {
 
     const { siteId, ownershipToken, claimToken } = parsedBody.data;
 
-    let anonymousUserId: string | null = null;
-    if (claimToken) {
-      const claim = verifySiteClaimToken(claimToken);
-      if (!claim || claim.siteId !== siteId) {
-        return NextResponse.json(
-          { success: false, error: 'Invalid claim link for this site' },
-          { status: 403 },
-        );
-      }
-      anonymousUserId = claim.anonymousUserId;
-    } else if (ownershipToken) {
-      anonymousUserId = verifyOwnershipToken(ownershipToken);
-    }
-    if (!anonymousUserId) {
-      return NextResponse.json(
-        { success: false, error: 'Invalid ownership token' },
-        { status: 403 },
-      );
-    }
-
-    // Find the site
-    const site = await prisma.site.findUnique({
-      where: { id: siteId },
-    });
-
-    if (!site) {
-      return NextResponse.json(
-        { success: false, error: 'Site not found' },
-        { status: 404 },
-      );
-    }
-
-    // Verify it's an anonymous site with matching ownership
-    if (site.userId !== ANONYMOUS_USER_ID) {
-      return NextResponse.json(
-        { success: false, error: 'Site is not anonymous' },
-        { status: 400 },
-      );
-    }
-
-    if (site.anonymousOwnerId !== anonymousUserId) {
-      return NextResponse.json(
-        { success: false, error: 'Ownership verification failed' },
-        { status: 403 },
-      );
-    }
-
-    // Claim links stop working once the anonymous site has expired (the DB
-    // expiresAt is the source of truth; the token's own JWT expiry is ignored).
-    if (
-      claimToken &&
-      site.isTemporary &&
-      site.expiresAt &&
-      site.expiresAt.getTime() <= Date.now()
-    ) {
-      return NextResponse.json(
-        { success: false, error: 'This link has expired' },
-        { status: 410 },
-      );
-    }
-
     // Get user's site count for analytics
     const userSitesCount = await prisma.site.count({
       where: { userId: session.user.id },
     });
 
-    // Transfer ownership to the authenticated user
-    const updatedSite = await prisma.site.update({
-      where: { id: siteId },
-      data: {
-        userId: session.user.id,
-        isTemporary: false,
-        expiresAt: null,
-        anonymousOwnerId: null,
-        // No need to keep the creator's (hashed) IP once a user owns the site.
-        anonCreatorIpHash: null,
-      },
+    // Transfer ownership to the authenticated user (single conditional write).
+    const result = await claimAnonSite({
+      siteId,
+      userId: session.user.id,
+      claimToken,
+      ownershipToken,
     });
+    if (!result.ok) {
+      return NextResponse.json(
+        { success: false, error: result.error },
+        { status: result.status },
+      );
+    }
+    const updatedSite = result.site;
 
     // Track analytics
     const posthog = PostHogClient();

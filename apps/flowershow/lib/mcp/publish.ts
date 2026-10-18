@@ -3,6 +3,7 @@ import type {
   FileMetadata,
   SyncResponse,
 } from '@flowershow/api-contract';
+import { validateSiteName } from '@/lib/validate-site-name';
 import { gitBlobSha } from './git-sha';
 
 /**
@@ -27,10 +28,18 @@ export type PublishInput = {
   files: PublishFileInput[];
   siteId?: string;
   claimToken?: string;
+  /** Name for a new account site (signed in, no siteId). */
+  name?: string;
 };
 
-/** Who is publishing: anonymous (claim-token sites) or an account token. */
-export type PublishMode = { kind: 'anon' } | { kind: 'user'; token: string };
+/** Who is publishing: anonymous (claim-token sites) or an authenticated user. */
+export type PublishMode = { kind: 'anon' } | { kind: 'user'; userId: string };
+
+/**
+ * How the in-process REST calls are authorized: an anonymous site's claim
+ * token, or a user the MCP endpoint has already authenticated.
+ */
+export type PublishCredential = { claimToken: string } | { userId: string };
 
 type StatusResult = {
   status: 'pending' | 'complete' | 'error';
@@ -39,10 +48,15 @@ type StatusResult = {
 
 export interface PublishDeps {
   createAnonSite(): Promise<AnonCreateSiteResponse>;
+  /** Create a new site in the user's account. */
+  createUserSite(
+    userId: string,
+    name: string,
+  ): Promise<{ siteId: string; liveUrl: string }>;
   sync(
     siteId: string,
     files: FileMetadata[],
-    bearer: string,
+    credential: PublishCredential,
   ): Promise<SyncResponse>;
   upload(
     url: string,
@@ -50,7 +64,7 @@ export interface PublishDeps {
     contentType: string,
     publishId?: string,
   ): Promise<void>;
-  status(siteId: string, bearer: string): Promise<StatusResult>;
+  status(siteId: string, credential: PublishCredential): Promise<StatusResult>;
   /** Public URL of an existing site (called only after sync succeeds). */
   siteUrl(siteId: string): Promise<string>;
   sleep(ms: number): Promise<void>;
@@ -156,14 +170,23 @@ function decodeFiles(files: PublishFileInput[]) {
   });
 }
 
-function explain(err: unknown, mode: PublishMode): string {
+function explain(
+  err: unknown,
+  mode: PublishMode,
+  input: Pick<PublishInput, 'claimToken'> = {},
+): string {
   if (err instanceof PublishError) return err.message;
   if (!(err instanceof ApiError)) throw err;
+  if (mode.kind === 'user' && (err.status === 403 || err.status === 404)) {
+    // Same answer for "not yours" and "doesn't exist": don't reveal other
+    // accounts' site ids.
+    return input.claimToken
+      ? 'This site is not in your account. If it is an anonymous site published earlier in this conversation, call claim-site with its siteId and claimToken to move it into your account, then publish with siteId.'
+      : 'Site not found in your account. Use list-sites to see your sites, or publish without siteId to create a new site.';
+  }
   switch (err.status) {
     case 403:
-      return mode.kind === 'user'
-        ? "You don't have access to this site. Use list-sites to see your sites."
-        : 'This claim token is not valid for this site. Publish without siteId to create a new site.';
+      return 'This claim token is not valid for this site. Publish without siteId to create a new site.';
     case 404:
       return 'Site not found.';
     case 409:
@@ -215,23 +238,30 @@ export async function publish(
   const files = decodeFiles(input.files);
 
   let target: Omit<PublishResult, 'message'>;
-  let bearer: string;
+  let credential: PublishCredential;
   let createdNow = false;
   if (mode.kind === 'user') {
-    if (!input.siteId) {
-      throw new PublishError(
-        'Give the siteId of the site to publish to (use list-sites to find it).',
-      );
+    credential = { userId: mode.userId };
+    if (input.siteId) {
+      target = { siteId: input.siteId, liveUrl: '' };
+    } else {
+      const name = siteNameFor(input.name, files);
+      let created: { siteId: string; liveUrl: string };
+      try {
+        created = await deps.createUserSite(mode.userId, name);
+      } catch (err) {
+        throw new PublishError(explain(err, mode));
+      }
+      createdNow = true;
+      target = { siteId: created.siteId, liveUrl: created.liveUrl };
     }
-    bearer = mode.token;
-    target = { siteId: input.siteId, liveUrl: '' };
   } else if (input.siteId) {
     if (!input.claimToken) {
       throw new PublishError(
         'To update an anonymous site, pass the claimToken returned when it was first published.',
       );
     }
-    bearer = input.claimToken;
+    credential = { claimToken: input.claimToken };
     target = {
       siteId: input.siteId,
       claimToken: input.claimToken,
@@ -244,7 +274,7 @@ export async function publish(
     } catch (err) {
       throw new PublishError(explain(err, mode));
     }
-    bearer = created.claimToken;
+    credential = { claimToken: created.claimToken };
     createdNow = true;
     target = {
       siteId: created.siteId,
@@ -265,7 +295,7 @@ export async function publish(
         size: f.bytes.byteLength,
         sha: gitBlobSha(f.bytes),
       })),
-      bearer,
+      credential,
     );
     // Only look the URL up once sync has authorised the caller for this site.
     if (!target.liveUrl) target.liveUrl = await deps.siteUrl(target.siteId);
@@ -286,7 +316,7 @@ export async function publish(
     const why =
       step === 'upload'
         ? 'Uploading the files failed. Please try again.'
-        : explain(err, mode);
+        : explain(err, mode, input);
     throw new PublishError(createdNow ? withRetryHint(why, target) : why);
   }
 
@@ -295,7 +325,7 @@ export async function publish(
   const deadline = now() + pollDeadlineMs;
   for (;;) {
     try {
-      last = await deps.status(target.siteId, bearer);
+      last = await deps.status(target.siteId, credential);
     } catch {
       last = null;
     }
@@ -312,7 +342,9 @@ function withRetryHint(
 ): string {
   // Only for a site this call created: on an update the caller already has
   // its siteId and claimToken, and the token may be the thing that failed.
-  if (!target.claimToken) return why;
+  if (!target.claimToken) {
+    return `${why}\n\nThe site was created in the user's account: retry by calling publish with siteId "${target.siteId}" instead of creating another site.`;
+  }
   const lines = [
     why,
     `The site was created: retry by calling publish with siteId "${target.siteId}" and claimToken "${target.claimToken}" instead of creating a new site.`,
@@ -352,6 +384,70 @@ function summarise(
     parts.push(
       'To change the site later in this conversation, call publish again with siteId and claimToken and the complete set of files (files left out are removed).',
     );
+  } else {
+    parts.push(
+      `The site is in the user's Flowershow account (siteId ${target.siteId}). To change it later, call publish with this siteId and the complete set of files (files left out are removed).`,
+    );
   }
   return parts.join('\n\n');
+}
+
+const NAME_MAX = 60;
+
+function cleanName(raw: string): string | null {
+  const name = raw
+    .replace(/<[^>]*>/g, '')
+    .replace(/[*_`~[\]]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, NAME_MAX)
+    .trim();
+  const v = validateSiteName(name);
+  return v.ok ? v.name : null;
+}
+
+function firstHeading(path: string, text: string): string | null {
+  if (path.endsWith('.md')) {
+    const fm = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+    const title = fm && /^title:\s*["']?(.+?)["']?\s*$/m.exec(fm[1] as string);
+    if (title?.[1]) return title[1];
+    const h = /^#\s+(.+?)\s*#*\s*$/m.exec(text);
+    return h?.[1] ?? null;
+  }
+  if (path.endsWith('.html') || path.endsWith('.htm')) {
+    const t =
+      /<title[^>]*>([\s\S]*?)<\/title>/i.exec(text) ??
+      /<h1[^>]*>([\s\S]*?)<\/h1>/i.exec(text);
+    return t?.[1] ?? null;
+  }
+  return null;
+}
+
+/**
+ * Name for a new account site: the given name, else the home page's first
+ * heading (or title), else "site-" plus a random suffix.
+ */
+export function siteNameFor(
+  given: string | undefined,
+  files: { path: string; bytes: Uint8Array }[],
+  random: () => string = () => Math.random().toString(36).slice(2, 8),
+): string {
+  if (given !== undefined) {
+    const v = validateSiteName(given);
+    if (!v.ok) throw new PublishError(`Invalid site name: ${v.error}`);
+    return v.name;
+  }
+  const ordered = [
+    ...files.filter((f) => /^index\.(md|html?)$/i.test(f.path)),
+    ...files.filter((f) => /\.(md|html?)$/i.test(f.path)),
+  ];
+  for (const f of ordered) {
+    const heading = firstHeading(
+      f.path.toLowerCase(),
+      new TextDecoder().decode(f.bytes),
+    );
+    const name = heading && cleanName(heading);
+    if (name) return name;
+  }
+  return `site-${random()}`;
 }
