@@ -8,6 +8,14 @@ import GoogleProvider from 'next-auth/providers/google';
 import { MagicLinkEmail } from '@/emails/magic-link';
 import { WelcomeEmail } from '@/emails/welcome';
 import { env } from '@/env.mjs';
+import {
+  canAutoLinkByEmail,
+  type GithubEmail,
+  isFreshlyCreatedUser,
+  isProviderEmailVerified,
+  originalSignInMethod,
+  pickGithubEmail,
+} from '@/lib/account-linking';
 import { resolveAuthRedirect } from '@/lib/auth-redirect';
 import { sendEmail } from '@/lib/email';
 import { generateUsername } from '@/lib/generate-username';
@@ -60,10 +68,38 @@ export const authOptions: NextAuthOptions = {
           scope: 'read:user user:email',
         },
       },
+      // Replaces NextAuth's default, which falls back to an UNVERIFIED address
+      // from /user/emails. We use only GitHub-verified addresses and flag them
+      // with `email_verified`, which gates account linking (see signIn below).
+      userinfo: {
+        url: 'https://api.github.com/user',
+        async request({ client, tokens }) {
+          const profile = await client.userinfo(tokens.access_token!);
+          let emails: GithubEmail[] | null = null;
+          try {
+            const res = await fetch('https://api.github.com/user/emails', {
+              headers: { Authorization: `token ${tokens.access_token}` },
+            });
+            if (res.ok) emails = await res.json();
+          } catch (err) {
+            console.error('GitHub /user/emails fetch failed:', err);
+          }
+          const { email, verified } = pickGithubEmail(
+            emails,
+            profile.email as string | null | undefined,
+          );
+          return { ...profile, email, email_verified: verified } as any;
+        },
+      },
+      // Safe only because signIn below rejects the link unless both the
+      // incoming email and the existing user's email are verified.
+      allowDangerousEmailAccountLinking: true,
     }),
     GoogleProvider({
       clientId: env.AUTH_GOOGLE_ID as string,
       clientSecret: env.AUTH_GOOGLE_SECRET as string,
+      // See GitHub above: gated on `email_verified` in the signIn callback.
+      allowDangerousEmailAccountLinking: true,
       async profile(profile) {
         return {
           id: profile.sub,
@@ -165,6 +201,10 @@ export const authOptions: NextAuthOptions = {
       // console.log("createUser", { user: message.user });
       // Called AFTER user is created in the DB
       // user: prisma user
+      // NextAuth also fires this when it links a new provider to an existing
+      // user by email; don't re-welcome them.
+      if (!isFreshlyCreatedUser(user as { createdAt?: Date })) return;
+      if (!user.email) return;
       // Add user to Brevo contact list
       try {
         await axios.post(
@@ -197,7 +237,7 @@ export const authOptions: NextAuthOptions = {
         react: WelcomeEmail({ userName }),
       });
     },
-    signIn: async ({ user, account, isNewUser }) => {
+    signIn: async ({ user, account, profile, isNewUser }) => {
       // Capture sign_up here rather than in `createUser`: for OAuth,
       // `events.createUser` fires before `linkAccount`, so no Account row
       // exists yet to read the provider from; for magic-link there is never an
@@ -205,6 +245,22 @@ export const authOptions: NextAuthOptions = {
       // `account` directly, so `account.provider` is reliable for every flow
       // ('github' | 'google' | 'email').
       if (!isNewUser) return;
+      // NextAuth reports a by-email account link as a new user too.
+      if (!isFreshlyCreatedUser(user as { createdAt?: Date })) return;
+
+      // Record that the provider verified this new user's email, so a later
+      // sign-in with another provider can be linked to it safely.
+      if (
+        account &&
+        account.provider !== 'email' &&
+        user.email &&
+        isProviderEmailVerified(account.provider, profile)
+      ) {
+        await prisma.user.update({
+          where: { id: user.id },
+          data: { emailVerified: new Date() },
+        });
+      }
 
       const posthog = PostHogClient();
       posthog.capture({
@@ -289,6 +345,32 @@ export const authOptions: NextAuthOptions = {
         } catch (error) {
           console.error('SignIn error:', error);
           return false;
+        }
+        return true;
+      }
+
+      // First sign-in with this provider. If another user already has this
+      // email, NextAuth will link to it (allowDangerousEmailAccountLinking) —
+      // permit that only when both emails are verified; otherwise tell the
+      // user which method they signed up with.
+      if (user.email) {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email },
+          select: {
+            emailVerified: true,
+            accounts: { select: { provider: true } },
+          },
+        });
+        if (
+          existingUser &&
+          !canAutoLinkByEmail({
+            provider: account.provider,
+            profile,
+            existingUser,
+          })
+        ) {
+          const method = originalSignInMethod(existingUser);
+          return `/login?error=OAuthAccountNotLinked&method=${encodeURIComponent(method)}`;
         }
       }
       return true;
