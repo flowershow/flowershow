@@ -128,6 +128,7 @@ model Site {
   links                   Link[]
   tags                    Tag[]
   annotations             Annotation[]
+  ownerCodes              SiteOwnerCode[]
   tree                    Json?         @db.JsonB // GitHub tree data
   privacyMode             PrivacyMode   @default(PUBLIC) @map("privacy_mode")
   accessPasswordHash      String?       @map("access_password_hash")
@@ -261,6 +262,22 @@ model Annotation {
 
   @@index([siteId, path])
   @@index([siteId, status])
+}
+
+/// One-time code for the site-owner sign-in handshake (flowershow-1pr.15).
+/// Issued on the cloud host after checking the session and ownership, exchanged
+/// on the site host for a site-scoped owner cookie. Only a SHA-256 hash of the
+/// code is stored; the row is deleted when the code is used (single use).
+model SiteOwnerCode {
+  codeHash  String   @id @map("code_hash")
+  siteId    String   @map("site_id")
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
 }
 
 enum PublishSource {

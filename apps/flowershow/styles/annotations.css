@@ -84,7 +84,7 @@
 
 .fs-annotations-add {
   position: absolute;
-  z-index: 110;
+  z-index: 111; /* above the panel / phone sheet */
   font: inherit;
   font-size: 0.85rem;
   cursor: pointer;
@@ -113,8 +113,8 @@
 
 /* ── Panel ───────────────────────────────────────────── */
 
-/* Below 1280px the panel slides over the page (phones: A2 replaces this with a
-   bottom sheet). */
+/* 768–1279px: the panel slides over the right of the page. Phones get the
+   bottom sheet below; >=1280px it docks beside the text. */
 .fs-annotations-panel {
   position: fixed;
   top: 0;
@@ -132,6 +132,50 @@
 }
 .fs-annotations-panel:focus {
   outline: none;
+}
+
+/* Phones (<768px): a bottom sheet over the lower ~58% of the screen, so the
+   passage stays visible above it (the script scrolls it there). It rides above
+   the on-screen keyboard via --fs-keyboard-inset / --fs-visible-height, set
+   from visualViewport. */
+@media (max-width: 767px) {
+  .fs-annotations-panel {
+    top: auto;
+    left: 0;
+    bottom: var(--fs-keyboard-inset, 0px);
+    width: auto;
+    height: min(58vh, calc(var(--fs-visible-height, 100vh) - 3rem));
+    height: min(58dvh, calc(var(--fs-visible-height, 100dvh) - 3rem));
+    border-left: none;
+    border-top: 1px solid var(--color-foreground-100, #e7e5e4);
+    border-radius: 0.875rem 0.875rem 0 0;
+    box-shadow: 0 -8px 24px rgb(0 0 0 / 0.12);
+  }
+  .fs-annotations-panel .fs-annotations-header {
+    position: relative;
+    padding-top: 0.9rem;
+    touch-action: none; /* the header is the swipe-to-close area */
+  }
+  .fs-annotations-handle {
+    position: absolute;
+    top: 0.4rem;
+    left: 50%;
+    width: 2.25rem;
+    height: 0.25rem;
+    margin-left: -1.125rem;
+    border-radius: 9999px;
+    background: var(--color-foreground-200, #d6d3d1);
+  }
+  .fs-annotations-body {
+    overscroll-behavior: contain;
+  }
+  .fs-annotations-close {
+    padding: 0.25rem 0.5rem; /* bigger tap target */
+  }
+  /* Room to scroll the last paragraphs above the sheet. */
+  html.fs-comments-open body {
+    padding-bottom: 58vh;
+  }
 }
 
 /* >=1280px: docked under the navbar beside the page, which is narrowed so no
@@ -156,10 +200,8 @@
   html.fs-comments-open .layout-inner.has-toc {
     grid-template-columns: minmax(0, 1fr);
   }
-  /* The "Built with Flowershow" badge (inline-styled, fixed bottom right). */
-  html.fs-comments-open #built-with-button {
-    right: calc(var(--fs-comments-panel-width) + 2rem) !important;
-  }
+  /* The "Built with Flowershow" badge pins its inline styles with !important,
+     so page-annotations.tsx moves it left of the panel in script. */
 }
 
 .fs-annotations-header {
@@ -340,6 +382,28 @@ button.fs-annotations-quote:hover {
   border-top: 1px solid var(--color-foreground-100, #e7e5e4);
   font-size: 0.75rem;
   opacity: 0.7;
+}
+.fs-annotations-manage .fs-annotations-link + .fs-annotations-link,
+.fs-annotations-manage a + .fs-annotations-link {
+  margin-left: 0.75rem;
+}
+/* Owner sign-in (1pr.15): a quiet badge in the bar and per-comment actions. */
+.fs-comments-bar-owner {
+  flex-shrink: 0;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.fs-annotations-owner-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
 }
 .fs-annotations-error {
   margin: 0;

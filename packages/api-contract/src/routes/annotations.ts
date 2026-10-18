@@ -75,9 +75,9 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
     path: '/api/sites/id/{siteId}/annotations/bulk',
     operationId: 'bulkAnnotations',
     summary: 'Resolve, reopen or delete annotations',
-    description: 'Site owner only. Pass either `ids` or `all: true`; `path` narrows to one page.',
+    description: 'Site owner only: a bearer token, or the site owner cookie on the site’s own host (same-origin requests only). Pass either `ids` or `all: true`; `path` narrows to one page.',
     tags: ['Annotations'],
-    security: [{ bearerToken: [] }],
+    security: [{ bearerToken: [] }, { siteOwnerCookie: [] }],
     request: { params: siteParams, body: { content: { 'application/json': { schema: AnnotationsBulkRequest } } } },
     responses: {
       '200': ok('Number of annotations changed', AnnotationsBulkResponse),
@@ -94,7 +94,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
     operationId: 'getAnnotationSettings',
     summary: 'Annotations setting and open count',
     tags: ['Annotations'],
-    security: [{ bearerToken: [] }],
+    security: [{ bearerToken: [] }, { siteOwnerCookie: [] }],
     request: { params: siteParams },
     responses: {
       '200': ok('Setting and open count', AnnotationSettings),
@@ -112,7 +112,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
     description:
       'Writes the dashboard config (used by `fl publish --annotations`). A `config.json` value still wins, which the returned `annotationsEnabled` reflects.',
     tags: ['Annotations'],
-    security: [{ bearerToken: [] }],
+    security: [{ bearerToken: [] }, { siteOwnerCookie: [] }],
     request: { params: siteParams, body: { content: { 'application/json': { schema: UpdateAnnotationSettingsRequest } } } },
     responses: {
       '200': ok('Setting and open count after the change', AnnotationSettings),

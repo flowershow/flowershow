@@ -24,7 +24,7 @@ import {
   textOffsetAt,
 } from '@/lib/annotations/anchoring';
 import { ANNOTATION_LIMITS } from '@/lib/annotations/limits';
-import { CommentItem, CommentMeta, truncate } from './comment-item';
+import { CommentItem, type OwnerAction, truncate } from './comment-item';
 import { CommentsBar, PANEL_ID } from './comments-bar';
 import '@/styles/annotations.css';
 
@@ -44,6 +44,18 @@ export const HIGHLIGHT_CSS =
 const HIDE_DELAY_MS = 400;
 /** Rough size of the floating "Comment" button, for keeping it inside the viewport. */
 const ADD_BUTTON = { width: 110, height: 36, gap: 8, margin: 8 };
+/** Phones get a bottom sheet instead of a side panel (same breakpoint as annotations.css). */
+export const SHEET_QUERY = '(max-width: 767px)';
+/** At this width the panel docks beside the page (same breakpoint as annotations.css). */
+const DOCKED_QUERY = '(min-width: 1280px)';
+/** The "Built with Flowershow" badge pins its own inline styles with !important, so CSS can't move it. */
+const BUILT_WITH_ID = 'built-with-button';
+/** How far a downward swipe on the sheet's header must travel to close it. */
+const SWIPE_CLOSE_PX = 60;
+/** Owner sign-in endpoints on the site's own host (flowershow-1pr.15). */
+export const OWNER_ME_PATH = '/_flowershow/owner/me';
+export const OWNER_SIGNIN_PATH = '/_flowershow/owner/signin';
+export const OWNER_SIGNOUT_PATH = '/_flowershow/owner/signout';
 
 type Placed = { annotation: Annotation; start: number; end: number };
 type PendingSelection = DescribedSelection & { top: number; left: number };
@@ -139,6 +151,24 @@ function measureNavbar(): { height: number; fixed: boolean } {
   };
 }
 
+/**
+ * With the bottom sheet open (lower ~58% of the screen), scroll the page so `range`
+ * starts a quarter of the way down the viewport: clear of sticky headers (navbar,
+ * sidebar subnav) and above the sheet.
+ */
+export function revealAboveSheet(range: Range | null) {
+  if (!range || typeof range.getBoundingClientRect !== 'function') return;
+  const top = range.getBoundingClientRect().top;
+  const target = Math.max(
+    measureNavbar().height + 16,
+    window.innerHeight * 0.25,
+  );
+  window.scrollTo({
+    top: Math.max(0, window.scrollY + top - target),
+    behavior: 'smooth',
+  });
+}
+
 export default function PageAnnotations({
   siteId,
   pagePath,
@@ -150,6 +180,9 @@ export default function PageAnnotations({
   /** The page has the Markdown root to annotate (no root: render nothing). */
   const [hasRoot, setHasRoot] = useState(true);
   const [isTouch, setIsTouch] = useState(false);
+  /** Phone layout: the panel is a bottom sheet. */
+  const [isSheet, setIsSheet] = useState(false);
+  const isSheetRef = useRef(false);
   /** A fixed (out-of-flow) navbar's height: the bar is pushed below it. */
   const [fixedNavHeight, setFixedNavHeight] = useState(0);
   const [annotations, setAnnotations] = useState<Annotation[]>([]);
@@ -165,6 +198,9 @@ export default function PageAnnotations({
   const [editingName, setEditingName] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Signed in as the site owner (site-scoped cookie), fetched after load. */
+  const [isOwner, setIsOwner] = useState(false);
+  const [ownerError, setOwnerError] = useState<string | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -175,6 +211,8 @@ export default function PageAnnotations({
   const returnFocusRef = useRef<HTMLElement | null>(null);
   /** Move focus into the panel once it renders (opened from the bar, not the composer). */
   const focusPanelRef = useRef(false);
+  /** Where a swipe on the sheet's header started. */
+  const swipeStartRef = useRef<number | null>(null);
 
   const endpoint = `/api/sites/id/${encodeURIComponent(siteId)}/annotations`;
 
@@ -189,6 +227,19 @@ export default function PageAnnotations({
     setRememberedName(stored);
     setName(stored);
   }, [rootId]);
+
+  // Track the phone breakpoint: below it the panel is a bottom sheet.
+  useEffect(() => {
+    if (typeof window.matchMedia !== 'function') return;
+    const query = window.matchMedia(SHEET_QUERY);
+    const update = () => {
+      isSheetRef.current = query.matches;
+      setIsSheet(query.matches);
+    };
+    update();
+    query.addEventListener?.('change', update);
+    return () => query.removeEventListener?.('change', update);
+  }, []);
 
   // Keep the bar (and the docked panel) just under the navbar, whatever the theme makes it.
   useEffect(() => {
@@ -225,6 +276,73 @@ export default function PageAnnotations({
       cancelled = true;
     };
   }, [endpoint, pagePath]);
+
+  // Owner status comes from a same-origin fetch, never from the page HTML (which stays cacheable).
+  useEffect(() => {
+    let cancelled = false;
+    fetch(OWNER_ME_PATH, { credentials: 'same-origin', cache: 'no-store' })
+      .then((res) =>
+        res.ok ? (res.json() as Promise<{ isOwner?: unknown }>) : null,
+      )
+      .then((data) => {
+        if (!cancelled) setIsOwner(data?.isOwner === true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const runOwnerAction = async (
+    annotation: Annotation,
+    action: OwnerAction,
+  ) => {
+    if (
+      action === 'delete' &&
+      !window.confirm('Delete this comment? This cannot be undone.')
+    )
+      return;
+    setOwnerError(null);
+    try {
+      const res = await fetch(`${endpoint}/bulk`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ids: [annotation.id] }),
+      });
+      if (res.status === 401 || res.status === 403) {
+        setIsOwner(false);
+        throw new Error('Your owner sign-in has expired. Sign in again.');
+      }
+      if (!res.ok) throw new Error('Could not update the comment.');
+      setAnnotations((previous) =>
+        action === 'delete'
+          ? previous.filter((a) => a.id !== annotation.id)
+          : previous.map((a) =>
+              a.id === annotation.id
+                ? { ...a, status: action === 'resolve' ? 'resolved' : 'open' }
+                : a,
+            ),
+      );
+    } catch (err) {
+      setOwnerError(
+        err instanceof Error ? err.message : 'Could not update the comment.',
+      );
+    }
+  };
+
+  const signOutOwner = async () => {
+    await fetch(OWNER_SIGNOUT_PATH, {
+      method: 'POST',
+      credentials: 'same-origin',
+    }).catch(() => {});
+    setIsOwner(false);
+  };
+
+  const ownerActionFor = (annotation: Annotation) =>
+    isOwner
+      ? (action: OwnerAction) => void runOwnerAction(annotation, action)
+      : undefined;
 
   const openAnnotations = annotations.filter((a) => a.status === 'open');
   const resolvedAnnotations = annotations.filter(
@@ -342,18 +460,25 @@ export default function PageAnnotations({
       );
       if (!hit) return;
       setFocusedId(hit.annotation.id);
+      if (isSheetRef.current) {
+        // Phone: the sheet takes the bottom of the screen, so lift the passage above it.
+        focusPanelRef.current = true;
+        revealAboveSheet(rangeFromOffsets(root, hit.start, hit.end));
+      }
       setOpen(true);
     };
     root.addEventListener('click', onClick);
     return () => root.removeEventListener('click', onClick);
   }, [rootId]);
 
+  // Bring the focused comment into view, unless the composer (top of the panel) is open.
+  const drafting = draft !== null;
   useEffect(() => {
-    if (open && focusedId)
+    if (open && focusedId && !drafting)
       document
         .getElementById(`fs-annotation-${focusedId}`)
         ?.scrollIntoView?.({ block: 'nearest' });
-  }, [open, focusedId]);
+  }, [open, focusedId, drafting]);
 
   // While open: dock the panel (CSS on <html>), close on Escape, and hand focus back on close.
   useEffect(() => {
@@ -369,13 +494,37 @@ export default function PageAnnotations({
       if (event.key === 'Escape') setOpen(false);
     };
     document.addEventListener('keydown', onKeyDown);
+    const unshiftBadge = shiftBuiltWithBadge();
     return () => {
       document.removeEventListener('keydown', onKeyDown);
+      unshiftBadge();
       html.classList.remove(OPEN_CLASS);
       // The toggle may only exist once the panel has opened, so read it now.
       returnFocus(panel, returnFocusRef, toggleRef);
     };
   }, [open]);
+
+  // Phone sheet: keep it above the on-screen keyboard (the visual viewport shrinks, the layout one doesn't).
+  useEffect(() => {
+    const panel = panelRef.current;
+    const viewport = window.visualViewport;
+    if (!open || !isSheet || !panel || !viewport) return;
+    const update = () => {
+      const inset = Math.max(
+        0,
+        window.innerHeight - viewport.height - viewport.offsetTop,
+      );
+      panel.style.setProperty('--fs-keyboard-inset', `${inset}px`);
+      panel.style.setProperty('--fs-visible-height', `${viewport.height}px`);
+    };
+    update();
+    viewport.addEventListener('resize', update);
+    viewport.addEventListener('scroll', update);
+    return () => {
+      viewport.removeEventListener('resize', update);
+      viewport.removeEventListener('scroll', update);
+    };
+  }, [open, isSheet]);
 
   const togglePanel = () => {
     if (open) {
@@ -389,8 +538,16 @@ export default function PageAnnotations({
 
   const startDraft = () => {
     if (!selection) return;
+    if (isSheetRef.current) {
+      const current = document.getSelection();
+      revealAboveSheet(
+        current && current.rangeCount > 0 ? current.getRangeAt(0) : null,
+      );
+    }
     setDraft({ selector: selection.selector, truncated: selection.truncated });
     setSelection(null);
+    // The composer takes focus, not the panel.
+    focusPanelRef.current = false;
     setEditingName(!rememberedName);
     setError(null);
     setOpen(true);
@@ -458,6 +615,10 @@ export default function PageAnnotations({
     setFocusedId(item.annotation.id);
     const root = document.getElementById(rootId);
     const range = root ? rangeFromOffsets(root, item.start, item.end) : null;
+    if (isSheetRef.current) {
+      revealAboveSheet(range);
+      return;
+    }
     range?.startContainer.parentElement?.scrollIntoView?.({
       behavior: 'smooth',
       block: 'center',
@@ -476,6 +637,7 @@ export default function PageAnnotations({
         onToggle={togglePanel}
         toggleRef={toggleRef}
         style={fixedNavHeight ? { marginTop: fixedNavHeight } : undefined}
+        isOwner={isOwner}
       />
       {mounted &&
         createPortal(
@@ -505,11 +667,43 @@ export default function PageAnnotations({
               <aside
                 ref={panelRef}
                 id={PANEL_ID}
-                className="fs-annotations-panel"
+                className={
+                  isSheet
+                    ? 'fs-annotations-panel is-sheet'
+                    : 'fs-annotations-panel'
+                }
+                // Phones: a non-modal sheet over the bottom of the page.
+                role={isSheet ? 'dialog' : undefined}
+                aria-modal={isSheet ? false : undefined}
                 aria-label="Comments"
                 tabIndex={-1}
               >
-                <div className="fs-annotations-header">
+                <div
+                  className="fs-annotations-header"
+                  // Swipe down on the sheet's header to close it.
+                  onTouchStart={(event) => {
+                    swipeStartRef.current = isSheet
+                      ? (event.touches[0]?.clientY ?? null)
+                      : null;
+                  }}
+                  onTouchEnd={(event) => {
+                    const start = swipeStartRef.current;
+                    swipeStartRef.current = null;
+                    const end = event.changedTouches[0]?.clientY;
+                    if (
+                      start !== null &&
+                      end !== undefined &&
+                      end - start > SWIPE_CLOSE_PX
+                    )
+                      setOpen(false);
+                  }}
+                >
+                  {isSheet && (
+                    <span
+                      className="fs-annotations-handle"
+                      aria-hidden="true"
+                    />
+                  )}
                   <h2>Comments{count > 0 && <span> ({count})</span>}</h2>
                   <button
                     type="button"
@@ -521,6 +715,11 @@ export default function PageAnnotations({
                   </button>
                 </div>
                 <div className="fs-annotations-body">
+                  {ownerError && (
+                    <p role="alert" className="fs-annotations-error">
+                      {ownerError}
+                    </p>
+                  )}
                   {draft && (
                     <form className="fs-annotations-form" onSubmit={submit}>
                       <blockquote className="fs-annotations-quote">
@@ -596,6 +795,7 @@ export default function PageAnnotations({
                           annotation={item.annotation}
                           focused={item.annotation.id === focusedId}
                           onSelect={() => scrollTo(item)}
+                          onOwnerAction={ownerActionFor(item.annotation)}
                         />
                       ))}
                     </ol>
@@ -609,6 +809,7 @@ export default function PageAnnotations({
                             key={annotation.id}
                             annotation={annotation}
                             focused={annotation.id === focusedId}
+                            onOwnerAction={ownerActionFor(annotation)}
                           />
                         ))}
                       </ol>
@@ -619,28 +820,43 @@ export default function PageAnnotations({
                       <summary>Resolved ({resolvedAnnotations.length})</summary>
                       <ol className="fs-annotations-list">
                         {resolvedAnnotations.map((annotation) => (
-                          <li
+                          <CommentItem
                             key={annotation.id}
-                            id={`fs-annotation-${annotation.id}`}
-                            className="fs-annotations-item"
-                          >
-                            <blockquote className="fs-annotations-quote">
-                              “{truncate(annotation.selector.exact, 140)}”
-                            </blockquote>
-                            <p className="fs-annotations-note">
-                              {annotation.note}
-                            </p>
-                            <CommentMeta annotation={annotation} />
-                          </li>
+                            annotation={annotation}
+                            onOwnerAction={ownerActionFor(annotation)}
+                          />
                         ))}
                       </ol>
                     </details>
                   )}
                 </div>
                 <p className="fs-annotations-manage">
-                  <a href={manageUrl} target="_blank" rel="noopener noreferrer">
-                    Site owner? Manage comments
-                  </a>
+                  {isOwner ? (
+                    <>
+                      <a
+                        href={manageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Manage all comments
+                      </a>
+                      <button
+                        type="button"
+                        className="fs-annotations-link"
+                        onClick={() => void signOutOwner()}
+                      >
+                        Sign out as owner
+                      </button>
+                    </>
+                  ) : (
+                    <a
+                      href={`${OWNER_SIGNIN_PATH}?return=${encodeURIComponent(
+                        window.location.pathname + window.location.search,
+                      )}`}
+                    >
+                      Site owner? Sign in to manage comments
+                    </a>
+                  )}
                 </p>
               </aside>
             )}
@@ -670,6 +886,38 @@ function returnFocus(
     panel?.contains(active)
   )
     target?.focus({ preventScroll: true });
+}
+
+/**
+ * While the docked panel is open, move the fixed "Built with Flowershow" badge left of
+ * it so it doesn't sit on the panel's footer. Below the docked width the panel/sheet
+ * stacks above the badge, so it stays put. Returns a function that undoes the shift.
+ */
+function shiftBuiltWithBadge(): () => void {
+  const badge = document.getElementById(BUILT_WITH_ID);
+  if (!badge || typeof window.matchMedia !== 'function') return () => {};
+  const query = window.matchMedia(DOCKED_QUERY);
+  const original = {
+    value: badge.style.getPropertyValue('right'),
+    priority: badge.style.getPropertyPriority('right'),
+  };
+  const restore = () =>
+    badge.style.setProperty('right', original.value, original.priority);
+  const update = () => {
+    if (query.matches)
+      badge.style.setProperty(
+        'right',
+        'calc(var(--fs-comments-panel-width, 20rem) + 2rem)',
+        'important',
+      );
+    else restore();
+  };
+  update();
+  query.addEventListener?.('change', update);
+  return () => {
+    query.removeEventListener?.('change', update);
+    restore();
+  };
 }
 
 // CSS Custom Highlight API: highlights without touching the React-owned DOM.

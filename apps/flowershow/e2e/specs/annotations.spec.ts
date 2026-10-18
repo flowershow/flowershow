@@ -158,6 +158,16 @@ test('At 1440px the bar sticks under the navbar and the open panel sits beside t
   const panelBox = (await panel.boundingBox())!;
   const textBox = (await page.locator('#page-main').boundingBox())!;
   expect(textBox.x + textBox.width).toBeLessThanOrEqual(panelBox.x);
+  // The "Built with Flowershow" badge (free sites) moves left of the panel.
+  const badge = page.locator('#built-with-button');
+  if (await badge.count()) {
+    await expect
+      .poll(async () => {
+        const box = (await badge.boundingBox())!;
+        return box.x + box.width <= panelBox.x;
+      })
+      .toBe(true);
+  }
 
   const barTopBefore = (await bar.boundingBox())!.y;
   await page.mouse.wheel(0, 800);
@@ -172,11 +182,63 @@ test('At 1440px the bar sticks under the navbar and the open panel sits beside t
 
   await page.getByRole('button', { name: 'Hide comments' }).click();
   await expect(panel).toHaveCount(0);
+  if (await badge.count())
+    await expect
+      .poll(async () => (await badge.boundingBox())!.x)
+      .toBeGreaterThan(panelBox.x);
   expect(
     await page.evaluate(() =>
       document.documentElement.classList.contains('fs-comments-open'),
     ),
   ).toBe(false);
+});
+
+test('An anonymous visitor is not the owner and is offered owner sign-in', async ({
+  page,
+  basePath,
+}) => {
+  // Owner state is a separate, never-cached request; page HTML stays anonymous.
+  const me = await page.request.get(`${basePath}/_flowershow/owner/me`);
+  expect(me.status()).toBe(200);
+  expect(await me.json()).toEqual({ isOwner: false });
+  expect(me.headers()['cache-control']).toBe('private, no-store');
+
+  // A forged owner cookie changes nothing.
+  const forged = await page.request.get(`${basePath}/_flowershow/owner/me`, {
+    headers: {
+      cookie: 'fs_site_owner=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.forged',
+    },
+  });
+  expect(await forged.json()).toEqual({ isOwner: false });
+
+  // Sign-in hands off to the cloud host; an absolute return URL is dropped.
+  const signin = await page.request.get(
+    `${basePath}/_flowershow/owner/signin?return=https%3A%2F%2Fevil.example`,
+    { maxRedirects: 0 },
+  );
+  expect(signin.status()).toBe(302);
+  const location = new URL(signin.headers().location!);
+  expect(location.pathname).toMatch(
+    /^\/api\/sites\/id\/[^/]+\/owner\/authorize$/,
+  );
+  expect(location.searchParams.get('return')).toBe('/');
+
+  // A made-up code never signs anyone in.
+  const callback = await page.request.get(
+    `${basePath}/_flowershow/owner/callback?code=made-up&return=%2F`,
+    { maxRedirects: 0 },
+  );
+  expect(callback.status()).toBe(400);
+  expect(callback.headers()['set-cookie']).toBeUndefined();
+
+  await page.goto(`${basePath}${PAGE}`);
+  await selectText(page, 'quick brown fox');
+  await page.getByRole('button', { name: 'Comment', exact: true }).click();
+  const panel = page.getByRole('complementary', PANEL);
+  await expect(
+    panel.getByRole('link', { name: 'Site owner? Sign in to manage comments' }),
+  ).toHaveAttribute('href', /^\/_flowershow\/owner\/signin\?return=%2F/);
+  await expect(page.locator('.fs-comments-bar-owner')).toHaveCount(0);
 });
 
 test.describe('on a phone', () => {
@@ -192,18 +254,21 @@ test.describe('on a phone', () => {
     await page.goto(`${basePath}${PAGE}`);
     await expect(page.locator('.fs-comments-bar')).toBeVisible();
     await selectText(page, 'quick brown fox');
-    const sheet = page.getByRole('button', { name: 'Comment', exact: true });
-    await expect(sheet).toHaveClass(/is-touch/);
-    const box = await sheet.boundingBox();
+    const addButton = page.getByRole('button', {
+      name: 'Comment',
+      exact: true,
+    });
+    await expect(addButton).toHaveClass(/is-touch/);
+    const box = await addButton.boundingBox();
     const viewport = page.viewportSize();
     // Above Android's Touch-to-Search bar, below the selection menu area.
     expect(
       box && viewport && viewport.height - (box.y + box.height),
     ).toBeGreaterThan(50);
-    await sheet.tap();
+    await addButton.tap();
     await page.getByLabel('Comment', { exact: true }).fill(note);
     await page.getByRole('button', { name: 'Post', exact: true }).tap();
-    await expect(page.getByRole('complementary', PANEL)).toHaveCount(0); // closes after save on touch
+    await expect(page.getByRole('dialog', PANEL)).toHaveCount(0); // closes after save on touch
     // The Next.js dev-only overlay badge can sit over page controls on a
     // phone-sized viewport and swallow taps; it doesn't exist in production.
     await page.evaluate(() => {
@@ -211,6 +276,68 @@ test.describe('on a phone', () => {
     });
     await page.evaluate(() => window.scrollTo(0, 0)); // the bar isn't sticky on phones
     await page.getByRole('button', { name: 'Show comments' }).tap();
-    await expect(page.getByRole('complementary', PANEL)).toContainText(note);
+    const sheet = page.getByRole('dialog', PANEL);
+    await expect(sheet).toContainText(note);
+    // A bottom sheet, not a full-height panel: the top of the page stays visible.
+    const sheetBox = await sheet.boundingBox();
+    expect(sheetBox && viewport && sheetBox.y).toBeGreaterThan(
+      viewport!.height * 0.3,
+    );
+    expect(sheetBox && viewport && sheetBox.y + sheetBox.height).toBeCloseTo(
+      viewport!.height,
+      0,
+    );
+    await page.getByRole('button', { name: 'Close comments' }).tap();
+    await expect(sheet).toHaveCount(0);
+    await expect(
+      page.getByRole('button', { name: 'Show comments' }),
+    ).toBeFocused();
+  });
+
+  test('tapping a highlight opens the sheet with the passage visible above it', async ({
+    page,
+    basePath,
+  }) => {
+    await page.goto(`${basePath}${PAGE}`);
+    await page.waitForLoadState('networkidle');
+    await expect
+      .poll(() =>
+        page.evaluate(() => CSS.highlights.get('fs-annotation')?.size ?? 0),
+      )
+      .toBeGreaterThan(0);
+    await page.evaluate(() => {
+      for (const el of document.querySelectorAll('nextjs-portal')) el.remove();
+    });
+    // Tap the middle of the first highlighted passage.
+    const point = await page.evaluate(() => {
+      const highlight = CSS.highlights.get('fs-annotation');
+      const range = highlight && ([...highlight][0] as Range);
+      range?.startContainer.parentElement?.scrollIntoView({
+        block: 'end',
+        behavior: 'instant',
+      });
+      const rect = range?.getClientRects()[0];
+      return (
+        rect && { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }
+      );
+    });
+    expect(point).toBeTruthy();
+    await page.touchscreen.tap(point!.x, point!.y);
+    const sheet = page.getByRole('dialog', PANEL);
+    await expect(sheet).toBeVisible();
+    await expect(sheet.locator('.is-focused')).toHaveCount(1);
+    // The passage is scrolled into the part of the screen above the sheet.
+    await expect
+      .poll(async () => {
+        const sheetTop = (await sheet.boundingBox())?.y ?? 0;
+        const passageBottom = await page.evaluate(() => {
+          const range = [
+            ...(CSS.highlights.get('fs-annotation-active') ?? []),
+          ][0] as Range | undefined;
+          return range?.getBoundingClientRect().bottom ?? Infinity;
+        });
+        return passageBottom < sheetTop && passageBottom > 0;
+      })
+      .toBe(true);
   });
 });

@@ -5,6 +5,7 @@ import { ANON_PAGE_CSP } from './lib/anon-site-safety';
 import {
   rewriteRawIfNeeded,
   rewriteSocialCardIfNeeded,
+  siteOwnerRouteIfNeeded,
   withAnonPageCsp,
 } from './middleware';
 
@@ -220,5 +221,49 @@ describe('withAnonPageCsp (flowershow-ctv)', () => {
   it('leaves claimed site pages unchanged', () => {
     const res = withAnonPageCsp(NextResponse.next(), 'alice');
     expect(res.headers.get('content-security-policy')).toBeNull();
+  });
+});
+
+describe('siteOwnerRouteIfNeeded — owner sign-in handshake (1pr.15)', () => {
+  const site = { id: 'site-1' };
+  const go = (path: string) =>
+    siteOwnerRouteIfNeeded(
+      new NextRequest(`http://notes-alice.test.localhost${path}`),
+      site,
+      null,
+    );
+
+  it('sends sign-in to the cloud authorize endpoint for this host’s site', () => {
+    const res = go('/_flowershow/owner/signin?return=%2Fnotes%2Fdraft');
+    expect(res?.status).toBe(302);
+    expect(res?.headers.get('location')).toBe(
+      'http://cloud.test.localhost/api/sites/id/site-1/owner/authorize?return=%2Fnotes%2Fdraft',
+    );
+  });
+
+  it('drops an absolute return URL on sign-in', () => {
+    const res = go('/_flowershow/owner/signin?return=https%3A%2F%2Fevil.com');
+    expect(
+      new URL(res!.headers.get('location')!).searchParams.get('return'),
+    ).toBe('/');
+  });
+
+  it('rewrites callback, me and signout to the site’s own API routes', () => {
+    const callback = rewriteTarget(
+      go('/_flowershow/owner/callback?code=c&return=%2F'),
+    );
+    expect(callback.pathname).toBe('/api/sites/id/site-1/owner/callback');
+    expect(callback.searchParams.get('code')).toBe('c');
+    expect(rewriteTarget(go('/_flowershow/owner/me')).pathname).toBe(
+      '/api/sites/id/site-1/owner/me',
+    );
+    expect(rewriteTarget(go('/_flowershow/owner/signout')).pathname).toBe(
+      '/api/sites/id/site-1/owner/signout',
+    );
+  });
+
+  it('leaves other paths alone', () => {
+    expect(go('/_flowershow/owner')).toBeNull();
+    expect(go('/notes')).toBeNull();
   });
 });
