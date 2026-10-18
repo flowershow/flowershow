@@ -33,3 +33,6 @@ checksum:
 
 release:
   name_template: "{{.Tag}}"
+  # install.sh and the docs' releases/latest/download links rely on the newest
+  # CLI release being the repo's "Latest" release.
+  make_latest: true

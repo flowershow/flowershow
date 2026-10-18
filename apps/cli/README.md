@@ -18,6 +18,8 @@ This detects your OS and architecture, downloads the latest release binary, and 
 curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | FL_INSTALL_DIR="$HOME/.local/bin" sh
 ```
 
+To install a specific version, set `FL_VERSION` (e.g. `FL_VERSION=2.6.0`).
+
 **Windows** — download `fl_windows_amd64.zip` (or `fl_windows_arm64.zip`) from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and add the extracted `fl.exe` to your `PATH`.
 
 > [!WARNING]
