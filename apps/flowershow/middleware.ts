@@ -8,6 +8,7 @@ import { ANON_PAGE_CSP } from './lib/anon-site-safety';
 import { SITE_ACCESS_COOKIE_NAME } from './lib/const';
 import type { InternalSite } from './lib/db/internal';
 import { getSiteUrl } from './lib/get-site-url';
+import { oauthEnabled } from './lib/oauth/config';
 import { resolveSiteAlias } from './lib/resolve-site-alias';
 import PostHogClient from './lib/server-posthog';
 import { siteKeyBytes } from './lib/site-hmac-key';
@@ -182,6 +183,9 @@ export default async function middleware(req: NextRequest) {
     if (pathname === '/report-abuse') {
       return rewrite(`/dragndrop${path}`, req, phBootstrap);
     }
+
+    const oauthPath = oauthRewritePath(pathname);
+    if (oauthPath) return rewrite(`${oauthPath}${search}`, req, phBootstrap);
   }
 
   // 7a) Root site domain (e.g. flowershow.me) — redirect to home
@@ -345,6 +349,37 @@ export default async function middleware(req: NextRequest) {
 }
 
 /* ───────────────────────────── Helpers ───────────────────────────── */
+
+const OAUTH_ENDPOINTS = new Set([
+  '/oauth/authorize',
+  '/oauth/token',
+  '/oauth/register',
+  '/oauth/revoke',
+]);
+
+/**
+ * MCP OAuth authorization server on the home domain (flowershow-3fr): map
+ * /.well-known/* discovery and /oauth/* endpoints to their route handlers.
+ * Returns null (fall through to the content site) when switched off.
+ */
+export function oauthRewritePath(pathname: string): string | null {
+  if (!oauthEnabled()) return null;
+  if (OAUTH_ENDPOINTS.has(pathname)) return `/api${pathname}`;
+  if (
+    pathname === '/.well-known/oauth-authorization-server' ||
+    pathname === '/.well-known/openid-configuration'
+  ) {
+    return `/api/oauth/well-known${pathname.slice('/.well-known'.length)}`;
+  }
+  if (
+    pathname === '/.well-known/oauth-protected-resource' ||
+    pathname === '/.well-known/oauth-protected-resource/api/mcp' ||
+    pathname === '/.well-known/oauth-protected-resource/api/mcp/account'
+  ) {
+    return `/api/oauth/well-known${pathname.slice('/.well-known'.length)}`;
+  }
+  return null;
+}
 
 /**
  * Anonymous (unclaimed) sites' rendered pages may not submit forms: raw HTML

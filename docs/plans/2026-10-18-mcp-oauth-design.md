@@ -187,6 +187,19 @@ Each is one PR; chained in this order. Beads are children of `flowershow-3fr`.
 5. **Manual test in claude.ai and ChatGPT (Rufus).** Not a PR. claude.ai web + mobile, Claude Desktop, ChatGPT developer mode: add `https://flowershow.app/api/mcp/account`, sign in, consent, publish a new site, update it in a new chat, claim an anon site from chat, revoke and reconnect. Record findings as beads.
 6. **Docs, changelog and drop "beta".** The checklist below. Acceptance: no "beta" for the connector anywhere in `content/flowershow-app`; changelog entry with a real consent-screen screenshot; skill updated.
 
+## Implementation notes (deviations from the above)
+
+Recorded as the PRs landed; each says why.
+
+- **Kill switch `MCP_OAUTH_ENABLED`** (PR 1). The `/.well-known/oauth-*` and `/oauth/*` rewrites, and the `/api/oauth/*` handlers, answer 404 unless it is `true`. PR 1 and PR 2 merge before the signed-in endpoint exists; if discovery metadata went live first, a client that probes the origin for OAuth metadata could start a flow that has no endpoint behind it yet. Turn it on together with PR 3, and it stays as an off switch afterwards.
+- **Protected resource metadata ships in PR 1**, not PR 3, with the other discovery documents (behind the same switch).
+- **Rate limits use a new `OAuthRateLimit` table** (fixed window, one `INSERT ... ON CONFLICT` per request) rather than `lib/anon-rate-limit.ts`, which only counts anonymous sites per IP hash and can't count arbitrary events. Old windows are swept opportunistically. Revoke is also limited (60/min/IP).
+- **Schema additions**: `OAuthAuthorizationCode` has a `grant` relation (cascade delete) and `createdAt`; `OAuthGrant` is indexed on `clientId`; `OAuthPendingRequest` has `createdAt`.
+- **CIMD fetch details**: default port (443) only; if any address the host resolves to is non-public the fetch is refused (checked inside the socket's own DNS lookup, so there is no DNS-rebinding gap); IPv4-mapped, NAT64 and 6to4 IPv6 ranges are blocked too; the document must be served as JSON (`application/json` or `application/*+json`); if a refetch after the 24 h cache fails, the stale copy is not used (fail closed).
+- **Refresh token presented by the wrong `client_id`** returns `invalid_grant` without consuming the token (so a third party can't trigger reuse-revocation of someone else's grant with a mismatched client). Any presentation of an already-used refresh token by its own client revokes the grant, including a client racing itself.
+- **Token endpoint refuses client authentication** (`Authorization` header or `client_secret`) with `invalid_client`, since every client is public.
+- **Cleanup**: apart from rate-limit windows, expired-row cleanup stays in PR 4 as planned.
+
 ## Drop the "beta" label: checklist
 
 Only after the manual test bead passes in both apps.
