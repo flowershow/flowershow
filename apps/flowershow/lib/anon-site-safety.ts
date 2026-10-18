@@ -1,8 +1,5 @@
 import { env } from '@/env.mjs';
-import {
-  ANONYMOUS_USER_ID,
-  ANONYMOUS_USERNAME,
-} from './anonymous-user-constants';
+import { ANONYMOUS_USER_ID } from './anonymous-user-constants';
 
 /**
  * Abuse controls for anonymous (unclaimed) sites (flowershow-ctv).
@@ -44,11 +41,6 @@ export const ANON_PAGE_CSP = "form-action 'none'";
 /** A site is anonymous until claimed: claiming moves it to a real user. */
 export function isAnonymousSite(site: { userId: string }): boolean {
   return site.userId === ANONYMOUS_USER_ID;
-}
-
-/** Same check from the middleware's site lookup, which only carries the username. */
-export function isAnonymousUsername(username: string | null | undefined) {
-  return username === ANONYMOUS_USERNAME;
 }
 
 /** Extra response headers for a raw .html file (empty for claimed sites). */

@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import type { PostHog } from 'posthog-node';
 import { env } from '@/env.mjs';
-import { ANON_PAGE_CSP, isAnonymousUsername } from './lib/anon-site-safety';
+import { ANON_PAGE_CSP } from './lib/anon-site-safety';
 import { SITE_ACCESS_COOKIE_NAME } from './lib/const';
 import type { InternalSite } from './lib/db/internal';
 import { getSiteUrl } from './lib/get-site-url';
@@ -274,7 +274,7 @@ export default async function middleware(req: NextRequest) {
         req,
         phBootstrap,
       ),
-      username,
+      site.anonymous === true,
     );
   }
 
@@ -350,8 +350,8 @@ export default async function middleware(req: NextRequest) {
  * Anonymous (unclaimed) sites' rendered pages may not submit forms: raw HTML
  * in their Markdown is not sanitised (flowershow-ctv). Claimed sites: unchanged.
  */
-export function withAnonPageCsp(res: NextResponse, username: string) {
-  if (isAnonymousUsername(username)) {
+export function withAnonPageCsp(res: NextResponse, anonymous: boolean) {
+  if (anonymous) {
     res.headers.set('Content-Security-Policy', ANON_PAGE_CSP);
   }
   return res;
@@ -416,7 +416,7 @@ async function fetchSite(req: NextRequest, apiPath: string) {
     });
     if (!res.ok) throw new Error('Site fetch failed');
     const site = await res.json();
-    return (site as InternalSite) ?? null;
+    return (site as InternalSite & { anonymous?: boolean }) ?? null;
   } catch {
     return null;
   }

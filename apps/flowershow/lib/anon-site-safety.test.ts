@@ -4,7 +4,6 @@ import {
   ANON_HTML_CSP,
   injectAnonBanner,
   isAnonymousSite,
-  isAnonymousUsername,
   rawHtmlSafetyHeaders,
   reportAbuseUrl,
 } from './anon-site-safety';
@@ -39,13 +38,10 @@ describe('rawHtmlSafetyHeaders', () => {
   });
 });
 
-describe('isAnonymousSite / isAnonymousUsername', () => {
+describe('isAnonymousSite', () => {
   it('is true only for the anonymous user', () => {
     expect(isAnonymousSite({ userId: ANONYMOUS_USER_ID })).toBe(true);
     expect(isAnonymousSite({ userId: 'user-123' })).toBe(false);
-    expect(isAnonymousUsername('anon')).toBe(true);
-    expect(isAnonymousUsername('alice')).toBe(false);
-    expect(isAnonymousUsername(undefined)).toBe(false);
   });
 });
 
