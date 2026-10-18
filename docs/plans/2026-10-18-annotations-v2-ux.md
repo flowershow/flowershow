@@ -132,9 +132,9 @@ Keep Phase 0's floating **Annotate** button, clamped to the viewport (`1pr.6`). 
 
 Order: A1 → A2. Both ship behind the existing per-site annotations setting; no migration, no API change.
 
-## 5. Owner / logged-in viewer: pending spike
+## 5. Owner / logged-in viewer (spike `flowershow-1pr.12`)
 
-Placeholder. Whether a site page can know its owner (or any logged-in user) is viewing it is being investigated in `flowershow-1pr.12`. Its findings will be added here and feed both streams: in A, possibly owner-only controls in the top bar (e.g. "Manage", "Turn off"); in B, author badges and who may resolve. Stream A assumes no owner detection.
+Findings: [2026-10-18-site-owner-session-spike.md](2026-10-18-site-owner-session-spike.md). Today a site page does not know who is viewing it: the session cookie is scoped to `.flowershow.app`, so it never reaches `*.flowershow.me` or custom domains, and the overlay calls the API anonymously. Recommended: a redirect handshake ("View as owner" from the dashboard or "Sign in as owner" on the site) that issues a short-lived, site-scoped cookie, with the page fetching `{isOwner}` after load so HTML stays cacheable. Stream A assumes no owner detection; once the handshake exists it can add owner-only controls to the top bar (e.g. "Manage", "Turn off"), and stream B can use it for author badges and who may resolve.
 
 ## 6. Stream B (later): replies and resolving, job stories first
 
