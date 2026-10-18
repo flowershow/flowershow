@@ -1,7 +1,7 @@
 #!/usr/bin/env sh
 set -e
 
-BASE_URL="https://github.com/flowershow/flowershow/releases/latest/download"
+REPO="flowershow/flowershow"
 BINARY="fl"
 # Override with FL_INSTALL_DIR to install somewhere you can write without sudo,
 # e.g. FL_INSTALL_DIR="$HOME/.local/bin" (useful for AI agents and CI).
@@ -14,7 +14,7 @@ case "$OS" in
   Darwin) OS="darwin" ;;
   *)
     echo "Unsupported OS: $OS"
-    echo "Please download manually from https://github.com/flowershow/flowershow/releases"
+    echo "Please download manually from https://github.com/${REPO}/releases"
     exit 1
     ;;
 esac
@@ -26,25 +26,64 @@ case "$ARCH" in
   arm64 | aarch64) ARCH="arm64" ;;
   *)
     echo "Unsupported architecture: $ARCH"
-    echo "Please download manually from https://github.com/flowershow/flowershow/releases"
+    echo "Please download manually from https://github.com/${REPO}/releases"
     exit 1
     ;;
 esac
 
-ARCHIVE="${BINARY}_${OS}_${ARCH}.tar.gz"
-URL="${BASE_URL}/${ARCHIVE}"
+if command -v curl >/dev/null 2>&1; then
+  fetch() { curl -fsSL "$1"; }
+elif command -v wget >/dev/null 2>&1; then
+  fetch() { wget -qO- "$1"; }
+else
+  echo "Error: curl or wget is required"
+  exit 1
+fi
 
-echo "Downloading fl for ${OS}/${ARCH}..."
+# Resolve the newest CLI release (tags look like cli/vX.Y.Z). The repo also
+# publishes npm package releases (e.g. @flowershow/remark-wiki-link@x.y.z), so
+# GitHub's "Latest" release is not guaranteed to be a CLI release and
+# releases/latest/download can't be relied on. Pin a version with
+# FL_VERSION=2.6.0 (with or without a leading "v").
+if [ -n "$FL_VERSION" ]; then
+  TAG="cli/v${FL_VERSION#v}"
+else
+  # The releases list is newest-first. Split the JSON on commas so each field
+  # is on its own line (works whether or not the API pretty-prints), then take
+  # the first non-prerelease cli/v* tag.
+  TAG="$(fetch "https://api.github.com/repos/${REPO}/releases?per_page=100" 2>/dev/null \
+    | tr ',' '\n' \
+    | awk '
+        /"tag_name"[[:space:]]*:/ {
+          tag = $0
+          sub(/.*"tag_name"[[:space:]]*:[[:space:]]*"/, "", tag)
+          sub(/".*/, "", tag)
+        }
+        /"prerelease"[[:space:]]*:[[:space:]]*false/ {
+          if (tag ~ /^cli\/v[0-9]/) { print tag; exit }
+          tag = ""
+        }
+      ' || true)"
+fi
+
+ARCHIVE="${BINARY}_${OS}_${ARCH}.tar.gz"
+if [ -n "$TAG" ]; then
+  URL="https://github.com/${REPO}/releases/download/${TAG}/${ARCHIVE}"
+  echo "Downloading fl ${TAG#cli/} for ${OS}/${ARCH}..."
+else
+  # GitHub API unavailable (e.g. rate-limited): fall back to the "Latest"
+  # release, which the release workflows keep pointed at the newest CLI release.
+  URL="https://github.com/${REPO}/releases/latest/download/${ARCHIVE}"
+  echo "Could not resolve the latest CLI release from the GitHub API; trying the 'Latest' release."
+  echo "Downloading fl for ${OS}/${ARCH}..."
+fi
 
 TMP_DIR="$(mktemp -d)"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-if command -v curl >/dev/null 2>&1; then
-  curl -fsSL "$URL" | tar xz -C "$TMP_DIR"
-elif command -v wget >/dev/null 2>&1; then
-  wget -qO- "$URL" | tar xz -C "$TMP_DIR"
-else
-  echo "Error: curl or wget is required"
+if ! fetch "$URL" | tar xz -C "$TMP_DIR" || [ ! -f "$TMP_DIR/$BINARY" ]; then
+  echo "Error: failed to download or extract $URL"
+  echo "Please download manually from https://github.com/${REPO}/releases"
   exit 1
 fi
 
