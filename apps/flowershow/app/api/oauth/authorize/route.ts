@@ -1,5 +1,8 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { startAuthorization } from '@/lib/oauth/authorize';
+import { bindingCookieName, bindingCookieOptions } from '@/lib/oauth/binding';
+import { scheduleOAuthCleanup } from '@/lib/oauth/cleanup';
+import { oauthIssuer } from '@/lib/oauth/config';
 import { disabledResponse } from '@/lib/oauth/http';
 import { checkOAuthRateLimit } from '@/lib/oauth/rate-limit';
 
@@ -44,11 +47,22 @@ export async function GET(request: NextRequest) {
       'Too many sign-in requests. Wait a minute and try again.',
     );
   }
+  scheduleOAuthCleanup();
   const outcome = await startAuthorization(request.nextUrl.searchParams);
   if (outcome.kind === 'error_page')
     return errorPage(outcome.status, outcome.message);
-  return NextResponse.redirect(outcome.location, {
+  const res = NextResponse.redirect(outcome.location, {
     status: 302,
     headers: { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer' },
   });
+  // Bind the pending request to this browser: the consent page accepts it
+  // only with this cookie (flowershow-3fr.4).
+  if (outcome.binding) {
+    res.cookies.set(
+      bindingCookieName(outcome.binding.pendingId),
+      outcome.binding.secret,
+      bindingCookieOptions(oauthIssuer().startsWith('https:')),
+    );
+  }
+  return res;
 }

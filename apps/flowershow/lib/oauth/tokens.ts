@@ -43,7 +43,11 @@ export type TokenError = {
 };
 
 export type TokenResult =
-  | { ok: true; tokens: TokenResponse }
+  | {
+      ok: true;
+      tokens: TokenResponse;
+      grant: { id: string; userId: string };
+    }
   | ({ ok: false } & TokenError);
 
 const invalidGrant = (error_description: string): TokenResult => ({
@@ -82,18 +86,28 @@ export async function revokeGrant(grantId: string, now = new Date()) {
   ]);
 }
 
+/**
+ * Issue an access + refresh token pair. A token row stores a scope only when
+ * it is narrower than the grant's (after a refresh that asked for less);
+ * null means the grant's scope.
+ */
 async function issueTokens(
   grant: { id: string; scope: string },
   now: Date,
+  scopes: { access?: string; refresh?: string } = {},
 ): Promise<TokenResponse> {
   const access = random(ACCESS_TOKEN_PREFIX);
   const refresh = random(REFRESH_TOKEN_PREFIX);
+  const accessScope = scopes.access ?? grant.scope;
+  const refreshScope = scopes.refresh ?? grant.scope;
+  const stored = (scope: string) => (scope === grant.scope ? null : scope);
   await prisma.$transaction([
     prisma.oAuthToken.create({
       data: {
         tokenHash: hashSecret(access),
         grantId: grant.id,
         kind: 'ACCESS',
+        scope: stored(accessScope),
         expiresAt: new Date(now.getTime() + ACCESS_TOKEN_TTL_S * 1000),
       },
     }),
@@ -102,6 +116,7 @@ async function issueTokens(
         tokenHash: hashSecret(refresh),
         grantId: grant.id,
         kind: 'REFRESH',
+        scope: stored(refreshScope),
         expiresAt: new Date(now.getTime() + REFRESH_TOKEN_TTL_S * 1000),
       },
     }),
@@ -115,9 +130,12 @@ async function issueTokens(
     token_type: 'Bearer',
     expires_in: ACCESS_TOKEN_TTL_S,
     refresh_token: refresh,
-    scope: grant.scope,
+    scope: accessScope,
   };
 }
+
+const normalizeScope = (scope: string) =>
+  [...new Set(scope.split(' ').filter(Boolean))].join(' ');
 
 const GRANT_SELECT = {
   id: true,
@@ -222,7 +240,11 @@ export async function exchangeAuthorizationCode(
       error_description: 'resource does not match the authorization request',
     };
   }
-  return { ok: true, tokens: await issueTokens(grant, now) };
+  return {
+    ok: true,
+    tokens: await issueTokens(grant, now),
+    grant: { id: grant.id, userId: grant.userId },
+  };
 }
 
 export type RefreshInput = {
@@ -235,7 +257,9 @@ export type RefreshInput = {
 /**
  * refresh_token grant with rotation: each refresh token works once. Presenting
  * one that was already used means it leaked (or the client raced itself), so
- * the whole grant is revoked (OAuth 2.0 Security BCP §4.14.2).
+ * the whole grant is revoked (OAuth 2.0 Security BCP §4.14.2). A `scope`
+ * narrower than the refresh token's is honoured for the new access token; the
+ * new refresh token keeps the old one's scope (RFC 6749 §6).
  */
 export async function refreshTokens(
   input: RefreshInput,
@@ -262,6 +286,7 @@ export async function refreshTokens(
       kind: true,
       expiresAt: true,
       usedAt: true,
+      scope: true,
       grantId: true,
       grant: { select: GRANT_SELECT },
     },
@@ -278,14 +303,21 @@ export async function refreshTokens(
   if (row.expiresAt.getTime() <= now.getTime())
     return invalidGrant('Refresh token expired');
   if (row.grant.revokedAt) return invalidGrant('Authorization was revoked');
+  const refreshScope = row.scope ?? row.grant.scope;
+  let accessScope = refreshScope;
   if (scope !== undefined && scope !== '') {
-    if (typeof scope !== 'string' || !scopeWithin(scope, row.grant.scope)) {
+    if (
+      typeof scope !== 'string' ||
+      !normalizeScope(scope) ||
+      !scopeWithin(scope, refreshScope)
+    ) {
       return {
         ok: false,
         error: 'invalid_scope',
         error_description: 'scope exceeds the original grant',
       };
     }
+    accessScope = normalizeScope(scope);
   }
   if (
     resource !== undefined &&
@@ -308,7 +340,14 @@ export async function refreshTokens(
     await revokeGrant(row.grantId, now);
     return invalidGrant('Refresh token already used; authorization revoked');
   }
-  return { ok: true, tokens: await issueTokens(row.grant, now) };
+  return {
+    ok: true,
+    tokens: await issueTokens(row.grant, now, {
+      access: accessScope,
+      refresh: refreshScope,
+    }),
+    grant: { id: row.grant.id, userId: row.grant.userId },
+  };
 }
 
 /**
@@ -370,6 +409,7 @@ export async function validateOAuthAccessToken(
     select: {
       kind: true,
       expiresAt: true,
+      scope: true,
       grant: {
         select: {
           id: true,
@@ -393,7 +433,7 @@ export async function validateOAuthAccessToken(
   return {
     userId: grant.userId,
     grantId: grant.id,
-    scopes: grant.scope.split(' ').filter(Boolean),
+    scopes: (row.scope ?? grant.scope).split(' ').filter(Boolean),
     resource: grant.resource,
   };
 }

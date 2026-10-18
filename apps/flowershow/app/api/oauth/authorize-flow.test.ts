@@ -11,7 +11,19 @@ vi.mock('@/lib/oauth/config', async (orig) => ({
   oauthEnabled: () => enabled.value,
 }));
 const reqHeaders = vi.hoisted(() => ({ value: new Headers() }));
-vi.mock('next/headers', () => ({ headers: async () => reqHeaders.value }));
+// The browser's cookies: what /oauth/authorize set, sent to the consent action.
+const jar = vi.hoisted(() => ({ value: new Map<string, string>() }));
+vi.mock('next/headers', () => ({
+  headers: async () => reqHeaders.value,
+  cookies: async () => ({
+    get: (name: string) =>
+      jar.value.has(name) ? { name, value: jar.value.get(name) } : undefined,
+    set: (name: string, value: string, opts?: { maxAge?: number }) => {
+      if (opts?.maxAge === 0) jar.value.delete(name);
+      else jar.value.set(name, value);
+    },
+  }),
+}));
 vi.mock('next/navigation', () => ({
   redirect: (url: string) => {
     throw Object.assign(new Error('NEXT_REDIRECT'), { url });
@@ -29,12 +41,20 @@ vi.mock('@/lib/server-posthog', () => ({
 }));
 
 import { decideConsent } from '@/app/(cloud)/oauth/consent/actions';
+import { bindingCookieName } from '@/lib/oauth/binding';
 import { accountResource, cloudOrigin, oauthIssuer } from '@/lib/oauth/config';
 import { s256 } from '@/lib/oauth/params';
 import { validateOAuthAccessToken } from '@/lib/oauth/tokens';
-import { GET as authorize } from './authorize/route';
+import { GET as authorizeRoute } from './authorize/route';
 import { POST as register } from './register/route';
 import { POST as token } from './token/route';
+
+/** GET /oauth/authorize in the test browser: keeps the cookies it sets. */
+async function authorize(req: NextRequest) {
+  const res = await authorizeRoute(req);
+  for (const c of res.cookies.getAll()) jar.value.set(c.name, c.value);
+  return res;
+}
 
 const ISSUER = 'http://test.localhost';
 const REDIRECT = 'https://claude.ai/api/mcp/auth_callback';
@@ -95,6 +115,7 @@ async function submit(req: string, decision: 'allow' | 'deny') {
 beforeEach(() => {
   db.reset();
   ip++;
+  jar.value = new Map();
   enabled.value = true;
   session.value = { user: { id: 'user-1', username: 'alice' } };
   reqHeaders.value = new Headers({
@@ -247,5 +268,123 @@ describe('consent action', () => {
     expect((await submit(req, 'allow')).state).toMatchObject({
       error: expect.stringMatching(/expired|used/),
     });
+  });
+});
+
+describe('browser binding cookie (flowershow-3fr.4)', () => {
+  async function pending() {
+    const clientId = await registerClient();
+    const res = await authorize(authorizeUrl(clientId));
+    const req = new URL(res.headers.get('location') as string).searchParams.get(
+      'req',
+    ) as string;
+    return { req, res };
+  }
+
+  it('/oauth/authorize sets an HttpOnly cookie scoped to /oauth on the home domain and its subdomains', async () => {
+    const { req, res } = await pending();
+    const name = bindingCookieName(req);
+    const header = res.headers.get('set-cookie') as string;
+    expect(header).toContain(`${name}=`);
+    expect(header).toMatch(/HttpOnly/i);
+    expect(header).toMatch(/SameSite=lax/i);
+    expect(header).toMatch(/Path=\/oauth/);
+    // Cloud host cloud.test.localhost is under home domain test.localhost.
+    expect(header).toMatch(/Domain=\.?test\.localhost/i);
+    expect(header).toMatch(/Max-Age=600/);
+    // The secret is not in the URL.
+    expect(res.headers.get('location')).not.toContain(
+      jar.value.get(name) as string,
+    );
+  });
+
+  it('refuses a consent POST from a browser without the cookie, and keeps the request for the right one', async () => {
+    const { req } = await pending();
+    const mine = jar.value;
+    jar.value = new Map();
+    expect((await submit(req, 'allow')).state).toEqual({
+      error: expect.stringMatching(/different browser/),
+    });
+    expect(db.tables.oAuthGrant.size).toBe(0);
+    jar.value = mine;
+    expect((await submit(req, 'allow')).location).toMatch(/code=/);
+  });
+
+  it('clears the cookie once the request is decided', async () => {
+    const { req } = await pending();
+    expect(jar.value.has(bindingCookieName(req))).toBe(true);
+    await submit(req, 'deny');
+    expect(jar.value.has(bindingCookieName(req))).toBe(false);
+  });
+});
+
+describe('POST /oauth/token refresh with a narrower scope', () => {
+  it('issues an access token with the narrower scope; the refresh token keeps its own', async () => {
+    const clientId = await registerClient();
+    const authRes = await authorize(authorizeUrl(clientId));
+    const req = new URL(
+      authRes.headers.get('location') as string,
+    ).searchParams.get('req') as string;
+    const code = new URL(
+      (await submit(req, 'allow')).location as string,
+    ).searchParams.get('code') as string;
+    // Pretend the grant carries two scopes (only one exists today).
+    const grant = [...db.tables.oAuthGrant.values()][0]!;
+    grant.scope = 'sites:write sites:read';
+
+    const post = (body: Record<string, string>) =>
+      token(
+        new NextRequest(`${ISSUER}/oauth/token`, {
+          method: 'POST',
+          headers: {
+            'content-type': 'application/x-www-form-urlencoded',
+            ...fromIp(),
+          },
+          body: new URLSearchParams(body).toString(),
+        }),
+      );
+    const first = await (
+      await post({
+        grant_type: 'authorization_code',
+        code,
+        client_id: clientId,
+        redirect_uri: REDIRECT,
+        code_verifier: VERIFIER,
+      })
+    ).json();
+    expect(first.scope).toBe('sites:write sites:read');
+
+    const narrowed = await post({
+      grant_type: 'refresh_token',
+      refresh_token: first.refresh_token,
+      client_id: clientId,
+      scope: 'sites:read',
+    });
+    expect(narrowed.status).toBe(200);
+    const second = await narrowed.json();
+    expect(second.scope).toBe('sites:read');
+    expect(
+      (await validateOAuthAccessToken(second.access_token, accountResource()))
+        ?.scopes,
+    ).toEqual(['sites:read']);
+
+    // Next refresh without scope: back to the refresh token's full scope.
+    const third = await (
+      await post({
+        grant_type: 'refresh_token',
+        refresh_token: second.refresh_token,
+        client_id: clientId,
+      })
+    ).json();
+    expect(third.scope).toBe('sites:write sites:read');
+
+    // Asking for more than the refresh token carries is refused.
+    const wider = await post({
+      grant_type: 'refresh_token',
+      refresh_token: third.refresh_token,
+      client_id: clientId,
+      scope: 'sites:write admin',
+    });
+    expect((await wider.json()).error).toBe('invalid_scope');
   });
 });

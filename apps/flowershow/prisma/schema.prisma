@@ -524,6 +524,7 @@ model OAuthToken {
   kind      OAuthTokenKind
   expiresAt DateTime       @map("expires_at")
   usedAt    DateTime?      @map("used_at") // refresh rotation / reuse detection
+  scope     String? // set by a narrower-scope refresh; null = the grant's scope
   createdAt DateTime       @default(now()) @map("created_at")
   grant     OAuthGrant     @relation(fields: [grantId], references: [id], onDelete: Cascade)
 

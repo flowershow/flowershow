@@ -1,9 +1,10 @@
 'use server';
 
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { decideAuthorization } from '@/lib/oauth/authorize';
-import { oauthEnabled } from '@/lib/oauth/config';
+import { bindingCookieName, bindingCookieOptions } from '@/lib/oauth/binding';
+import { oauthEnabled, oauthIssuer } from '@/lib/oauth/config';
 import PostHogClient from '@/lib/server-posthog';
 import { getSession } from '@/server/auth';
 
@@ -40,12 +41,24 @@ export async function decideConsent(
     return { error: 'Your session has ended. Sign in again.' };
 
   const decision = formData.get('decision') === 'allow' ? 'allow' : 'deny';
+  const req = formData.get('req');
+  // Only the browser that went through /oauth/authorize holds this cookie.
+  const jar = await cookies();
+  const cookieName = typeof req === 'string' ? bindingCookieName(req) : null;
+  const binding = cookieName ? jar.get(cookieName)?.value : undefined;
   const outcome = await decideAuthorization(
-    formData.get('req'),
+    req,
     session.user.id,
     decision,
+    binding,
   );
   if (!outcome.ok) return { error: outcome.message };
+  if (cookieName) {
+    jar.set(cookieName, '', {
+      ...bindingCookieOptions(oauthIssuer().startsWith('https:')),
+      maxAge: 0,
+    });
+  }
 
   if (outcome.newGrant) {
     const posthog = PostHogClient();
