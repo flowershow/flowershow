@@ -1,5 +1,5 @@
-import { NextRequest } from 'next/server';
 import type { CreateSiteResponse } from '@flowershow/api-contract';
+import { NextRequest } from 'next/server';
 import { GET as statusGET } from '@/app/api/sites/id/[siteId]/status/route';
 import { POST as syncPOST } from '@/app/api/sites/id/[siteId]/sync/route';
 import { POST as createSitePOST } from '@/app/api/sites/route';
@@ -12,14 +12,22 @@ import { getSiteUrl } from '@/lib/get-site-url';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 import { markMcpInternal } from './internal-request';
-import { ApiError, type PublishCredential } from './publish';
+import {
+  type AnonCaller,
+  checkAnonCreateLimits,
+  checkAnonUpdateLimit,
+  MCP_ANON_LIMITS,
+  reportGlobalLimitReached,
+  signInHint,
+} from './limits';
+import { ApiError, type PublishCredential, PublishError } from './publish';
 import type { McpDeps } from './server';
 
 /**
  * Rate-limit key for anonymous sites created through MCP. Chat apps (claude.ai,
- * ChatGPT) call from their own cloud IPs, so per-IP limits would make all
- * their users share one small bucket; MCP gets one global hourly bucket
- * instead (MCP_ANON_HOURLY_LIMIT), alongside the ANON_PUBLISH_DISABLED kill switch.
+ * ChatGPT) call from their own cloud IPs, so MCP has one global hourly bucket
+ * (MCP_ANON_HOURLY_LIMIT) as a backstop, alongside the ANON_PUBLISH_DISABLED
+ * kill switch; per-caller and per-IP limits come first (lib/mcp/limits.ts).
  */
 export const MCP_ANON_BUCKET = 'mcp:anonymous';
 const DEFAULT_MCP_ANON_HOURLY_LIMIT = 100;
@@ -71,10 +79,16 @@ async function json<T>(res: Response): Promise<T> {
  * Production dependencies for the MCP tools. Sync and status call the
  * existing route handlers in-process, so MCP gets exactly the same auth
  * (claim-token or account-token), limits and expiry checks as the CLI.
+ * `caller` identifies an anonymous caller for the per-caller limits.
  */
-export function realMcpDeps(): McpDeps {
+export function realMcpDeps(caller?: AnonCaller): McpDeps {
   return {
     async createAnonSite() {
+      if (caller && (await checkAnonCreateLimits(caller))) {
+        throw new PublishError(
+          `You have published too many new anonymous sites in the last hour. To change a site published earlier in this conversation, call publish with its siteId and claimToken; otherwise try again later. ${signInHint()}`,
+        );
+      }
       // 0 disables anonymous publishing through MCP; unset or invalid uses the default.
       const configured = Number.parseInt(env.MCP_ANON_HOURLY_LIMIT ?? '', 10);
       const limit = Number.isNaN(configured)
@@ -83,10 +97,17 @@ export function realMcpDeps(): McpDeps {
       const result = await createAnonSite({
         bucket: hashIp(MCP_ANON_BUCKET),
         limit,
-        rateLimitedMessage:
-          'Too many anonymous sites have been published recently. Try again later.',
+        rateLimitedMessage: `Too many anonymous sites have been published recently. Try again later. ${signInHint()}`,
       });
       if (!result.ok) {
+        if (result.status === 429) {
+          if (limit > 0) {
+            await reportGlobalLimitReached(limit).catch((err) =>
+              console.error('MCP limit alert failed:', err),
+            );
+          }
+          throw new PublishError(result.message);
+        }
         throw new ApiError(result.status, result.error, result.message);
       }
       const posthog = PostHogClient();
@@ -123,6 +144,17 @@ export function realMcpDeps(): McpDeps {
     },
 
     async sync(siteId, files, credential) {
+      // Per-site limit on anonymous publishes. Only for a claim token that is
+      // genuinely for this site, so nobody can use up another site's budget.
+      if (
+        'claimToken' in credential &&
+        verifySiteClaimToken(credential.claimToken)?.siteId === siteId &&
+        !(await checkAnonUpdateLimit(siteId))
+      ) {
+        throw new PublishError(
+          `This site has been published more than ${MCP_ANON_LIMITS.perSiteUpdates} times in the last hour. Try again later. ${signInHint()}`,
+        );
+      }
       const res = await syncPOST(
         internalRequest(
           'POST',

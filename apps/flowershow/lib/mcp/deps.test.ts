@@ -21,6 +21,13 @@ vi.mock('@/server/db', () => ({
 vi.mock('@/lib/server-posthog', () => ({
   default: () => ({ capture: vi.fn(), shutdown: vi.fn() }),
 }));
+vi.mock('./limits', () => ({
+  checkAnonCreateLimits: vi.fn(async () => null),
+  checkAnonUpdateLimit: vi.fn(async () => true),
+  reportGlobalLimitReached: vi.fn(async () => {}),
+  signInHint: () => 'Sign in: https://flowershow.app/api/mcp/account',
+  MCP_ANON_LIMITS: { perCaller: 10, perIp: 10, perSiteUpdates: 60 },
+}));
 
 import { GET as statusGET } from '@/app/api/sites/id/[siteId]/status/route';
 import { POST as syncPOST } from '@/app/api/sites/id/[siteId]/sync/route';
@@ -32,7 +39,12 @@ import { claimAnonSite } from '@/lib/claim-anon-site';
 import prisma from '@/server/db';
 import { MCP_ANON_BUCKET, realMcpDeps } from './deps';
 import { mcpInternalCaller } from './internal-request';
-import { ApiError } from './publish';
+import {
+  checkAnonCreateLimits,
+  checkAnonUpdateLimit,
+  reportGlobalLimitReached,
+} from './limits';
+import { ApiError, PublishError } from './publish';
 
 const create = createAnonSite as ReturnType<typeof vi.fn>;
 const sync = syncPOST as ReturnType<typeof vi.fn>;
@@ -63,14 +75,61 @@ describe('realMcpDeps', () => {
   it('turns a refused create into an ApiError', async () => {
     create.mockResolvedValue({
       ok: false,
-      status: 429,
-      error: 'rate_limited',
-      message: 'slow down',
+      status: 503,
+      error: 'anon_disabled',
+      message: 'off',
     });
     await expect(realMcpDeps().createAnonSite()).rejects.toMatchObject({
-      status: 429,
-      message: 'slow down',
+      status: 503,
+      message: 'off',
     });
+  });
+
+  it('alerts and points at the signed-in connector when the global bucket runs out', async () => {
+    create.mockImplementation(async (opts) => ({
+      ok: false,
+      status: 429,
+      error: 'rate_limited',
+      message: opts.rateLimitedMessage,
+    }));
+    const err = await realMcpDeps()
+      .createAnonSite()
+      .catch((e) => e);
+    expect(err).toBeInstanceOf(PublishError);
+    expect(err.message).toContain('https://flowershow.app/api/mcp/account');
+    expect(reportGlobalLimitReached).toHaveBeenCalledWith(100);
+  });
+
+  it('checks per-caller limits before the global bucket', async () => {
+    const caller = { ip: '1.2.3.4', callerId: 'session:s1' };
+    vi.mocked(checkAnonCreateLimits).mockResolvedValueOnce('caller');
+    const err = await realMcpDeps(caller)
+      .createAnonSite()
+      .catch((e) => e);
+    expect(checkAnonCreateLimits).toHaveBeenCalledWith(caller);
+    expect(err).toBeInstanceOf(PublishError);
+    expect(err.message).toMatch(/too many new anonymous sites/);
+    expect(err.message).toContain('https://flowershow.app/api/mcp/account');
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('limits publishes to an anonymous site per site', async () => {
+    const token = generateSiteClaimToken('site-1', 'anon-1');
+    vi.mocked(checkAnonUpdateLimit).mockResolvedValueOnce(false);
+    const err = await realMcpDeps()
+      .sync('site-1', [], { claimToken: token })
+      .catch((e) => e);
+    expect(checkAnonUpdateLimit).toHaveBeenCalledWith('site-1');
+    expect(err).toBeInstanceOf(PublishError);
+    expect(sync).not.toHaveBeenCalled();
+  });
+
+  it("does not count a claim token for another site against this site's limit", async () => {
+    sync.mockResolvedValue(NextResponse.json({ toUpload: [], toUpdate: [] }));
+    const token = generateSiteClaimToken('site-other', 'anon-1');
+    await realMcpDeps().sync('site-1', [], { claimToken: token });
+    await realMcpDeps().sync('site-1', [], { userId: 'u1' });
+    expect(checkAnonUpdateLimit).not.toHaveBeenCalled();
   });
 
   it('calls the sync route in-process with the claim token and file list', async () => {
