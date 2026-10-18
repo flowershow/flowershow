@@ -1,12 +1,17 @@
-# Annotations v2 UX: threaded replies + margin redesign
+# Annotations v2: UI refresh (stream A) and replies (stream B, later)
 
-Status: **Draft for Rufus's review, 2026-10-18.** No code yet. Bead `flowershow-1pr.10` (epic `flowershow-1pr`). Builds on [Phase 0](2026-10-03-page-annotation-phase-0-implementation.md) and [ADR 0015](../adr/0015-annotations-are-open-and-moderated-off-page.md).
+Status: **Draft for Rufus's review, revised 2026-10-18 after his feedback.** No code yet. Epic `flowershow-1pr`. Stream A = `flowershow-1pr.10` (now). Stream B = `flowershow-1pr.11` (later, job stories first). Owner/login on site pages = spike `flowershow-1pr.12` (separate). Builds on [Phase 0](2026-10-03-page-annotation-phase-0-implementation.md) and [ADR 0015](../adr/0015-annotations-are-open-and-moderated-off-page.md).
 
-**Goal:** keep what works (no login, select-to-annotate, agent pull) and make annotation feel like commenting on a Claude artifact or a Google Doc: notes sit beside the passage they're about, people can reply, and anyone reviewing can resolve a thread from the page.
+Two streams:
 
-## 1. Current state and problems
+- **Stream A: UI refresh.** What the annotate affordance looks like, where notes render, phone behaviour. Same data and API as Phase 0. Small, ship first.
+- **Stream B: replies and resolving.** A new feature area. Start from job stories, copy the best (Google Docs), start simpler than that. Not designed yet.
 
-Phase 0 ships one flat `Annotation` table, an open `GET/POST /api/sites/id/{siteId}/annotations`, owner-only `bulk` (resolve/reopen/delete) and `settings` routes, a dashboard "Annotations" tab, `fl annotations pull|resolve|delete`, and one client component (`components/public/annotations/page-annotations.tsx`, 580 lines) that renders a pill, an "Annotate" button, highlights (CSS Custom Highlight API) and a fixed right-hand panel listing every note.
+The dashboard is out of scope for both.
+
+## 1. Today (Phase 0)
+
+One client component (`apps/flowershow/components/public/annotations/page-annotations.tsx`, styles in `apps/flowershow/styles/annotations.css`): a fixed pill at bottom left, a floating "Annotate" button on selection, highlights via the CSS Custom Highlight API, and a fixed 24rem right panel listing every note.
 
 Screenshots from annotations-demo-rufuspollock.flowershow.me (2026-10-18):
 
@@ -14,169 +19,152 @@ Screenshots from annotations-demo-rufuspollock.flowershow.me (2026-10-18):
 |---|---|---|
 | ![](2026-10-18-annotations-v2-ux/desktop-1440-panel.webp) | ![](2026-10-18-annotations-v2-ux/desktop-1440-draft.webp) | ![](2026-10-18-annotations-v2-ux/phone-390-panel.webp) |
 
-Problems, concretely:
+Problems with the UI:
 
-1. **No conversation.** A note can't be answered. "Could you give one concrete example?" gets no "Done, see para 2" or "Disagree because…", so discussion moves to chat and the agent never sees it.
-2. **Panel covers the text** (`flowershow-1pr.8`). At 1440px the 24rem fixed panel hides the end of every body line; the right "On this page" column it sits over is the space a margin should use.
-3. **Notes are far from their passage.** The panel is a list in document order at the top of the screen; the third note's highlight is 800px lower. You match quote to highlight by reading.
-4. **Writing a note pushes the list down** and the form (labelled "Note", "Your name (optional)", big orange "Save annotation") is heavy compared to the one-line notes people actually write ("wow").
-5. **Resolve is off-page only.** Reviewers who see their point addressed can't close it; only the owner can, in the dashboard or CLI.
-6. **Weak author/time signal.** "me · Oct 6, 2026" in small grey text; no relative time; owner and reviewers look the same.
-7. **Phone panel is a full-height side sheet** that hides the page entirely, so you can't see the passage while reading its note.
-8. **Chrome.** The desktop pill reads "Annotations on · 3 notes · select text to add one" permanently at bottom left; "Site owner? Manage annotations" sits in every panel.
+1. **Weak, odd entry point.** "Annotations on · 3 notes · select text to add one" is a pill in the bottom-left corner, where nobody looks, sharing the bottom edge with "Built with Flowershow" and report-abuse. A reviewer sent the link may not notice the page is open for feedback at all.
+2. **Panel covers the text** (`flowershow-1pr.8`). At 1440px the fixed panel hides the end of every body line; the right TOC column it sits over is free space we could use instead.
+3. **Notes are far from their passage.** The list is in document order at the top of the panel; you match quote to highlight by reading. Clicking a highlight does not reliably bring its note into view.
+4. **Heavy composer.** Writing a note pushes the list down; the form ("Note", "Your name (optional)", big orange "Save annotation") is heavy for the one-line notes people write.
+5. **Phone panel hides the page.** It is a full-height side sheet, so you can't see the passage while reading its note.
+6. **Chrome noise.** "Site owner? Manage annotations" sits in every panel; author and time are faint grey ("me · Oct 6, 2026").
+7. **a11y gaps** from `flowershow-1pr.6`: focus not returned on close, `aria-controls` pointing at a missing element, Annotate button can render off-screen.
 
-## 2. Proposed interaction design
+## 2. How the best do it
 
-Vocabulary stays "annotation(s)" (Phase 0 rule: "comments" means Giscus). A conversation on one passage is a **thread**: the first annotation plus its **replies**.
-
-### Desktop (viewport leaves ≥ 320px right of the page body, typically ≥ 1280px)
-
-```
- sidebar        page body (#mdxpage)                        annotation rail (300px)
- ─────────  ─────────────────────────────────────────    ┌─────────────────────────┐
-            And yet [the humble file keeps coming back]. ─│ (M) Maya · 2h        ✓  │
-            It is the one format every tool can read…     │ Love this line. Could   │
-                                                          │ you give one example?   │
-                                                          │ (R) Rufus · Author · 1h │
-                                                          │ Added one in para 2.    │
-                                                          │ [ Reply…              ] │
-                                                          └─────────────────────────┘
-            Plain text is also the native language…       ┌─────────────────────────┐
-            something, [the most reliable thing it can  ──│ (S) Sam · 3d         ✓  │
-            hand back is a file].                         │ Is this still true for  │
-                                                          │ HTML output?  · 1 reply │
-                                                          └─────────────────────────┘
-                                                          Not found on page (1) ▸
- [≡ 3 open]                                               Show resolved (2)
-```
-
-- **Rail replaces the right TOC column** while annotations are shown (TOC hidden, not moved). Content never shifts or gets covered, which closes `1pr.8`. If the free space right of `#mdxpage` is under 320px (narrow window, wide-page layouts), fall back to the bottom sheet below.
-- **Cards align to their highlight.** Each card's ideal top is its range's `getBoundingClientRect().top` (page coords). Layout pass: sort by ideal top, place each at `max(ideal, previousBottom + 8px)`. When a card is active, lay it out at its ideal top first and push neighbours up and down from it (Google Docs behaviour). Recompute on resize, font load and the existing MutationObserver; animate `transform` only.
-- **Active thread is linked.** Hover or click a card: its highlight switches to a stronger `::highlight(fs-annotation-active)` and the card gets a raised border; click a highlight: its card activates and scrolls into view. Only the active card shows all replies and the reply box; inactive cards show the root note plus "· N replies".
-- **New thread.** Select text → small floating **Annotate** button just above the selection end (clamped to the viewport, `1pr.6`). Click → a draft card opens in the rail at that height, textarea focused ("Add an annotation…"), selection kept as a pending highlight. Enter-to-newline, ⌘/Ctrl+Enter posts, Esc cancels. No quote block in the card: the highlight is the quote.
-- **Card anatomy.** Initial avatar (colour hashed from name), name, "Author" badge for owner replies, relative time (`Intl.RelativeTimeFormat`, full date in `title`), body as plain text with newlines kept, then replies in the same style, then a one-line "Reply…" that grows on focus. Header has a ✓ Resolve button; resolved cards show "Resolved by Maya · 1h · Reopen".
-- **Outdated threads** (quote not found) collect under a collapsed "Not found on page (N)" at the bottom of the rail, each card showing its quote, since there is no highlight to point at.
-- **Resolved threads are hidden** (no highlight, no card) behind "Show resolved (N)" at the bottom of the rail; shown resolved cards are greyed with Reopen.
-- **Minimal chrome.** The rail is visible by default when the page has open threads. The bottom-left pill shrinks to an icon + count ("3 open") that toggles the rail; first-visit hint "Select text to annotate" appears once in the empty rail instead of in the pill. "Site owner? Manage annotations" moves to a small rail footer link.
-
-### Phone and narrow windows: bottom sheet
-
-```
-┌──────────────────────────┐     ┌──────────────────────────┐
-│ And yet [the humble file │     │ …the humble file keeps…  │
-│ keeps coming back]. It   │     │ ──────────────────────── │
-│ is the one format every  │     │ ▁▁▁ (drag handle)        │
-│ tool can read…           │     │ (M) Maya · 2h         ✓  │
-│                          │     │ Love this line. Could…   │
-│ ──────────────────────── │     │ (R) Rufus · Author · 1h  │
-│ ▁▁▁                      │     │ Added one in para 2.     │
-│ (M) Maya · 2h · 1 reply  │     │ [ Reply…             ↑ ] │
-│ ‹ 1 of 3 ›            ✓  │     │ ‹ 1 of 3 ›   All threads │
-└──────────────────────────┘     └──────────────────────────┘
-  tap highlight: peek (~30%)        drag up: full thread (~70%)
-```
-
-- Tapping a highlight opens the sheet at **peek** height with that thread's root, leaving the passage visible above; ‹ › steps through threads in page order and scrolls the page to each highlight. Drag or tap up to **expanded** (~70%): full thread and reply box. "All threads" lists every thread, then "Not found on page" and "Show resolved".
-- New thread: keep Phase 0's touch "Annotate" button (above Android's bar, works on first tap); it opens the sheet expanded with the composer focused and the page scrolled so the selection sits above the sheet.
-- The sheet is a `role="dialog"` with focus moved in and returned to the trigger on close; Esc and swipe-down close it. Uses `env(safe-area-inset-bottom)` and `visualViewport` so the reply box stays above the keyboard on iOS.
-
-### No-login identity
-
-- Keep Phase 0: optional name, max 60 chars, empty = "Anonymous", remembered in `localStorage` key `fs-annotator-name` (try/catch). Asked inline once, the first time you post, reply or resolve ("Your name, so others know who wrote this — optional"); afterwards shown as "as Maya · change" under the composer.
-- No visitor ids, tokens or IPs (Phase 0 constraint stands), so no "edit/delete my own reply" in v2.
-- **Owner identity comes from the PAT.** Replies posted through `fl annotations reply` (owner token) are stored with `fromOwner = true` and shown with an "Author" badge; on-page posts are never marked as owner, whatever name is typed. The page can't detect the owner (cookie domain, ADR 0015), so the owner replying in the browser posts as a named reviewer.
-
-### Resolve and reopen from the page: a reversal to flag
-
-Phase 0 and ADR 0015 say "only the owner resolves or deletes". The bead asks for resolve on the page, and the page can't recognise the owner, so the only workable rule is: **anyone who can annotate can resolve or reopen a thread**; **delete stays owner-only** (dashboard and CLI). Resolve is reversible, records `resolvedByName` (the remembered name, or null), and resolved threads stay visible behind "Show resolved". Replying to a resolved thread reopens it. This needs an ADR 0015 amendment. Alternative if Rufus prefers: on-page resolve only hides the thread for the viewer (local), owner resolve stays global. Recommendation: the shared rule, as Google Docs does for commenters.
-
-## 3. Data model: replies
-
-**Recommendation: a separate `AnnotationReply` table**, with `Annotation` staying the thread root (anchor, status, page sha).
-
-```prisma
-model AnnotationReply {
-  id           String     @id @default(cuid())
-  annotationId String     @map("annotation_id")
-  body         String
-  authorName   String?    @map("author_name")
-  /// Set only when posted with the site owner's token (CLI/API), never from the page
-  fromOwner    Boolean    @default(false) @map("from_owner")
-  createdAt    DateTime   @default(now()) @map("created_at")
-  annotation   Annotation @relation(fields: [annotationId], references: [id], onDelete: Cascade)
-  @@index([annotationId, createdAt])
-}
-// Annotation gains: replies AnnotationReply[]; resolvedByName String? @map("resolved_by_name")
-```
-
-Why not `parentId` on `Annotation`: the root's `exact`, offsets, `blobSha` and `status` are non-null and meaningless on a reply, so they'd become nullable or filled with junk, and every existing query (per-page/site caps, open counts in `fl publish`/`fl settings`, dashboard list, pull, bulk resolve) would need `parentId: null` added or replies would leak in as empty-quote notes. A separate table leaves all of those correct untouched. Threads are flat (one level), as in Claude and Google Docs.
-
-**Migration** `20261018…_add_annotation_reply`: purely additive (create table + index + FK cascade; `ALTER TABLE "Annotation" ADD COLUMN resolved_by_name text`). No backfill; existing annotations become threads with zero replies. Cascade from `Site → Annotation → AnnotationReply` keeps anonymous-site expiry and "Delete all" working.
-
-**API impact** (contract-first, `packages/api-contract`):
-
-- `Annotation` DTO gains `replies: AnnotationReply[]` (oldest first, always present), `resolvedBy: string | null`, `lastActivityAt`. GET does one `include`. Go's JSON decoding ignores unknown fields, so old CLIs keep working (they just don't show replies).
-- `POST /api/sites/id/{siteId}/annotations/{id}/replies` `{ body, authorName? }`: open, same gates as create (`hasSiteAccess`, `isAnnotationsEnabled`, 16 KB body). Owner PAT → `fromOwner: true`. Reopens a resolved thread. Caps: body 1–2000; ≤ 100 replies per thread; ≤ 5000 replies per site (409 `limit_reached`, same wording style).
-- `POST /api/sites/id/{siteId}/annotations/{id}/status` `{ status: 'open'|'resolved', authorName? }`: open, same gates; sets `resolvedAt`/`resolvedByName`. Owner `bulk` stays for multi-id and delete.
-- PostHog: `annotation_replied` and `annotations_resolved` gain `source: page|cli|dashboard`; never text or names.
-
-## 4. `fl annotations pull` and the agent loop
-
-Threads are the unit. Markdown output keeps the header, trust line and per-file grouping; each thread keeps its trusted metadata outside the wrapper and puts every reviewer string inside one:
-
-```
-### ckx123
-- Status: open
-- Created: 2026-10-16T09:12Z · Last activity: 2026-10-18T10:02Z
-- Page edited since note: no
-- Replies: 2
-<untrusted-annotation id="ckx123">
-name: "Maya"
-before: "And yet "
-quote: "the humble file keeps coming back"
-after: ". It is the one"
-note: "Love this line. Could you give one concrete example?"
-reply: {"name":"Sam","created":"2026-10-17T08:00Z","body":"+1, a backup example"}
-reply: {"name":"Rufus","author":true,"created":"2026-10-18T10:02Z","body":"Added one in para 2."}
-</untrusted-annotation>
-```
-
-Each reply is one JSON line, so no reviewer text can close the wrapper (existing guarantee). `author: true` is set by the server from `fromOwner`, and the trust line says so. JSON output nests `replies` in each annotation. Default still returns open threads only; a thread whose last reply is from a reviewer after the owner's last reply is the "needs attention" case, flagged as `- Awaiting reply: yes`.
-
-New CLI verbs so the agent can close the loop on the page itself:
-
-- `fl annotations reply <id> -m "Added an example in para 2"` (owner token → "Author" badge).
-- `fl annotations resolve <id>… [-m "…"]`: optional reply then resolve, so reviewers see what changed.
-- `fl annotations reopen <id>…` (makes the dead `reopen` verb from `1pr.6` real).
-
-The skill's loop becomes: pull → edit Markdown → `fl publish` → `resolve <id> -m "what I changed"` for done items, `reply <id> -m "question"` where the note is ambiguous.
-
-## 5. Folded-in items
-
-- `flowershow-1pr.8` (panel covers text): closed by the rail.
-- `flowershow-1pr.6` a11y: focus returns to the trigger on close; `aria-controls` only when the controlled element exists; Annotate button clamped to the viewport. Also fold the short-quote anchoring fix (exact match only below ~16 chars), because a mis-anchored card is now visibly in the wrong place. CLI minors touched by PR 2 (failed `--annotations` PATCH exits 0, `delete <ids>` without confirm, dead `reopen`). The rest of `1pr.6` (config.json mismatch, cap race, chunked body read) stays there.
-- `flowershow-1pr.4` (send-for-review fast path) is not folded in, but the rail must work in its minimal-chrome layout.
-
-## 6. Out of scope
-
-Email/notifications, realtime updates (refetch on focus and after own actions is enough), edit/delete own reply, @mentions, reactions, rich text/Markdown in bodies, owner detection on the page, nested threads, annotating images/canvas/HTML pages, rate limiting beyond caps.
-
-## 7. Task breakdown (child beads, not yet created)
-
-| # | Bead | Scope | Acceptance criteria | Effort |
+| Product | Entry affordance | Where notes render (desktop) | Phone | Count shown |
 |---|---|---|---|---|
-| 1 | Replies + on-page status: data and API | `AnnotationReply` + `resolvedByName` migration; contract schemas/routes; replies and status routes; DTO `replies`/`resolvedBy`/`lastActivityAt`; dashboard list shows replies read-only; ADR 0015 amendment | Route tests cover gates (setting off, page opt-out, password, anon site), caps 409, reply reopens, PAT sets `fromOwner`, page post never does; existing Phase 0 tests unchanged and green; additive migration applies on a prod snapshot | ~5 h |
-| 2 | CLI: threads in pull, `reply`, `resolve -m`, `reopen` | Go client + commands, md/JSON thread output, "Awaiting reply" flag, `1pr.6` CLI minors, README/CHANGELOG/docs, skill PR | Golden tests: reply text containing `</untrusted-annotation>` can't escape; `author` only from server field; old server (no `replies`) still works; skill PR merged after CLI release | ~5 h |
-| 3 | Desktop margin rail + thread cards | Split `page-annotations.tsx` into anchoring hook, `ThreadCard`, `Rail`; layout pass; active linking (second highlight); in-rail composer; reply/resolve/reopen; name prompt; outdated + resolved sections; pill shrink; `1pr.8` and `1pr.6` a11y + short-quote fix | At 1280/1440/1920 no body text covered and each card's top within 8px of its highlight unless pushed; 20 threads on one paragraph don't overlap; click highlight ↔ card both ways; keyboard-only reply and resolve; falls back to sheet when space < 320px | ~10 h |
-| 4 | Phone/narrow bottom sheet | Peek/expanded sheet, ‹ › stepping, All threads, composer above keyboard, dialog focus handling | Pixel 7 and iPhone 13 e2e: tap highlight → peek shows that thread with passage visible; reply posts with keyboard open; Annotate works on first tap; manual iOS Safari + Android Chrome check | ~6 h |
-| 5 | E2E, docs, changelog | Playwright specs for threads/resolve across subdomain, custom domain, password site; `docs/reference/annotations.md`; changelog entry with 1440px screenshot | Full annotations e2e green in CI; docs describe replies, who can resolve, `fl annotations reply`; changelog per house style | ~3 h |
+| Google Docs | Comment icon floats in the right margin beside the selection; "+" in toolbar; Ctrl+Alt+M | Cards in the right margin, aligned to their passage; active card shifts others | App: comments open as a bottom panel / full-screen thread | Comments icon in the top bar opens "All comments" |
+| Claude artifacts (claude.ai / Claude Science) | Artifact header bar at top holds the actions; select text → small **Comment** button; HTML needs a **Comment** toggle in the header first | Highlight badge inline, hover to read; no threads, no resolve | Same, in the artifact view | Pending comments listed above the message box |
+| Notion | Selection toolbar "Comment"; top-bar comments icon | Inline comments in the right margin on wide pages; top-bar icon opens a sidebar with all/resolved | Bottom sheet | Small count beside highlighted text; top-bar icon |
+| Hypothesis | Selection pops "Annotate / Highlight"; collapsed sidebar tab at right edge | Collapsible right sidebar, pushes or overlays page; "bucket bar" arrows with counts in the gutter | Sidebar goes full-width over the page | Count on the sidebar tab and bucket bar |
+| Medium | Selection menu: Highlight / Respond / Share | Responses in a right drawer that overlays; highlights inline | Bottom sheet | Speech-bubble + count in the article action bar (top and bottom) |
+| Figma | Comment mode toggle in the top toolbar (C) | Pins on canvas, list in a right panel | App: pins + sheet | Badge on the comment tool |
 
-Order: 1 → (2, 3 in parallel) → 4 → 5. About 29 agent-hours.
+What they share: (a) a **persistent, visible entry at the top** (toolbar/header) showing a count, (b) a **contextual button on selection**, (c) notes in a **right margin or panel that does not cover the text** on desktop, (d) a **bottom sheet** on phones. Margin-aligned cards (Google Docs, Notion) are the premium version; a plain docked list (Notion sidebar, Hypothesis) is the simple one.
+
+Sources: [Claude Science comments](https://claude.com/docs/claude-science/comments), [Hypothesis client config](https://hypothesis-client.readthedocs.io/en/latest/publishers/config.html), [Google Docs Android comments](https://workspaceupdates.googleblog.com/2024/10/redesigned-comments-on-android-docs-sheets-slides.html), [Notion 2.12 comments](https://www.notion.com/zh-cn/releases/2021-09-21); the rest from current product use.
+
+## 3. Stream A: recommended design (simple)
+
+Keep the vocabulary "annotations" / "note" (Phase 0 rule: "comments" means Giscus). Keep all Phase 0 data, API and identity rules.
+
+### 3.1 Top bar (entry point)
+
+When annotations are on for the page, a slim bar (36px) sits directly under the site navbar, sticky at `top: var(--navbar-height)`, full content width. Precedent: the temporary-site banner. It replaces the bottom-left pill.
+
+```
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ [site navbar]                                                                │
+├──────────────────────────────────────────────────────────────────────────────┤
+│ ✎ Open for feedback · 3 notes      Select text to add a note    [Show notes] │
+└──────────────────────────────────────────────────────────────────────────────┘
+```
+
+- Left: state + count. Middle (desktop only): the hint. Right: a toggle button "Show notes" / "Hide notes" (`aria-expanded`, `aria-controls` only when the panel exists).
+- Phone: `✎ 3 notes · select text to add one   [Notes]`, same height.
+- Muted styling from theme tokens (background `--color-background`, bottom border `--color-foreground-200`); no accent fill.
+- Zero notes: "Open for feedback · select text to add a note", no toggle.
+
+### 3.2 Selection button
+
+Keep Phase 0's floating **Annotate** button, clamped to the viewport (`1pr.6`). On touch keep the full-width button above the browser bar (works on first tap). Clicking it opens the panel/sheet with the composer focused.
+
+### 3.3 Desktop panel: docked, never covering text
+
+```
+ sidebar      page body (#mdxpage)                         notes panel (320px)
+ ────────  ───────────────────────────────────────────   ┌──────────────────────────┐
+           And yet [the humble file keeps coming back].  │ Notes (3)             ✕  │
+           It is the one format every tool can read…     │ ──────────────────────── │
+                                                         │ “the humble file…”       │
+           Plain text is also the native language…       │ Love this line. Could    │
+           something, [the most reliable thing it can    │ you give one example?    │
+           hand back is a file].                         │ Maya · 2 days ago        │
+                                                         │ ──────────────────────── │
+                                                         │ “the most reliable…”     │
+                                                         │ Is this still true for   │
+                                                         │ HTML output?             │
+                                                         │ Sam · 2 days ago         │
+                                                         └──────────────────────────┘
+```
+
+- **Docked in the right column**, below the top bar, replacing the TOC while open (TOC hidden, not moved). If the space right of `#mdxpage` is under 320px, the page body gets `margin-right: 320px` (push, not overlay). Text is never covered, closing `1pr.8`.
+- **List in page order**, quote as a short one-line excerpt. **Linked both ways:** click a highlight → panel opens if closed, its note scrolls into view and is outlined, highlight switches to a stronger "active" style; click a note → page scrolls to its highlight.
+- **Composer at the top of the panel** when active: quote excerpt, one textarea ("Add a note…"), "as Maya · change" line (name asked inline the first time only), small "Post" button; ⌘/Ctrl+Enter posts, Esc cancels. List stays in place below.
+- **Author and time** in normal text weight, relative time (`Intl.RelativeTimeFormat`, full date in `title`).
+- **Outdated notes** (quote not found) grouped at the bottom under "Not found on page (N)", collapsed. Resolved notes stay where Phase 0 has them (collapsed "Resolved (N)").
+- "Site owner? Manage annotations" moves to a small footer link at the bottom of the panel.
+- Panel open/closed remembered per site in `localStorage` (try/catch). Default: closed, so the reader sees the page first and the top bar invites them in.
+
+### 3.4 Phone: bottom sheet
+
+```
+┌──────────────────────────┐   ┌──────────────────────────┐
+│ ✎ 3 notes      [Notes]   │   │ ✎ 3 notes      [Notes]   │
+│ And yet [the humble file │   │ …the humble file keeps…  │
+│ keeps coming back]. It   │   │ ──────────────────────── │
+│ is the one format every  │   │ ▁▁▁                      │
+│ tool can read…           │   │ Notes (3)             ✕  │
+│ ──────────────────────── │   │ “the humble file…”       │
+│ ▁▁▁                      │   │ Love this line. Could…   │
+│ Maya · 2 days ago        │   │ Maya · 2 days ago        │
+│ Love this line. Could…   │   │ “the most reliable…”     │
+│ ‹ 1 of 3 ›            ✕  │   │ Is this still true…      │
+└──────────────────────────┘   └──────────────────────────┘
+  tap highlight: peek (~35%)     tap [Notes]: list (~70%)
+```
+
+- Tap a highlight → sheet at **peek** height with that note, passage still visible above; ‹ › steps through notes and scrolls the page to each highlight.
+- Tap [Notes] → sheet at ~70% with the full list. Annotate → sheet at ~70% with composer focused, page scrolled so the selection sits above the sheet.
+- `role="dialog"`, focus moved in and returned to the trigger on close; Esc and swipe-down close. `env(safe-area-inset-bottom)` and `visualViewport` keep the composer above the iOS keyboard.
+
+### 3.5 Alternatives (not recommended for now)
+
+- **A. Google Docs margin cards.** Each note as a card aligned to its highlight's height, active card pushes neighbours. Best reading experience, but a layout engine (recompute on resize, font load, DOM changes; collisions) roughly doubles the desktop work. Good follow-up once the docked panel ships; the panel's linking makes it an incremental step.
+- **B. No bar, just a better floating control.** Keep a bottom control but move it to a labelled tab at the right edge (Hypothesis-style). Cheaper, but stays easy to miss and still competes with "Built with Flowershow" and report-abuse.
+
+## 4. Stream A: PRs
+
+| # | PR | Scope | Acceptance criteria | Effort |
+|---|---|---|---|---|
+| A1 | Top bar + docked desktop panel | Split `page-annotations.tsx` (anchoring hook, `TopBar`, `NotesPanel`, `NoteItem`); top bar replaces pill; docked panel replaces TOC / pushes body; two-way highlight ↔ note linking with active highlight style; lighter composer + inline name prompt; relative times; outdated group; footer manage link; `1pr.6` a11y (focus return, `aria-controls`, clamped button) and short-quote anchoring fix | At 1024/1280/1440/1920 no body text is covered with the panel open; bar visible and sticky under the navbar on every annotated page, absent when annotations off; clicking a highlight shows its note and vice versa; keyboard-only: open panel, post a note, close, focus back on trigger; Phase 0 unit tests updated and green; e2e for subdomain, custom domain and password site still green | ~8 h |
+| A2 | Phone bottom sheet + docs/changelog | Peek/expanded sheet, ‹ › stepping, composer above keyboard, dialog focus; `docs/reference/annotations.md` and site docs updated; changelog entry with 1440px screenshot | Pixel 7 and iPhone 13 Playwright: tap highlight → peek shows that note with passage visible; Annotate works on first tap and posts with keyboard open; manual check on iOS Safari and Android Chrome; changelog per house style | ~5 h |
+
+Order: A1 → A2. Both ship behind the existing per-site annotations setting; no migration, no API change.
+
+## 5. Owner / logged-in viewer: pending spike
+
+Placeholder. Whether a site page can know its owner (or any logged-in user) is viewing it is being investigated in `flowershow-1pr.12`. Its findings will be added here and feed both streams: in A, possibly owner-only controls in the top bar (e.g. "Manage", "Turn off"); in B, author badges and who may resolve. Stream A assumes no owner detection.
+
+## 6. Stream B (later): replies and resolving, job stories first
+
+Replies are a new feature area (`flowershow-1pr.11`, blocked on A). Before any design, agree the job stories, then copy the simplest proven pattern (Google Docs threads: flat replies, one Resolve button, resolved hidden behind a filter) and cut it down.
+
+Draft job stories:
+
+1. **Reviewer answers back.** When the author replies to my note asking what I meant, I want to answer on the same note, so the conversation stays next to the passage and doesn't move to chat.
+2. **Author responds without editing.** When a note is a question or I disagree with it, I want to reply on the page ("kept as is because…"), so the reviewer knows it was seen and why nothing changed.
+3. **Reviewer closes their own point.** When I reread the page and see my point addressed, I want to mark the note resolved, so the remaining open notes are the ones that still matter.
+4. **Agent closes the loop.** When my agent has pulled notes, edited the Markdown and republished, I want it to resolve each handled note with a one-line "what I changed", so reviewers see what happened without diffing the page.
+5. **Author triages what needs attention.** When I come back to a page after a few days, I want to see which notes are new or have an unanswered reply, so I deal with those first.
+6. **Second reviewer agrees.** When someone has already made the point I was going to make, I want to add "+1, same here" to their note, so the author sees weight without duplicate notes.
+
+Prior draft (2026-10-18, first version of this doc), **not agreed, input only**: a separate `AnnotationReply` table rather than `parentId` on `Annotation`; on-page resolve/reopen by anyone with delete staying owner-only (a reversal of ADR 0015's owner-only resolve); `fl annotations reply <id> -m`, `resolve <id> -m`, `reopen`; threads as the unit in `fl annotations pull` with each reply as one JSON line inside the untrusted wrapper; an "Author" badge only for replies posted with the owner's token. See commit `948052a1` for the full text.
+
+## 7. Out of scope (both streams for now)
+
+Dashboard changes, email/notifications, realtime updates, edit/delete own note, @mentions, reactions, rich text in notes, annotating images/canvas/HTML pages, rate limiting beyond caps.
 
 ## 8. Open questions for Rufus
 
-1. **Resolve by anyone on the page** (reverses ADR 0015's owner-only resolve), with delete still owner-only. OK, or prefer viewer-local hide?
-2. **Rail visible by default** when a page has open threads, hiding the TOC while shown. Or start collapsed behind the pill?
-3. **"Author" badge only for CLI/API replies.** Acceptable that you show as a plain named reviewer when replying in the browser, until we solve owner detection on site domains?
-4. **Owner reply from the dashboard** too (cheap via tRPC session), or CLI-only for now?
-5. **Caps:** 100 replies per thread and 5000 replies per site, fine?
+Stream A:
+
+1. **Top bar under the navbar, sticky** on desktop and phone (36px), replacing the pill. OK, or non-sticky on phones to save space?
+2. **Wording:** "Open for feedback · 3 notes" and "notes" in the UI, keeping "comments" for Giscus. Or switch the UI to "comments" like everyone else?
+3. **Docked panel first, margin-aligned cards later** (alternative A). OK to start with the list?
+4. **Panel closed by default**, opened from the bar or by clicking a highlight. Or open by default when a page has notes?
+
+Stream B:
+
+5. Are the six job stories the right set? Any to drop for v1 (6 looks optional; 4 matters most for the agent loop)?
+6. Who may resolve: anyone on the page, the original reviewer only, or the owner only? Depends on the `1pr.12` spike.
