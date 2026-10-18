@@ -10,6 +10,7 @@ import { getSiteUrl } from './lib/get-site-url';
 import { resolveSiteAlias } from './lib/resolve-site-alias';
 import PostHogClient from './lib/server-posthog';
 import { siteKeyBytes } from './lib/site-hmac-key';
+import { OWNER_PATHS, safeReturnPath } from './lib/site-owner-session';
 
 export const config = {
   matcher: [
@@ -206,6 +207,9 @@ export default async function middleware(req: NextRequest) {
       return rewrite(`/api/robots/${hostname}`, req, phBootstrap);
     }
 
+    const ownerRoute = siteOwnerRouteIfNeeded(req, site, phBootstrap);
+    if (ownerRoute) return ownerRoute;
+
     if (pathname === '/_login') {
       return rewrite(
         `/site-access/${username}/${projectname}`,
@@ -275,6 +279,9 @@ export default async function middleware(req: NextRequest) {
   const site = await fetchSite(req, `/api/sites/_domain/${hostname}`);
   if (!site) return rewrite(`/not-found`, req, phBootstrap);
 
+  const ownerRoute = siteOwnerRouteIfNeeded(req, site, phBootstrap);
+  if (ownerRoute) return ownerRoute;
+
   // Per-site login page
   if (pathname === '/_login') {
     return rewrite(`/site-access/_domain/${hostname}`, req, phBootstrap);
@@ -336,6 +343,44 @@ function rewrite(targetPath: string, req: NextRequest, ph?: PHBootstrap) {
     NextResponse.rewrite(new URL(targetPath, req.url)),
     ph ?? null,
   );
+}
+
+/**
+ * Owner sign-in handshake on a site host (flowershow-1pr.15). Served before the
+ * password gate so an owner can sign in on a protected site. The site id comes
+ * from this host's lookup, never from the request, so a code or cookie can only
+ * act for the site this host serves.
+ */
+export function siteOwnerRouteIfNeeded(
+  req: NextRequest,
+  site: { id: string },
+  ph: PHBootstrap,
+) {
+  const { pathname, search, searchParams } = req.nextUrl;
+  const api = `/api/sites/id/${encodeURIComponent(site.id)}/owner`;
+  switch (pathname) {
+    case OWNER_PATHS.signin: {
+      const returnPath = safeReturnPath(searchParams.get('return'));
+      const secure =
+        env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+        env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+      const cloud = `${secure ? 'https' : 'http'}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`;
+      const res = NextResponse.redirect(
+        `${cloud}${api}/authorize?return=${encodeURIComponent(returnPath)}`,
+        302,
+      );
+      res.headers.set('Cache-Control', 'no-store');
+      return res;
+    }
+    case OWNER_PATHS.callback:
+      return rewrite(`${api}/callback${search}`, req, ph);
+    case OWNER_PATHS.me:
+      return rewrite(`${api}/me`, req, ph);
+    case OWNER_PATHS.signout:
+      return rewrite(`${api}/signout`, req, ph);
+    default:
+      return null;
+  }
 }
 
 function normalizePath(url: URL) {

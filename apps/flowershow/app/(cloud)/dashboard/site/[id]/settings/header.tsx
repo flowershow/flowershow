@@ -115,7 +115,20 @@ export default function SiteSettingsHeader({ site }: { site: FullSite }) {
           </div>
         </div>
 
-        <div className="shrink-0">
+        <div className="flex shrink-0 flex-col items-stretch gap-2 sm:flex-row sm:items-center">
+          {!visitDisabled && (
+            <a
+              // Owner sign-in handshake: cloud checks the session, the site sets its own owner cookie.
+              href={`/api/sites/id/${encodeURIComponent(site.id)}/owner/authorize?return=%2F`}
+              data-testid="view-as-owner"
+              target="_blank"
+              rel="noreferrer"
+              title="Open your site signed in as its owner, so you can resolve and delete comments on the page"
+              className="inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-medium text-stone-600 hover:text-stone-900 hover:underline dark:text-zinc-400 dark:hover:text-zinc-100"
+            >
+              View as owner
+            </a>
+          )}
           {visitDisabled ? (
             <button
               type="button"

@@ -1,14 +1,19 @@
 import type { Annotation } from '@flowershow/api-contract';
 
+export type OwnerAction = 'resolve' | 'reopen' | 'delete';
+
 export function CommentItem({
   annotation,
   onSelect,
   focused = false,
+  onOwnerAction,
 }: {
   annotation: Annotation;
   /** Scroll the page to this comment's highlight (absent when the quote isn't on the page). */
   onSelect?: () => void;
   focused?: boolean;
+  /** Present only for the signed-in site owner: resolve/reopen and delete. */
+  onOwnerAction?: (action: OwnerAction) => void;
 }) {
   const quote = `“${truncate(annotation.selector.exact, 140)}”`;
   return (
@@ -31,6 +36,26 @@ export function CommentItem({
       )}
       <p className="fs-annotations-note">{annotation.note}</p>
       <CommentMeta annotation={annotation} />
+      {onOwnerAction && (
+        <p className="fs-annotations-owner-actions">
+          <button
+            type="button"
+            className="fs-annotations-link"
+            onClick={() =>
+              onOwnerAction(annotation.status === 'open' ? 'resolve' : 'reopen')
+            }
+          >
+            {annotation.status === 'open' ? 'Resolve' : 'Reopen'}
+          </button>
+          <button
+            type="button"
+            className="fs-annotations-link"
+            onClick={() => onOwnerAction('delete')}
+          >
+            Delete
+          </button>
+        </p>
+      )}
     </li>
   );
 }

@@ -383,6 +383,28 @@ button.fs-annotations-quote:hover {
   font-size: 0.75rem;
   opacity: 0.7;
 }
+.fs-annotations-manage .fs-annotations-link + .fs-annotations-link,
+.fs-annotations-manage a + .fs-annotations-link {
+  margin-left: 0.75rem;
+}
+/* Owner sign-in (1pr.15): a quiet badge in the bar and per-comment actions. */
+.fs-comments-bar-owner {
+  flex-shrink: 0;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.fs-annotations-owner-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+}
 .fs-annotations-error {
   margin: 0;
   color: var(--color-danger, #dc2626);

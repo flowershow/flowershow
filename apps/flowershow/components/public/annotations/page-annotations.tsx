@@ -24,7 +24,7 @@ import {
   textOffsetAt,
 } from '@/lib/annotations/anchoring';
 import { ANNOTATION_LIMITS } from '@/lib/annotations/limits';
-import { CommentItem, CommentMeta, truncate } from './comment-item';
+import { CommentItem, type OwnerAction, truncate } from './comment-item';
 import { CommentsBar, PANEL_ID } from './comments-bar';
 import '@/styles/annotations.css';
 
@@ -52,6 +52,10 @@ const DOCKED_QUERY = '(min-width: 1280px)';
 const BUILT_WITH_ID = 'built-with-button';
 /** How far a downward swipe on the sheet's header must travel to close it. */
 const SWIPE_CLOSE_PX = 60;
+/** Owner sign-in endpoints on the site's own host (flowershow-1pr.15). */
+export const OWNER_ME_PATH = '/_flowershow/owner/me';
+export const OWNER_SIGNIN_PATH = '/_flowershow/owner/signin';
+export const OWNER_SIGNOUT_PATH = '/_flowershow/owner/signout';
 
 type Placed = { annotation: Annotation; start: number; end: number };
 type PendingSelection = DescribedSelection & { top: number; left: number };
@@ -194,6 +198,9 @@ export default function PageAnnotations({
   const [editingName, setEditingName] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  /** Signed in as the site owner (site-scoped cookie), fetched after load. */
+  const [isOwner, setIsOwner] = useState(false);
+  const [ownerError, setOwnerError] = useState<string | null>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   );
@@ -269,6 +276,73 @@ export default function PageAnnotations({
       cancelled = true;
     };
   }, [endpoint, pagePath]);
+
+  // Owner status comes from a same-origin fetch, never from the page HTML (which stays cacheable).
+  useEffect(() => {
+    let cancelled = false;
+    fetch(OWNER_ME_PATH, { credentials: 'same-origin', cache: 'no-store' })
+      .then((res) =>
+        res.ok ? (res.json() as Promise<{ isOwner?: unknown }>) : null,
+      )
+      .then((data) => {
+        if (!cancelled) setIsOwner(data?.isOwner === true);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const runOwnerAction = async (
+    annotation: Annotation,
+    action: OwnerAction,
+  ) => {
+    if (
+      action === 'delete' &&
+      !window.confirm('Delete this comment? This cannot be undone.')
+    )
+      return;
+    setOwnerError(null);
+    try {
+      const res = await fetch(`${endpoint}/bulk`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ids: [annotation.id] }),
+      });
+      if (res.status === 401 || res.status === 403) {
+        setIsOwner(false);
+        throw new Error('Your owner sign-in has expired. Sign in again.');
+      }
+      if (!res.ok) throw new Error('Could not update the comment.');
+      setAnnotations((previous) =>
+        action === 'delete'
+          ? previous.filter((a) => a.id !== annotation.id)
+          : previous.map((a) =>
+              a.id === annotation.id
+                ? { ...a, status: action === 'resolve' ? 'resolved' : 'open' }
+                : a,
+            ),
+      );
+    } catch (err) {
+      setOwnerError(
+        err instanceof Error ? err.message : 'Could not update the comment.',
+      );
+    }
+  };
+
+  const signOutOwner = async () => {
+    await fetch(OWNER_SIGNOUT_PATH, {
+      method: 'POST',
+      credentials: 'same-origin',
+    }).catch(() => {});
+    setIsOwner(false);
+  };
+
+  const ownerActionFor = (annotation: Annotation) =>
+    isOwner
+      ? (action: OwnerAction) => void runOwnerAction(annotation, action)
+      : undefined;
 
   const openAnnotations = annotations.filter((a) => a.status === 'open');
   const resolvedAnnotations = annotations.filter(
@@ -563,6 +637,7 @@ export default function PageAnnotations({
         onToggle={togglePanel}
         toggleRef={toggleRef}
         style={fixedNavHeight ? { marginTop: fixedNavHeight } : undefined}
+        isOwner={isOwner}
       />
       {mounted &&
         createPortal(
@@ -640,6 +715,11 @@ export default function PageAnnotations({
                   </button>
                 </div>
                 <div className="fs-annotations-body">
+                  {ownerError && (
+                    <p role="alert" className="fs-annotations-error">
+                      {ownerError}
+                    </p>
+                  )}
                   {draft && (
                     <form className="fs-annotations-form" onSubmit={submit}>
                       <blockquote className="fs-annotations-quote">
@@ -715,6 +795,7 @@ export default function PageAnnotations({
                           annotation={item.annotation}
                           focused={item.annotation.id === focusedId}
                           onSelect={() => scrollTo(item)}
+                          onOwnerAction={ownerActionFor(item.annotation)}
                         />
                       ))}
                     </ol>
@@ -728,6 +809,7 @@ export default function PageAnnotations({
                             key={annotation.id}
                             annotation={annotation}
                             focused={annotation.id === focusedId}
+                            onOwnerAction={ownerActionFor(annotation)}
                           />
                         ))}
                       </ol>
@@ -738,28 +820,43 @@ export default function PageAnnotations({
                       <summary>Resolved ({resolvedAnnotations.length})</summary>
                       <ol className="fs-annotations-list">
                         {resolvedAnnotations.map((annotation) => (
-                          <li
+                          <CommentItem
                             key={annotation.id}
-                            id={`fs-annotation-${annotation.id}`}
-                            className="fs-annotations-item"
-                          >
-                            <blockquote className="fs-annotations-quote">
-                              “{truncate(annotation.selector.exact, 140)}”
-                            </blockquote>
-                            <p className="fs-annotations-note">
-                              {annotation.note}
-                            </p>
-                            <CommentMeta annotation={annotation} />
-                          </li>
+                            annotation={annotation}
+                            onOwnerAction={ownerActionFor(annotation)}
+                          />
                         ))}
                       </ol>
                     </details>
                   )}
                 </div>
                 <p className="fs-annotations-manage">
-                  <a href={manageUrl} target="_blank" rel="noopener noreferrer">
-                    Site owner? Manage comments
-                  </a>
+                  {isOwner ? (
+                    <>
+                      <a
+                        href={manageUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        Manage all comments
+                      </a>
+                      <button
+                        type="button"
+                        className="fs-annotations-link"
+                        onClick={() => void signOutOwner()}
+                      >
+                        Sign out as owner
+                      </button>
+                    </>
+                  ) : (
+                    <a
+                      href={`${OWNER_SIGNIN_PATH}?return=${encodeURIComponent(
+                        window.location.pathname + window.location.search,
+                      )}`}
+                    >
+                      Site owner? Sign in to manage comments
+                    </a>
+                  )}
                 </p>
               </aside>
             )}

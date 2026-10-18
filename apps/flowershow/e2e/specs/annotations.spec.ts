@@ -193,6 +193,54 @@ test('At 1440px the bar sticks under the navbar and the open panel sits beside t
   ).toBe(false);
 });
 
+test('An anonymous visitor is not the owner and is offered owner sign-in', async ({
+  page,
+  basePath,
+}) => {
+  // Owner state is a separate, never-cached request; page HTML stays anonymous.
+  const me = await page.request.get(`${basePath}/_flowershow/owner/me`);
+  expect(me.status()).toBe(200);
+  expect(await me.json()).toEqual({ isOwner: false });
+  expect(me.headers()['cache-control']).toBe('private, no-store');
+
+  // A forged owner cookie changes nothing.
+  const forged = await page.request.get(`${basePath}/_flowershow/owner/me`, {
+    headers: {
+      cookie: 'fs_site_owner=eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJ4In0.forged',
+    },
+  });
+  expect(await forged.json()).toEqual({ isOwner: false });
+
+  // Sign-in hands off to the cloud host; an absolute return URL is dropped.
+  const signin = await page.request.get(
+    `${basePath}/_flowershow/owner/signin?return=https%3A%2F%2Fevil.example`,
+    { maxRedirects: 0 },
+  );
+  expect(signin.status()).toBe(302);
+  const location = new URL(signin.headers().location!);
+  expect(location.pathname).toMatch(
+    /^\/api\/sites\/id\/[^/]+\/owner\/authorize$/,
+  );
+  expect(location.searchParams.get('return')).toBe('/');
+
+  // A made-up code never signs anyone in.
+  const callback = await page.request.get(
+    `${basePath}/_flowershow/owner/callback?code=made-up&return=%2F`,
+    { maxRedirects: 0 },
+  );
+  expect(callback.status()).toBe(400);
+  expect(callback.headers()['set-cookie']).toBeUndefined();
+
+  await page.goto(`${basePath}${PAGE}`);
+  await selectText(page, 'quick brown fox');
+  await page.getByRole('button', { name: 'Comment', exact: true }).click();
+  const panel = page.getByRole('complementary', PANEL);
+  await expect(
+    panel.getByRole('link', { name: 'Site owner? Sign in to manage comments' }),
+  ).toHaveAttribute('href', /^\/_flowershow\/owner\/signin\?return=%2F/);
+  await expect(page.locator('.fs-comments-bar-owner')).toHaveCount(0);
+});
+
 test.describe('on a phone', () => {
   // devices['Pixel 7'] includes defaultBrowserType, which test.use() rejects inside a describe.
   const { defaultBrowserType, ...pixel7 } = devices['Pixel 7'];
