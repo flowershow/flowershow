@@ -45,4 +45,3 @@ See [[listings|Listing pages]]. The `<List />` component keeps working; the docs
 - `<List />` no longer lists pages marked `publish: false`.
 - `<List />` pagination shows one `...` per gap instead of one per hidden page.
 - The RSS feed no longer fails when a post has an unusual `title`, `author` or `description` (a number, or a wiki link).
-- `config.json` redirects now work on `*.flowershow.me` sites. They used to send visitors to a broken `/@user/site/...` address, which showed a 404.
