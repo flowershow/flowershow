@@ -133,6 +133,16 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
+    // MCP OAuth consent (flowershow-3fr.2): never framed (clickjacking on Allow).
+    if (pathname === '/oauth/consent') {
+      const res = NextResponse.rewrite(new URL(path, req.url));
+      res.headers.set('X-Frame-Options', 'DENY');
+      res.headers.set('Content-Security-Policy', "frame-ancestors 'none'");
+      res.headers.set('Referrer-Policy', 'no-referrer');
+      res.headers.set('Cache-Control', 'no-store');
+      return withPHBootstrapCookie(res, phBootstrap);
+    }
+
     return withPHBootstrapCookie(
       NextResponse.rewrite(new URL(`/dashboard${path}`, req.url)),
       phBootstrap,

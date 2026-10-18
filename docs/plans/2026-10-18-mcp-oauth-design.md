@@ -199,6 +199,12 @@ Recorded as the PRs landed; each says why.
 - **Refresh token presented by the wrong `client_id`** returns `invalid_grant` without consuming the token (so a third party can't trigger reuse-revocation of someone else's grant with a mismatched client). Any presentation of an already-used refresh token by its own client revokes the grant, including a client racing itself.
 - **Token endpoint refuses client authentication** (`Authorization` header or `client_secret`) with `invalid_client`, since every client is public.
 - **Cleanup**: apart from rate-limit windows, expired-row cleanup stays in PR 4 as planned.
+- **Pending request ids are 256-bit random values** (PR 2), not cuids: the id is the consent page's only handle on the request, so it must be unguessable. A pending request is deleted when it is decided, so Allow/Cancel works once.
+- **Consent skip happens on the consent page itself** (PR 2): when the signed-in user already has an unrevoked grant for the same client, redirect URI, scope and resource, the page issues a code and redirects without showing the screen. A grant is reused (not duplicated) in that case and when the user approves again.
+- **The consent page can't be framed** (`X-Frame-Options: DENY`, `frame-ancestors 'none'`, set in middleware) and the authorize error page has a locked-down CSP.
+- **`state` is capped at 2048 characters** (longer is `invalid_request`).
+- **`mcp_oauth_grant_created`** is captured in PR 2, where grants are created; the other events stay in PR 4.
+- **Playwright** signs in by setting a next-auth session cookie minted with the test secret (the login providers themselves are not exercised); the logged-out case asserts the redirect to `/login?callbackUrl=/oauth/consent?req=…` and the return to consent.
 
 ## Drop the "beta" label: checklist
 
