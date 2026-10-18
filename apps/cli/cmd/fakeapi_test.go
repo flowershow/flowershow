@@ -323,6 +323,8 @@ func setupFakeAPI(t *testing.T, loggedIn bool, existing ...string) *fakeAPI {
 
 	home := t.TempDir()
 	t.Setenv("HOME", home)
+	// os.UserConfigDir (claims store) uses XDG_CONFIG_HOME on Linux.
+	t.Setenv("XDG_CONFIG_HOME", filepath.Join(home, ".config"))
 	t.Setenv("API_URL", f.server.URL)
 	t.Setenv("FLOWERSHOW_TELEMETRY_DISABLED", "1")
 	t.Setenv("FLOWERSHOW_NO_UPDATE_CHECK", "1")
