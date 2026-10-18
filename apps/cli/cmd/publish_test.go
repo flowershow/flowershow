@@ -314,7 +314,7 @@ func makeAnonFolder(t *testing.T, name, siteID, claimToken string) string {
 		ClaimURL:   anonClaimURL,
 		ExpiresAt:  anonExpiresAt,
 	}
-	if err := localconfig.Write(dir, cfg); err != nil {
+	if err := localconfig.WriteAnon(dir, cfg); err != nil {
 		t.Fatal(err)
 	}
 	return dir
@@ -368,11 +368,17 @@ func TestPublishAnonFolder(t *testing.T) {
 		}
 	}
 	raw := readRawConfig(t, dir)
-	for _, want := range []string{`"anon": true`, `"siteId": "` + anonSiteID + `"`, `"claimToken": "` + anonClaimToken + `"`, `"claimUrl"`, `"liveUrl"`} {
+	for _, want := range []string{`"anon": true`, `"siteId": "` + anonSiteID + `"`, `"liveUrl"`} {
 		if !strings.Contains(raw, want) {
 			t.Fatalf(".flowershow should contain %s, got:\n%s", want, raw)
 		}
 	}
+	// flowershow-wkc: the claim token (and the claim URL, which embeds it)
+	// never land in the project folder; they go to the private claims store.
+	if strings.Contains(raw, anonClaimToken) || strings.Contains(raw, "claimToken") || strings.Contains(raw, "claimUrl") {
+		t.Fatalf(".flowershow must not contain the claim token or URL, got:\n%s", raw)
+	}
+	assertClaimStored(t, anonSiteID, anonClaimToken)
 	if len(f.createdNames()) != 0 {
 		t.Fatal("anon publish must not create an account site")
 	}

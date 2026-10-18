@@ -108,7 +108,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	// Read local config (folder mode only)
 	var localCfg *localconfig.Config
 	if isFolderMode {
-		localCfg = localconfig.Read(folderPath)
+		localCfg = loadLink(folderPath)
 	}
 
 	// A link to an anonymous site is only used by --anon. For account
@@ -360,6 +360,8 @@ func relinkClaimedSite(folderPath string, anonCfg *localconfig.Config, site api.
 	cfg.SiteName = site.ProjectName
 	if err := localconfig.Write(folderPath, &cfg); err != nil {
 		ui.PrintWarning(fmt.Sprintf("Couldn't update .flowershow: %s", err))
+	} else {
+		localconfig.ForgetClaim(anonCfg.SiteID)
 	}
 	fmt.Printf("\n%s This folder's site was claimed into your account; updating %s\n\n", ui.Green("✓"), site.URL)
 	return &cfg
@@ -468,6 +470,15 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 		printAnonSuccess(saved.LiveURL, saved.ClaimURL, saved.ExpiresAt)
 		return processingError(failed)
 	}
+	if saved != nil && canLink {
+		// Linked to an anonymous site whose claim token isn't on this
+		// computer (e.g. published elsewhere): it can't be updated from here.
+		note := "This folder's anonymous site"
+		if saved.LiveURL != "" {
+			note += " (" + saved.LiveURL + ")"
+		}
+		fmt.Printf("\n%s %s can't be updated from this computer: its claim token isn't saved here (it was probably published from another computer). Publishing a new anonymous site.\n\n", ui.Yellow("Note:"), note)
+	}
 
 	sp.Start("Creating site...")
 	created, err := api.CreateAnonSite()
@@ -489,7 +500,7 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 	// Link the folder straight away (not after upload), so a failed upload
 	// can be retried into the same site.
 	if canLink {
-		if err := localconfig.Write(folderPath, &localconfig.Config{
+		if err := localconfig.WriteAnon(folderPath, &localconfig.Config{
 			Anon:       true,
 			SiteID:     created.SiteID,
 			ClaimToken: created.ClaimToken,
@@ -548,6 +559,7 @@ func clearAnonConfig(folderPath string, cfg *localconfig.Config) {
 	if folderPath == "" {
 		return
 	}
+	localconfig.ForgetClaim(cfg.SiteID)
 	rest := *cfg
 	rest.Anon, rest.SiteID, rest.ClaimToken, rest.ExpiresAt, rest.LiveURL, rest.ClaimURL = false, "", "", "", "", ""
 	if rest == (localconfig.Config{}) {
