@@ -1,15 +1,41 @@
 'use client';
 
-import { useActionState } from 'react';
+import { useActionState, useEffect, useRef } from 'react';
 import { type ConsentState, decideConsent } from './actions';
 
-export function ConsentForm({ requestId }: { requestId: string }) {
+/**
+ * Allow / Cancel. With `autoApprove` (a reconnect to an app the user already
+ * approved) the form submits Allow itself once the page has loaded: the
+ * approval is still a same-origin POST, never a side effect of the GET.
+ */
+export function ConsentForm({
+  requestId,
+  autoApprove = false,
+}: {
+  requestId: string;
+  autoApprove?: boolean;
+}) {
   const [state, action, pending] = useActionState<ConsentState, FormData>(
     decideConsent,
     null,
   );
+  const formRef = useRef<HTMLFormElement>(null);
+  const allowRef = useRef<HTMLButtonElement>(null);
+  const submitted = useRef(false);
+
+  useEffect(() => {
+    if (!autoApprove || submitted.current) return;
+    submitted.current = true;
+    formRef.current?.requestSubmit(allowRef.current);
+  }, [autoApprove]);
+
   return (
-    <form action={action} className="space-y-4">
+    <form
+      ref={formRef}
+      action={action}
+      className="space-y-4"
+      data-testid="oauth-consent-form"
+    >
       <input type="hidden" name="req" value={requestId} />
       {state?.error && (
         <div
@@ -30,6 +56,7 @@ export function ConsentForm({ requestId }: { requestId: string }) {
           Cancel
         </button>
         <button
+          ref={allowRef}
           type="submit"
           name="decision"
           value="allow"
@@ -37,7 +64,7 @@ export function ConsentForm({ requestId }: { requestId: string }) {
           data-testid="oauth-allow"
           className="flex-1 rounded-md border border-transparent bg-black px-4 py-2 text-sm font-medium text-white hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
         >
-          {pending ? 'Connecting…' : 'Allow'}
+          {pending ? 'Connecting…' : autoApprove ? 'Continue' : 'Allow'}
         </button>
       </div>
     </form>

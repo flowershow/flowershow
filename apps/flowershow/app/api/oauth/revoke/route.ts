@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
   if (disabled) return disabled;
   if (!(await checkOAuthRateLimit('revoke', request.headers))) {
     return oauthError(
-      'slow_down',
+      'invalid_request',
       'Too many requests. Try again shortly.',
       429,
       {

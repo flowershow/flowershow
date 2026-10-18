@@ -5,6 +5,8 @@ import {
   type ResolvedClient,
   resolveClient,
 } from './clients';
+import { bindingMatches, hashBinding, newBindingSecret } from './binding';
+import { env } from '@/env.mjs';
 import { cloudOrigin, oauthIssuer, PENDING_REQUEST_TTL_S } from './config';
 import {
   isValidCodeChallenge,
@@ -32,13 +34,22 @@ export type PendingParams = {
   scope: string;
   resource: string;
   state: string | null;
+  /** SHA-256 of the browser-binding cookie set by /oauth/authorize. */
+  bindingHash: string;
 };
 
 export type AuthorizeOutcome =
   /** Show our error page: the client or redirect URI can't be trusted. */
   | { kind: 'error_page'; status: number; message: string }
-  /** Redirect the browser (to the client with an error, or to consent). */
-  | { kind: 'redirect'; location: string };
+  /**
+   * Redirect the browser (to the client with an error, or to consent). On
+   * the way to consent, `binding` is the cookie to set on that response.
+   */
+  | {
+      kind: 'redirect';
+      location: string;
+      binding?: { pendingId: string; secret: string };
+    };
 
 /** Append authorization response parameters, keeping any existing query. */
 export function authorizationRedirect(
@@ -171,12 +182,14 @@ export async function startAuthorization(
     );
   }
 
+  const secret = newBindingSecret();
   const params: PendingParams = {
     redirectUri,
     codeChallenge: challenge,
     scope: scope.scope,
     resource: resource.resource,
     state,
+    bindingHash: hashBinding(secret),
   };
   const pending = await prisma.oAuthPendingRequest.create({
     data: {
@@ -189,6 +202,7 @@ export async function startAuthorization(
   return {
     kind: 'redirect',
     location: `${cloudOrigin()}/oauth/consent?req=${encodeURIComponent(pending.id)}`,
+    binding: { pendingId: pending.id, secret },
   };
 }
 
@@ -206,6 +220,7 @@ function isPendingParams(p: unknown): p is PendingParams {
     typeof o.codeChallenge === 'string' &&
     typeof o.scope === 'string' &&
     typeof o.resource === 'string' &&
+    typeof o.bindingHash === 'string' &&
     (o.state === null || typeof o.state === 'string')
   );
 }
@@ -225,6 +240,14 @@ export async function loadPendingRequest(
   });
   if (!client) return null;
   return { id: row.id, params: row.params, client };
+}
+
+/** True when this browser's binding cookie belongs to the pending request. */
+export function isBoundToBrowser(
+  pending: PendingRequest,
+  cookieValue: string | undefined,
+): boolean {
+  return bindingMatches(cookieValue, pending.params.bindingHash);
 }
 
 /** Delete the pending request; true only for the caller that deleted it. */
@@ -261,6 +284,9 @@ export async function findReusableGrant(
   });
 }
 
+export const OTHER_BROWSER_MESSAGE =
+  'This sign-in request was started in a different browser. Start again from the app, in this browser.';
+
 export type ConsentOutcome =
   | { ok: true; location: string; grantId?: string; newGrant?: boolean }
   | { ok: false; message: string };
@@ -274,9 +300,13 @@ export async function decideAuthorization(
   pendingId: unknown,
   userId: string,
   decision: 'allow' | 'deny',
+  binding: string | undefined,
   now = new Date(),
 ): Promise<ConsentOutcome> {
   const pending = await loadPendingRequest(pendingId, now);
+  if (pending && !isBoundToBrowser(pending, binding)) {
+    return { ok: false, message: OTHER_BROWSER_MESSAGE };
+  }
   if (!pending || !(await consumePending(pending.id))) {
     return {
       ok: false,
@@ -334,4 +364,28 @@ export function redirectHostLabel(redirectUri: string): string {
   if (url.protocol === 'http:')
     return `${url.hostname} (an app on this computer)`;
   return url.host;
+}
+
+const bareHost = (host: string) => host.replace(/:\d+$/, '').toLowerCase();
+
+/**
+ * Who a client is, for the consent screen and Connected apps. A CIMD client's
+ * client_id is the https URL of its metadata document, so its hostname is the
+ * one identity Flowershow can vouch for (whoever controls that host published
+ * the document). `userHosted` flags hosts under our user-site domain
+ * (NEXT_PUBLIC_SITE_DOMAIN), where anyone can publish such a document.
+ */
+export function clientIdentity(client: {
+  clientId: string;
+  kind: 'DCR' | 'CIMD';
+}): { host: string; userHosted: boolean } | null {
+  if (client.kind !== 'CIMD') return null;
+  let host: string;
+  try {
+    host = new URL(client.clientId).hostname.toLowerCase();
+  } catch {
+    return null;
+  }
+  const site = bareHost(env.NEXT_PUBLIC_SITE_DOMAIN);
+  return { host, userHosted: host === site || host.endsWith(`.${site}`) };
 }

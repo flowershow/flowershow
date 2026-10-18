@@ -6,6 +6,8 @@ import {
   preflight,
   readParams,
 } from '@/lib/oauth/http';
+import { scheduleOAuthCleanup } from '@/lib/oauth/cleanup';
+import { captureOAuthEvent } from '@/lib/oauth/events';
 import { checkOAuthRateLimit } from '@/lib/oauth/rate-limit';
 import { exchangeAuthorizationCode, refreshTokens } from '@/lib/oauth/tokens';
 
@@ -18,21 +20,27 @@ export async function POST(request: NextRequest) {
   const disabled = disabledResponse();
   if (disabled) return disabled;
   if (!(await checkOAuthRateLimit('token', request.headers))) {
+    // slow_down is a device-flow error (RFC 8628); the token endpoint has no
+    // rate-limit code, so: 429 + invalid_request + Retry-After.
     return oauthError(
-      'slow_down',
+      'invalid_request',
       'Too many requests. Try again shortly.',
       429,
-      {
-        'Retry-After': '60',
-      },
+      { 'Retry-After': '60' },
     );
   }
+  scheduleOAuthCleanup();
   // Public clients only: refuse client authentication we can't verify.
-  if (request.headers.get('authorization')) {
+  // RFC 6749 §5.2: a 401 invalid_client carries WWW-Authenticate, with the
+  // scheme the client tried.
+  const authorization = request.headers.get('authorization');
+  if (authorization) {
+    const scheme = /^[A-Za-z][\w!#$%&'*+.^`|~-]*/.exec(authorization)?.[0];
     return oauthError(
       'invalid_client',
       'Client authentication is not supported; send client_id in the body',
       401,
+      { 'WWW-Authenticate': wwwAuthenticate(scheme ?? 'Basic') },
     );
   }
   const params = await readParams(request);
@@ -47,6 +55,7 @@ export async function POST(request: NextRequest) {
       'invalid_client',
       'Client secrets are not supported',
       401,
+      { 'WWW-Authenticate': wwwAuthenticate('Basic') },
     );
   }
 
@@ -75,7 +84,16 @@ export async function POST(request: NextRequest) {
     );
   }
   if (!result.ok) return oauthError(result.error, result.error_description);
+  if (params.grant_type === 'refresh_token') {
+    captureOAuthEvent(result.grant.userId, 'mcp_oauth_grant_refreshed', {
+      grant_id: result.grant.id,
+    });
+  }
   return oauthJson(result.tokens);
+}
+
+function wwwAuthenticate(scheme: string): string {
+  return `${scheme} realm="flowershow", error="invalid_client"`;
 }
 
 export { preflight as OPTIONS };

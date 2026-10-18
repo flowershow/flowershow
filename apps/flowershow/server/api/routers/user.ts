@@ -10,6 +10,8 @@ import {
   publicProcedure,
 } from '@/server/api/trpc';
 import { generatePatToken, hashToken } from '@/lib/cli-auth';
+import { listConnectedApps, revokeUserGrant } from '@/lib/oauth/grants';
+import { TRPCError } from '@trpc/server';
 
 export const userRouter = createTRPCRouter({
   getStats: publicProcedure.query(async ({ ctx }) => {
@@ -90,6 +92,29 @@ export const userRouter = createTRPCRouter({
       },
     });
   }),
+  // MCP OAuth "Connected apps" (flowershow-3fr.4).
+  getConnectedApps: protectedProcedure.query(async ({ ctx }) => {
+    return await listConnectedApps(ctx.session.user.id);
+  }),
+  revokeConnectedApp: protectedProcedure
+    .input(z.object({ grantId: z.string().min(1).max(100) }))
+    .mutation(async ({ ctx, input }) => {
+      const revoked = await revokeUserGrant(ctx.session.user.id, input.grantId);
+      if (!revoked) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'App not found or already disconnected',
+        });
+      }
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: ctx.session.user.id,
+        event: 'mcp_oauth_grant_revoked',
+        properties: { grant_id: input.grantId, source: 'dashboard' },
+      });
+      await posthog.shutdown();
+      return { ok: true };
+    }),
   createAccessToken: protectedProcedure
     .input(
       z.object({

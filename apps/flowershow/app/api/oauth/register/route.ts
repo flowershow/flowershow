@@ -6,6 +6,7 @@ import {
   oauthJson,
   preflight,
 } from '@/lib/oauth/http';
+import { scheduleOAuthCleanup } from '@/lib/oauth/cleanup';
 import { checkOAuthRateLimit } from '@/lib/oauth/rate-limit';
 
 /**
@@ -19,7 +20,7 @@ export async function POST(request: NextRequest) {
   if (disabled) return disabled;
   if (!(await checkOAuthRateLimit('register', request.headers))) {
     return oauthError(
-      'slow_down',
+      'invalid_request',
       'Too many registrations. Try again later.',
       429,
       {
@@ -27,6 +28,7 @@ export async function POST(request: NextRequest) {
       },
     );
   }
+  scheduleOAuthCleanup();
   const type = request.headers.get('content-type') ?? '';
   if (!/^application\/json\b/i.test(type)) {
     return oauthError(

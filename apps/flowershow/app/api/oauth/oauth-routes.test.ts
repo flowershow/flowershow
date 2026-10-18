@@ -280,6 +280,7 @@ describe('POST /oauth/register', () => {
     }
     const limited = await register(json('/oauth/register', body));
     expect(limited.status).toBe(429);
+    expect((await limited.json()).error).toBe('invalid_request');
     // Another IP is unaffected.
     expect(
       (
@@ -378,10 +379,16 @@ describe('POST /oauth/token', () => {
       ),
     );
     expect(a.status).toBe(401);
+    // RFC 6749 §5.2: WWW-Authenticate with the scheme the client tried.
+    expect(a.headers.get('www-authenticate')).toBe(
+      'Basic realm="flowershow", error="invalid_client"',
+    );
     const b = await token(
       form('/oauth/token', { grant_type: 'refresh_token', client_secret: 's' }),
     );
+    expect(b.status).toBe(401);
     expect((await b.json()).error).toBe('invalid_client');
+    expect(b.headers.get('www-authenticate')).toMatch(/^Basic realm=/);
   });
 
   it('rejects repeated parameters and unknown content types', async () => {
@@ -401,9 +408,11 @@ describe('POST /oauth/token', () => {
     for (let i = 0; i < 60; i++) {
       await token(form('/oauth/token', { grant_type: 'x' }));
     }
-    expect(
-      (await token(form('/oauth/token', { grant_type: 'x' }))).status,
-    ).toBe(429);
+    const limited = await token(form('/oauth/token', { grant_type: 'x' }));
+    expect(limited.status).toBe(429);
+    // Not slow_down (a device-flow code): invalid_request + Retry-After.
+    expect((await limited.json()).error).toBe('invalid_request');
+    expect(limited.headers.get('retry-after')).toBe('60');
   });
 
   it('answers CORS preflight', async () => {

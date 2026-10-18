@@ -1,11 +1,15 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { notFound, redirect } from 'next/navigation';
 import {
-  decideAuthorization,
+  clientIdentity,
   findReusableGrant,
+  isBoundToBrowser,
   loadPendingRequest,
+  OTHER_BROWSER_MESSAGE,
   redirectHostLabel,
 } from '@/lib/oauth/authorize';
+import { bindingCookieName } from '@/lib/oauth/binding';
 import { oauthEnabled } from '@/lib/oauth/config';
 import { getSession } from '@/server/auth';
 import { ConsentForm } from './consent-form';
@@ -28,9 +32,12 @@ function Shell({ children }: { children: React.ReactNode }) {
 }
 
 /**
- * OAuth consent for MCP clients (flowershow-3fr.2). The middleware sends
- * signed-out visitors to /login first. The page only ever gets the pending
- * request's id, so its parameters can't be edited on the way.
+ * OAuth consent for MCP clients (flowershow-3fr.2). Signed-out visitors go to
+ * /login first. The page only ever gets the pending request's id, so its
+ * parameters can't be edited on the way, and it only works in the browser
+ * that went through /oauth/authorize (binding cookie). Rendering it never
+ * changes state: approving, even the automatic approval of a reconnect, is
+ * a POST from the form (flowershow-3fr.4).
  */
 export default async function ConsentPage({
   searchParams,
@@ -60,19 +67,49 @@ export default async function ConsentPage({
     );
   }
 
-  // Reconnect: this user already approved this app for the same redirect
-  // URI, scope and resource, so skip the screen.
-  if (await findReusableGrant(session.user.id, pending)) {
-    const outcome = await decideAuthorization(
-      pending.id,
-      session.user.id,
-      'allow',
+  const jar = await cookies();
+  if (
+    !isBoundToBrowser(pending, jar.get(bindingCookieName(pending.id))?.value)
+  ) {
+    return (
+      <Shell>
+        <h1
+          className="text-xl font-semibold text-gray-900 dark:text-zinc-100"
+          data-testid="oauth-other-browser"
+        >
+          Start again from the app
+        </h1>
+        <p className="text-sm text-gray-600 dark:text-zinc-300">
+          {OTHER_BROWSER_MESSAGE}
+        </p>
+      </Shell>
     );
-    if (outcome.ok) redirect(outcome.location);
   }
 
   const { client, params } = pending;
+
+  // Reconnect: this user already approved this app for the same redirect
+  // URI, scope and resource, so the form approves itself (a POST, not here).
+  if (await findReusableGrant(session.user.id, pending)) {
+    return (
+      <Shell>
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-zinc-100">
+          Reconnecting {client.name}…
+        </h1>
+        <p className="text-sm text-gray-600 dark:text-zinc-300">
+          You already allowed this app. Sending you back to{' '}
+          <span className="font-mono">
+            {redirectHostLabel(params.redirectUri)}
+          </span>
+          .
+        </p>
+        <ConsentForm requestId={pending.id} autoApprove />
+      </Shell>
+    );
+  }
+
   const username = session.user.username;
+  const identity = clientIdentity(client);
 
   return (
     <Shell>
@@ -86,6 +123,28 @@ export default async function ConsentPage({
           verified by Flowershow.
         </p>
       </div>
+
+      {identity && (
+        <div className="space-y-2">
+          <p className="text-sm text-gray-700 dark:text-zinc-200">
+            This app is published by{' '}
+            <strong className="font-mono" data-testid="oauth-client-host">
+              {identity.host}
+            </strong>
+          </p>
+          {identity.userHosted && (
+            <div
+              role="alert"
+              data-testid="oauth-user-hosted-warning"
+              className="rounded-md bg-amber-50 p-3 text-sm text-amber-900 dark:bg-amber-950/40 dark:text-amber-300"
+            >
+              {identity.host} is a site published by a Flowershow user, not by
+              Flowershow. Anyone can publish there, so only allow this app if
+              you know and trust who made it.
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="space-y-1 text-sm text-gray-700 dark:text-zinc-200">
         <p>

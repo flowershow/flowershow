@@ -1,9 +1,15 @@
 import TokensList from './tokens-list';
 import CreateTokenModal from './create-token-modal';
+import ConnectedAppsList from './connected-apps-list';
+import { oauthEnabled } from '@/lib/oauth/config';
 import { api } from '@/trpc/server';
 
 export default async function TokensPage() {
   const tokens = await api.user.getAccessTokens.query();
+  const showConnectedApps = oauthEnabled();
+  const connectedApps = showConnectedApps
+    ? await api.user.getConnectedApps.query()
+    : [];
 
   const patTokens = tokens.filter((t) => t.type === 'PAT');
   const cliTokens = tokens.filter((t) => t.type === 'CLI');
@@ -54,6 +60,22 @@ export default async function TokensPage() {
           emptyMessage="No CLI tokens. Run 'fl login' to authenticate."
         />
       </section>
+
+      {/* MCP OAuth grants (flowershow-3fr.4) */}
+      {showConnectedApps && (
+        <section className="space-y-4">
+          <div>
+            <h2 className="text-xl font-semibold dark:text-white">
+              Connected apps
+            </h2>
+            <p className="text-sm text-stone-500 dark:text-stone-400">
+              AI apps you signed in to Flowershow from, such as Claude or
+              ChatGPT. Revoke one to disconnect it.
+            </p>
+          </div>
+          <ConnectedAppsList apps={connectedApps} />
+        </section>
+      )}
     </div>
   );
 }

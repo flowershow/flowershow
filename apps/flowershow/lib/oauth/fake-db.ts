@@ -1,8 +1,9 @@
 /**
  * In-memory stand-in for the Prisma models used by lib/oauth, for unit tests
  * only. Supports exactly the query shapes lib/oauth uses (equality, `null`,
- * `{ lt }`/`{ gt }` on dates); `select`/`include` return the full row plus
- * the `grant`, `grant.client` and `client` relations.
+ * `{ lt }`/`{ gt }` on dates, `{ in }`, `grants: { none: {} }` on clients,
+ * `take`); `select`/`include` return the full row plus the `grant`,
+ * `grant.client` and `client` relations.
  */
 
 type Row = Record<string, any>;
@@ -59,8 +60,18 @@ export function createFakeDb() {
     return out;
   };
 
-  const find = (name: keyof typeof tables, where: Row) =>
-    [...tables[name].values()].filter((r) => matches(r, where));
+  const find = (name: keyof typeof tables, where: Row) => {
+    const { grants, ...rest } = where;
+    return [...tables[name].values()].filter((r) => {
+      if (!matches(r, rest)) return false;
+      if (name === 'oAuthClient' && grants && 'none' in grants) {
+        return ![...tables.oAuthGrant.values()].some(
+          (g) => g.clientId === r.id,
+        );
+      }
+      return true;
+    });
+  };
 
   const model = (name: keyof typeof tables) => ({
     async create({ data }: { data: Row }) {
@@ -94,8 +105,10 @@ export function createFakeDb() {
     async findFirst({ where }: { where?: Row } = {}) {
       return withRelations(name, find(name, where ?? {})[0]);
     },
-    async findMany({ where }: { where?: Row } = {}) {
-      return find(name, where ?? {}).map((r) => withRelations(name, r));
+    async findMany({ where, take }: { where?: Row; take?: number } = {}) {
+      return find(name, where ?? {})
+        .slice(0, take)
+        .map((r) => withRelations(name, r));
     },
     async update({ where, data }: { where: Row; data: Row }) {
       const row = find(name, where)[0];

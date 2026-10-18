@@ -6,7 +6,9 @@ vi.mock('@/server/db', async () => ({
 }));
 
 import {
+  clientIdentity,
   decideAuthorization,
+  isBoundToBrowser,
   loadPendingRequest,
   redirectHostLabel,
   startAuthorization,
@@ -62,8 +64,29 @@ async function pendingIdFor(over: Record<string, string | undefined> = {}) {
   if (out.kind !== 'redirect' || !out.location.startsWith(cloudOrigin())) {
     throw new Error(`unexpected ${JSON.stringify(out)}`);
   }
-  return params(out.location).get('req') as string;
+  const id = params(out.location).get('req') as string;
+  if (out.binding?.pendingId !== id) throw new Error('no binding');
+  secrets.set(id, out.binding.secret);
+  return id;
 }
+
+/** The browser-binding cookie /oauth/authorize set for each pending request. */
+const secrets = new Map<string, string>();
+
+/** decideAuthorization from the browser that started the request. */
+const decide = (
+  id: unknown,
+  userId: string,
+  decision: 'allow' | 'deny',
+  now: Date,
+) =>
+  decideAuthorization(
+    id,
+    userId,
+    decision,
+    typeof id === 'string' ? secrets.get(id) : undefined,
+    now,
+  );
 
 describe('startAuthorization', () => {
   it('parks a valid request and redirects to the consent page on the cloud host', async () => {
@@ -84,6 +107,7 @@ describe('startAuthorization', () => {
       scope: 'sites:write',
       resource: accountResource(),
       state: 'xyz-state',
+      bindingHash: expect.stringMatching(/^[0-9a-f]{64}$/),
     });
     expect(row.expiresAt.getTime() - T0.getTime()).toBe(10 * 60 * 1000);
   });
@@ -164,7 +188,7 @@ describe('startAuthorization', () => {
 describe('decideAuthorization (consent)', () => {
   it('allow: redirects with code, state and iss; the code exchanges for tokens', async () => {
     const id = await pendingIdFor();
-    const out = await decideAuthorization(id, 'user-1', 'allow', T0);
+    const out = await decide(id, 'user-1', 'allow', T0);
     expect(out.ok).toBe(true);
     if (!out.ok) return;
     expect(out.newGrant).toBe(true);
@@ -196,7 +220,7 @@ describe('decideAuthorization (consent)', () => {
 
   it('the code is useless without the PKCE verifier', async () => {
     const id = await pendingIdFor();
-    const out = await decideAuthorization(id, 'user-1', 'allow', T0);
+    const out = await decide(id, 'user-1', 'allow', T0);
     if (!out.ok) throw new Error('setup');
     const code = params(out.location).get('code') as string;
     const r = await exchangeAuthorizationCode(
@@ -208,7 +232,7 @@ describe('decideAuthorization (consent)', () => {
 
   it('deny: redirects with access_denied, state and iss, and creates no grant', async () => {
     const id = await pendingIdFor();
-    const out = await decideAuthorization(id, 'user-1', 'deny', T0);
+    const out = await decide(id, 'user-1', 'deny', T0);
     expect(out.ok).toBe(true);
     if (!out.ok) return;
     const p = params(out.location);
@@ -221,62 +245,47 @@ describe('decideAuthorization (consent)', () => {
 
   it('omits state when the client sent none', async () => {
     const id = await pendingIdFor({ state: undefined });
-    const out = await decideAuthorization(id, 'user-1', 'allow', T0);
+    const out = await decide(id, 'user-1', 'allow', T0);
     expect(out.ok && params(out.location).has('state')).toBe(false);
   });
 
   it('a pending request can be decided only once', async () => {
     const id = await pendingIdFor();
-    expect((await decideAuthorization(id, 'user-1', 'allow', T0)).ok).toBe(
-      true,
-    );
-    expect((await decideAuthorization(id, 'user-1', 'allow', T0)).ok).toBe(
-      false,
-    );
-    expect((await decideAuthorization(id, 'user-2', 'deny', T0)).ok).toBe(
-      false,
-    );
+    expect((await decide(id, 'user-1', 'allow', T0)).ok).toBe(true);
+    expect((await decide(id, 'user-1', 'allow', T0)).ok).toBe(false);
+    expect((await decide(id, 'user-2', 'deny', T0)).ok).toBe(false);
   });
 
   it('expires after 10 minutes', async () => {
     const id = await pendingIdFor();
     const late = new Date(T0.getTime() + 10 * 60 * 1000 + 1);
     expect(await loadPendingRequest(id, late)).toBeNull();
-    expect((await decideAuthorization(id, 'user-1', 'allow', late)).ok).toBe(
-      false,
-    );
+    expect((await decide(id, 'user-1', 'allow', late)).ok).toBe(false);
   });
 
   it('rejects unknown or malformed ids', async () => {
     for (const id of [undefined, '', 'nope', 'x'.repeat(200), 42]) {
-      expect((await decideAuthorization(id, 'user-1', 'allow', T0)).ok).toBe(
-        false,
-      );
+      expect((await decide(id, 'user-1', 'allow', T0)).ok).toBe(false);
     }
   });
 
   it('reuses an active grant for the same user, client, redirect URI, scope and resource', async () => {
-    await decideAuthorization(await pendingIdFor(), 'user-1', 'allow', T0);
-    const second = await decideAuthorization(
-      await pendingIdFor(),
-      'user-1',
-      'allow',
-      T0,
-    );
+    await decide(await pendingIdFor(), 'user-1', 'allow', T0);
+    const second = await decide(await pendingIdFor(), 'user-1', 'allow', T0);
     expect(second.ok && second.newGrant).toBe(false);
     expect(db.tables.oAuthGrant.size).toBe(1);
   });
 
   it('creates a separate grant for another user, resource or redirect URI, or after revocation', async () => {
-    await decideAuthorization(await pendingIdFor(), 'user-1', 'allow', T0);
-    await decideAuthorization(await pendingIdFor(), 'user-2', 'allow', T0);
-    await decideAuthorization(
+    await decide(await pendingIdFor(), 'user-1', 'allow', T0);
+    await decide(await pendingIdFor(), 'user-2', 'allow', T0);
+    await decide(
       await pendingIdFor({ resource: anonResource() }),
       'user-1',
       'allow',
       T0,
     );
-    await decideAuthorization(
+    await decide(
       await pendingIdFor({ redirect_uri: 'http://localhost:3000/callback' }),
       'user-1',
       'allow',
@@ -284,12 +293,7 @@ describe('decideAuthorization (consent)', () => {
     );
     expect(db.tables.oAuthGrant.size).toBe(4);
     for (const g of db.tables.oAuthGrant.values()) g.revokedAt = T0;
-    const after = await decideAuthorization(
-      await pendingIdFor(),
-      'user-1',
-      'allow',
-      T0,
-    );
+    const after = await decide(await pendingIdFor(), 'user-1', 'allow', T0);
     expect(after.ok && after.newGrant).toBe(true);
   });
 });
@@ -300,5 +304,65 @@ describe('redirectHostLabel', () => {
     expect(redirectHostLabel('http://127.0.0.1:5555/cb')).toBe(
       '127.0.0.1 (an app on this computer)',
     );
+  });
+});
+
+describe('browser binding (flowershow-3fr.4)', () => {
+  it('stores only a hash of the cookie secret with the pending request', async () => {
+    const id = await pendingIdFor();
+    const row = db.tables.oAuthPendingRequest.get(id)!;
+    const secret = secrets.get(id)!;
+    expect(secret).toMatch(/^[A-Za-z0-9_-]{43}$/);
+    expect(JSON.stringify(row.params)).not.toContain(secret);
+    const pending = (await loadPendingRequest(id, T0))!;
+    expect(isBoundToBrowser(pending, secret)).toBe(true);
+    expect(isBoundToBrowser(pending, undefined)).toBe(false);
+    expect(isBoundToBrowser(pending, 'x'.repeat(43))).toBe(false);
+  });
+
+  it('refuses a decision from another browser and leaves the request usable', async () => {
+    const id = await pendingIdFor();
+    for (const cookie of [
+      undefined,
+      '',
+      'wrong',
+      secrets.get(await pendingIdFor()),
+    ]) {
+      const out = await decideAuthorization(id, 'user-1', 'allow', cookie, T0);
+      expect(out).toMatchObject({
+        ok: false,
+        message: expect.stringMatching(/different browser/),
+      });
+    }
+    expect(db.tables.oAuthGrant.size).toBe(0);
+    expect((await decide(id, 'user-1', 'allow', T0)).ok).toBe(true);
+  });
+});
+
+describe('clientIdentity', () => {
+  it('is the client_id host for CIMD clients, nothing for DCR', () => {
+    expect(
+      clientIdentity({
+        kind: 'CIMD',
+        clientId: 'https://claude.ai/oauth/mcp-client.json',
+      }),
+    ).toEqual({ host: 'claude.ai', userHosted: false });
+    expect(clientIdentity({ kind: 'DCR', clientId: 'dcr_abc' })).toBeNull();
+  });
+
+  it('flags hosts under the user-site domain (NEXT_PUBLIC_SITE_DOMAIN)', () => {
+    // The test env's site domain is test.localhost.
+    for (const clientId of [
+      'https://test.localhost/client.json',
+      'https://alice.test.localhost/client.json',
+    ]) {
+      expect(clientIdentity({ kind: 'CIMD', clientId })?.userHosted).toBe(true);
+    }
+    expect(
+      clientIdentity({
+        kind: 'CIMD',
+        clientId: 'https://nottest.localhost/client.json',
+      })?.userHosted,
+    ).toBe(false);
   });
 });

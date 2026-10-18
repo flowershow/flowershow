@@ -41,9 +41,9 @@ async function signIn(context: BrowserContext) {
   ]);
 }
 
-async function registerClient(page: Page) {
+async function registerClient(page: Page, name = 'E2E MCP client') {
   const res = await page.request.post(`${HOME}/oauth/register`, {
-    data: { client_name: 'E2E MCP client', redirect_uris: [REDIRECT] },
+    data: { client_name: name, redirect_uris: [REDIRECT] },
   });
   expect(res.status()).toBe(201);
   return (await res.json()).client_id as string;
@@ -154,5 +154,117 @@ test.describe('MCP OAuth consent', () => {
     await expect(page.getByTestId('oauth-client-name')).toHaveText(
       'E2E MCP client',
     );
+  });
+
+  test('the consent link only works in the browser that started sign-in (binding cookie)', async ({
+    page,
+    context,
+    browser,
+  }) => {
+    await signIn(context);
+    const clientId = await registerClient(page);
+    await page.goto(authorizeUrl(clientId, 'state-bound'));
+    await expect(page.getByTestId('oauth-allow')).toBeVisible();
+    const consentUrl = page.url();
+
+    // Same account, another browser (no binding cookie): refused.
+    const other = await browser.newContext();
+    try {
+      await signIn(other);
+      const otherPage = await other.newPage();
+      await otherPage.goto(consentUrl);
+      await expect(otherPage.getByTestId('oauth-other-browser')).toBeVisible();
+      await expect(otherPage.getByTestId('oauth-allow')).toHaveCount(0);
+    } finally {
+      await other.close();
+    }
+
+    // The original browser can still decide it.
+    const arrived = await captureRedirect(page);
+    await page.reload();
+    await page.getByTestId('oauth-allow').click();
+    await expect
+      .poll(() => arrived()?.searchParams.get('code') ?? null)
+      .not.toBeNull();
+  });
+
+  test('a reconnect is approved by a POST from the page, never by the GET', async ({
+    page,
+    context,
+  }) => {
+    await signIn(context);
+    const clientId = await registerClient(page);
+    const arrived = await captureRedirect(page);
+
+    // First connection: the user clicks Allow.
+    await page.goto(authorizeUrl(clientId, 'state-first'));
+    await page.getByTestId('oauth-allow').click();
+    await expect
+      .poll(() => arrived()?.searchParams.get('state') ?? null)
+      .toBe('state-first');
+
+    // Reconnect: start sign-in, but fetch the consent page without running
+    // its JavaScript (a link scanner or prefetch would do this).
+    const start = await page.request.get(authorizeUrl(clientId, 'state-re'), {
+      maxRedirects: 0,
+    });
+    expect(start.status()).toBe(302);
+    const consentUrl = start.headers().location as string;
+    expect(consentUrl).toMatch(new RegExp(`^${CLOUD}/oauth/consent\\?req=`));
+    const get = await page.request.get(consentUrl, { maxRedirects: 0 });
+    expect(get.status()).toBe(200);
+    expect(await get.text()).toContain('Reconnecting');
+
+    // The GET consumed nothing: opening the page in the browser approves
+    // (the form posts itself) and the client gets a code.
+    await page.goto(consentUrl);
+    await expect
+      .poll(() => arrived()?.searchParams.get('state') ?? null)
+      .toBe('state-re');
+    expect(arrived()?.searchParams.get('code')).toBeTruthy();
+  });
+
+  test('Connected apps lists the app; Revoke disconnects it and its token stops working', async ({
+    page,
+    context,
+  }) => {
+    const name = `E2E revoke ${Date.now()}`;
+    await signIn(context);
+    const clientId = await registerClient(page, name);
+    const arrived = await captureRedirect(page);
+    await page.goto(authorizeUrl(clientId, 'state-revoke'));
+    await page.getByTestId('oauth-allow').click();
+    await expect
+      .poll(() => arrived()?.searchParams.get('code') ?? null)
+      .not.toBeNull();
+    const tokenRes = await page.request.post(`${HOME}/oauth/token`, {
+      form: {
+        grant_type: 'authorization_code',
+        code: arrived()?.searchParams.get('code') as string,
+        client_id: clientId,
+        redirect_uri: REDIRECT,
+        code_verifier: verifier,
+      },
+    });
+    const { access_token } = await tokenRes.json();
+    const mcpCall = () =>
+      page.request.post(`${HOME}/api/mcp/account`, {
+        headers: {
+          authorization: `Bearer ${access_token}`,
+          accept: 'application/json, text/event-stream',
+        },
+        data: { jsonrpc: '2.0', id: 1, method: 'tools/list' },
+      });
+    expect((await mcpCall()).status()).not.toBe(401);
+
+    await page.goto(`${CLOUD}/tokens`);
+    const row = page.getByTestId('connected-app-row').filter({ hasText: name });
+    await expect(row).toBeVisible();
+    await expect(row).toContainText('sites:write');
+    page.once('dialog', (dialog) => dialog.accept());
+    await row.getByTestId('connected-app-revoke').click();
+    await expect(row).toHaveCount(0);
+
+    expect((await mcpCall()).status()).toBe(401);
   });
 });

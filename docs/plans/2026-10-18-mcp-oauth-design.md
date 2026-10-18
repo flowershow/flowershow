@@ -211,6 +211,13 @@ Recorded as the PRs landed; each says why.
 - **Claim route status codes** (PR 3, `flowershow-nds`): an already-claimed site is now `409` (was `400`), the same answer the loser of a concurrent claim gets.
 - **`PublishSource.mcp`** is recorded for every publish that comes through MCP, anonymous ones included.
 - **Playwright** signs in by setting a next-auth session cookie minted with the test secret (the login providers themselves are not exercised); the logged-out case asserts the redirect to `/login?callbackUrl=/oauth/consent?req=…` and the return to consent.
+- **Consent is bound to the browser** (PR 4, from the security review): `/oauth/authorize` sets an HttpOnly, SameSite=Lax cookie (`fs_oauth_<hash of request id>`, `Path=/oauth`, scoped to the home domain so the cloud host sees it, 10 min) holding a random secret; the pending request stores its SHA-256. The consent page and its action refuse the request without the matching cookie, so a consent link sent to someone else is useless. The cookie is cleared once the request is decided.
+- **The consent page never changes state on GET** (PR 4): the reconnect skip renders "Reconnecting…" and the form posts Allow itself from the browser, replacing PR 2's approve-on-render.
+- **CIMD clients show their `client_id` host** on the consent screen ("published by claude.ai"), with a warning when it is under `NEXT_PUBLIC_SITE_DOMAIN` (a user-published site). Connected apps shows the same host, or the redirect host for DCR clients.
+- **Cleanup** (PR 4): `/oauth/authorize`, `/oauth/token` and `/oauth/register` schedule a sweep with `after()` that deletes up to 100 rows per table: expired pending requests and tokens (rotated refresh tokens stay until they expire, for reuse detection), codes an hour past expiry (so a late replay still revokes), and clients (DCR or cached CIMD) with no grant 7 days after registration. No new indexes: the `expiresAt` ones exist and the client table stays small.
+- **Token endpoint errors** (PR 4): rate-limited requests get `429` + `invalid_request` + `Retry-After` (not `slow_down`, a device-flow code), also on register and revoke; `invalid_client` 401s carry `WWW-Authenticate` with the scheme the client tried (RFC 6749 §5.2).
+- **Narrower scope on refresh** (PR 4): `OAuthToken.scope` (nullable, null = the grant's) lets a refresh with a narrower `scope` issue an access token with just that scope; the new refresh token keeps the presented one's scope (RFC 6749 §6). With one scope today this is future-proofing.
+- **Events**: `mcp_oauth_grant_refreshed` (token endpoint, after the response) and `mcp_oauth_grant_revoked` (dashboard). Revocation via `/oauth/revoke` is not captured.
 
 ## Drop the "beta" label: checklist
 
