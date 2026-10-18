@@ -18,8 +18,8 @@ function isPlainObject(val: unknown): val is Record<string, unknown> {
   return typeof val === 'object' && val !== null && !Array.isArray(val);
 }
 
-// --- leaf schemas (kept non-strict so extra keys on a link don't disqualify
-// an otherwise-valid entry on the read/salvage path) ---
+// --- leaf schemas (non-strict so extra keys on a link don't disqualify an
+// otherwise-valid entry on the read/salvage path) ---
 const navLinkSchema = z.object({ name: z.string(), href: z.string() });
 const navDropdownSchema = z.object({
   name: z.string(),
@@ -28,7 +28,13 @@ const navDropdownSchema = z.object({
 // NavItem = NavLink | NavDropdown. A plain link has `href`; a dropdown has
 // `links`. navLinkSchema is tried first so plain links win the union.
 const navItemSchema = z.union([navLinkSchema, navDropdownSchema]);
-const socialLinkSchema = navLinkSchema.extend({ label: z.string().optional() });
+// `name` is optional: the config.json reference documents social links as
+// `{ label, href }`, and the navbar/footer fall back to the label.
+const socialLinkSchema = z.object({
+  name: z.string().optional(),
+  href: z.string(),
+  label: z.string().optional(),
+});
 const footerGroupSchema = z.object({
   title: z.string(),
   links: z.array(navLinkSchema),
@@ -39,81 +45,114 @@ const redirectSchema = z.object({
   permanent: z.boolean().optional(),
 });
 const ctaItemSchema = z.object({ href: z.string(), label: z.string() });
-
-// --- container schemas (strict: unknown nested keys are typos worth rejecting
-// on write, since every writer is the machine-generated dashboard UI) ---
-const themeConfigSchema = z.strictObject({
-  theme: z.string().optional(),
-  defaultMode: z.enum(['light', 'dark', 'system']).optional(),
-  showModeSwitch: z.boolean().optional(),
-});
-const heroObjectSchema = z.strictObject({
-  title: z.string().optional(),
-  description: z.string().optional(),
-  image: z.string().optional(),
-  cta: z.array(ctaItemSchema).optional(),
-  imagelayout: z.enum(['right', 'full']).optional(),
-});
-const umamiObjectSchema = z.strictObject({
-  websiteId: z.string().optional(),
-  src: z.string().optional(),
-});
-const navConfigSchema = z.strictObject({
-  title: z.string().optional(),
-  links: z.array(navItemSchema).optional(),
-  cta: navLinkSchema.optional(),
-  logo: z.string().optional(),
-  social: z.array(socialLinkSchema).optional(),
-});
-const footerConfigSchema = z.strictObject({
-  navigation: z.array(footerGroupSchema).optional(),
-});
-const sidebarSchema = z.strictObject({
-  orderBy: z.enum(['title', 'path']).optional(),
-  paths: z.array(z.string()).optional(),
-});
 // giscus is Partial<GiscusProps> — many props, so accept any plain object.
 const giscusSchema = z.record(z.string(), z.unknown());
 
+type Mode = 'strict' | 'loose';
+
 /**
- * Field schemas for every SiteConfig key. Required here; the write schema
- * `.partial()`s them, and the read sanitizer applies them field-by-field.
+ * Field schemas for every SiteConfig key, in one of two modes:
+ *
+ *  - `strict` (write): container objects reject unknown keys (typos) and enum
+ *    fields must be one of the known values.
+ *  - `loose` (read): container objects tolerate unknown keys and enum-ish
+ *    fields only need to be strings. Renderers already normalize unknown
+ *    values (theme.defaultMode, hero.imagelayout), so dropping a whole
+ *    `theme`/`hero` object over them would change how existing sites render.
  */
-const configShape = {
-  siteName: z.string(),
-  /** @deprecated — kept for existing configs */
-  title: z.string(),
-  description: z.string(),
-  image: z.string(),
-  logo: z.string(),
-  favicon: z.string(),
-  nav: navConfigSchema,
-  footer: footerConfigSchema,
-  social: z.array(socialLinkSchema),
-  analytics: z.string(),
-  umami: z.union([z.string(), umamiObjectSchema]),
-  contentInclude: z.array(z.string()),
-  contentExclude: z.array(z.string()),
-  contentHide: z.array(z.string()),
-  showSidebar: z.boolean(),
-  sidebar: sidebarSchema,
-  showToc: z.boolean(),
-  showKnowledgeGraph: z.boolean(),
-  showEditLink: z.boolean(),
-  showComments: z.boolean(),
-  showBacklinks: z.boolean(),
-  giscus: giscusSchema,
-  redirects: z.array(redirectSchema),
-  theme: z.union([z.string(), themeConfigSchema]),
-  enableSearch: z.boolean(),
-  enableRss: z.boolean(),
-  showBuiltWithButton: z.boolean(),
-  showRawLink: z.boolean(),
-  syntaxMode: z.enum(['auto', 'md', 'mdx']),
-  showHero: z.boolean(),
-  hero: z.union([z.boolean(), heroObjectSchema]),
-  cta: z.array(ctaItemSchema),
-} as const;
+function buildConfigShape(mode: Mode) {
+  const obj = <T extends z.ZodRawShape>(shape: T) =>
+    mode === 'strict' ? z.strictObject(shape) : z.looseObject(shape);
+  const enumOrString = <const T extends readonly [string, ...string[]]>(
+    values: T,
+  ) => (mode === 'strict' ? z.enum(values) : z.string());
+
+  const themeConfigSchema = obj({
+    theme: z.string().optional(),
+    defaultMode: enumOrString(['light', 'dark', 'system']).optional(),
+    showModeSwitch: z.boolean().optional(),
+  });
+  const heroObjectSchema = obj({
+    title: z.string().optional(),
+    description: z.string().optional(),
+    image: z.string().optional(),
+    cta: z.array(ctaItemSchema).optional(),
+    imagelayout: enumOrString(['right', 'full']).optional(),
+  });
+  const umamiObjectSchema = obj({
+    websiteId: z.string().optional(),
+    src: z.string().optional(),
+  });
+  const navConfigSchema = obj({
+    title: z.string().optional(),
+    links: z.array(navItemSchema).optional(),
+    cta: navLinkSchema.optional(),
+    logo: z.string().optional(),
+    social: z.array(socialLinkSchema).optional(),
+  });
+  const footerConfigSchema = obj({
+    navigation: z.array(footerGroupSchema).optional(),
+  });
+  const sidebarSchema = obj({
+    orderBy: enumOrString(['title', 'path']).optional(),
+    paths: z.array(z.string()).optional(),
+  });
+
+  return {
+    siteName: z.string(),
+    /** @deprecated — kept for existing configs */
+    title: z.string(),
+    description: z.string(),
+    locale: z.string(),
+    image: z.string(),
+    logo: z.string(),
+    favicon: z.string(),
+    nav: navConfigSchema,
+    footer: footerConfigSchema,
+    social: z.array(socialLinkSchema),
+    analytics: z.string(),
+    umami: z.union([z.string(), umamiObjectSchema]),
+    head: z.string(),
+    contentInclude: z.array(z.string()),
+    contentExclude: z.array(z.string()),
+    contentHide: z.array(z.string()),
+    showSidebar: z.boolean(),
+    sidebar: sidebarSchema,
+    showToc: z.boolean(),
+    showKnowledgeGraph: z.boolean(),
+    showEditLink: z.boolean(),
+    showReadingTime: z.boolean(),
+    showNavbar: z.boolean(),
+    showFooter: z.boolean(),
+    showBreadcrumbs: z.boolean(),
+    showComments: z.boolean(),
+    annotations: z.boolean(),
+    showBacklinks: z.boolean(),
+    showTags: z.boolean(),
+    giscus: giscusSchema,
+    redirects: z.array(redirectSchema),
+    theme: z.union([z.string(), themeConfigSchema]),
+    enableSearch: z.boolean(),
+    enableRss: z.boolean(),
+    showBuiltWithButton: z.boolean(),
+    showRawLink: z.boolean(),
+    syntaxMode: enumOrString(['auto', 'md', 'mdx']),
+    showHero: z.boolean(),
+    hero: z.union([z.boolean(), heroObjectSchema]),
+    cta: z.array(ctaItemSchema),
+  };
+}
+
+const configShape = buildConfigShape('strict');
+const readConfigShape: Record<string, z.ZodType> = buildConfigShape('loose');
+
+/**
+ * Every top-level SiteConfig key the schema models. Exported so tests can
+ * check it stays in sync with the `SiteConfig` type and the config docs.
+ */
+export const SITE_CONFIG_KEYS = Object.keys(configShape) as Array<
+  keyof typeof configShape
+>;
 
 /**
  * Strict, partial schema for a config *patch*: every field optional (patches
@@ -166,6 +205,16 @@ export function validateConfigPatch(patch: Record<string, unknown>): void {
 
 type Warn = (path: string) => void;
 
+/**
+ * Read-side validity check. `null` values are how the dashboard clears a field,
+ * so stored configs carry them (e.g. `{ umami: { websiteId, src: null } }`);
+ * they are ignored for validation and kept in the output, exactly as before
+ * sanitizing existed.
+ */
+function isValid(schema: z.ZodType, value: unknown): boolean {
+  return schema.safeParse(stripNullish(value)).success;
+}
+
 // List fields that SALVAGE valid elements (drop only the bad ones). Every other
 // field drops wholesale when malformed. nav.links / nav.social /
 // footer.navigation are salvaged inside sanitizeNav / sanitizeFooter.
@@ -191,8 +240,7 @@ function salvageArray(
   }
   const kept: unknown[] = [];
   value.forEach((el, i) => {
-    const result = element.safeParse(el);
-    if (result.success) kept.push(result.data);
+    if (isValid(element, el)) kept.push(el);
     else warn(`${path}[${i}]`);
   });
   return kept;
@@ -208,19 +256,19 @@ function sanitizeNav(
   }
   const out: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(value)) {
-    if (key === 'links') {
+    if (val === null) {
+      out[key] = null; // cleared via the dashboard — keep as-is
+    } else if (key === 'links') {
       const links = salvageArray(val, navItemSchema, 'nav.links', warn);
       if (links !== undefined) out.links = links;
     } else if (key === 'social') {
       const social = salvageArray(val, socialLinkSchema, 'nav.social', warn);
       if (social !== undefined) out.social = social;
     } else if (key === 'title' || key === 'logo') {
-      const result = z.string().safeParse(val);
-      if (result.success) out[key] = result.data;
+      if (typeof val === 'string') out[key] = val;
       else warn(`nav.${key}`);
     } else if (key === 'cta') {
-      const result = navLinkSchema.safeParse(val);
-      if (result.success) out.cta = result.data;
+      if (isValid(navLinkSchema, val)) out.cta = val;
       else warn('nav.cta');
     } else {
       out[key] = val; // unknown nested key — pass through
@@ -239,7 +287,9 @@ function sanitizeFooter(
   }
   const out: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(value)) {
-    if (key === 'navigation') {
+    if (val === null) {
+      out[key] = null; // cleared via the dashboard — keep as-is
+    } else if (key === 'navigation') {
       const nav = salvageArray(
         val,
         footerGroupSchema,
@@ -258,7 +308,8 @@ function sanitizeFooter(
  * Lenient read-path sanitizer. Never throws. Malformed fields are dropped (or,
  * for list fields, have their bad elements dropped) so a bad config renders as
  * if the offending field were absent, instead of crashing the public site.
- * Unknown/future keys pass through untouched. Every drop emits a server-side
+ * Unknown/future keys and `null` (cleared) values pass through untouched; enum
+ * values and unknown keys inside modeled objects are tolerated. Every drop emits a server-side
  * `console.warn` (with the siteId, when provided) — invisible to the visitor.
  */
 export function sanitizeSiteConfig(
@@ -276,6 +327,10 @@ export function sanitizeSiteConfig(
 
   const out: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(input)) {
+    if (value === null) {
+      out[key] = null; // cleared via the dashboard — keep as-is
+      continue;
+    }
     if (key === 'nav') {
       const nav = sanitizeNav(value, warn);
       if (nav !== undefined) out.nav = nav;
@@ -293,14 +348,27 @@ export function sanitizeSiteConfig(
       if (salvaged !== undefined) out[key] = salvaged;
       continue;
     }
-    const schema = (configShape as Record<string, z.ZodType>)[key];
+    const schema = readConfigShape[key];
     if (!schema) {
       out[key] = value; // unknown/future key — pass through
       continue;
     }
-    const result = schema.safeParse(value);
-    if (result.success) out[key] = result.data;
+    // Keep the original value (not the parsed output): zod strips unknown
+    // keys, and the read path must not silently drop fields it doesn't model.
+    if (isValid(schema, value)) out[key] = value;
     else warn(key);
   }
   return out as SiteConfig;
 }
+
+// Compile-time guard: every SiteConfig field must be modeled above, otherwise
+// the strict write path would reject it as an unknown key and the new option
+// could never be saved from the dashboard.
+type UnmodeledSiteConfigKeys = Exclude<
+  keyof SiteConfig,
+  keyof typeof configShape
+>;
+const allSiteConfigKeysModeled: [UnmodeledSiteConfigKeys] extends [never]
+  ? true
+  : UnmodeledSiteConfigKeys = true;
+void allSiteConfigKeysModeled;

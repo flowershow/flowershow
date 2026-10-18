@@ -1,5 +1,11 @@
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { sanitizeSiteConfig, validateConfigPatch } from './site-config-schema';
+import {
+  SITE_CONFIG_KEYS,
+  sanitizeSiteConfig,
+  validateConfigPatch,
+} from './site-config-schema';
 
 describe('validateConfigPatch — accepts valid patches', () => {
   it('accepts an empty patch', () => {
@@ -326,5 +332,182 @@ describe('sanitizeSiteConfig — unknown keys and warnings', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     sanitizeSiteConfig({ siteName: 'Brand', showToc: true });
     expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+// ── Current configs must keep working ────────────────────────────────────────
+
+const CONFIG_DOCS = resolve(
+  __dirname,
+  '../../../content/flowershow-app/docs/reference/config-file.md',
+);
+
+/** `### \`key\`` headings in the config.json reference. */
+function documentedKeys(md: string): string[] {
+  return [...md.matchAll(/^### `([A-Za-z]+)`/gm)].map((m) => m[1]!);
+}
+
+/** Every ```json example in the config.json reference, as a config object. */
+function documentedExamples(md: string): Record<string, unknown>[] {
+  return [...md.matchAll(/```json\n([\s\S]*?)```/g)].map((m) => {
+    const body = m[1]!.trim();
+    return JSON.parse(body.startsWith('{') ? body : `{${body}}`);
+  });
+}
+
+describe('documented config.json options', () => {
+  const md = readFileSync(CONFIG_DOCS, 'utf8');
+
+  it('models every option documented in the config.json reference', () => {
+    const keys = documentedKeys(md);
+    expect(keys.length).toBeGreaterThan(30);
+    for (const key of keys) {
+      expect(SITE_CONFIG_KEYS, `docs option "${key}"`).toContain(key);
+    }
+  });
+
+  it('accepts every documented example on write and keeps it intact on read', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const examples = documentedExamples(md);
+    expect(examples.length).toBeGreaterThan(30);
+    for (const example of examples) {
+      expect(
+        () => validateConfigPatch(example),
+        JSON.stringify(example),
+      ).not.toThrow();
+      expect(sanitizeSiteConfig(example)).toEqual(example);
+    }
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
+  });
+});
+
+describe('fields added since the schema was written', () => {
+  const recent = {
+    locale: 'de-DE',
+    head: '<meta name="x" content="y">',
+    showReadingTime: true,
+    showNavbar: false,
+    showFooter: false,
+    showBreadcrumbs: false,
+    annotations: true,
+    showTags: false,
+  };
+
+  it('accepts them on write', () => {
+    expect(() => validateConfigPatch(recent)).not.toThrow();
+  });
+
+  it('keeps them on read', () => {
+    expect(sanitizeSiteConfig(recent)).toEqual(recent);
+  });
+});
+
+describe('every dashboard save shape is accepted', () => {
+  // Mirrors the patches built in app/(cloud)/dashboard/site/[id]/settings/page.tsx
+  // and components/dashboard/form/image-upload-form.tsx.
+  const patches: Record<string, unknown>[] = [
+    { description: 'A site' },
+    { description: null },
+    { favicon: 'https://cdn/x.png' },
+    { image: null },
+    { logo: 'https://cdn/logo.png' },
+    { theme: { theme: 'letterpress' } },
+    { theme: { defaultMode: 'dark' } },
+    { theme: { showModeSwitch: false } },
+    { showBuiltWithButton: false },
+    { nav: { title: 'Nav' } },
+    { nav: { title: null } },
+    { nav: { links: [{ name: 'Home', href: '/' }] } },
+    { social: [{ label: 'github', name: 'GH', href: 'https://github.com' }] },
+    { footer: { navigation: [] } },
+    { syntaxMode: 'mdx' },
+    { showSidebar: true },
+    { sidebar: { orderBy: 'path' } },
+    { sidebar: { orderBy: undefined } },
+    { sidebar: { paths: ['docs/'] } },
+    { contentInclude: ['a/'] },
+    { contentExclude: ['b/'] },
+    { contentHide: ['c/'] },
+    { redirects: [{ from: '/a', to: '/b' }] },
+    { showToc: false },
+    { showReadingTime: true },
+    { showBreadcrumbs: false },
+    { showKnowledgeGraph: true },
+    { enableSearch: true },
+    { enableRss: true },
+    { showComments: true },
+    { giscus: { repoId: 'R_1' } },
+    { giscus: { categoryId: null } },
+    { annotations: true },
+    { showEditLink: true },
+    { showRawLink: true },
+    { showBacklinks: false },
+    { showTags: false },
+    { analytics: 'G-XXXX' },
+    { umami: { websiteId: 'w' } },
+    { umami: null },
+    { umami: { src: null } },
+    { head: '<script></script>' },
+  ];
+
+  it.each(patches.map((p) => [JSON.stringify(p), p]))('%s', (_, patch) => {
+    expect(() => validateConfigPatch(patch)).not.toThrow();
+  });
+});
+
+describe('sanitizeSiteConfig — does not change how valid stored configs render', () => {
+  afterEach(() => vi.restoreAllMocks());
+
+  it('keeps null (dashboard-cleared) values and their siblings', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const stored = {
+      description: null,
+      umami: { websiteId: 'w', src: null },
+      sidebar: { orderBy: 'title', paths: null },
+      nav: { title: null, links: [{ name: 'Home', href: '/' }] },
+      giscus: { repoId: 'R_1', categoryId: null },
+      footer: { navigation: null },
+    };
+    expect(sanitizeSiteConfig(stored)).toEqual(stored);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('tolerates unknown keys inside theme, hero, umami and sidebar', () => {
+    const config = {
+      theme: { theme: 'forest', accent: 'red' },
+      hero: { title: 'Hi', subtitle: 'extra' },
+      umami: { websiteId: 'w', domains: 'a.com' },
+      sidebar: { orderBy: 'title', depth: 2 },
+    };
+    expect(sanitizeSiteConfig(config)).toEqual(config);
+  });
+
+  it('tolerates unknown enum values that renderers already normalize', () => {
+    const config = {
+      theme: { theme: 'forest', defaultMode: 'auto' },
+      hero: { title: 'Hi', imagelayout: 'left' },
+    };
+    expect(sanitizeSiteConfig(config)).toEqual(config);
+  });
+
+  it('keeps extra keys on links instead of stripping them', () => {
+    const config = {
+      nav: {
+        links: [{ name: 'Home', href: '/', target: '_blank' }],
+        cta: { name: 'Go', href: '/go', style: 'primary' },
+      },
+      redirects: [{ from: '/a', to: '/b', note: 'moved' }],
+    };
+    expect(sanitizeSiteConfig(config)).toEqual(config);
+  });
+
+  it('keeps social links without a name (documented `{ label, href }` form)', () => {
+    const config = {
+      social: [{ label: 'github', href: 'https://github.com/x' }],
+      nav: { social: [{ label: 'x', href: 'https://x.com/y' }] },
+    };
+    expect(sanitizeSiteConfig(config)).toEqual(config);
+    expect(() => validateConfigPatch({ social: config.social })).not.toThrow();
   });
 });
