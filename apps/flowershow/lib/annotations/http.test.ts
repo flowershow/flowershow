@@ -19,7 +19,9 @@ import PostHogClient from '@/lib/server-posthog';
 import { authorizeOwner, errorResponse, track } from './http';
 
 const validateToken = validateAccessToken as ReturnType<typeof vi.fn>;
-const request = {} as NextRequest;
+const request = {
+  headers: new Headers({ authorization: 'Bearer fs_pat_x' }),
+} as NextRequest;
 const SITE = { id: 'site-1', userId: 'owner-1' };
 
 beforeEach(() => vi.clearAllMocks());

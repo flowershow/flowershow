@@ -10,6 +10,7 @@ import {
   registerAnonymousRoutes,
   registerCliAuthRoutes,
   registerGitHubAppRoutes,
+  registerSiteOwnerRoutes,
   registerSitesRoutes,
   registerUserRoutes,
   registerWebhooksRoutes,
@@ -77,6 +78,14 @@ function registerSecuritySchemes(registry: OpenAPIRegistry) {
     description: 'NextAuth JWT session cookie (browser-based access)',
   });
 
+  registry.registerComponent('securitySchemes', 'siteOwnerCookie', {
+    type: 'apiKey',
+    in: 'cookie',
+    name: '__Host-fs_site_owner',
+    description:
+      'Site-scoped owner cookie set on a site host by the owner sign-in handshake. Only valid on that site’s own host; writes must be same-origin.',
+  });
+
   registry.registerComponent('securitySchemes', 'githubWebhookSignature', {
     type: 'apiKey',
     in: 'header',
@@ -105,6 +114,7 @@ export function generateOpenApiDocument(): OpenAPIObject {
   registerSitesRoutes(registry);
   registerAnnotationsRoutes(registry);
   registerAnonymousRoutes(registry);
+  registerSiteOwnerRoutes(registry);
   registerGitHubAppRoutes(registry);
   registerWebhooksRoutes(registry);
 

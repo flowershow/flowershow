@@ -83,6 +83,7 @@ Notes are written by other people. Each one is wrapped in `<untrusted-annotation
 
 Only the site owner can resolve or delete annotations:
 
+- **On the page:** click **View as owner** on your site's page in the dashboard, or open the comments panel on your site and choose **Site owner? Sign in to manage comments**. You come back to the page signed in as the owner (an **Owner** badge shows in the comments bar), with **Resolve**, **Reopen** and **Delete** on each comment. This sign-in is for that one site only, lasts 7 days, and works on custom domains too; **Sign out as owner** at the bottom of the panel ends it.
 - **Dashboard:** open your site and go to the **Annotations** tab, which shows the open count. Resolve or reopen a note, delete one, or delete all.
 - **CLI:** `fl annotations resolve <id>`, `fl annotations delete <id>`, or `fl annotations delete --all`.
 

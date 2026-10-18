@@ -9,6 +9,8 @@ export interface CommentsBarProps {
   onToggle: () => void;
   toggleRef?: Ref<HTMLButtonElement>;
   style?: CSSProperties;
+  /** The viewer is signed in as the site owner (fetched after load, never in the HTML). */
+  isOwner?: boolean;
 }
 
 /**
@@ -21,12 +23,14 @@ export function CommentsBar({
   onToggle,
   toggleRef,
   style,
+  isOwner = false,
 }: CommentsBarProps) {
   const status =
     count > 0
       ? `${count} ${count === 1 ? 'comment' : 'comments'}`
       : 'Open for comments';
-  const hasToggle = count > 0 || open;
+  // The owner can always open the panel (e.g. to reopen resolved comments).
+  const hasToggle = count > 0 || open || isOwner;
   return (
     <div
       className={hasToggle ? 'fs-comments-bar has-toggle' : 'fs-comments-bar'}
@@ -37,6 +41,14 @@ export function CommentsBar({
           <CommentIcon />
           {status}
         </span>
+        {isOwner && (
+          <span
+            className="fs-comments-bar-owner"
+            title="You're signed in as the site owner"
+          >
+            Owner
+          </span>
+        )}
         <span className="fs-comments-bar-hint">Select text to comment</span>
         {hasToggle && (
           <button
