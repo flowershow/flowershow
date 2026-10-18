@@ -43,7 +43,11 @@ describe('/api/mcp', () => {
       rpc(listTools, { authorization: 'Bearer fs_pat_ok' }),
     );
     expect(res.status).toBe(200);
-    expect((await toolNames(res)).sort()).toEqual(['list-sites', 'publish']);
+    expect((await toolNames(res)).sort()).toEqual([
+      'claim-site',
+      'list-sites',
+      'publish',
+    ]);
   });
 
   it.each(['Bearer fs_pat_revoked', 'Bearer garbage', 'Basic abc'])(
@@ -108,7 +112,7 @@ describe('/api/mcp', () => {
   });
 
   it('answers GET (no server-to-client stream in stateless mode) with 405', async () => {
-    const res = GET();
+    const res = await GET(rpc(listTools));
     expect(res.status).toBe(405);
   });
 });

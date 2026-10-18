@@ -13,7 +13,12 @@ vi.mock('next-auth', () => ({ getServerSession: vi.fn() }));
 vi.mock('@/server/auth', () => ({ authOptions: {} }));
 vi.mock('@/server/db', () => ({
   default: {
-    site: { findUnique: vi.fn(), count: vi.fn(), update: vi.fn() },
+    site: {
+      findUnique: vi.fn(),
+      count: vi.fn(),
+      update: vi.fn(),
+      updateMany: vi.fn(),
+    },
   },
 }));
 vi.mock('@/lib/server-posthog', () => ({
@@ -35,7 +40,7 @@ import { POST } from './route';
 
 const findUnique = prisma.site.findUnique as ReturnType<typeof vi.fn>;
 const count = prisma.site.count as ReturnType<typeof vi.fn>;
-const update = prisma.site.update as ReturnType<typeof vi.fn>;
+const update = prisma.site.updateMany as ReturnType<typeof vi.fn>;
 const session = getServerSession as ReturnType<typeof vi.fn>;
 
 function req(body: unknown, headers: Record<string, string> = {}) {
@@ -72,11 +77,7 @@ beforeEach(() => {
   session.mockResolvedValue({ user: { id: 'u1' } });
   count.mockResolvedValue(0);
   findUnique.mockResolvedValue(anonSite());
-  update.mockImplementation(async ({ data }) => ({
-    id: 'site-1',
-    projectName: 'p',
-    ...data,
-  }));
+  update.mockResolvedValue({ count: 1 });
 });
 
 describe('POST /api/sites/claim', () => {
@@ -85,7 +86,11 @@ describe('POST /api/sites/claim', () => {
     const res = await POST(req({ siteId: 'site-1', claimToken }));
     expect(res.status).toBe(200);
     expect(update).toHaveBeenCalledWith({
-      where: { id: 'site-1' },
+      where: expect.objectContaining({
+        id: 'site-1',
+        userId: ANONYMOUS_USER_ID,
+        anonymousOwnerId: 'anon-1',
+      }),
       data: TRANSFER,
     });
   });
@@ -110,12 +115,41 @@ describe('POST /api/sites/claim', () => {
     expect(update).not.toHaveBeenCalled();
   });
 
-  it('returns 400 when the site is already claimed', async () => {
+  it('returns 409 when the site is already claimed', async () => {
     findUnique.mockResolvedValue(anonSite({ userId: 'u2' }));
     const claimToken = generateSiteClaimToken('site-1', 'anon-1');
     const res = await POST(req({ siteId: 'site-1', claimToken }));
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(409);
+    expect((await res.json()).error).toMatch(/already been claimed/);
     expect(update).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 to the loser of a race (the conditional write matched nothing)', async () => {
+    update.mockResolvedValue({ count: 0 });
+    const claimToken = generateSiteClaimToken('site-1', 'anon-1');
+    const res = await POST(req({ siteId: 'site-1', claimToken }));
+    expect(res.status).toBe(409);
+  });
+
+  it('of two concurrent claims exactly one succeeds (flowershow-nds)', async () => {
+    let owner = ANONYMOUS_USER_ID;
+    findUnique.mockImplementation(async () => anonSite({ userId: owner }));
+    update.mockImplementation(async ({ where, data }) => {
+      // Model the database: the conditional update applies at most once.
+      await new Promise((r) => setTimeout(r, 1));
+      if (owner !== where.userId) return { count: 0 };
+      owner = data.userId;
+      return { count: 1 };
+    });
+    const claimToken = generateSiteClaimToken('site-1', 'anon-1');
+    session
+      .mockResolvedValueOnce({ user: { id: 'u1' } })
+      .mockResolvedValueOnce({ user: { id: 'u2' } });
+    const [a, b] = await Promise.all([
+      POST(req({ siteId: 'site-1', claimToken })),
+      POST(req({ siteId: 'site-1', claimToken })),
+    ]);
+    expect([a.status, b.status].sort()).toEqual([200, 409]);
   });
 
   it('returns 410 for a claimToken whose temporary site has expired', async () => {
@@ -141,7 +175,11 @@ describe('POST /api/sites/claim', () => {
     const res = await POST(req({ siteId: 'site-1', ownershipToken }));
     expect(res.status).toBe(200);
     expect(update).toHaveBeenCalledWith({
-      where: { id: 'site-1' },
+      where: expect.objectContaining({
+        id: 'site-1',
+        userId: ANONYMOUS_USER_ID,
+        anonymousOwnerId: 'anon-1',
+      }),
       data: TRANSFER,
     });
   });

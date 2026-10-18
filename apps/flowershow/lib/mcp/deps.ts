@@ -1,13 +1,18 @@
 import { NextRequest } from 'next/server';
+import type { CreateSiteResponse } from '@flowershow/api-contract';
 import { GET as statusGET } from '@/app/api/sites/id/[siteId]/status/route';
 import { POST as syncPOST } from '@/app/api/sites/id/[siteId]/sync/route';
+import { POST as createSitePOST } from '@/app/api/sites/route';
 import { env } from '@/env.mjs';
 import { hashIp } from '@/lib/anon-rate-limit';
 import { createAnonSite } from '@/lib/anon-site';
+import { verifySiteClaimToken } from '@/lib/anonymous-user';
+import { claimAnonSite } from '@/lib/claim-anon-site';
 import { getSiteUrl } from '@/lib/get-site-url';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
-import { ApiError } from './publish';
+import { markMcpInternal } from './internal-request';
+import { ApiError, type PublishCredential } from './publish';
 import type { McpDeps } from './server';
 
 /**
@@ -19,20 +24,35 @@ import type { McpDeps } from './server';
 export const MCP_ANON_BUCKET = 'mcp:anonymous';
 const DEFAULT_MCP_ANON_HOURLY_LIMIT = 100;
 
+/**
+ * A request to a REST route handler, called in-process. An anonymous site's
+ * claim token travels as the bearer (exactly as the CLI sends it); a user the
+ * MCP endpoint has already authenticated travels as an in-process marker
+ * (lib/mcp/internal-request.ts), so OAuth access tokens are never forwarded.
+ */
 function internalRequest(
   method: 'GET' | 'POST',
   path: string,
-  bearer: string,
+  credential: PublishCredential,
   body?: unknown,
 ) {
-  return new NextRequest(`https://${env.NEXT_PUBLIC_HOME_DOMAIN}${path}`, {
-    method,
-    headers: {
-      authorization: `Bearer ${bearer}`,
-      ...(body !== undefined && { 'content-type': 'application/json' }),
+  const request = new NextRequest(
+    `https://${env.NEXT_PUBLIC_HOME_DOMAIN}${path}`,
+    {
+      method,
+      headers: {
+        ...('claimToken' in credential && {
+          authorization: `Bearer ${credential.claimToken}`,
+        }),
+        ...(body !== undefined && { 'content-type': 'application/json' }),
+      },
+      ...(body !== undefined && { body: JSON.stringify(body) }),
     },
-    ...(body !== undefined && { body: JSON.stringify(body) }),
-  });
+  );
+  return markMcpInternal(
+    request,
+    'userId' in credential ? { userId: credential.userId } : {},
+  );
 }
 
 async function json<T>(res: Response): Promise<T> {
@@ -79,12 +99,35 @@ export function realMcpDeps(): McpDeps {
       return result.site;
     },
 
-    async sync(siteId, files, bearer) {
+    async createUserSite(userId, name) {
+      // Never overwrite: on a name clash, try "name-2", "name-3", ...
+      for (let attempt = 1; attempt <= 6; attempt++) {
+        const projectName =
+          attempt === 1
+            ? name
+            : attempt < 6
+              ? `${name}-${attempt}`
+              : `${name}-${Math.random().toString(36).slice(2, 6)}`;
+        const res = await createSitePOST(
+          internalRequest('POST', '/api/sites', { userId }, { projectName }),
+        );
+        if (res.status === 409) continue;
+        const { site } = await json<CreateSiteResponse>(res);
+        return { siteId: site.id, liveUrl: site.url };
+      }
+      throw new ApiError(
+        409,
+        'site_exists',
+        'A site with that name already exists.',
+      );
+    },
+
+    async sync(siteId, files, credential) {
       const res = await syncPOST(
         internalRequest(
           'POST',
           `/api/sites/id/${encodeURIComponent(siteId)}/sync`,
-          bearer,
+          credential,
           {
             files,
           },
@@ -107,12 +150,12 @@ export function realMcpDeps(): McpDeps {
         throw new ApiError(res.status, 'upload_failed', 'Upload failed');
     },
 
-    async status(siteId, bearer) {
+    async status(siteId, credential) {
       const res = await statusGET(
         internalRequest(
           'GET',
           `/api/sites/id/${encodeURIComponent(siteId)}/status`,
-          bearer,
+          credential,
         ),
         { params: Promise.resolve({ siteId }) },
       );
@@ -143,13 +186,62 @@ export function realMcpDeps(): McpDeps {
           customDomain: true,
           subdomain: true,
           user: { select: { username: true } },
+          publishes: {
+            orderBy: { startedAt: 'desc' },
+            take: 1,
+            select: { startedAt: true },
+          },
         },
       });
       return sites.map((s) => ({
         siteId: s.id,
         name: s.projectName,
         url: getSiteUrl(s),
+        lastPublishedAt: s.publishes[0]?.startedAt.toISOString() ?? null,
       }));
+    },
+
+    async claimSite(userId, siteId, claimToken) {
+      // Check the token is for this site before touching the database.
+      const claim = verifySiteClaimToken(claimToken);
+      if (!claim || claim.siteId !== siteId) {
+        throw new ApiError(
+          403,
+          'forbidden',
+          'This claimToken is not valid for this site.',
+        );
+      }
+      const result = await claimAnonSite({ siteId, userId, claimToken });
+      if (!result.ok) {
+        const message =
+          result.status === 409
+            ? 'This site has already been added to a Flowershow account. If it is yours, find it with list-sites.'
+            : result.status === 410
+              ? 'This anonymous site has expired and can no longer be kept. Publish again to create a new site.'
+              : result.status === 404
+                ? 'Site not found.'
+                : 'This claimToken is not valid for this site.';
+        throw new ApiError(result.status, 'claim_failed', message);
+      }
+      const posthog = PostHogClient();
+      posthog.capture({
+        distinctId: userId,
+        event: 'anon_claim_completed',
+        properties: { site_id: siteId, claim_method: 'mcp' },
+      });
+      await posthog.shutdown();
+      const site = await prisma.site.findUnique({
+        where: { id: siteId },
+        select: {
+          id: true,
+          projectName: true,
+          customDomain: true,
+          subdomain: true,
+          user: { select: { username: true } },
+        },
+      });
+      if (!site) throw new ApiError(404, 'not_found', 'Site not found.');
+      return { siteId: site.id, name: site.projectName, url: getSiteUrl(site) };
     },
 
     sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),

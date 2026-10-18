@@ -18,7 +18,8 @@ type PublishSource =
   | 'cli'
   | 'obsidian_plugin'
   | 'dashboard_upload'
-  | 'anonymous';
+  | 'anonymous'
+  | 'mcp';
 type ChangeType = 'added' | 'updated' | 'deleted';
 type FileStatus = 'uploading' | 'success' | 'error' | 'canceled' | 'expired';
 
@@ -54,6 +55,7 @@ const SOURCE_LABELS: Record<PublishSource, string> = {
   obsidian_plugin: 'Obsidian',
   dashboard_upload: 'Dashboard',
   anonymous: 'Anonymous',
+  mcp: 'AI assistant (MCP)',
 };
 
 function FileStatusDot({ status }: { status: FileStatus }) {

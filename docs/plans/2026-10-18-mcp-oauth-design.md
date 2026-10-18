@@ -204,6 +204,12 @@ Recorded as the PRs landed; each says why.
 - **The consent page can't be framed** (`X-Frame-Options: DENY`, `frame-ancestors 'none'`, set in middleware) and the authorize error page has a locked-down CSP.
 - **`state` is capped at 2048 characters** (longer is `invalid_request`).
 - **`mcp_oauth_grant_created`** is captured in PR 2, where grants are created; the other events stay in PR 4.
+- **How MCP acts as the user** (PR 3): the design's "internal flag on the request" is a module-private `Symbol` property set by `lib/mcp/internal-request.ts` on requests the MCP endpoint builds in-process; `validateAccessToken` honours it, so sync, status and create-site run their normal ownership checks for that user. A Symbol property can't come from HTTP. It is used for PAT/CLI callers too, so the MCP endpoint no longer forwards any bearer token (claim tokens for anonymous sites still travel as the bearer, as before). REST routes still accept only `fs_pat_`/`fs_cli_` tokens.
+- **New account sites** (PR 3) are created through `POST /api/sites` in-process (same validation, subdomain logic and site-created email as the CLI). A name clash gets `-2`, `-3`, … instead of overwriting. There are no per-account site limits to apply yet (`flowershow-bp8`).
+- **`/api/mcp/account` also accepts PAT/CLI tokens**; `/api/mcp` keeps its original `Bearer realm="flowershow"` challenge for PAT/CLI failures and only adds `resource_metadata` when an `fs_oat_` token fails, so existing clients see no change.
+- **Not-yours and not-found look the same** to a signed-in caller of `publish` (no probing of other accounts' site ids); with a `claimToken` the message points to `claim-site`.
+- **Claim route status codes** (PR 3, `flowershow-nds`): an already-claimed site is now `409` (was `400`), the same answer the loser of a concurrent claim gets.
+- **`PublishSource.mcp`** is recorded for every publish that comes through MCP, anonymous ones included.
 - **Playwright** signs in by setting a next-auth session cookie minted with the test secret (the login providers themselves are not exercised); the logged-out case asserts the redirect to `/login?callbackUrl=/oauth/consent?req=…` and the return to consent.
 
 ## Drop the "beta" label: checklist
