@@ -40,3 +40,21 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # changesets creates a GitHub release for each npm package it publishes
+      # (e.g. @flowershow/remark-wiki-link@x.y.z), and GitHub marks the newest one
+      # as "Latest". The CLI install script fallback, `fl` update check and docs
+      # (releases/latest/download/fl_*.tar.gz) expect "Latest" to be a CLI
+      # release, so point it back at the newest cli/v* release.
+      - name: Keep newest CLI release marked as Latest
+        if: steps.changesets.outputs.published == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          tag=$(gh release list --repo "$GITHUB_REPOSITORY" --limit 100 --exclude-drafts --exclude-pre-releases --json tagName --jq '[.[] | select(.tagName | startswith("cli/v"))][0].tagName // empty')
+          if [ -n "$tag" ]; then
+            gh release edit "$tag" --repo "$GITHUB_REPOSITORY" --latest
+            echo "Marked $tag as Latest"
+          else
+            echo "No cli/v* release found; leaving Latest unchanged"
+          fi

@@ -1,7 +1,7 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { describe, expect, it, vi } from 'vitest';
-import type { PublishDeps } from './publish';
+import { ApiError, type PublishDeps } from './publish';
 import {
   createFlowershowMcpServer,
   type McpDeps,
@@ -17,9 +17,20 @@ const ANON = {
   expiresAt: '2026-10-09T12:00:00.000Z',
 };
 
+const USER: McpMode = {
+  kind: 'user',
+  userId: 'u1',
+  via: 'oauth',
+  scopes: ['sites:write'],
+};
+
 function deps(over: Partial<McpDeps> = {}): McpDeps {
   const publish: PublishDeps = {
     createAnonSite: vi.fn().mockResolvedValue(ANON),
+    createUserSite: vi.fn().mockResolvedValue({
+      siteId: 's-new',
+      liveUrl: 'https://new-alice.flowershow.me',
+    }),
     sync: vi.fn().mockResolvedValue({
       toUpload: [
         { path: 'index.html', uploadUrl: 'u', contentType: 'text/html' },
@@ -41,8 +52,14 @@ function deps(over: Partial<McpDeps> = {}): McpDeps {
         siteId: 's1',
         name: 'notes',
         url: 'https://notes-alice.flowershow.me',
+        lastPublishedAt: '2026-10-18T09:00:00.000Z',
       },
     ]),
+    claimSite: vi.fn().mockResolvedValue({
+      siteId: 'site-1',
+      name: 'p',
+      url: 'https://p-anon.flowershow.me',
+    }),
     ...over,
   };
 }
@@ -68,12 +85,17 @@ describe('Flowershow MCP server', () => {
   });
 
   it('adds list-sites with an account token', async () => {
-    const client = await connect(
-      { kind: 'user', token: 'fs_pat_x', userId: 'u1' },
-      deps(),
-    );
+    const client = await connect(USER, deps());
     const { tools } = await client.listTools();
-    expect(tools.map((t) => t.name).sort()).toEqual(['list-sites', 'publish']);
+    expect(tools.map((t) => t.name).sort()).toEqual([
+      'claim-site',
+      'list-sites',
+      'publish',
+    ]);
+    const publish = tools.find((t) => t.name === 'publish');
+    expect(publish?.description).toMatch(/account/);
+    expect(publish?.description).not.toMatch(/expires in 7 days/);
+    expect(publish?.inputSchema.properties).toHaveProperty('name');
   });
 
   it('publishes anonymously and returns the claim link as text and structured content', async () => {
@@ -126,10 +148,7 @@ describe('Flowershow MCP server', () => {
 
   it('lists the account sites', async () => {
     const d = deps();
-    const client = await connect(
-      { kind: 'user', token: 'fs_pat_x', userId: 'u1' },
-      d,
-    );
+    const client = await connect(USER, d);
     const res = await client.callTool({ name: 'list-sites', arguments: {} });
     expect(d.listSites).toHaveBeenCalledWith('u1');
     expect(res.structuredContent).toEqual({
@@ -138,8 +157,63 @@ describe('Flowershow MCP server', () => {
           siteId: 's1',
           name: 'notes',
           url: 'https://notes-alice.flowershow.me',
+          lastPublishedAt: '2026-10-18T09:00:00.000Z',
         },
       ],
     });
+  });
+
+  it('keeps the anonymous tool surface unchanged (no name argument)', async () => {
+    const client = await connect({ kind: 'anon' }, deps());
+    const { tools } = await client.listTools();
+    expect(tools[0]?.inputSchema.properties).not.toHaveProperty('name');
+  });
+
+  it('publishes into the account as the token user', async () => {
+    const d = deps();
+    const client = await connect(USER, d);
+    const res = await client.callTool({
+      name: 'publish',
+      arguments: { files: [{ path: 'index.md', content: '# Notes' }] },
+    });
+    expect(res.isError).toBeFalsy();
+    expect(d.createUserSite).toHaveBeenCalledWith('u1', 'Notes');
+    expect(d.createAnonSite).not.toHaveBeenCalled();
+  });
+
+  it('claims an anonymous site into the account', async () => {
+    const d = deps();
+    const client = await connect(USER, d);
+    const res = await client.callTool({
+      name: 'claim-site',
+      arguments: { siteId: 'site-1', claimToken: 'fs_claim_x' },
+    });
+    expect(d.claimSite).toHaveBeenCalledWith('u1', 'site-1', 'fs_claim_x');
+    expect(res.isError).toBeFalsy();
+    expect(res.structuredContent).toMatchObject({
+      siteId: 'site-1',
+      liveUrl: 'https://p-anon.flowershow.me',
+    });
+  });
+
+  it('reports a failed claim as a tool error with the reason', async () => {
+    const client = await connect(
+      USER,
+      deps({
+        claimSite: vi
+          .fn()
+          .mockRejectedValue(
+            new ApiError(409, 'claim_failed', 'already in an account'),
+          ),
+      }),
+    );
+    const res = await client.callTool({
+      name: 'claim-site',
+      arguments: { siteId: 'site-1', claimToken: 'fs_claim_x' },
+    });
+    expect(res.isError).toBe(true);
+    expect((res.content as { text: string }[])[0]?.text).toBe(
+      'already in an account',
+    );
   });
 });

@@ -6,9 +6,23 @@
 
 ### Try it out now and sign up at https://flowershow.app/
 
-## Install and publish
+Want to see it in action? 🎉 https://flowershow.app itself is built and published with Flowershow 💐
 
-No Node.js, npm or git needed. The CLI is a single binary called `fl`.
+- 📝 Docs: https://flowershow.app/docs
+- 🤖 for AI: https://flowershow.app/cli
+- 💎 for Obsidian: https://flowershow.app/uses/obsidian
+
+Flowershow is proudly open-source.
+
+Flowershow is a product of [Datopian](https://datopian.com) - dedicated to democratising the power of data & knowledge.
+
+## Publish
+
+Just login in the website and you can publish in seconds by drag and drop, from Obsidian (plugin), from Github and more.
+
+### Command line (for AI)
+
+The CLI is a single binary called `fl`.
 
 ```bash
 # Install (macOS / Linux)
@@ -23,20 +37,7 @@ Windows: download `fl_windows_amd64.zip` from the [latest release](https://githu
 
 Using an AI agent (Claude, ChatGPT, Codex, Cursor)? See https://flowershow.app/publish-with-ai.
 
-> The old npm packages `flowershow` and `@flowershow/publish` are deprecated. Don't install them.
-
-Want to see it in action? 🎉 https://flowershow.app itself is built and published with Flowershow 💐
-
-- 📝 Docs: https://flowershow.app/docs
-- 🤖 for AI: https://flowershow.app/cli
-- 💎 for Obsidian: https://flowershow.app/uses/obsidian
-
-Flowershow is proudly open-source.
-
-Flowershow is a product of [Datopian](https://datopian.com) - dedicated to democratising the power of data & knowledge.
-
 ---
-
 ---
 
 # For Developers (contributing to Flowershow itself)

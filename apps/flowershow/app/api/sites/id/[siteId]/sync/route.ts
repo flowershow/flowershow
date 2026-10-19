@@ -11,6 +11,7 @@ import {
   generatePresignedUploadUrl,
   getContentType,
 } from '@/lib/content-store';
+import { mcpInternalCaller } from '@/lib/mcp/internal-request';
 import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
 import {
   clientTypeToPublishSource,
@@ -123,7 +124,9 @@ export async function POST(
       const publish = await prisma.publish.create({
         data: {
           siteId,
-          source: clientTypeToPublishSource(getClientInfo(request).client_type),
+          source: mcpInternalCaller(request)
+            ? 'mcp'
+            : clientTypeToPublishSource(getClientInfo(request).client_type),
           legacy: isLegacy,
         },
       });
@@ -283,8 +286,11 @@ export async function POST(
 
     if (!dryRun) {
       const { client_type } = getClientInfo(request);
-      const publish_method =
-        client_type === 'obsidian-plugin' ? 'obsidian_plugin' : client_type;
+      const publish_method = mcpInternalCaller(request)
+        ? 'mcp'
+        : client_type === 'obsidian-plugin'
+          ? 'obsidian_plugin'
+          : client_type;
       posthog.capture({
         distinctId,
         event: 'content_published',

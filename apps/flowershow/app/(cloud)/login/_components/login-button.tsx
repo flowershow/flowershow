@@ -5,6 +5,7 @@ import { signIn } from 'next-auth/react';
 import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
+import { accountNotLinkedMessage } from '@/lib/account-linking';
 
 // Basic email shape check — good enough for client-side feedback.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -34,13 +35,17 @@ export default function LoginButton() {
   const error = searchParams?.get('error');
   const callbackUrl = searchParams?.get('callbackUrl');
   const provider = searchParams?.get('provider');
+  // Set by our signIn callback: the method the existing account signed up with.
+  const method = searchParams?.get('method');
 
   useEffect(() => {
     const errorCode = Array.isArray(error) ? error.pop() : error;
-    if (errorCode) {
+    if (errorCode === 'OAuthAccountNotLinked') {
+      toast.error(accountNotLinkedMessage(method), { duration: 15000 });
+    } else if (errorCode) {
       toast.error(ERROR_MESSAGES[errorCode] ?? errorCode);
     }
-  }, [error]);
+  }, [error, method]);
 
   // Auto-trigger a provider's OAuth flow when linked here with ?provider=<id>
   // (e.g. the landing-page "Sign up with Google" button → /login?provider=google).

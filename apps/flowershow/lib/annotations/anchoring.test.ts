@@ -165,10 +165,31 @@ describe('anchorSelector', () => {
     });
   });
 
-  it('survives a small edit inside the quote', () => {
+  it('survives a small edit inside a longer quote', () => {
     const text = 'The quick brown fax jumps over the dog.';
-    const anchor = anchorSelector(text, selector)!;
-    expect(text.slice(anchor.start, anchor.end)).toBe('brown fax');
+    const anchor = anchorSelector(text, {
+      exact: 'quick brown fox jumps',
+      prefix: 'The ',
+      suffix: ' over',
+      start: 4,
+      end: 25,
+    })!;
+    expect(text.slice(anchor.start, anchor.end)).toBe('quick brown fax jumps');
+  });
+
+  it('only matches short quotes verbatim, so they never land on unrelated text', () => {
+    expect(
+      anchorSelector('The quick brown fax jumps over the dog.', selector),
+    ).toBeNull();
+    expect(
+      anchorSelector('The quick brown box jumps over the dog.', {
+        exact: 'fox',
+        prefix: 'brown ',
+        suffix: ' jumps',
+        start: 16,
+        end: 19,
+      }),
+    ).toBeNull();
   });
 
   it('gives up (outdated) when the quoted text is gone', () => {

@@ -193,10 +193,10 @@ func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 
 		var pending, errored []api.BlobStatus
 		for _, b := range blobs {
-			switch b.SyncStatus {
-			case "UPLOADING", "PROCESSING":
+			switch b.Status {
+			case "uploading":
 				pending = append(pending, b)
-			case "ERROR":
+			case "error":
 				errored = append(errored, b)
 			}
 		}
@@ -218,8 +218,8 @@ func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 				fmt.Printf("\n%s %d file(s) had errors:\n", yellow("⚠️"), len(errored))
 				for _, b := range errored {
 					errMsg := "unknown error"
-					if b.SyncError != nil {
-						errMsg = *b.SyncError
+					if b.Error != nil {
+						errMsg = *b.Error
 					}
 					fmt.Printf("  %s %s: %s\n", yellow("-"), b.Path, errMsg)
 				}
@@ -241,7 +241,7 @@ func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 	var pending []api.BlobStatus
 	if status != nil {
 		for _, b := range status.Blobs {
-			if b.SyncStatus == "UPLOADING" || b.SyncStatus == "PROCESSING" {
+			if b.Status == "uploading" {
 				pending = append(pending, b)
 			}
 		}

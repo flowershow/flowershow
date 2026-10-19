@@ -9,7 +9,6 @@ import (
 	"github.com/flowershow/publish/internal/auth"
 	"github.com/flowershow/publish/internal/config"
 	"github.com/flowershow/publish/internal/files"
-	"github.com/flowershow/publish/internal/localconfig"
 	"github.com/flowershow/publish/internal/siteconfig"
 	"github.com/flowershow/publish/internal/telemetry"
 	"github.com/flowershow/publish/internal/ui"
@@ -48,7 +47,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 	// A folder published with --anon is linked to an anonymous site, which
 	// `fl sync` (account sites only) can't update.
 	if absPath, err := filepath.Abs(inputPath); err == nil {
-		if cfg := localconfig.Read(absPath); cfg.IsAnon() {
+		if cfg := loadLink(absPath); cfg.IsAnon() {
 			msg := fmt.Sprintf("This folder was published without an account, so `fl sync` can't update it.\n"+
 				"Run `fl --anon %s` to update it", shellQuoteAll([]string{inputPath}))
 			if cfg.ClaimURL != "" {
@@ -206,15 +205,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 		fmt.Printf("%s Deleted %d file(s)\n", ui.Green("✓"), len(syncPlan.Deleted))
 	}
 
-	// Wait for processing
-	result := ui.WaitForSync(existingSite.Site.ID, 30)
-	if result.Timeout {
-		ui.PrintWarning("Some files are still processing after 30 seconds.\n" +
-			"Your site is available but some pages may not be ready yet.\n" +
-			"Check back in a moment.")
-	} else if !result.Success && len(result.Errors) > 0 {
-		ui.PrintWarning("Some files had processing errors (see above).")
-	}
+	failed := waitForProcessing(existingSite.Site.ID)
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{
 		"command":     "sync",
@@ -231,7 +222,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 		syncPlan.Summary.Deleted,
 		syncPlan.Summary.Unchanged,
 	)))
-	return nil
+	return processingError(failed)
 }
 
 func displaySyncSummary(plan *api.SyncFilesResponse, projectName string, verbose bool) {

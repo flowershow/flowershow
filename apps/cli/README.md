@@ -18,6 +18,8 @@ This detects your OS and architecture, downloads the latest release binary, and 
 curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | FL_INSTALL_DIR="$HOME/.local/bin" sh
 ```
 
+To install a specific version, set `FL_VERSION` (e.g. `FL_VERSION=2.6.0`).
+
 **Windows** — download `fl_windows_amd64.zip` (or `fl_windows_arm64.zip`) from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and add the extracted `fl.exe` to your `PATH`.
 
 > [!WARNING]
@@ -184,7 +186,7 @@ fl --anon ./my-notes
 4. Site is created via the Flowershow API
 5. Presigned URLs are obtained for secure file uploads
 6. Files are uploaded directly to Cloudflare R2 storage
-7. CLI waits for markdown files to be processed
+7. CLI waits for markdown files to be processed. If any file fails to process (e.g. invalid YAML frontmatter), it lists each file with its error and exits non-zero, even though the rest of the site is published
 8. Site URL is displayed
 9. For folder mode, site name is saved to `.flowershow` in the folder for future runs
 

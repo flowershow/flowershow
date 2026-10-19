@@ -93,8 +93,7 @@ import {
   postFiles,
   resolvePostRoute,
 } from '@/lib/post/route';
-import { resolveSiteAlias } from '@/lib/resolve-site-alias';
-import { matchRedirect } from '@/lib/redirects';
+import { resolveConfigRedirect } from '@/lib/config-redirect';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
 import { ensureLeadingSlash, normalizeAuthors } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
@@ -139,7 +138,7 @@ export async function generateMetadata(props: {
     })
     .catch(() => {
       // No page here: a configured redirect applies before any fallback.
-      redirectIfMatched(site, siteConfig, decodedSlug);
+      redirectIfConfigured(siteConfig, decodedSlug);
       // For anonymous sites, return null instead of throwing 404
       // This allows the page to render even if metadata isn't ready
       if (userName === 'anon') {
@@ -347,21 +346,6 @@ export default async function SitePage(props: {
   // the virtual `/tags` pages are all suppressed. Defaults to on.
   const showTags = siteConfig?.showTags ?? true;
 
-  const blob = await api.site.getBlob
-    .query({
-      siteId: site.id,
-      slug: decodedSlug,
-    })
-    .catch(() => null);
-
-  // Redirects apply only where no page is published, so a stale rule can't
-  // hide a live page.
-  if (!blob) redirectIfMatched(site, siteConfig, decodedSlug);
-
-  if (blob && isSiteChromeFile(blob.path)) {
-    notFound();
-  }
-
   const siteFilePaths = await api.site.getAllBlobPaths
     .query({
       siteId: site.id,
@@ -379,6 +363,21 @@ export default async function SitePage(props: {
   const imageDimensions = await api.site.getImageDimensionsMap
     .query({ siteId: site.id })
     .catch(() => ({}) as ImageDimensionsMap);
+
+  const blob = await api.site.getBlob
+    .query({
+      siteId: site.id,
+      slug: decodedSlug,
+    })
+    .catch(() => null);
+
+  // Redirects apply only where no page is published, so a stale rule can't
+  // hide a live page.
+  if (!blob) redirectIfConfigured(siteConfig, decodedSlug);
+
+  if (blob && isSiteChromeFile(blob.path)) {
+    notFound();
+  }
 
   // Page-level `showNavbar`/`showFooter` (falling back to site config) hide
   // the layout's navbar/footer via a marker + CSS :has() (default-theme.css).
@@ -583,23 +582,27 @@ export default async function SitePage(props: {
 
   // Annotations: Markdown pages only (the rule also excludes .canvas/.html).
   // Same rule as noindex and the API, so every eligible page gets the overlay.
-  const annotationsOverlay = isAnnotationsEnabled({
-    site,
-    siteConfig,
-    pageMetadata: metadata,
-    pagePath: blob.path,
-  }) ? (
-    <PageAnnotations
-      siteId={site.id}
-      pagePath={blob.path}
-      manageUrl={`${
-        env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
-        env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
-          ? 'https'
-          : 'http'
-      }://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${site.id}/annotations`}
-    />
-  ) : null;
+  // `rootId` is the element whose text can be annotated: on layout pages that is
+  // <main>, so the title and description in the page header are included.
+  const annotationsOverlay = (rootId: string) =>
+    isAnnotationsEnabled({
+      site,
+      siteConfig,
+      pageMetadata: metadata,
+      pagePath: blob.path,
+    }) ? (
+      <PageAnnotations
+        rootId={rootId}
+        siteId={site.id}
+        pagePath={blob.path}
+        manageUrl={`${
+          env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+          env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+            ? 'https'
+            : 'http'
+        }://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${site.id}/annotations`}
+      />
+    ) : null;
 
   // Premium: per-page `scripts` frontmatter, gated and resolved server-side.
   const pageScripts = isFeatureEnabled(Feature.PageScripts, site)
@@ -708,7 +711,7 @@ export default async function SitePage(props: {
         />
         <UrlNormalizer />
         {chromeMarker}
-        {annotationsOverlay}
+        {annotationsOverlay('mdxpage')}
         <div className="rendered-mdx is-plain" id="mdxpage">
           {compiledContent}
         </div>
@@ -875,7 +878,7 @@ export default async function SitePage(props: {
       />
       <UrlNormalizer />
       {chromeMarker}
-      {annotationsOverlay}
+      {annotationsOverlay('page-main')}
 
       {showSidebar && <SidebarMobileNav items={sidebarItems} prefix={''} />}
 
@@ -911,7 +914,7 @@ export default async function SitePage(props: {
           )}
           data-view={pageLevelRoute?.view}
         >
-          <main className="page-main">
+          <main className="page-main" id="page-main">
             {changelog?.kind === 'index' ? (
               <>
                 <ChangelogIndexPage
@@ -1089,21 +1092,12 @@ function isPastLastPage(p?: { page: number; pageCount: number }): boolean {
   return p !== undefined && p.page > p.pageCount;
 }
 
-function redirectIfMatched(
-  site: Awaited<ReturnType<typeof getSite>>,
+function redirectIfConfigured(
   siteConfig: SiteConfig | null,
   slug: string,
 ): void {
-  const match = matchRedirect(slug, siteConfig?.redirects ?? []);
+  const match = resolveConfigRedirect(siteConfig?.redirects, slug);
   if (!match) return;
-  const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(match.to);
-  const url =
-    site.customDomain || isAbsolute
-      ? match.to
-      : `${resolveSiteAlias(
-          `/@${site.user?.username}/${site.projectName}`,
-          'to',
-        )}${match.to}`;
-  if (match.permanent) permanentRedirect(url);
-  redirect(url);
+  if (match.permanent) permanentRedirect(match.url);
+  redirect(match.url);
 }

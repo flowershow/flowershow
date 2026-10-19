@@ -1,0 +1,30 @@
+name: CLI Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/cli/**'
+      - '.github/workflows/cli-test.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'apps/cli/**'
+      - '.github/workflows/cli-test.yml'
+
+jobs:
+  test:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/cli
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: apps/cli/go.mod
+          cache-dependency-path: apps/cli/go.sum
+      - run: go vet ./...
+      - run: go test ./...

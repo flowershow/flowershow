@@ -1,5 +1,90 @@
-.fs-annotations-pill,
+/* Page comments (feature name: annotations). Unlayered on purpose: the docked
+   layout below must beat the default theme's @layer rules, and its selectors
+   carry `html.fs-comments-open` so they also beat official themes' unlayered
+   `.layout-inner.*` rules. */
+
+:root {
+  --fs-comments-bar-height: 2.25rem;
+  --fs-comments-panel-width: 20rem;
+}
+
+/* ── Top bar ─────────────────────────────────────────── */
+
+.fs-comments-bar {
+  position: relative;
+  z-index: 9; /* under the navbar (10) and its menus */
+  height: var(--fs-comments-bar-height);
+  background: var(--color-background, #fff);
+  color: var(--color-foreground, #525252);
+  border-bottom: 1px solid var(--color-foreground-100, #e7e5e4);
+  font-size: 0.85rem;
+  line-height: 1;
+}
+/* Sticky on desktop only: on phones it scrolls away to save space. Below
+   1024px the sidebar subnav already sticks under the navbar. */
+@media (min-width: 1024px) {
+  .fs-comments-bar {
+    position: sticky;
+    top: var(--fs-comments-top, var(--navbar-height, 0px));
+  }
+}
+.fs-comments-bar-inner {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  height: 100%;
+  padding: 0 1rem;
+}
+.fs-comments-bar-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+.fs-comments-bar-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+.fs-comments-bar-hint {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  opacity: 0.7;
+}
+@media (min-width: 640px) {
+  .fs-comments-bar-hint {
+    text-align: center;
+  }
+}
+/* Narrow phones: count + toggle only (the hint is in the empty panel too). */
+@media (max-width: 479px) {
+  .fs-comments-bar.has-toggle .fs-comments-bar-hint {
+    visibility: hidden;
+  }
+}
+.fs-comments-bar-toggle {
+  flex-shrink: 0;
+  font: inherit;
+  cursor: pointer;
+  padding: 0.3rem 0.7rem;
+  border-radius: 9999px;
+  border: 1px solid var(--color-foreground-200, #d6d3d1);
+  background: transparent;
+  color: inherit;
+}
+.fs-comments-bar-toggle:hover,
+.fs-comments-bar-toggle[aria-expanded="true"] {
+  background: var(--color-foreground-50, #f5f5f4);
+}
+
+/* ── Floating "Comment" button on a selection ────────── */
+
 .fs-annotations-add {
+  position: absolute;
+  z-index: 111; /* above the panel / phone sheet */
   font: inherit;
   font-size: 0.85rem;
   cursor: pointer;
@@ -9,19 +94,6 @@
   color: var(--color-foreground, #525252);
   padding: 0.4rem 0.9rem;
   box-shadow: 0 6px 16px rgb(0 0 0 / 0.08);
-}
-
-.fs-annotations-pill {
-  position: fixed;
-  left: 1rem;
-  bottom: 1.5rem;
-  z-index: 100;
-  max-width: calc(100vw - 2rem);
-}
-
-.fs-annotations-add {
-  position: absolute;
-  z-index: 110;
 }
 
 /* Touch: a floating button above the bottom edge, clear of the native selection
@@ -39,51 +111,146 @@
   color: #fff;
 }
 
+/* ── Panel ───────────────────────────────────────────── */
+
+/* 768–1279px: the panel slides over the right of the page. Phones get the
+   bottom sheet below; >=1280px it docks beside the text. */
 .fs-annotations-panel {
   position: fixed;
   top: 0;
   right: 0;
   bottom: 0;
   z-index: 110;
+  display: flex;
+  flex-direction: column;
   width: min(24rem, 100vw);
-  overflow-y: auto;
-  padding: 1rem 1.25rem calc(2rem + env(safe-area-inset-bottom));
   background: var(--color-background, #fff);
   color: var(--color-foreground, #525252);
-  border-left: 1px solid var(--color-foreground-200, #d6d3d1);
+  border-left: 1px solid var(--color-foreground-100, #e7e5e4);
   box-shadow: -8px 0 24px rgb(0 0 0 / 0.08);
   font-size: 0.9rem;
+}
+.fs-annotations-panel:focus {
+  outline: none;
+}
+
+/* Phones (<768px): a bottom sheet over the lower ~58% of the screen, so the
+   passage stays visible above it (the script scrolls it there). It rides above
+   the on-screen keyboard via --fs-keyboard-inset / --fs-visible-height, set
+   from visualViewport. */
+@media (max-width: 767px) {
+  .fs-annotations-panel {
+    top: auto;
+    left: 0;
+    bottom: var(--fs-keyboard-inset, 0px);
+    width: auto;
+    height: min(58vh, calc(var(--fs-visible-height, 100vh) - 3rem));
+    height: min(58dvh, calc(var(--fs-visible-height, 100dvh) - 3rem));
+    border-left: none;
+    border-top: 1px solid var(--color-foreground-100, #e7e5e4);
+    border-radius: 0.875rem 0.875rem 0 0;
+    box-shadow: 0 -8px 24px rgb(0 0 0 / 0.12);
+  }
+  .fs-annotations-panel .fs-annotations-header {
+    position: relative;
+    padding-top: 0.9rem;
+    touch-action: none; /* the header is the swipe-to-close area */
+  }
+  .fs-annotations-handle {
+    position: absolute;
+    top: 0.4rem;
+    left: 50%;
+    width: 2.25rem;
+    height: 0.25rem;
+    margin-left: -1.125rem;
+    border-radius: 9999px;
+    background: var(--color-foreground-200, #d6d3d1);
+  }
+  .fs-annotations-body {
+    overscroll-behavior: contain;
+  }
+  .fs-annotations-close {
+    padding: 0.25rem 0.5rem; /* bigger tap target */
+  }
+  /* Room to scroll the last paragraphs above the sheet. */
+  html.fs-comments-open body {
+    padding-bottom: 58vh;
+  }
+}
+
+/* >=1280px: docked under the navbar beside the page, which is narrowed so no
+   text sits behind the panel; the ToC column makes way while it is open. */
+@media (min-width: 1280px) {
+  .fs-annotations-panel {
+    top: var(--fs-comments-top, 0px);
+    z-index: 9;
+    width: var(--fs-comments-panel-width);
+    box-shadow: none;
+  }
+  html.fs-comments-open .site-body,
+  html.fs-comments-open .site-footer {
+    margin-right: var(--fs-comments-panel-width);
+  }
+  html.fs-comments-open .layout-inner-right {
+    display: none;
+  }
+  html.fs-comments-open .layout-inner.has-sidebar-and-toc {
+    grid-template-columns: var(--width-sidebar, 16rem) minmax(0, 1fr);
+  }
+  html.fs-comments-open .layout-inner.has-toc {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  /* The "Built with Flowershow" badge pins its inline styles with !important,
+     so page-annotations.tsx moves it left of the panel in script. */
 }
 
 .fs-annotations-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
+  min-height: var(--fs-comments-bar-height);
+  padding: 0.25rem 0.75rem 0.25rem 1.25rem;
+  border-bottom: 1px solid var(--color-foreground-100, #e7e5e4);
 }
 .fs-annotations-header h2 {
-  margin: 0.5rem 0;
+  margin: 0;
+  font-size: 0.9rem;
   font-weight: 600;
+}
+.fs-annotations-header h2 span {
+  font-weight: 400;
+  opacity: 0.7;
 }
 .fs-annotations-close {
   font-size: 1.5rem;
   line-height: 1;
+  padding: 0 0.25rem;
   background: none;
   border: none;
   color: inherit;
   cursor: pointer;
 }
 
+.fs-annotations-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 1rem 1.25rem;
+}
+
 .fs-annotations-form {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
-  margin-bottom: 1.5rem;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid var(--color-foreground-100, #e7e5e4);
 }
 .fs-annotations-form label {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  font-weight: 500;
+  font-size: 0.8rem;
 }
 .fs-annotations-form textarea,
 .fs-annotations-form input {
@@ -94,16 +261,19 @@
   border: 1px solid var(--color-foreground-200, #d6d3d1);
   background: transparent;
   color: inherit;
+  resize: vertical;
 }
 
 .fs-annotations-actions {
   display: flex;
+  justify-content: flex-end;
   gap: 0.5rem;
 }
 .fs-annotations-actions button {
   font: inherit;
+  font-size: 0.85rem;
   cursor: pointer;
-  padding: 0.5rem 0.9rem;
+  padding: 0.35rem 0.8rem;
   border-radius: 0.375rem;
   border: 1px solid var(--color-foreground-200, #d6d3d1);
   background: transparent;
@@ -113,6 +283,10 @@
   background: var(--color-accent, #fb923c);
   border-color: var(--color-accent, #fb923c);
   color: #fff;
+}
+.fs-annotations-actions button:disabled {
+  cursor: default;
+  opacity: 0.5;
 }
 
 .fs-annotations-link {
@@ -131,27 +305,42 @@
   margin: 0;
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+}
+.fs-annotations-item {
+  padding: 0.75rem 0.5rem;
+  margin: 0 -0.5rem;
+}
+.fs-annotations-item + .fs-annotations-item {
+  border-top: 1px solid var(--color-foreground-50, #f5f5f4);
 }
 .fs-annotations-item.is-focused {
-  outline: 2px solid var(--color-accent, #fb923c);
-  outline-offset: 4px;
-  border-radius: 0.25rem;
+  background: color-mix(in srgb, var(--color-accent, #fb923c) 10%, transparent);
+  box-shadow: inset 2px 0 0 var(--color-accent, #fb923c);
 }
-.fs-annotations-resolved {
-  margin-top: 1.5rem;
-  padding-top: 1rem;
-  border-top: 1px solid var(--color-foreground-200, #d6d3d1);
-  opacity: 0.75;
+
+.fs-annotations-group {
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--color-foreground-100, #e7e5e4);
 }
-.fs-annotations-resolved summary {
+.fs-annotations-group summary {
   cursor: pointer;
+  font-size: 0.8rem;
+  opacity: 0.8;
+}
+.fs-annotations-group .fs-annotations-quote {
+  border-left-style: dashed;
+}
+.fs-annotations-resolved .fs-annotations-item {
+  opacity: 0.75;
 }
 
 .fs-annotations-quote {
   display: block;
+  width: 100%;
   text-align: left;
   font: inherit;
+  font-size: 0.85rem;
   font-style: italic;
   background: none;
   border: none;
@@ -160,36 +349,63 @@
   padding: 0 0 0 0.5rem;
   color: inherit;
   opacity: 0.8;
+  overflow-wrap: anywhere;
 }
 button.fs-annotations-quote {
   cursor: pointer;
 }
-.is-outdated .fs-annotations-quote {
-  border-left-style: dashed;
-}
-
-.fs-annotations-badge {
-  display: inline-block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  margin-bottom: 0.25rem;
-  opacity: 0.7;
+button.fs-annotations-quote:hover {
+  opacity: 1;
 }
 
 .fs-annotations-note {
   white-space: pre-wrap;
-  margin: 0.25rem 0;
+  margin: 0.35rem 0 0.25rem;
   overflow-wrap: anywhere;
 }
-.fs-annotations-meta,
+.fs-annotations-meta {
+  margin: 0;
+  font-size: 0.8rem;
+}
+.fs-annotations-meta time {
+  opacity: 0.7;
+}
 .fs-annotations-empty,
-.fs-annotations-manage,
 .fs-annotations-notice {
   font-size: 0.8rem;
   opacity: 0.7;
 }
+.fs-annotations-manage {
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0.5rem 1.25rem calc(0.5rem + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--color-foreground-100, #e7e5e4);
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+.fs-annotations-manage .fs-annotations-link + .fs-annotations-link,
+.fs-annotations-manage a + .fs-annotations-link {
+  margin-left: 0.75rem;
+}
+/* Owner sign-in (1pr.15): a quiet badge in the bar and per-comment actions. */
+.fs-comments-bar-owner {
+  flex-shrink: 0;
+  padding: 0.05rem 0.45rem;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+.fs-annotations-owner-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+}
 .fs-annotations-error {
+  margin: 0;
   color: var(--color-danger, #dc2626);
 }

@@ -108,7 +108,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	// Read local config (folder mode only)
 	var localCfg *localconfig.Config
 	if isFolderMode {
-		localCfg = localconfig.Read(folderPath)
+		localCfg = loadLink(folderPath)
 	}
 
 	// A link to an anonymous site is only used by --anon. For account
@@ -338,7 +338,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 		_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: siteName})
 	}
 
-	waitForProcessing(site.ID)
+	failed := waitForProcessing(site.ID)
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{
 		"command":     "publish",
@@ -347,7 +347,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	})
 	ui.PrintPublishSuccess(site.URL)
 	reportAnnotations(site.ID)
-	return nil
+	return processingError(failed)
 }
 
 // relinkClaimedSite rewrites folderPath's .flowershow, which linked to an
@@ -360,6 +360,8 @@ func relinkClaimedSite(folderPath string, anonCfg *localconfig.Config, site api.
 	cfg.SiteName = site.ProjectName
 	if err := localconfig.Write(folderPath, &cfg); err != nil {
 		ui.PrintWarning(fmt.Sprintf("Couldn't update .flowershow: %s", err))
+	} else {
+		localconfig.ForgetClaim(anonCfg.SiteID)
 	}
 	fmt.Printf("\n%s This folder's site was claimed into your account; updating %s\n\n", ui.Green("✓"), site.URL)
 	return &cfg
@@ -414,16 +416,26 @@ func uploadNewSite(site api.Site, discovered []files.FileInfo) error {
 }
 
 // waitForProcessing polls the site's status until files are processed (or
-// 30 seconds pass) and warns about slow or failed processing.
-func waitForProcessing(siteID string) {
+// 30 seconds pass) and warns about slow processing. It returns the number of
+// files that failed to process; pass it to processingError once the rest of
+// the publish output has been printed.
+func waitForProcessing(siteID string) int {
 	result := ui.WaitForSync(siteID, 30)
 	if result.Timeout {
 		ui.PrintWarning("Some files are still processing after 30 seconds.\n" +
 			"Your site is available but some pages may not be ready yet.\n" +
 			"Check back in a moment.")
-	} else if !result.Success && len(result.Errors) > 0 {
-		ui.PrintWarning("Some files had processing errors (see above).")
 	}
+	return len(result.Errors)
+}
+
+// processingError makes failed file processing exit non-zero, so a publish
+// never reports plain success while pages are missing (flowershow-hi1).
+func processingError(failed int) error {
+	if failed == 0 {
+		return nil
+	}
+	return fail(fmt.Sprintf("%d file(s) failed to process and may be missing from your site (see errors above). Fix them and publish again.", failed))
 }
 
 // runAnonPublish publishes discovered files without an account. If saved (a
@@ -437,7 +449,8 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 	if saved != nil && saved.ClaimToken != "" {
 		api.SetTokenOverride(saved.ClaimToken)
 		site := api.Site{ID: saved.SiteID, URL: saved.LiveURL}
-		if err := syncToSite(site, "anonymous site", discovered, sp, startTime, false); err != nil {
+		failed, err := syncToSite(site, "anonymous site", discovered, sp, startTime, false)
+		if err != nil {
 			var httpErr *api.HTTPError
 			if errors.As(err, &httpErr) {
 				if httpErr.StatusCode == 409 {
@@ -455,7 +468,16 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 			return failWith(err)
 		}
 		printAnonSuccess(saved.LiveURL, saved.ClaimURL, saved.ExpiresAt)
-		return nil
+		return processingError(failed)
+	}
+	if saved != nil && canLink {
+		// Linked to an anonymous site whose claim token isn't on this
+		// computer (e.g. published elsewhere): it can't be updated from here.
+		note := "This folder's anonymous site"
+		if saved.LiveURL != "" {
+			note += " (" + saved.LiveURL + ")"
+		}
+		fmt.Printf("\n%s %s can't be updated from this computer: its claim token isn't saved here (it was probably published from another computer). Publishing a new anonymous site.\n\n", ui.Yellow("Note:"), note)
 	}
 
 	sp.Start("Creating site...")
@@ -478,7 +500,7 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 	// Link the folder straight away (not after upload), so a failed upload
 	// can be retried into the same site.
 	if canLink {
-		if err := localconfig.Write(folderPath, &localconfig.Config{
+		if err := localconfig.WriteAnon(folderPath, &localconfig.Config{
 			Anon:       true,
 			SiteID:     created.SiteID,
 			ClaimToken: created.ClaimToken,
@@ -496,7 +518,7 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 		fmt.Printf("Claim link for this site: %s\n", created.ClaimURL)
 		return err
 	}
-	waitForProcessing(site.ID)
+	failed := waitForProcessing(site.ID)
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{
 		"command":     "publish",
@@ -511,7 +533,7 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 	case !canLink:
 		fmt.Println("This folder's .flowershow links it to a site in your account, so it was left unchanged and this anonymous site can't be updated from here.")
 	}
-	return nil
+	return processingError(failed)
 }
 
 // printAnonSuccess prints the live URL and the claim link, each in full on
@@ -537,6 +559,7 @@ func clearAnonConfig(folderPath string, cfg *localconfig.Config) {
 	if folderPath == "" {
 		return
 	}
+	localconfig.ForgetClaim(cfg.SiteID)
 	rest := *cfg
 	rest.Anon, rest.SiteID, rest.ClaimToken, rest.ExpiresAt, rest.LiveURL, rest.ClaimURL = false, "", "", "", "", ""
 	if rest == (localconfig.Config{}) {
@@ -560,16 +583,18 @@ func isAnonGoneStatus(status int) bool {
 
 // doSync performs a delta sync to an existing site with already-discovered files.
 func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time) error {
-	if err := syncToSite(site, siteName, discovered, sp, startTime, true); err != nil {
+	failed, err := syncToSite(site, siteName, discovered, sp, startTime, true)
+	if err != nil {
 		return err
 	}
 	reportAnnotations(site.ID)
-	return nil
+	return processingError(failed)
 }
 
 // syncToSite is doSync. If reportPlanErr is false, an error from the sync
-// request itself is returned unprinted, so the caller can explain it.
-func syncToSite(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time, reportPlanErr bool) error {
+// request itself is returned unprinted, so the caller can explain it. It
+// returns the number of files that failed to process (see waitForProcessing).
+func syncToSite(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time, reportPlanErr bool) (int, error) {
 	fmt.Printf("  Publishing to: %s\n", ui.Cyan(site.URL))
 
 	var fileMetadata []api.FileMetadata
@@ -586,9 +611,9 @@ func syncToSite(site api.Site, siteName string, discovered []files.FileInfo, sp 
 	if err != nil {
 		sp.Fail("Failed to analyze changes")
 		if !reportPlanErr {
-			return err
+			return 0, err
 		}
-		return failWith(err)
+		return 0, failWith(err)
 	}
 	sp.Stop()
 
@@ -597,7 +622,7 @@ func syncToSite(site api.Site, siteName string, discovered []files.FileInfo, sp 
 		fmt.Printf("\n%s Already in sync!\n", ui.Green("✅"))
 		fmt.Printf("%s All %d file(s) are up to date.\n", ui.Gray(""), len(discovered))
 		fmt.Printf("%s Site: %s\n", ui.Gray(""), ui.Cyan(site.URL))
-		return nil
+		return 0, nil
 	}
 
 	displaySyncSummary(syncPlan, siteName, false)
@@ -630,7 +655,7 @@ func syncToSite(site api.Site, siteName string, discovered []files.FileInfo, sp 
 			for _, f := range failedUploads {
 				fmt.Printf("  - %s\n", f)
 			}
-			return fail(fmt.Sprintf("%d file(s) failed to upload to %s. Re-run the same command to retry.", len(failedUploads), site.URL))
+			return 0, fail(fmt.Sprintf("%d file(s) failed to upload to %s. Re-run the same command to retry.", len(failedUploads), site.URL))
 		} else {
 			if syncPlan.Summary.ToUpload > 0 {
 				fmt.Printf("%s Uploaded %d new file(s)\n", ui.Green("✓"), syncPlan.Summary.ToUpload)
@@ -645,7 +670,7 @@ func syncToSite(site api.Site, siteName string, discovered []files.FileInfo, sp 
 		fmt.Printf("%s Deleted %d file(s)\n", ui.Green("✓"), len(syncPlan.Deleted))
 	}
 
-	waitForProcessing(site.ID)
+	failed := waitForProcessing(site.ID)
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{
 		"command":     "publish",
@@ -662,7 +687,7 @@ func syncToSite(site api.Site, siteName string, discovered []files.FileInfo, sp 
 		syncPlan.Summary.Deleted,
 		syncPlan.Summary.Unchanged,
 	)))
-	return nil
+	return failed, nil
 }
 
 func pathExists(p string) bool {

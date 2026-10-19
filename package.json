@@ -40,20 +40,27 @@
       "@types/react-dom": "19.2.2",
       "d3-color": ">=3.1.0",
       "dset": ">=3.1.4",
-      "dompurify": ">=3.2.4",
+      "dompurify": ">=3.4.16",
       "lodash": ">=4.17.23",
       "lodash-es": ">=4.17.23",
       "preact": ">=10.28.2",
-      "qs": ">=6.14.2",
+      "qs": ">=6.16.0",
       "glob": ">=10.5.0",
-      "fast-xml-parser": ">=5.3.4",
+      "fast-xml-parser": "^5.7.0",
       "@isaacs/brace-expansion": ">=5.0.1",
+      "brace-expansion@<2": "^1.1.21",
+      "brace-expansion@>=4 <6": "^5.0.12",
       "vega-functions": ">=6.1.1",
       "vega-selections": ">=6.1.2",
-      "js-yaml": ">=4.1.1",
-      "read-yaml-file>js-yaml": "^3.14.1",
+      "js-yaml": "^5.4.1",
+      "read-yaml-file>js-yaml": "^3.15.2",
       "mdast-util-to-hast": ">=13.2.1",
-      "diff": ">=5.2.2"
+      "diff": ">=5.2.2",
+      "protobufjs": "^8.6.6",
+      "axios": "^1.20.0",
+      "fast-uri": "^3.1.8",
+      "ip-address": "^10.7.1",
+      "@opentelemetry/core": "^2.8.0"
     }
   }
 }

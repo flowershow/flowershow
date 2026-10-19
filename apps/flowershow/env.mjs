@@ -65,6 +65,10 @@ export const env = createEnv({
     ANONYMOUS_JWT_SECRET: z.string(),
     ANON_PUBLISH_DISABLED: z.string().optional(),
     MCP_ANON_HOURLY_LIMIT: z.string().optional(),
+    // MCP OAuth (flowershow-3fr): 'true' serves the authorization server
+    // (/.well-known/oauth-*, /oauth/*). Off by default until the signed-in
+    // MCP endpoint ships, so no client discovers a half-built flow.
+    MCP_OAUTH_ENABLED: z.enum(['true', 'false']).optional(),
     CF_WORKER_URL: z.string(),
     CF_WORKER_SECRET: z.string(),
     INTERNAL_API_SECRET: z.string().optional(),
@@ -169,6 +173,7 @@ export const env = createEnv({
     ANONYMOUS_JWT_SECRET: process.env.ANONYMOUS_JWT_SECRET,
     ANON_PUBLISH_DISABLED: process.env.ANON_PUBLISH_DISABLED,
     MCP_ANON_HOURLY_LIMIT: process.env.MCP_ANON_HOURLY_LIMIT,
+    MCP_OAUTH_ENABLED: process.env.MCP_OAUTH_ENABLED,
     CF_WORKER_URL: process.env.CF_WORKER_URL,
     CF_WORKER_SECRET: process.env.CF_WORKER_SECRET,
     INTERNAL_API_SECRET: process.env.INTERNAL_API_SECRET,

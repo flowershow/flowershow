@@ -36,6 +36,7 @@ model User {
   deviceCodes         DeviceCode[]
   accessTokens        AccessToken[]
   githubInstallations GitHubInstallation[]
+  oauthGrants         OAuthGrant[]
 }
 
 model Subscription {
@@ -128,6 +129,7 @@ model Site {
   links                   Link[]
   tags                    Tag[]
   annotations             Annotation[]
+  ownerCodes              SiteOwnerCode[]
   tree                    Json?         @db.JsonB // GitHub tree data
   privacyMode             PrivacyMode   @default(PUBLIC) @map("privacy_mode")
   accessPasswordHash      String?       @map("access_password_hash")
@@ -263,12 +265,29 @@ model Annotation {
   @@index([siteId, status])
 }
 
+/// One-time code for the site-owner sign-in handshake (flowershow-1pr.15).
+/// Issued on the cloud host after checking the session and ownership, exchanged
+/// on the site host for a site-scoped owner cookie. Only a SHA-256 hash of the
+/// code is stored; the row is deleted when the code is used (single use).
+model SiteOwnerCode {
+  codeHash  String   @id @map("code_hash")
+  siteId    String   @map("site_id")
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+
+  @@index([expiresAt])
+}
+
 enum PublishSource {
   github_webhook
   cli
   obsidian_plugin
   dashboard_upload
   anonymous
+  mcp
 }
 
 
@@ -424,4 +443,101 @@ model GitHubInstallationRepository {
   @@index([installationId])
   @@index([repositoryFullName])
   @@index([repositoryId])
+}
+
+// ─── MCP OAuth authorization server (flowershow-3fr) ───
+// See docs/plans/2026-10-18-mcp-oauth-design.md. Public clients only; every
+// secret (code, access token, refresh token) is stored as a SHA-256 hash.
+
+enum OAuthClientKind {
+  DCR // RFC 7591 dynamic client registration
+  CIMD // client ID metadata document (client_id is an https URL)
+}
+
+enum OAuthTokenKind {
+  ACCESS
+  REFRESH
+}
+
+model OAuthClient {
+  id                String          @id @default(cuid())
+  clientId          String          @unique @map("client_id") // generated for DCR, the URL for CIMD
+  kind              OAuthClientKind
+  name              String // self-declared by the client: never proof of identity
+  uri               String?
+  logoUri           String?         @map("logo_uri")
+  redirectUris      String[]        @map("redirect_uris")
+  metadataFetchedAt DateTime?       @map("metadata_fetched_at") // CIMD cache (24h)
+  createdAt         DateTime        @default(now()) @map("created_at")
+  grants            OAuthGrant[]
+}
+
+// One per user x client authorization: the unit shown and revoked in the dashboard.
+model OAuthGrant {
+  id          String                   @id @default(cuid())
+  userId      String                   @map("user_id")
+  clientId    String                   @map("client_id") // OAuthClient.id (not the public client_id)
+  scope       String
+  resource    String // RFC 8707 audience: the MCP URL these tokens are valid for
+  redirectUri String                   @map("redirect_uri")
+  createdAt   DateTime                 @default(now()) @map("created_at")
+  lastUsedAt  DateTime?                @map("last_used_at")
+  revokedAt   DateTime?                @map("revoked_at")
+  user        User                     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  client      OAuthClient              @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  tokens      OAuthToken[]
+  codes       OAuthAuthorizationCode[]
+
+  @@index([userId])
+  @@index([clientId])
+}
+
+// Between /oauth/authorize and the consent page: the page gets only this id,
+// so it can't be fed edited parameters.
+model OAuthPendingRequest {
+  id        String   @id @default(cuid())
+  clientId  String   @map("client_id") // OAuthClient.id
+  params    Json
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@index([expiresAt])
+}
+
+model OAuthAuthorizationCode {
+  codeHash      String     @id @map("code_hash")
+  grantId       String     @map("grant_id")
+  codeChallenge String     @map("code_challenge")
+  redirectUri   String     @map("redirect_uri")
+  expiresAt     DateTime   @map("expires_at")
+  usedAt        DateTime?  @map("used_at")
+  createdAt     DateTime   @default(now()) @map("created_at")
+  grant         OAuthGrant @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([grantId])
+  @@index([expiresAt])
+}
+
+model OAuthToken {
+  tokenHash String         @id @map("token_hash")
+  grantId   String         @map("grant_id")
+  kind      OAuthTokenKind
+  expiresAt DateTime       @map("expires_at")
+  usedAt    DateTime?      @map("used_at") // refresh rotation / reuse detection
+  scope     String? // set by a narrower-scope refresh; null = the grant's scope
+  createdAt DateTime       @default(now()) @map("created_at")
+  grant     OAuthGrant     @relation(fields: [grantId], references: [id], onDelete: Cascade)
+
+  @@index([grantId])
+  @@index([expiresAt])
+}
+
+// Fixed-window counters for the OAuth endpoints' per-IP rate limits. Durable
+// across serverless instances (the in-memory lib/rate-limit.ts is not).
+model OAuthRateLimit {
+  key       String   @id // "<bucket>:<ip hash>:<window start>"
+  count     Int      @default(0)
+  expiresAt DateTime @map("expires_at")
+
+  @@index([expiresAt])
 }

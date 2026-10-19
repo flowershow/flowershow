@@ -4,12 +4,15 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { getToken } from 'next-auth/jwt';
 import type { PostHog } from 'posthog-node';
 import { env } from '@/env.mjs';
+import { ANON_PAGE_CSP } from './lib/anon-site-safety';
 import { SITE_ACCESS_COOKIE_NAME } from './lib/const';
 import type { InternalSite } from './lib/db/internal';
 import { getSiteUrl } from './lib/get-site-url';
+import { oauthEnabled } from './lib/oauth/config';
 import { resolveSiteAlias } from './lib/resolve-site-alias';
 import PostHogClient from './lib/server-posthog';
 import { siteKeyBytes } from './lib/site-hmac-key';
+import { OWNER_PATHS, safeReturnPath } from './lib/site-owner-session';
 
 export const config = {
   matcher: [
@@ -130,6 +133,16 @@ export default async function middleware(req: NextRequest) {
       );
     }
 
+    // MCP OAuth consent (flowershow-3fr.2): never framed (clickjacking on Allow).
+    if (pathname === '/oauth/consent') {
+      const res = NextResponse.rewrite(new URL(path, req.url));
+      res.headers.set('X-Frame-Options', 'DENY');
+      res.headers.set('Content-Security-Policy', "frame-ancestors 'none'");
+      res.headers.set('Referrer-Policy', 'no-referrer');
+      res.headers.set('Cache-Control', 'no-store');
+      return withPHBootstrapCookie(res, phBootstrap);
+    }
+
     return withPHBootstrapCookie(
       NextResponse.rewrite(new URL(`/dashboard${path}`, req.url)),
       phBootstrap,
@@ -176,6 +189,13 @@ export default async function middleware(req: NextRequest) {
     if (pathname === '/claim') {
       return rewrite(`/dragndrop${path}`, req, phBootstrap);
     }
+
+    if (pathname === '/report-abuse') {
+      return rewrite(`/dragndrop${path}`, req, phBootstrap);
+    }
+
+    const oauthPath = oauthRewritePath(pathname);
+    if (oauthPath) return rewrite(`${oauthPath}${search}`, req, phBootstrap);
   }
 
   // 7a) Root site domain (e.g. flowershow.me) — redirect to home
@@ -205,6 +225,9 @@ export default async function middleware(req: NextRequest) {
     if (pathname === '/robots.txt') {
       return rewrite(`/api/robots/${hostname}`, req, phBootstrap);
     }
+
+    const ownerRoute = siteOwnerRouteIfNeeded(req, site, phBootstrap);
+    if (ownerRoute) return ownerRoute;
 
     if (pathname === '/_login') {
       return rewrite(
@@ -259,10 +282,13 @@ export default async function middleware(req: NextRequest) {
     );
     if (raw) return raw;
 
-    return rewrite(
-      `/site/${username}/${projectname}${pathname}${searchParams}`,
-      req,
-      phBootstrap,
+    return withAnonPageCsp(
+      rewrite(
+        `/site/${username}/${projectname}${pathname}${searchParams}`,
+        req,
+        phBootstrap,
+      ),
+      site.anonymous === true,
     );
   }
 
@@ -274,6 +300,9 @@ export default async function middleware(req: NextRequest) {
   // Look up site
   const site = await fetchSite(req, `/api/sites/_domain/${hostname}`);
   if (!site) return rewrite(`/not-found`, req, phBootstrap);
+
+  const ownerRoute = siteOwnerRouteIfNeeded(req, site, phBootstrap);
+  if (ownerRoute) return ownerRoute;
 
   // Per-site login page
   if (pathname === '/_login') {
@@ -331,11 +360,91 @@ export default async function middleware(req: NextRequest) {
 
 /* ───────────────────────────── Helpers ───────────────────────────── */
 
+const OAUTH_ENDPOINTS = new Set([
+  '/oauth/authorize',
+  '/oauth/token',
+  '/oauth/register',
+  '/oauth/revoke',
+]);
+
+/**
+ * MCP OAuth authorization server on the home domain (flowershow-3fr): map
+ * /.well-known/* discovery and /oauth/* endpoints to their route handlers.
+ * Returns null (fall through to the content site) when switched off.
+ */
+export function oauthRewritePath(pathname: string): string | null {
+  if (!oauthEnabled()) return null;
+  if (OAUTH_ENDPOINTS.has(pathname)) return `/api${pathname}`;
+  if (
+    pathname === '/.well-known/oauth-authorization-server' ||
+    pathname === '/.well-known/openid-configuration'
+  ) {
+    return `/api/oauth/well-known${pathname.slice('/.well-known'.length)}`;
+  }
+  if (
+    pathname === '/.well-known/oauth-protected-resource' ||
+    pathname === '/.well-known/oauth-protected-resource/api/mcp' ||
+    pathname === '/.well-known/oauth-protected-resource/api/mcp/account'
+  ) {
+    return `/api/oauth/well-known${pathname.slice('/.well-known'.length)}`;
+  }
+  return null;
+}
+
+/**
+ * Anonymous (unclaimed) sites' rendered pages may not submit forms: raw HTML
+ * in their Markdown is not sanitised (flowershow-ctv). Claimed sites: unchanged.
+ */
+export function withAnonPageCsp(res: NextResponse, anonymous: boolean) {
+  if (anonymous) {
+    res.headers.set('Content-Security-Policy', ANON_PAGE_CSP);
+  }
+  return res;
+}
+
 function rewrite(targetPath: string, req: NextRequest, ph?: PHBootstrap) {
   return withPHBootstrapCookie(
     NextResponse.rewrite(new URL(targetPath, req.url)),
     ph ?? null,
   );
+}
+
+/**
+ * Owner sign-in handshake on a site host (flowershow-1pr.15). Served before the
+ * password gate so an owner can sign in on a protected site. The site id comes
+ * from this host's lookup, never from the request, so a code or cookie can only
+ * act for the site this host serves.
+ */
+export function siteOwnerRouteIfNeeded(
+  req: NextRequest,
+  site: { id: string },
+  ph: PHBootstrap,
+) {
+  const { pathname, search, searchParams } = req.nextUrl;
+  const api = `/api/sites/id/${encodeURIComponent(site.id)}/owner`;
+  switch (pathname) {
+    case OWNER_PATHS.signin: {
+      const returnPath = safeReturnPath(searchParams.get('return'));
+      const secure =
+        env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+        env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+      const cloud = `${secure ? 'https' : 'http'}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`;
+      const res = NextResponse.redirect(
+        `${cloud}${api}/authorize?return=${encodeURIComponent(returnPath)}`,
+        302,
+      );
+      res.headers.set('Cache-Control', 'no-store');
+      return res;
+    }
+    case OWNER_PATHS.callback:
+      return rewrite(`${api}/callback${search}`, req, ph);
+    case OWNER_PATHS.me:
+      return rewrite(`${api}/me`, req, ph);
+    case OWNER_PATHS.signout:
+      return rewrite(`${api}/signout`, req, ph);
+    default:
+      return null;
+  }
 }
 
 function normalizePath(url: URL) {
@@ -352,7 +461,7 @@ async function fetchSite(req: NextRequest, apiPath: string) {
     });
     if (!res.ok) throw new Error('Site fetch failed');
     const site = await res.json();
-    return (site as InternalSite) ?? null;
+    return (site as InternalSite & { anonymous?: boolean }) ?? null;
   } catch {
     return null;
   }

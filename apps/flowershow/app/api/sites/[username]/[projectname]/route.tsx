@@ -138,5 +138,7 @@ export async function GET(
     privacyMode: site.privacyMode,
     tokenVersion: site.tokenVersion,
     user: { username: site.user.username },
+    // Unclaimed anonymous site: the middleware adds abuse controls (flowershow-ctv).
+    anonymous: site.user.id === ANONYMOUS_USER_ID,
   });
 }

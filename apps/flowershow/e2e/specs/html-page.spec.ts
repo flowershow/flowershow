@@ -1,7 +1,12 @@
 import { expect, test } from '../helpers/fixtures';
 
 test('HTML Page Rendering', async ({ page, basePath }) => {
-  await page.goto(`${basePath}/docs/test.html`);
+  const response = await page.goto(`${basePath}/docs/test.html`);
+
+  await test.step('is not sandboxed on a claimed site (flowershow-ctv)', async () => {
+    expect(response?.headers()['content-security-policy']).toBeUndefined();
+    await expect(page.locator('#flowershow-anon-banner')).toHaveCount(0);
+  });
 
   await test.step('renders the page title', async () => {
     await expect(page).toHaveTitle('Test HTML Page');
