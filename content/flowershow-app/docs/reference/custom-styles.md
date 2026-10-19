@@ -351,4 +351,4 @@ On the default layout, content sits in a readable column next to the sidebar and
 > Keep overrides in `:root` where possible. This gives you broad, consistent changes with less CSS.
 
 > [!info]
-> For a detailed guide including examples and step-by-step instructions, check out [[how-to-customize-style|this blog post]].
+> For a detailed guide including examples and step-by-step instructions, see [Styling your site](/docs/guides/custom-styles).

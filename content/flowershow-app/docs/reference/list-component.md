@@ -122,4 +122,4 @@ This works because each `.list-component-item` is already `position: relative`. 
 The full list, including loading skeleton and pagination classes, is in the [[theme-class-reference#lists-cards-skeletons-and-pagination|theme class reference]].
 
 > [!info]
-> For a detailed guide including examples and step-by-step instructions, check out [[how-to-create-content-catalogs|this blog post]].
+> For a detailed guide including examples and step-by-step instructions, see the [content catalogs guide](/docs/guides/content-catalogs).

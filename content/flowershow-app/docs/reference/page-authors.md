@@ -39,4 +39,4 @@ The `avatar` field can be:
 - An external URL: `https://example.com/jane-avatar.jpg`
 
 
-For a detailed guide with examples and screenshots, see [[how-to-create-author-pages|How to Create Author Pages]].
+For a detailed guide with examples and screenshots, see [[author-pages|How to Create Author Pages]].
