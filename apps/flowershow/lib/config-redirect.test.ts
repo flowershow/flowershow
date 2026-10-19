@@ -49,3 +49,76 @@ describe('resolveConfigRedirect', () => {
     expect(resolveConfigRedirect(undefined, '/publish')).toBeNull();
   });
 });
+
+const urlFor = (
+  slug: string,
+  rules: Parameters<typeof resolveConfigRedirect>[0],
+) => resolveConfigRedirect(rules, slug)?.url ?? null;
+
+describe('resolveConfigRedirect with folder wildcards', () => {
+  it('matches exact paths only when `from` has no wildcard', () => {
+    const rules = [{ from: '/old', to: '/new' }];
+    expect(urlFor('/old/page', rules)).toBeNull();
+    expect(urlFor('/older', rules)).toBeNull();
+  });
+
+  it('carries the rest of the path into :splat, including nested folders', () => {
+    const rules = [
+      { from: '/markdown/*', to: 'https://wayofmarkdown.com/:splat' },
+    ];
+    expect(urlFor('/markdown/kb/turndown', rules)).toBe(
+      'https://wayofmarkdown.com/kb/turndown',
+    );
+    expect(urlFor('/markdown/learn/howtos/a', rules)).toBe(
+      'https://wayofmarkdown.com/learn/howtos/a',
+    );
+  });
+
+  it('matches the bare folder without leaving a trailing slash', () => {
+    expect(
+      urlFor('/markdown', [
+        { from: '/markdown/*', to: 'https://wayofmarkdown.com/:splat' },
+      ]),
+    ).toBe('https://wayofmarkdown.com');
+    expect(urlFor('/old', [{ from: '/old/*', to: '/new/:splat' }])).toBe(
+      '/new',
+    );
+    expect(urlFor('/old', [{ from: '/old/*', to: '/:splat' }])).toBe('/');
+  });
+
+  it('does not match a sibling that shares the prefix', () => {
+    expect(
+      urlFor('/markdownx', [{ from: '/markdown/*', to: '/x/:splat' }]),
+    ).toBeNull();
+  });
+
+  it('redirects a whole folder to one page when `to` has no :splat', () => {
+    expect(urlFor('/old/a/b', [{ from: '/old/*', to: '/archive' }])).toBe(
+      '/archive',
+    );
+  });
+
+  it('uses the first matching rule, so specific rules go above wildcards', () => {
+    const rules = [
+      { from: '/markdown/kb/apple-notes', to: '/apple' },
+      { from: '/markdown/*', to: '/md/:splat' },
+      { from: '/markdown/kb/google-docs', to: '/never' },
+    ];
+    expect(urlFor('/markdown/kb/apple-notes', rules)).toBe('/apple');
+    expect(urlFor('/markdown/kb/google-docs', rules)).toBe(
+      '/md/kb/google-docs',
+    );
+  });
+
+  it('supports a site-wide `/*` rule', () => {
+    const rules = [{ from: '/*', to: 'https://new.example.com/:splat' }];
+    expect(urlFor('/', rules)).toBe('https://new.example.com');
+    expect(urlFor('/a/b', rules)).toBe('https://new.example.com/a/b');
+  });
+
+  it('never turns a relative target into a protocol-relative URL', () => {
+    const rules = [{ from: '/old/*', to: '/:splat' }];
+    expect(urlFor('/old//evil.com', rules)).toBe('/evil.com');
+    expect(urlFor('/old/\\evil.com', rules)).toBe('/evil.com');
+  });
+});

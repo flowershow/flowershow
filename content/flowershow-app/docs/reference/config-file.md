@@ -528,20 +528,21 @@ Show a link to the raw Markdown source of each page.
 
 ### `redirects`
 
-**Type:** `Array<{ from: string, to: string }>`  
+**Type:** `Array<{ from: string, to: string, permanent?: boolean }>`  
 **Default:** —
 
-URL redirects for moved or renamed pages. Matches exact paths only — no regex or glob patterns. [[redirects|Learn more →]]
+URL redirects for moved or renamed pages. A `from` ending in `/*` redirects a whole folder, with `:splat` in `to` standing for the rest of the path. The first matching rule wins, and a redirect never applies where a page is published. [[redirects|Learn more →]]
 
-| Field  | Type     | Description      |
-| ------ | -------- | ---------------- |
-| `from` | `string` | The old URL path |
-| `to`   | `string` | The new URL path |
+| Field       | Type      | Description                                                                  |
+| ----------- | --------- | ---------------------------------------------------------------------------- |
+| `from`      | `string`  | The old URL path, or a folder ending in `/*`                                  |
+| `to`        | `string`  | The new URL path or a full URL; `:splat` is replaced by the rest of the path |
+| `permanent` | `boolean` | `true` for a 308 permanent redirect; defaults to a 307 temporary redirect    |
 
 ```json
 "redirects": [
   { "from": "/blog/old-post", "to": "/blog/new-post" },
-  { "from": "/old-section", "to": "/new-section" }
+  { "from": "/old-section/*", "to": "/new-section/:splat" }
 ]
 ```
 

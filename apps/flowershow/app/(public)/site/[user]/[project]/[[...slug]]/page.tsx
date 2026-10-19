@@ -137,6 +137,8 @@ export async function generateMetadata(props: {
       slug: decodedSlug,
     })
     .catch(() => {
+      // No page here: a configured redirect applies before any fallback.
+      redirectIfConfigured(siteConfig, decodedSlug);
       // For anonymous sites, return null instead of throwing 404
       // This allows the page to render even if metadata isn't ready
       if (userName === 'anon') {
@@ -344,17 +346,6 @@ export default async function SitePage(props: {
   // the virtual `/tags` pages are all suppressed. Defaults to on.
   const showTags = siteConfig?.showTags ?? true;
 
-  // Handle redirects if configured
-  const configRedirect = resolveConfigRedirect(
-    siteConfig?.redirects,
-    decodedSlug,
-  );
-  if (configRedirect) {
-    return configRedirect.permanent
-      ? permanentRedirect(configRedirect.url)
-      : redirect(configRedirect.url);
-  }
-
   const siteFilePaths = await api.site.getAllBlobPaths
     .query({
       siteId: site.id,
@@ -379,6 +370,10 @@ export default async function SitePage(props: {
       slug: decodedSlug,
     })
     .catch(() => null);
+
+  // Redirects apply only where no page is published, so a stale rule can't
+  // hide a live page.
+  if (!blob) redirectIfConfigured(siteConfig, decodedSlug);
 
   if (blob && isSiteChromeFile(blob.path)) {
     notFound();
@@ -1095,4 +1090,14 @@ export default async function SitePage(props: {
 
 function isPastLastPage(p?: { page: number; pageCount: number }): boolean {
   return p !== undefined && p.page > p.pageCount;
+}
+
+function redirectIfConfigured(
+  siteConfig: SiteConfig | null,
+  slug: string,
+): void {
+  const match = resolveConfigRedirect(siteConfig?.redirects, slug);
+  if (!match) return;
+  if (match.permanent) permanentRedirect(match.url);
+  redirect(match.url);
 }
