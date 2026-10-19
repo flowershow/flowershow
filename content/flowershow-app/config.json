@@ -193,6 +193,118 @@
       "to": "https://wayofmarkdown.com"
     },
     {
+      "from": "/markdown/basics",
+      "to": "https://wayofmarkdown.com/basics"
+    },
+    {
+      "from": "/markdown/kb",
+      "to": "https://wayofmarkdown.com/kb"
+    },
+    {
+      "from": "/markdown/kb/ai-editing",
+      "to": "https://wayofmarkdown.com/kb/ai-editing"
+    },
+    {
+      "from": "/markdown/kb/apple-notes",
+      "to": "https://wayofmarkdown.com/markdown-in-apple-notes"
+    },
+    {
+      "from": "/markdown/kb/cursor-obsidian",
+      "to": "https://wayofmarkdown.com/kb/cursor-obsidian"
+    },
+    {
+      "from": "/markdown/kb/google-docs",
+      "to": "https://wayofmarkdown.com/markdown-in-google-docs"
+    },
+    {
+      "from": "/markdown/kb/google-docs-markdown-export-quirks",
+      "to": "https://wayofmarkdown.com/markdown-in-google-docs"
+    },
+    {
+      "from": "/markdown/kb/identifiers",
+      "to": "https://wayofmarkdown.com/kb/identifiers"
+    },
+    {
+      "from": "/markdown/kb/into-md",
+      "to": "https://wayofmarkdown.com/kb/into-md"
+    },
+    {
+      "from": "/markdown/kb/ipad-notes",
+      "to": "https://wayofmarkdown.com/markdown-in-apple-notes"
+    },
+    {
+      "from": "/markdown/kb/markdoc",
+      "to": "https://wayofmarkdown.com/kb/markdoc"
+    },
+    {
+      "from": "/markdown/kb/turndown",
+      "to": "https://wayofmarkdown.com/kb/turndown"
+    },
+    {
+      "from": "/markdown/learn",
+      "to": "https://wayofmarkdown.com/learn"
+    },
+    {
+      "from": "/markdown/learn/introduction",
+      "to": "https://wayofmarkdown.com/learn"
+    },
+    {
+      "from": "/markdown/learn/background",
+      "to": "https://wayofmarkdown.com/learn/background"
+    },
+    {
+      "from": "/markdown/learn/tutorial-1",
+      "to": "https://wayofmarkdown.com/learn/tutorial-1"
+    },
+    {
+      "from": "/markdown/learn/tutorial-2",
+      "to": "https://wayofmarkdown.com/learn/tutorial-2"
+    },
+    {
+      "from": "/markdown/learn/tutorial-3",
+      "to": "https://wayofmarkdown.com/learn/tutorial-3"
+    },
+    {
+      "from": "/markdown/learn/tutorial-4",
+      "to": "https://wayofmarkdown.com/learn/tutorial-4"
+    },
+    {
+      "from": "/markdown/learn/howtos/add-a-simple-md-page",
+      "to": "https://wayofmarkdown.com/learn/howtos/add-a-simple-md-page"
+    },
+    {
+      "from": "/markdown/learn/howtos/create-a-simple-catalog-of-anything",
+      "to": "https://wayofmarkdown.com/learn/howtos/create-a-simple-catalog-of-anything"
+    },
+    {
+      "from": "/markdown/learn/howtos/edit-or-add-md-pages-locally",
+      "to": "https://wayofmarkdown.com/learn/howtos/edit-or-add-md-pages-locally"
+    },
+    {
+      "from": "/markdown/learn/howtos/edit-text-on-a-single-md-page",
+      "to": "https://wayofmarkdown.com/learn/howtos/edit-text-on-a-single-md-page"
+    },
+    {
+      "from": "/markdown/learn/howtos/how-to-add-images-to-a-md-page",
+      "to": "https://wayofmarkdown.com/learn/howtos/how-to-add-images-to-a-md-page"
+    },
+    {
+      "from": "/markdown/learn/howtos/publish-obsidian-vault-to-github",
+      "to": "https://wayofmarkdown.com/learn/howtos/publish-obsidian-vault-to-github"
+    },
+    {
+      "from": "/markdown/learn/howtos/quickly-create-a-sandbox-website",
+      "to": "https://wayofmarkdown.com/learn/howtos/quickly-create-a-sandbox-website"
+    },
+    {
+      "from": "/markdown/learn/tutorials/create-a-website-from-scratch",
+      "to": "https://wayofmarkdown.com/learn/tutorials/create-a-website-from-scratch"
+    },
+    {
+      "from": "/markdown/learn/tutorials/edit-a-website-locally",
+      "to": "https://wayofmarkdown.com/learn/tutorials/edit-a-website-locally"
+    },
+    {
       "from": "/docs/site-wide-toc",
       "to": "/docs/reference/sidebar"
     },
@@ -203,10 +315,6 @@
     {
       "from": "/blog/how-to-set-up-blog",
       "to": "/docs/guides/publish-blog"
-    },
-    {
-      "from": "/blog/contribute-improvements-to-flowershow-docs-and-website-is-easy",
-      "to": "/docs/guides/contribute-improvements-to-flowershow-docs-and-website-is-easy"
     },
     {
       "from": "/blog/enhance-markdown-with-styled-jsx-blocks",
@@ -449,10 +557,6 @@
       "to": "/docs/reference/edit-this-page"
     },
     {
-      "from": "/docs/faq",
-      "to": "/docs/reference/faq"
-    },
-    {
       "from": "/docs/footer",
       "to": "/docs/reference/footer"
     },
@@ -527,10 +631,6 @@
     {
       "from": "/docs/sidebar",
       "to": "/docs/reference/sidebar"
-    },
-    {
-      "from": "/docs/site-settings",
-      "to": "/docs/reference/site-settings"
     },
     {
       "from": "/docs/syntax-mode",

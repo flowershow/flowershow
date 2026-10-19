@@ -63,7 +63,7 @@ Page titles can be set using three methods (in order of precedence):
 2. **First level 1 heading** (`# Heading`)
 3. **Filename** (fallback)
 
-Read more about [[page-titles|Page titles]].
+Read more about [[page-title|Page titles]].
 
 ### Description
 

@@ -48,4 +48,4 @@ If you want a custom HTML homepage, create `index.html` at the root of your cont
 
 If you've set a `rootDir` in site settings (e.g. `/docs`), all resolution above is relative to that directory.
 
-See also: [[debugging-404s|Debugging 404 pages]]
+See also: [[debug-404s|Debugging 404 pages]]

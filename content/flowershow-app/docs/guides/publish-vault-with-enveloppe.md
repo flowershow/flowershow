@@ -59,7 +59,7 @@ image:\s*([^\s]+)
 image: "[[$1]]"
 ```
 
-### 2. Install the [Enveloppe Obsidian plugin](obsidian://show-plugin?id=obsidian-mkdocs-publisher)
+### 2. Install the [Enveloppe Obsidian plugin](https://community.obsidian.md/plugins/obsidian-mkdocs-publisher)
 
 Open the **Community Plugins** tab in Obsidian and search for Enveloppe:
 

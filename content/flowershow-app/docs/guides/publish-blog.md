@@ -211,7 +211,7 @@ When an author page exists, the author's name in blog posts will automatically l
 > Use simple, URL-friendly names for author page files (e.g., `jane-smith.md`) and set the full name in the `title` field. Then use the file name as an ID in the blog post frontmatter (e.g., `authors: [jane-smith]`).
 
 > [!info] Learn more about author pages
-> For more details about author pages, profile customization, and avatars, see [How to Show Authors of Your Content in Page Headers](/blog/how-to-create-author-pages).
+> For more details about author pages, profile customization, and avatars, see [Author Pages](/docs/guides/author-pages).
 
 ## Step 5: Add Blog to Navigation
 
@@ -292,7 +292,7 @@ Then drop the form into your post:
 ```
 
 > [!info]
-> Learn more in [How to Add Newsletter and Other Subscription Forms](/blog/how-to-add-newsletter-and-other-subscription-forms).
+> Learn more in [Newsletter and Subscription Forms](/docs/guides/forms).
 
 ![[Pasted image 20251007233814.png]]
 
@@ -311,8 +311,8 @@ In your site’s config.json, you can set the theme like this:
 > [!info] Learn more about using themes
 > For more details about using official Flowershow themes, see [[announcing-official-themes|Official Flowershow Themes]].
 
-> ![tip] You can also create a custom theme!
-> You can also style your site yourself by creating a `custom.css` file in the root of your site. To learn more, see [[how-to-customize-style|How to Customize the Style of Your Site]].
+> [!tip] You can also create a custom theme!
+> You can also style your site yourself by creating a `custom.css` file in the root of your site. To learn more, see [Styling your site](/docs/guides/custom-styles).
 
 ![[Pasted image 20251007233927.png]]
 ![[Pasted image 20251007233951.png]]
