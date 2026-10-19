@@ -4,7 +4,6 @@ date: 2026-10-19
 description: Moved or renamed a folder? One redirect rule now sends every page in it to its new address, and redirects no longer hide pages you still publish.
 authors:
   - olayway
-image: "[[assets/changelog-folder-redirects.webp]]"
 showToc: false
 ---
 
