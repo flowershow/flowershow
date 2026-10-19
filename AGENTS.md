@@ -106,7 +106,7 @@ To write or review a tutorial, how-to or feature overview page, use the `write-t
 1. **Extend before you add.** Check `content/flowershow-app/changelog/` (and open PRs) for an entry from the last few days on the same theme. If one exists, add your change to it.
 2. **Fixes and small improvements are bullets, not entries.** Add them under a `**Fixes**` heading in the most related entry. A fix gets its own entry only if users must act or were seriously affected (data loss, security, breaking change).
 3. **New entries are for new capabilities.** Title them by what users can now do ("Publish without an account"), not by what changed in the code.
-4. **Every entry has a screenshot** of the feature in use (`image:`, a ~1440px `.webp` in `content/flowershow-app/assets/`). Take it from the live page or a throwaway `fl` preview site.
+4. **Add a screenshot when it helps users see the change**, e.g. a new UI or a visible result (`image:` in frontmatter, a ~1440px `.webp` in `content/flowershow-app/assets/`). Take it from the live page or a throwaway `fl` preview site. Skip it for config options and other changes a picture wouldn't explain.
 
 Create `content/flowershow-app/changelog/YYYY-MM-DD-short-slug.md`:
 
@@ -117,7 +117,6 @@ date: YYYY-MM-DD
 description: One-sentence summary shown in the changelog list.
 authors:
   - olayway
-image: "[[assets/changelog-short-slug.webp]]"
 showToc: false
 ---
 
