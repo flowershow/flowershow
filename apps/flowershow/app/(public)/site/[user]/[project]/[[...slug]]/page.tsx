@@ -94,6 +94,7 @@ import {
   resolvePostRoute,
 } from '@/lib/post/route';
 import { resolveSiteAlias } from '@/lib/resolve-site-alias';
+import { matchRedirect } from '@/lib/redirects';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
 import { ensureLeadingSlash, normalizeAuthors } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
@@ -137,6 +138,8 @@ export async function generateMetadata(props: {
       slug: decodedSlug,
     })
     .catch(() => {
+      // No page here: a configured redirect applies before any fallback.
+      redirectIfMatched(site, siteConfig, decodedSlug);
       // For anonymous sites, return null instead of throwing 404
       // This allows the page to render even if metadata isn't ready
       if (userName === 'anon') {
@@ -344,23 +347,19 @@ export default async function SitePage(props: {
   // the virtual `/tags` pages are all suppressed. Defaults to on.
   const showTags = siteConfig?.showTags ?? true;
 
-  // Handle redirects if configured
-  if (siteConfig?.redirects) {
-    for (const r of siteConfig.redirects) {
-      // Simple string comparison for exact path matching
-      if (decodedSlug === ensureLeadingSlash(r.from)) {
-        const redirectUrl = site.customDomain
-          ? r.to
-          : `${resolveSiteAlias(
-              `/@${site.user?.username}/${site.projectName}`,
-              'to',
-            )}${r.to}`;
+  const blob = await api.site.getBlob
+    .query({
+      siteId: site.id,
+      slug: decodedSlug,
+    })
+    .catch(() => null);
 
-        return r.permanent
-          ? permanentRedirect(redirectUrl)
-          : redirect(redirectUrl);
-      }
-    }
+  // Redirects apply only where no page is published, so a stale rule can't
+  // hide a live page.
+  if (!blob) redirectIfMatched(site, siteConfig, decodedSlug);
+
+  if (blob && isSiteChromeFile(blob.path)) {
+    notFound();
   }
 
   const siteFilePaths = await api.site.getAllBlobPaths
@@ -380,17 +379,6 @@ export default async function SitePage(props: {
   const imageDimensions = await api.site.getImageDimensionsMap
     .query({ siteId: site.id })
     .catch(() => ({}) as ImageDimensionsMap);
-
-  const blob = await api.site.getBlob
-    .query({
-      siteId: site.id,
-      slug: decodedSlug,
-    })
-    .catch(() => null);
-
-  if (blob && isSiteChromeFile(blob.path)) {
-    notFound();
-  }
 
   // Page-level `showNavbar`/`showFooter` (falling back to site config) hide
   // the layout's navbar/footer via a marker + CSS :has() (default-theme.css).
@@ -1099,4 +1087,23 @@ export default async function SitePage(props: {
 
 function isPastLastPage(p?: { page: number; pageCount: number }): boolean {
   return p !== undefined && p.page > p.pageCount;
+}
+
+function redirectIfMatched(
+  site: Awaited<ReturnType<typeof getSite>>,
+  siteConfig: SiteConfig | null,
+  slug: string,
+): void {
+  const match = matchRedirect(slug, siteConfig?.redirects ?? []);
+  if (!match) return;
+  const isAbsolute = /^[a-z][a-z\d+.-]*:/i.test(match.to);
+  const url =
+    site.customDomain || isAbsolute
+      ? match.to
+      : `${resolveSiteAlias(
+          `/@${site.user?.username}/${site.projectName}`,
+          'to',
+        )}${match.to}`;
+  if (match.permanent) permanentRedirect(url);
+  redirect(url);
 }
