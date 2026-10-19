@@ -73,7 +73,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Page title](/docs/reference/page-title) — Set the title of your page, both for display and for SEO
 - [Password protection](/docs/reference/password-protection) — Restrict access to your site with a password.
 - [Post pages](/docs/reference/post-pages) — Every post in your blog gets a reading column, a header with the author and date, the cover image, and links to the previous, next and related posts. Nothing to configure.
-- [URL Redirects](/docs/reference/redirects) — Configure URL redirects to maintain backwards compatibility when moving or renaming pages.
+- [URL Redirects](/docs/reference/redirects) — Send visitors from old URLs to new ones when you move or rename pages, including whole folders at once.
 - [Custom robots.txt](/docs/reference/robots-txt) — Control how search engines crawl your Flowershow site by publishing a robots.txt file from your vault.
 - [RSS Feed](/docs/reference/rss-feed) — Enable an RSS feed for your site so readers can subscribe to your content.
 - [SEO and social media metadata](/docs/reference/seo-social-metadata) — Configure SEO titles, descriptions, and social media images for better search and sharing.
