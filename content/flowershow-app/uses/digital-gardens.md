@@ -215,7 +215,7 @@ showComments: false
         <div className="section-head reveal">
           <span className="eyebrow">Showcase</span>
           <h2>Digital gardens growing on Flowershow</h2>
-          <p>A few of the <span className="stat-hl">1,700+</span> sites already published.</p>
+          <p>A few of the <span className="stat-hl">2,300+</span> sites already published.</p>
         </div>
         <div className="show-grid">
           <div className="show-card sc-garden reveal">
@@ -245,7 +245,7 @@ showComments: false
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
           <h2>Markdown to URL. Instantly. Free.</h2>
-          <p>Join the writers, researchers, and teams behind 1,700+ sites already published with Flowershow.</p>
+          <p>Join the writers, researchers, and teams behind 2,300+ sites already published with Flowershow.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>
         </div>
