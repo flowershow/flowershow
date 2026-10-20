@@ -2,6 +2,8 @@
 
 > Draft v2, 2026-10-20, written working backwards. Status, open claims and the work left are in [internal-faq.md](internal-faq.md).
 
+Demo video (very first pass): https://youtu.be/ysBjyR9yu7E
+
 ## Flowershow launches Publish with AI: say "publish this" in Claude or ChatGPT and get a website you keep
 
 **Flowershow is now in the Claude and ChatGPT app directories and works as a skill in Claude Code, Codex and Cursor. Ask your AI to publish what you made and you get a live link in seconds. In any later conversation you can ask it to change the page or grow it into a whole site at the same address, and the site stays yours as plain files.**
