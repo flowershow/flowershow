@@ -1553,6 +1553,7 @@
 .fs-root .thesis h2 { margin: 12px 0 22px; }
 .fs-root .thesis p { color: var(--body); font-size: 1.1rem; line-height: 1.65; }
 .fs-root .thesis .thesis-punch { margin-top: 18px; color: var(--ink); font-weight: 600; }
+.fs-root .proof-close { max-width: 720px; margin: 36px auto 0; text-align: center; color: var(--ink); font-weight: 600; font-size: 1.1rem; }
 @media (max-width: 760px) { .fs-root .proof-grid { grid-template-columns: 1fr; } }
 @media (min-width: 900px) {
   .fs-root .hero-media-next { max-width: 980px; flex-direction: row; align-items: center; }
