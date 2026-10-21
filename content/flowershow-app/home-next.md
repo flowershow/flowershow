@@ -68,6 +68,7 @@ showComments: false
             <p><code>fl</code>, Claude Code, Cursor, Claude, Obsidian, GitHub. Free to start, about $5/month, open source.</p>
           </div>
         </div>
+        <p className="proof-close reveal">Not for every site. For the notes, docs, wikis and reports that are most of what people publish.</p>
       </div>
     </section>
     <section className="section section-soft" id="thesis">
