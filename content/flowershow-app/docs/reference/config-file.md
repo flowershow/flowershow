@@ -526,6 +526,32 @@ Show a link to the raw Markdown source of each page.
 
 ---
 
+### `showPageActions`
+
+**Type:** `boolean`  
+**Default:** `false`
+
+Show a menu beside the title of each page to copy the page as Markdown, view its Markdown source, or open it in ChatGPT or Claude. [[page-actions|Learn more →]]
+
+```json
+"showPageActions": true
+```
+
+---
+
+### `enableLlmsTxt`
+
+**Type:** `boolean`  
+**Default:** `false`
+
+Serve an auto-generated `/llms.txt` listing your pages with links to their Markdown, for AI assistants. A published `llms.txt` file is used instead. Not available on password-protected sites. [[llms-txt|Learn more →]]
+
+```json
+"enableLlmsTxt": true
+```
+
+---
+
 ### `redirects`
 
 **Type:** `Array<{ from: string, to: string, permanent?: boolean }>`  

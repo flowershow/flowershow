@@ -14,6 +14,7 @@ import CanvasEnhancer from '@/components/public/canvas-enhancer';
 import { PageScripts } from '@/components/public/page-scripts';
 import Comments from '@/components/public/comments';
 import Hero from '@/components/public/hero';
+import { PageActions } from '@/components/public/page-actions';
 import { PageChromeMarker } from '@/components/public/page-chrome-marker';
 import { BlogLayout } from '@/components/public/layouts/blog';
 import { PostLayout } from '@/components/public/layouts/post';
@@ -854,6 +855,19 @@ export default async function SitePage(props: {
       })
     : null;
 
+  // Copy as Markdown / open in ChatGPT or Claude, beside the title of
+  // Markdown pages (config showPageActions). The raw source is served at the
+  // page's file path on the site's own host.
+  const markdownPath = `/${blob.path.split('/').map(encodeURIComponent).join('/')}`;
+  const pageActions =
+    siteConfig?.showPageActions === true && /\.mdx?$/i.test(blob.path) ? (
+      <PageActions
+        markdownPath={markdownPath}
+        markdownUrl={`${getSiteUrl(site)}${markdownPath}`}
+        showAiLinks={site.privacyMode !== 'PASSWORD'}
+      />
+    ) : undefined;
+
   const pageHeaderProps = {
     title: metadata?.title ?? '',
     description: displayDescription(metadata) ?? '',
@@ -1020,7 +1034,7 @@ export default async function SitePage(props: {
                 <CanvasEnhancer />
               </ListingPage>
             ) : (
-              <BlogLayout {...pageHeaderProps}>
+              <BlogLayout {...pageHeaderProps} actions={pageActions}>
                 <div className="rendered-mdx" id="mdxpage">
                   {compiledContent}
                 </div>

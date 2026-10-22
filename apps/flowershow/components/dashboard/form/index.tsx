@@ -57,6 +57,8 @@ export default function Form({
     'enableRss',
     'showBuiltWithButton',
     'showRawLink',
+    'showPageActions',
+    'enableLlmsTxt',
     'showSidebar',
     'showToc',
     'showReadingTime',

@@ -1,6 +1,6 @@
 ---
 title: Flowershow CLI
-description: Learn how to use the Flowershow CLI to publish your notes directly from your terminal.
+description: Install and use fl, the Flowershow CLI, to publish your notes from the terminal. A single binary, no Node.js or npm needed (the old npm packages are deprecated).
 ---
 
 The Flowershow CLI allows you to publish your Markdown files and folders to Flowershow directly from your terminal.

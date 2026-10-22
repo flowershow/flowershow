@@ -962,6 +962,44 @@ export default async function SiteSettingsPage(props: {
             handleSubmit={updateDbConfig}
           />
           <Form
+            title="Page Actions Menu"
+            description="Show a menu beside the title of each page to copy the page as Markdown, view its Markdown source, or open it in ChatGPT or Claude."
+            helpText={
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/page-actions"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            }
+            inputAttrs={{
+              name: 'showPageActions',
+              type: 'text',
+              defaultValue: Boolean(siteConfig?.showPageActions).toString(),
+            }}
+            handleSubmit={updateDbConfig}
+          />
+          <Form
+            title="llms.txt"
+            description="Serve an auto-generated /llms.txt that lists your pages with links to their Markdown, so AI assistants can find and read your content. Not available on password-protected sites. A published llms.txt file is used instead."
+            helpText={
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/llms-txt"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            }
+            inputAttrs={{
+              name: 'enableLlmsTxt',
+              type: 'text',
+              defaultValue: Boolean(siteConfig?.enableLlmsTxt).toString(),
+            }}
+            handleSubmit={updateDbConfig}
+          />
+          <Form
             title="Show Backlinks"
             description="Show a list of pages that link to the current page at the bottom of each page."
             inputAttrs={{

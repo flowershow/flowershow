@@ -1,9 +1,9 @@
 ---
 title: Markdown access
-description: Every page on a Flowershow site is also served as raw markdown. Append .md to any URL to get clean, agent-readable content.
+description: Every Markdown page on a Flowershow site is also served as raw markdown. Append .md to its URL to get clean, agent-readable content.
 ---
 
-Every page on any Flowershow-hosted site is also available as raw markdown — including your own published content and the Flowershow documentation at `flowershow.app`. Append `.md` (or `.mdx` for MDX pages) to any page URL to get the source:
+Every Markdown page on any Flowershow-hosted site is also available as raw markdown — including your own published content and the Flowershow documentation at `flowershow.app`. Append `.md` (or `.mdx` for MDX pages) to the page URL to get the source:
 
 - **Page:** `https://your-site.flowershow.me/some/page`
 - **Markdown:** `https://your-site.flowershow.me/some/page.md`
@@ -26,6 +26,13 @@ Raw markdown is faster and cheaper for AI agents to process than rendered HTML �
 Appending `.md` directly to the directory URL (e.g. `/some/folder/.md`) will 404.
 
 **MDX pages** — if the source file is `.mdx`, use the `.mdx` extension in the raw URL, not `.md`.
+
+**HTML pages** — pages published from `.html` files have no Markdown version. Their URL already serves the HTML file itself.
+
+## Finding the Markdown
+
+- **Page actions:** sites can show a **Copy page** menu beside each page title that copies the Markdown or opens it in ChatGPT or Claude. See [[page-actions|Page actions]].
+- **llms.txt:** sites can serve an `/llms.txt` index of every page with links to its Markdown. See [[llms-txt|llms.txt]]. The Flowershow docs have one at [flowershow.app/llms.txt](https://flowershow.app/llms.txt).
 
 ## Fetching markdown
 

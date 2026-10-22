@@ -442,6 +442,8 @@ describe('every dashboard save shape is accepted', () => {
     { annotations: true },
     { showEditLink: true },
     { showRawLink: true },
+    { showPageActions: true },
+    { enableLlmsTxt: true },
     { showBacklinks: false },
     { showTags: false },
     { analytics: 'G-XXXX' },

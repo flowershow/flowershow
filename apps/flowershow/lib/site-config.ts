@@ -28,6 +28,8 @@ export const SITE_CONFIG_DEFAULTS = {
   enableRss: false,
   showBuiltWithButton: true,
   showRawLink: false,
+  showPageActions: false,
+  enableLlmsTxt: false,
   showEditLink: false,
   showReadingTime: false,
   showBreadcrumbs: true,

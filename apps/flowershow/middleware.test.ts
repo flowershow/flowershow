@@ -5,6 +5,7 @@ import { ANON_PAGE_CSP } from './lib/anon-site-safety';
 import {
   rewriteRawIfNeeded,
   rewriteSocialCardIfNeeded,
+  siteFileRoute,
   siteOwnerRouteIfNeeded,
   withAnonPageCsp,
 } from './middleware';
@@ -265,5 +266,31 @@ describe('siteOwnerRouteIfNeeded — owner sign-in handshake (1pr.15)', () => {
   it('leaves other paths alone', () => {
     expect(go('/_flowershow/owner')).toBeNull();
     expect(go('/notes')).toBeNull();
+  });
+});
+
+describe('siteFileRoute — per-site generated files', () => {
+  it('routes sitemap.xml, rss.xml and llms.txt for subdomain sites', () => {
+    expect(siteFileRoute('/sitemap.xml', 'victim/notes')).toBe(
+      '/api/sitemap/victim/notes',
+    );
+    expect(siteFileRoute('/rss.xml', 'victim/notes')).toBe(
+      '/api/rss/victim/notes',
+    );
+    expect(siteFileRoute('/llms.txt', 'victim/notes')).toBe(
+      '/api/llms/victim/notes',
+    );
+  });
+
+  it('routes llms.txt for custom domains', () => {
+    expect(siteFileRoute('/llms.txt', '_domain/example.com')).toBe(
+      '/api/llms/_domain/example.com',
+    );
+  });
+
+  it('leaves other paths, including nested llms.txt files, alone', () => {
+    expect(siteFileRoute('/docs/llms.txt', 'victim/notes')).toBeNull();
+    expect(siteFileRoute('/llms-full.txt', 'victim/notes')).toBeNull();
+    expect(siteFileRoute('/', 'victim/notes')).toBeNull();
   });
 });

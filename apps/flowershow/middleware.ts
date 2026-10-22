@@ -260,17 +260,9 @@ export default async function middleware(req: NextRequest) {
     const guard = await ensureSiteAccess(req, site, phBootstrap);
     if (guard) return guard;
 
-    if (pathname === '/sitemap.xml') {
-      return rewrite(
-        `/api/sitemap/${username}/${projectname}`,
-        req,
-        phBootstrap,
-      );
-    }
-
-    if (pathname === '/rss.xml') {
-      return rewrite(`/api/rss/${username}/${projectname}`, req, phBootstrap);
-    }
+    // Per-site sitemap.xml, rss.xml and llms.txt
+    const siteFile = siteFileRoute(pathname, `${username}/${projectname}`);
+    if (siteFile) return rewrite(siteFile, req, phBootstrap);
 
     // Non-image raw files (e.g. .md, .pdf, .html) are served after the
     // password gate so password-protected sites redirect to login here.
@@ -332,15 +324,10 @@ export default async function middleware(req: NextRequest) {
   const guard = await ensureSiteAccess(req, site, phBootstrap);
   if (guard) return guard;
 
-  // For custom domains: username "_domain", project = hostname
-  if (pathname === '/sitemap.xml') {
-    return rewrite(`/api/sitemap/_domain/${hostname}`, req, phBootstrap);
-  }
-
-  // Per-site RSS feed
-  if (pathname === '/rss.xml') {
-    return rewrite(`/api/rss/_domain/${hostname}`, req, phBootstrap);
-  }
+  // Per-site sitemap.xml, rss.xml and llms.txt. For custom domains:
+  // username "_domain", project = hostname
+  const siteFile = siteFileRoute(pathname, `_domain/${hostname}`);
+  if (siteFile) return rewrite(siteFile, req, phBootstrap);
 
   // Non-image raw files served after the password gate.
   const raw = rewriteRawIfNeeded(
@@ -389,6 +376,28 @@ export function oauthRewritePath(pathname: string): string | null {
     return `/api/oauth/well-known${pathname.slice('/.well-known'.length)}`;
   }
   return null;
+}
+
+/**
+ * Per-site generated files, served after the password gate: the API route for
+ * `pathname`, or null. `sitePath` is `<username>/<project>` or
+ * `_domain/<hostname>`. /llms.txt goes to its route even when the site
+ * publishes its own llms.txt: the route serves that file first.
+ */
+export function siteFileRoute(
+  pathname: string,
+  sitePath: string,
+): string | null {
+  switch (pathname) {
+    case '/sitemap.xml':
+      return `/api/sitemap/${sitePath}`;
+    case '/rss.xml':
+      return `/api/rss/${sitePath}`;
+    case '/llms.txt':
+      return `/api/llms/${sitePath}`;
+    default:
+      return null;
+  }
 }
 
 /**
