@@ -1,11 +1,17 @@
 'use client';
 
+import type { ClaimPreviewResponse } from '@flowershow/api-contract';
 import { useRouter } from 'next/navigation';
-import { useSession } from 'next-auth/react';
+import { signOut, useSession } from 'next-auth/react';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { env } from '@/env.mjs';
 import { getAnonymousToken } from '@/lib/client-anonymous-user';
-import { decideClaimAction, scrubbedClaimPath } from './claim-flow';
+import {
+  decideClaimAction,
+  describeClaimFailure,
+  formatClaimExpiry,
+  scrubbedClaimPath,
+} from './claim-flow';
 import {
   buildClaimCallbackUrl,
   buildClaimLoginUrl,
@@ -38,8 +44,13 @@ export default function ClaimPage() {
     projectName: string;
   } | null>(null);
 
+  const [retryBody, setRetryBody] = useState<
+    ({ siteId: string } & Record<string, string>) | null
+  >(null);
+  const [preview, setPreview] = useState<ClaimPreviewResponse | null>(null);
+
   const router = useRouter();
-  const { status } = useSession();
+  const { status, data: session } = useSession();
 
   // The link (siteId + secret token) is read once on mount, then the token is
   // scrubbed from the address bar before anything else (e.g. PostHog's
@@ -86,15 +97,18 @@ export default function ClaimPage() {
           body: JSON.stringify(body),
         });
 
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
 
         if (!response.ok || !result.success) {
-          // A link that can never work again (claimed, expired, invalid)
-          // shouldn't linger in storage; keep it for retryable errors.
-          if ([400, 403, 404, 410].includes(response.status)) {
+          // Show our own copy, never the server's raw error text. A link
+          // that can never work again (claimed, expired, invalid) shouldn't
+          // linger in storage; keep it for retryable errors.
+          const failure = describeClaimFailure(response.status, result.code);
+          if (failure.clearStash) {
             clearStashedClaimToken(safeLocalStorage(), body.siteId);
           }
-          setError(result.error || 'Failed to claim site');
+          setError(failure.message);
+          setRetryBody(failure.retryable ? body : null);
           setState('error');
           return;
         }
@@ -109,12 +123,50 @@ export default function ClaimPage() {
         );
       } catch (err) {
         console.error('Claim error:', err);
-        setError('An unexpected error occurred');
+        setError(describeClaimFailure(null).message);
+        setRetryBody(body);
         setState('error');
       }
     },
     [router],
   );
+
+  const retry = useCallback(() => {
+    if (!retryBody) return;
+    claimStarted.current = false;
+    claimSite(retryBody);
+  }, [retryBody, claimSite]);
+
+  // Before asking to confirm, look up what the link would add (live URL,
+  // expiry). A link that can't be claimed fails here, before any click.
+  useEffect(() => {
+    if (state !== 'confirm' || !siteId || !linkToken || preview) return;
+    let cancelled = false;
+    fetch('/api/sites/claim/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ siteId, claimToken: linkToken }),
+    })
+      .then(async (response) => {
+        if (cancelled) return;
+        if (response.ok) {
+          setPreview(await response.json());
+          return;
+        }
+        if ([400, 403, 404, 409, 410].includes(response.status)) {
+          const failure = describeClaimFailure(response.status);
+          clearStashedClaimToken(safeLocalStorage(), siteId);
+          setError(failure.message);
+          setRetryBody(null);
+          setState('error');
+        }
+        // Other errors: still let the user confirm without the details.
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [state, siteId, linkToken, preview]);
 
   useEffect(() => {
     if (!link) return; // link not read yet
@@ -174,12 +226,50 @@ export default function ClaimPage() {
           <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-4">
             Add this site to your account?
           </h1>
+          {preview ? (
+            <p className="text-gray-600 dark:text-zinc-300 mb-2">
+              <a
+                href={preview.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-orange-600 dark:text-orange-400 underline break-all"
+              >
+                {preview.liveUrl.replace(/^https?:\/\//, '')}
+              </a>
+            </p>
+          ) : (
+            <p className="text-gray-600 dark:text-zinc-300 mb-2">
+              Site ID: <code className="break-all">{siteId}</code>
+            </p>
+          )}
           <p className="text-gray-600 dark:text-zinc-300 mb-2">
-            Site ID: <code className="break-all">{siteId}</code>
+            This site was published without an account.{' '}
+            {formatClaimExpiry(preview?.expiresAt)
+              ? `It will be deleted on ${formatClaimExpiry(preview?.expiresAt)} unless you add it to your account.`
+              : 'It will expire unless you add it to your account.'}
           </p>
           <p className="text-gray-600 dark:text-zinc-300 mb-6">
-            This site was published without an account. It will expire unless
-            you add it to your account.
+            Adding to{' '}
+            <strong>
+              {session?.user?.username
+                ? `@${session.user.username}`
+                : (session?.user?.email ?? 'your account')}
+            </strong>
+            .{' '}
+            <button
+              type="button"
+              onClick={() =>
+                signOut({
+                  callbackUrl: scrubbedClaimPath(
+                    window.location.pathname,
+                    siteId,
+                  ),
+                })
+              }
+              className="text-sm underline"
+            >
+              Not you? Switch account
+            </button>
           </p>
           <div className="flex flex-col items-center gap-3">
             <button
@@ -226,15 +316,31 @@ export default function ClaimPage() {
         <div className="max-w-md w-full text-center px-4">
           <div className="text-6xl mb-4">⚠️</div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100 mb-2">
-            Claim Failed
+            Couldn&apos;t add this site
           </h1>
           <p className="text-gray-600 dark:text-zinc-300 mb-6">{error}</p>
-          <button
-            onClick={() => router.push(dashboardUrl)}
-            className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
-          >
-            Go to Dashboard
-          </button>
+          <div className="flex flex-col items-center gap-3">
+            {retryBody && (
+              <button
+                type="button"
+                onClick={retry}
+                className="px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
+              >
+                Try again
+              </button>
+            )}
+            <button
+              type="button"
+              onClick={() => router.push(dashboardUrl)}
+              className={
+                retryBody
+                  ? 'text-sm text-gray-600 dark:text-zinc-300 underline'
+                  : 'px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium'
+              }
+            >
+              Go to Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );

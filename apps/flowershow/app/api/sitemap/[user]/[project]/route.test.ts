@@ -76,6 +76,33 @@ describe('GET /api/sitemap — password gate', () => {
 
     expect(res.status).toBe(200);
     expect(await res.text()).toContain('<urlset');
+    expect(res.headers.get('x-robots-tag')).toBeNull();
+  });
+});
+
+describe('GET /api/sitemap — anonymous sites', () => {
+  const anonSite = {
+    ...passwordSite,
+    privacyMode: 'PUBLIC',
+    isTemporary: true,
+    anonymousOwnerId: 'anon-1',
+    expiresAt: new Date(Date.now() + 86400000),
+  };
+
+  it('serves the sitemap with noindex', async () => {
+    findFirst.mockResolvedValue(anonSite);
+    const res = await GET(makeReq(), makeParams());
+    expect(res.status).toBe(200);
+    expect(res.headers.get('x-robots-tag')).toBe('noindex');
+  });
+
+  it('returns 404 once the site has expired', async () => {
+    findFirst.mockResolvedValue({
+      ...anonSite,
+      expiresAt: new Date(Date.now() - 1000),
+    });
+    const res = await GET(makeReq(), makeParams());
+    expect(res.status).toBe(404);
   });
 });
 

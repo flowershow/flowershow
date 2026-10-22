@@ -63,6 +63,7 @@ export const env = createEnv({
     TYPESENSE_ADMIN_API_KEY: z.string(),
     SITE_ACCESS_JWT_SECRET: z.string(),
     ANONYMOUS_JWT_SECRET: z.string(),
+    ANON_IP_HASH_SECRET: z.string().optional(),
     ANON_PUBLISH_DISABLED: z.string().optional(),
     MCP_ANON_HOURLY_LIMIT: z.string().optional(),
     // MCP OAuth (flowershow-3fr): 'true' serves the authorization server
@@ -171,6 +172,7 @@ export const env = createEnv({
       process.env.NEXT_PUBLIC_POSTHOG_FEEDBACK_SURVEY_ID,
     SITE_ACCESS_JWT_SECRET: process.env.SITE_ACCESS_JWT_SECRET,
     ANONYMOUS_JWT_SECRET: process.env.ANONYMOUS_JWT_SECRET,
+    ANON_IP_HASH_SECRET: process.env.ANON_IP_HASH_SECRET,
     ANON_PUBLISH_DISABLED: process.env.ANON_PUBLISH_DISABLED,
     MCP_ANON_HOURLY_LIMIT: process.env.MCP_ANON_HOURLY_LIMIT,
     MCP_OAUTH_ENABLED: process.env.MCP_OAUTH_ENABLED,

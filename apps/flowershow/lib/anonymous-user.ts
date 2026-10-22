@@ -31,7 +31,7 @@ export function generateOwnershipToken(anonymousUserId: string): string {
       type: 'anonymous_ownership',
     },
     ANONYMOUS_JWT_SECRET,
-    { expiresIn: '30d' }, // 30 days - longer since it's reusable
+    { algorithm: 'HS256', expiresIn: '30d' }, // 30 days - longer since it's reusable
   );
 }
 
@@ -43,7 +43,9 @@ export function generateOwnershipToken(anonymousUserId: string): string {
  */
 export function verifyOwnershipToken(token: string): string | null {
   try {
-    const decoded = jwt.verify(token, ANONYMOUS_JWT_SECRET) as {
+    const decoded = jwt.verify(token, ANONYMOUS_JWT_SECRET, {
+      algorithms: ['HS256'],
+    }) as {
       anonymousUserId: string;
       type: string;
     };
@@ -72,7 +74,7 @@ export function generateSiteClaimToken(
   const jwtToken = jwt.sign(
     { type: 'site_claim', siteId, anonymousUserId },
     ANONYMOUS_JWT_SECRET,
-    { expiresIn: '7d' },
+    { algorithm: 'HS256', expiresIn: '7d' },
   );
   return `${CLAIM_TOKEN_PREFIX}${jwtToken}`;
 }
@@ -90,7 +92,7 @@ export function verifySiteClaimToken(
     const decoded = jwt.verify(
       token.slice(CLAIM_TOKEN_PREFIX.length),
       ANONYMOUS_JWT_SECRET,
-      { ignoreExpiration: true },
+      { algorithms: ['HS256'], ignoreExpiration: true },
     ) as {
       type?: string;
       siteId?: string;

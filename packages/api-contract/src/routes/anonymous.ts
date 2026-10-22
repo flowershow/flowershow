@@ -4,8 +4,12 @@ import {
   AnonCreateSiteResponseSchema,
   AnonPublishRequestSchema,
   AnonPublishResponseSchema,
+  ClaimPreviewRequestSchema,
+  ClaimPreviewResponseSchema,
   ClaimSiteRequestSchema,
   ClaimSiteResponseSchema,
+  ClaimSiteWithTokenRequestSchema,
+  ClaimSiteWithTokenResponseSchema,
   ErrorSchema,
   SiteDetailSchema,
   SuccessResponseSchema,
@@ -197,6 +201,84 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
         description: 'Internal server error',
         content: { 'application/json': { schema: ErrorResponse } },
       },
+    },
+  });
+
+  const errorBody = {
+    content: {
+      'application/json': {
+        schema: z.object({ error: z.string(), message: z.string() }),
+      },
+    },
+  };
+
+  registry.registerPath({
+    method: 'post',
+    path: '/api/sites/id/{siteId}/claim',
+    operationId: 'claimSiteWithToken',
+    summary: 'Claim an anonymous site into the token owner account',
+    description:
+      "Transfer an anonymous site to the account of the CLI token or PAT in the Authorization header, proving the right to it with the site's claim token. Used by `fl` to adopt a folder's anonymous site when publishing while logged in. Claiming a site already in the caller's account succeeds with `alreadyClaimed: true`.",
+    tags: ['Anonymous Publishing'],
+    security: [{ bearerToken: [] }],
+    request: {
+      params: z.object({ siteId: z.string() }),
+      body: {
+        content: {
+          'application/json': { schema: ClaimSiteWithTokenRequestSchema },
+        },
+      },
+    },
+    responses: {
+      '200': {
+        description: 'Site claimed (or already in this account)',
+        content: {
+          'application/json': { schema: ClaimSiteWithTokenResponseSchema },
+        },
+      },
+      '400': { description: 'claimToken missing', ...errorBody },
+      '401': { description: 'Not authenticated', ...errorBody },
+      '403': {
+        description: 'Claim token not valid for this site',
+        ...errorBody,
+      },
+      '404': { description: 'Site not found', ...errorBody },
+      '409': {
+        description: 'Site already claimed into another account',
+        ...errorBody,
+      },
+      '410': { description: 'Anonymous site has expired', ...errorBody },
+      '500': { description: 'Internal server error', ...errorBody },
+    },
+  });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/api/sites/claim/preview',
+    operationId: 'previewClaim',
+    summary: 'Preview what a claim link would claim',
+    description:
+      "Return an unclaimed anonymous site's name, live URL and expiry for the holder of its claim token, so the claim page can show what is being added.",
+    tags: ['Anonymous Publishing'],
+    security: [],
+    request: {
+      body: {
+        content: { 'application/json': { schema: ClaimPreviewRequestSchema } },
+      },
+    },
+    responses: {
+      '200': {
+        description: 'The site the link would claim',
+        content: { 'application/json': { schema: ClaimPreviewResponseSchema } },
+      },
+      '400': { description: 'siteId or claimToken missing', ...errorBody },
+      '403': {
+        description: 'Claim token not valid for this site',
+        ...errorBody,
+      },
+      '404': { description: 'Site not found', ...errorBody },
+      '409': { description: 'Site already claimed', ...errorBody },
+      '410': { description: 'Anonymous site has expired', ...errorBody },
     },
   });
 
