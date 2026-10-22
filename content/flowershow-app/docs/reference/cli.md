@@ -118,8 +118,8 @@ fl ./my-notes
 
 This will create a new site (named after the folder) and upload all supported files within it. The site URL (`https://<site-name>-<username>.flowershow.me`) is printed at the end.
 
-> [!WARNING]
-> If you already have a site with the same name, `fl` publishes to that site instead of creating a new one, and removes files from it that aren't in your folder. Check `fl list` first and use `--name` to choose a different name if needed.
+> [!NOTE]
+> If you already have a site with the same name, `fl` asks whether to overwrite it or choose a new name (with `--yes` it refuses). See [Name collisions](#name-collisions).
 
 ### Publish a Single File
 
@@ -138,6 +138,7 @@ To publish an HTML page together with its CSS, JavaScript or images, put them in
 - `--yes`: Skip the new-site name confirmation prompt (useful for scripts and CI). It never allows overwriting an existing site.
 - `--anon`: Publish without an account, to a temporary site. See [Publish without an account](#publish-without-an-account).
 - `--overwrite`: Publish a path that isn't linked to a site (no `.flowershow` file) into an existing site with the same name, replacing its content. See [Name collisions](#name-collisions).
+- `--json`: Print the result as JSON on stdout, for scripts and agents (requires `fl` 2.9.0 or later). See [JSON output](#json-output).
 
 **Example with options:**
 
@@ -153,25 +154,49 @@ Use `--anon` to publish with no account and no login (requires `fl` 2.5.0 or lat
 fl --anon ./my-report
 ```
 
-`fl` creates a site at a random `https://<name>-anon.flowershow.me` URL and prints two lines:
+`fl` creates a site at a random `https://<name>-anon.flowershow.me` URL. It prints the claim link as soon as the site is created, and again at the end:
 
 ```
 ✓ Published (no account): https://k3x9q2mf-anon.flowershow.me
 Claim it to keep it (expires 7 Oct 2026): https://flowershow.app/claim?siteId=…#token=fs_claim_…
 ```
 
-- **It expires in 7 days** unless you claim it. Updating the site doesn't extend the expiry, and an expired site stops being served straight away.
-- **Claim it to keep it.** Open the claim link, sign in or sign up, and confirm with **Add to my account** to move the site into your account.
-- **Re-running on the same folder updates the same URL.** The site ID and claim token are saved in the folder's `.flowershow` file. The claim token is a secret: anyone with the claim link or the `.flowershow` file can overwrite the site or take it, so don't share them or commit `.flowershow` to a public repository.
+- **It expires in 7 days** unless you claim it. Updating the site doesn't extend the expiry. Once it expires, its pages, sitemap and feed stop being served straight away; images and other files linked directly from storage (`r2.flowershow.app/…`) can stay reachable for up to a day, until the nightly cleanup deletes them.
+- **Claim it to keep it.** Open the claim link, sign in or sign up, check the site's address and the account it's going to, and confirm with **Add to my account** to move the site into your account. It keeps its `…-anon.flowershow.me` address.
+- **Or publish it while logged in.** Run `fl login`, then publish the folder without `--anon` (`fl ./my-report`). On the computer that published it, `fl` adds the site to your account and updates it (requires `fl` 2.9.0 or later). Elsewhere, `fl` can't claim it and creates a new site in your account; use the claim link instead.
+- **Re-running on the same folder updates the same URL.** The folder's `.flowershow` file keeps the site ID; the claim token is kept in your user config folder (`claims.json`), not in the project, so it isn't committed with your files. The claim token and claim link are secrets: anyone with them can overwrite the site or take it until it's claimed, so don't share them publicly.
 - Single files and multiple paths aren't linked, so each run creates a new site.
 - Limits: 200 files and 50 MB in total. HTML-only content is fine.
-- Anonymous sites aren't indexed by search engines.
+- Anonymous sites' pages, sitemap and feed tell search engines not to index them (`noindex`). Images and other files served directly from storage don't carry that header.
 - `--anon` never uses your login, even if you're logged in.
 - If the saved anonymous site has expired or been deleted, `fl` says so, removes the link from `.flowershow` and exits with status 1. Re-run the command to create a new anonymous site.
-- If the site has been claimed, `fl --anon` exits with status 1 and keeps the link: run `fl login` with the account that claimed it, then publish the folder without `--anon` (`fl ./my-report`) to update the claimed site. This works on the machine that published the folder, since it keeps the link in `.flowershow`.
+- If the site has been claimed, `fl --anon` exits with status 1 and keeps the link: run `fl login` with the account that claimed it, then publish the folder without `--anon` (`fl ./my-report`) to update the claimed site.
+- `--anon` in a folder linked to a site in your account warns first: it creates a separate temporary site that the folder can't update later.
 - `fl sync` doesn't support anonymously published folders. Use `fl --anon <folder>` to update them.
 
 `fl` never publishes anonymously unless you pass `--anon`. Without a login and without `--anon` it exits with status 1 and suggests both `fl login` and `fl --anon <path>`.
+
+## JSON output
+
+Add `--json` to get the result as one JSON object on stdout; progress and messages go to stderr. It implies `--yes`, so it never waits for input.
+
+```bash
+fl --anon --json ./my-report
+```
+
+```json
+{
+  "ok": true,
+  "url": "https://k3x9q2mf-anon.flowershow.me",
+  "siteId": "cm…",
+  "siteName": "k3x9q2mf",
+  "anon": true,
+  "claimUrl": "https://flowershow.app/claim?siteId=…#token=fs_claim_…",
+  "expiresAt": "2026-10-29T12:00:00.000Z"
+}
+```
+
+`claimUrl` and `expiresAt` are only set for anonymous sites. `claimed` is `true` when the run added the folder's anonymous site to your account. On failure, `ok` is `false`, `error` holds the message and `fl` exits with status 1; fields already known (such as a new site's `claimUrl`) are still included.
 
 ## Environment token
 
