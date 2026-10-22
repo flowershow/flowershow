@@ -10,6 +10,7 @@ import (
 
 	"github.com/flowershow/publish/internal/api"
 	"github.com/flowershow/publish/internal/auth"
+	"github.com/flowershow/publish/internal/claims"
 	"github.com/flowershow/publish/internal/localconfig"
 	"github.com/flowershow/publish/internal/ui"
 )
@@ -465,7 +466,7 @@ func TestPublishAnonSingleFile(t *testing.T) {
 	if readRawConfig(t, dir) != "" {
 		t.Fatal("single-file anon publish must not write .flowershow")
 	}
-	if !strings.Contains(out, "Single files can't be updated without an account. Publish a folder, or run `fl login`.") {
+	if !strings.Contains(out, anonNotLinkableNote) {
 		t.Fatalf("output should explain single files can't be updated, got:\n%s", out)
 	}
 	if !strings.Contains(out, anonClaimURL) {
@@ -648,36 +649,119 @@ func TestPublishLoggedInAfterClaimUpdatesClaimedSite(t *testing.T) {
 	}
 }
 
-func TestPublishLoggedInIgnoresAnonConfigAndShowsClaimLink(t *testing.T) {
-	for _, siteID := range []string{anonSiteID, "anon-deleted"} {
-		t.Run(siteID, func(t *testing.T) {
-			testPublishLoggedInIgnoresAnonConfig(t, siteID)
-		})
-	}
-}
-
-// testPublishLoggedInIgnoresAnonConfig: the anonymous site isn't the user's
-// (still anonymous: 403, or gone: 404), so a new account site is created.
-func testPublishLoggedInIgnoresAnonConfig(t *testing.T, siteID string) {
+// flowershow-2yl: a logged-in `fl <folder>` on a folder published with
+// --anon claims the anonymous site into the account (the claim token is on
+// this computer) and updates it, instead of creating a new site.
+func TestPublishLoggedInClaimsAnonSiteAndUpdatesIt(t *testing.T) {
 	f := setupFakeAPI(t, true)
-	dir := makeAnonFolder(t, "notes", siteID, anonClaimToken)
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
 
 	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
 
 	if err != nil {
 		t.Fatalf("unexpected error: %v\n%s", err, out)
 	}
+	if len(f.claimCalls) != 1 || f.claimCalls[0] != "Bearer "+testToken+" "+anonClaimToken {
+		t.Fatalf("expected one claim with the user's token and the claim token, got %v", f.claimCalls)
+	}
+	if got := f.createdNames(); len(got) != 0 {
+		t.Fatalf("must not create a new site, created %v", got)
+	}
+	if ids := f.syncIDs(); len(ids) != 1 || ids[0] != anonSiteID || f.syncAuth[0] != "Bearer "+testToken {
+		t.Fatalf("expected a sync to the claimed site with the user's token, got %v %v", ids, f.syncAuth)
+	}
+	if !strings.Contains(out, "Added this folder's anonymous site to your account") || !strings.Contains(out, anonLiveURL) {
+		t.Fatalf("output should say the site was added to the account, got:\n%s", out)
+	}
+	if cfg := localconfig.Read(dir); cfg == nil || cfg.SiteName != "quiet-otter-anon" || cfg.IsAnon() {
+		t.Fatalf("expected .flowershow relinked to the claimed site, got %+v", cfg)
+	}
+	if c := claims.Get(anonSiteID); c != nil {
+		t.Fatalf("claim token should be forgotten after claiming, got %+v", c)
+	}
+}
+
+// Without the claim token on this computer the site can't be claimed: a new
+// account site is published, with a note and the claim link.
+func TestPublishLoggedInAnonWithoutTokenPublishesNewSite(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	dir := makeFolder(t, "notes", "")
+	if err := localconfig.Write(dir, &localconfig.Config{Anon: true, SiteID: anonSiteID, LiveURL: anonLiveURL}); err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+
+	if err != nil {
+		t.Fatalf("unexpected error: %v\n%s", err, out)
+	}
+	if len(f.claimCalls) != 0 || f.syncedTo(anonSiteID) {
+		t.Fatalf("must not claim or sync the anonymous site, claims %v syncs %v", f.claimCalls, f.syncIDs())
+	}
 	if got := f.createdNames(); len(got) != 1 || got[0] != "notes" {
 		t.Fatalf("expected account site 'notes' to be created, got %v", got)
 	}
-	if f.syncedTo(anonSiteID) {
-		t.Fatal("logged-in publish must not sync to the anonymous site")
-	}
-	if !strings.Contains(out, "without an account") || !strings.Contains(out, anonClaimURL) {
-		t.Fatalf("output should note the earlier anonymous publish and its claim link, got:\n%s", out)
+	if !strings.Contains(out, "claim token isn't on this computer") {
+		t.Fatalf("output should explain why the site wasn't claimed, got:\n%s", out)
 	}
 	if cfg := localconfig.Read(dir); cfg == nil || cfg.SiteName != "notes" || cfg.Anon {
 		t.Fatalf("expected folder to be linked to account site 'notes', got %+v", cfg)
+	}
+}
+
+// The anonymous site can't be claimed (deleted, expired, or claimed by
+// someone else): publish a new account site and say why.
+func TestPublishLoggedInAnonUnclaimablePublishesNewSite(t *testing.T) {
+	cases := []struct {
+		name, siteID string
+		claimStatus  int
+		want         string
+	}{
+		{"deleted", "anon-deleted", 0, "has expired or been deleted"},
+		{"expired", anonSiteID, 410, "has expired or been deleted"},
+		{"claimed elsewhere", anonSiteID, 409, "was added to another Flowershow account"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			f := setupFakeAPI(t, true)
+			f.claimStatus = tc.claimStatus
+			dir := makeAnonFolder(t, "notes", tc.siteID, anonClaimToken)
+
+			out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+
+			if err != nil {
+				t.Fatalf("unexpected error: %v\n%s", err, out)
+			}
+			if got := f.createdNames(); len(got) != 1 || got[0] != "notes" {
+				t.Fatalf("expected account site 'notes' to be created, got %v", got)
+			}
+			if !strings.Contains(out, tc.want) {
+				t.Fatalf("output should say %q, got:\n%s", tc.want, out)
+			}
+			if strings.Contains(out, anonClaimURL) {
+				t.Fatalf("should not offer a claim link that can't work, got:\n%s", out)
+			}
+		})
+	}
+}
+
+// cze (3): only "not yours" (403) or "gone" (404) may lead to a new site; a
+// server or network error must not create a duplicate.
+func TestPublishLoggedInAnonLookupErrorDoesNotCreateSite(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	f.siteStatus[anonSiteID] = 500
+	dir := makeAnonFolder(t, "notes", anonSiteID, anonClaimToken)
+
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "", true, false, false) })
+
+	if err == nil {
+		t.Fatalf("expected an error, got:\n%s", out)
+	}
+	if got := f.createdNames(); len(got) != 0 {
+		t.Fatalf("must not create a site on a lookup error, created %v", got)
+	}
+	if cfg := localconfig.Read(dir); cfg == nil || !cfg.IsAnon() {
+		t.Fatalf(".flowershow must be left unchanged, got %+v", cfg)
 	}
 }
 

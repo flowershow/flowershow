@@ -1,8 +1,10 @@
 package cmd
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -24,10 +26,24 @@ var publishYes bool
 var publishOverwrite bool
 var publishAnon bool
 var publishAnnotations, publishAnnotationsSet bool
+var publishJSON bool
 
 // notLoggedInMsg is shown when publishing without a login and without --anon.
 // fl never publishes anonymously unless asked to.
 const notLoggedInMsg = "You're not logged in.\nRun `fl login` to publish to your account, or `fl --anon <path>` to publish without an account (expires in 7 days unless claimed)."
+
+// authFailedMsg explains a failed login check (err from auth.GetUserInfo).
+// fromEnv says the token came from FLOWERSHOW_TOKEN, which wins over
+// `fl login`, so "run fl login" alone would be wrong advice.
+func authFailedMsg(err error, fromEnv bool) string {
+	if !errors.Is(err, auth.ErrUnauthorized) {
+		return fmt.Sprintf("Couldn't check your login with Flowershow (%s). Check your connection and try again.", err)
+	}
+	if fromEnv {
+		return "FLOWERSHOW_TOKEN is set but Flowershow rejected it (expired, revoked or mistyped).\nCheck the token, or unset FLOWERSHOW_TOKEN to use your `fl login` session. To publish without an account, use `fl --anon <path>`."
+	}
+	return "Your login has expired or was revoked.\nRun `fl login` to log in again, or `fl --anon <path>` to publish without an account (expires in 7 days unless claimed)."
+}
 
 // anonGoneMsg is shown when a saved anonymous site can no longer be updated
 // (expired, deleted, or the token is no longer valid).
@@ -37,8 +53,9 @@ const anonGoneMsg = "This anonymous site has expired or been deleted, so it can'
 // an account. The link is kept so a logged-in `fl` can relink to that site.
 const anonClaimedMsg = "This site has been added to a Flowershow account, so it can't be updated with --anon. Run `fl login` with that account, then publish this folder without --anon to update it."
 
-// anonSingleFilesNote is shown after an anonymous publish that can't be linked.
-const anonSingleFilesNote = "Single files can't be updated without an account. Publish a folder, or run `fl login`."
+// anonNotLinkableNote is shown after an anonymous publish of files (or
+// several paths), which has no folder to link, so it can't be updated.
+const anonNotLinkableNote = "Sites published from files or from several paths can't be updated without an account. Publish a single folder, or run `fl login`."
 
 func init() {
 	rootCmd.Args = cobra.ArbitraryArgs
@@ -47,14 +64,68 @@ func init() {
 	rootCmd.Flags().BoolVar(&publishOverwrite, "overwrite", false, "Allow publishing an unlinked path into an existing site with the same name, replacing its content")
 	rootCmd.Flags().BoolVar(&publishAnon, "anon", false, "Publish without an account. The site expires in 7 days unless claimed; prints a claim link.")
 	rootCmd.Flags().BoolVar(&publishAnnotations, "annotations", false, "Turn annotations on (or off with --annotations=false): anyone with the link can select text and leave a note")
+	rootCmd.Flags().BoolVar(&publishJSON, "json", false, "Print the result as JSON on stdout (url, siteId, claimUrl, expiresAt, ...); progress goes to stderr. Implies --yes. For scripts and agents.")
 	rootCmd.RunE = func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
 			return cmd.Help()
 		}
 		publishAnnotationsSet = cmd.Flags().Changed("annotations")
+		if publishJSON {
+			return runPublishJSON(os.Stdout, args, publishName, publishOverwrite, publishAnon)
+		}
 		ui.Header("Flowershow")
 		return runPublish(args, publishName, publishYes, publishOverwrite, publishAnon)
 	}
+}
+
+// publishResult is what `fl --json` prints on stdout, and is filled in as a
+// publish goes: whatever is known is printed even if the publish fails (e.g.
+// an anonymous site's claim link after a failed upload).
+type publishResult struct {
+	OK        bool   `json:"ok"`
+	URL       string `json:"url,omitempty"`
+	SiteID    string `json:"siteId,omitempty"`
+	SiteName  string `json:"siteName,omitempty"`
+	Anon      bool   `json:"anon"`
+	ClaimURL  string `json:"claimUrl,omitempty"`
+	ExpiresAt string `json:"expiresAt,omitempty"`
+	// Claimed is true if this run added the folder's anonymous site to the
+	// user's account before publishing to it.
+	Claimed bool   `json:"claimed,omitempty"`
+	Error   string `json:"error,omitempty"`
+}
+
+// lastResult is the result of the current publish (see publishResult).
+var lastResult publishResult
+
+// recordSite notes the site being published to, for --json.
+func recordSite(site api.Site, siteName string) {
+	lastResult.URL, lastResult.SiteID = site.URL, site.ID
+	if siteName != "" {
+		lastResult.SiteName = siteName
+	} else if site.ProjectName != "" {
+		lastResult.SiteName = site.ProjectName
+	}
+}
+
+// runPublishJSON runs a non-interactive publish with all human-readable
+// output on stderr, then prints the result as one JSON object to out.
+func runPublishJSON(out io.Writer, args []string, nameFlag string, overwrite, anon bool) error {
+	lastResult = publishResult{}
+	realStdout := os.Stdout
+	os.Stdout = os.Stderr
+	err := runPublish(args, nameFlag, true, overwrite, anon)
+	os.Stdout = realStdout
+
+	res := lastResult
+	res.OK = err == nil
+	if err != nil {
+		res.Error = err.Error()
+	}
+	enc := json.NewEncoder(out)
+	enc.SetIndent("", "  ")
+	_ = enc.Encode(res)
+	return err
 }
 
 // runPublish publishes inputPaths. skipConfirm (--yes) only skips the
@@ -87,7 +158,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 		userInfo, err = auth.GetUserInfo(config.APIURL(), tokenData.Token)
 		if err != nil {
 			sp.Fail("Authentication failed")
-			return fail("You must be authenticated to use this command.\nRun `fl login` to authenticate.")
+			return fail(authFailedMsg(err, auth.TokenFromEnv()))
 		}
 		sp.Succeed(fmt.Sprintf("Logged in as: %s", userInfo.DisplayName()))
 	}
@@ -111,32 +182,35 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 		localCfg = loadLink(folderPath)
 	}
 
-	// A link to an anonymous site is only used by --anon. For account
-	// publishing: if the site has since been claimed into this account,
-	// relink the folder to it; otherwise the folder counts as unlinked, and
-	// we point out the earlier anonymous site so it can still be claimed.
+	// A link to an anonymous site is used as is by --anon. For account
+	// publishing, the folder is moved to the account (see adoptAnonSite):
+	// relinked to the site if it is already in this account, or claimed into
+	// it if this computer has its claim token. Otherwise the folder counts as
+	// unlinked, and we point out the earlier anonymous site so it can still
+	// be claimed.
 	var anonCfg *localconfig.Config
 	if localCfg.IsAnon() {
 		anonCfg, localCfg = localCfg, nil
-		if !anon && anonCfg.SiteID != "" {
-			if claimed, err := api.GetSiteByID(anonCfg.SiteID); err == nil {
-				localCfg = relinkClaimedSite(folderPath, anonCfg, claimed.Site)
+		if !anon {
+			adopted, err := adoptAnonSite(folderPath, anonCfg)
+			if err != nil {
+				return err
 			}
-		}
-		if !anon && localCfg == nil {
-			fmt.Printf("\n%s This folder was previously published without an account", ui.Yellow("Note:"))
-			if anonCfg.LiveURL != "" {
-				fmt.Printf(" (%s)", anonCfg.LiveURL)
-			}
-			fmt.Println(". Publishing it to your account now.")
-			if anonCfg.ClaimURL != "" {
-				fmt.Printf("To keep that earlier site, claim it:\n%s\n", anonCfg.ClaimURL)
-			}
-			fmt.Println()
+			localCfg = adopted
 		}
 	}
 	if anon && nameFlag != "" {
 		ui.PrintWarning("--name is ignored with --anon: anonymous sites get a random name.")
+	}
+	if anon && overwrite {
+		ui.PrintWarning("--overwrite is ignored with --anon: anonymous sites are always new or updated through their claim token.")
+	}
+	if anon && localCfg != nil {
+		ui.PrintWarning(fmt.Sprintf(
+			"This folder is linked to %q in your account (.flowershow). --anon publishes a separate temporary site that this folder can't update later.\n"+
+				"To update your site instead, run the same command without --anon.",
+			localCfg.SiteName,
+		))
 	}
 
 	// If --name is given and differs from the stored name, treat it as an
@@ -329,6 +403,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	}
 	site := siteData.Site
 	sp.Succeed("Site created")
+	recordSite(site, siteName)
 
 	if err := uploadNewSite(site, discovered); err != nil {
 		return err
@@ -350,20 +425,108 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	return processingError(failed)
 }
 
+// adoptAnonSite handles a logged-in publish of a folder linked to an
+// anonymous site (flowershow-2yl). It returns the folder's new account link,
+// or nil if the folder should be published as a new account site.
+//
+//   - The site is already in this account (claimed via its link): relink.
+//   - It isn't (403) and this computer has its claim token: claim it into
+//     the account, then relink, so the publish updates the same site and URL.
+//   - It can't be claimed (claimed by another account, expired, deleted, no
+//     token here): print a note and publish a new account site.
+//
+// Any other error (network, server) fails the publish rather than creating
+// a new site by mistake.
+func adoptAnonSite(folderPath string, anonCfg *localconfig.Config) (*localconfig.Config, error) {
+	if anonCfg.SiteID == "" {
+		printAnonNote(anonCfg, "")
+		return nil, nil
+	}
+	owned, err := api.GetSiteByID(anonCfg.SiteID)
+	if err == nil {
+		return relinkClaimedSite(folderPath, anonCfg, owned.Site.ProjectName, owned.Site.URL,
+			"This folder's site was claimed into your account; updating"), nil
+	}
+	var httpErr *api.HTTPError
+	if !errors.As(err, &httpErr) || (httpErr.StatusCode != 403 && httpErr.StatusCode != 404) {
+		return nil, fail(fmt.Sprintf("Couldn't check this folder's anonymous site: %s\nNothing was published. Try again in a moment.", err))
+	}
+	if httpErr.StatusCode == 404 {
+		localconfig.ForgetClaim(anonCfg.SiteID)
+		anonCfg.ClaimURL = ""
+		printAnonNote(anonCfg, "has expired or been deleted")
+		return nil, nil
+	}
+	if anonCfg.ClaimToken == "" {
+		printAnonNote(anonCfg, "")
+		return nil, nil
+	}
+
+	claimed, err := api.ClaimSite(anonCfg.SiteID, anonCfg.ClaimToken)
+	if err != nil {
+		if !errors.As(err, &httpErr) {
+			return nil, fail(fmt.Sprintf("Couldn't add this folder's anonymous site to your account: %s\nNothing was published. Try again in a moment.", err))
+		}
+		switch httpErr.StatusCode {
+		case 409:
+			localconfig.ForgetClaim(anonCfg.SiteID)
+			anonCfg.ClaimURL = ""
+			printAnonNote(anonCfg, "was added to another Flowershow account")
+			return nil, nil
+		case 404, 410:
+			localconfig.ForgetClaim(anonCfg.SiteID)
+			anonCfg.ClaimURL = ""
+			printAnonNote(anonCfg, "has expired or been deleted")
+			return nil, nil
+		case 401, 403:
+			printAnonNote(anonCfg, "couldn't be added to your account (its claim token was not accepted)")
+			return nil, nil
+		default:
+			return nil, fail(fmt.Sprintf("Couldn't add this folder's anonymous site to your account: %s\nNothing was published. Try again in a moment.", err))
+		}
+	}
+	lastResult.Claimed = true
+	msg := "Added this folder's anonymous site to your account (it no longer expires); updating"
+	if claimed.AlreadyClaimed {
+		msg = "This folder's site was claimed into your account; updating"
+	}
+	return relinkClaimedSite(folderPath, anonCfg, claimed.Site.ProjectName, claimed.Site.URL, msg), nil
+}
+
+// printAnonNote tells the user that the folder's earlier anonymous site
+// won't be updated and a new account site is being published. why, if set,
+// says what happened to the anonymous site.
+func printAnonNote(anonCfg *localconfig.Config, why string) {
+	fmt.Printf("\n%s This folder was previously published without an account", ui.Yellow("Note:"))
+	if anonCfg.LiveURL != "" {
+		fmt.Printf(" (%s)", anonCfg.LiveURL)
+	}
+	if why != "" {
+		fmt.Printf(". That site %s", why)
+	} else if anonCfg.ClaimToken == "" {
+		fmt.Print(". Its claim token isn't on this computer, so it can't be moved to your account from here")
+	}
+	fmt.Println(". Publishing this folder as a new site in your account.")
+	if anonCfg.ClaimURL != "" {
+		fmt.Printf("To keep that earlier site too, claim it:\n%s\n", anonCfg.ClaimURL)
+	}
+	fmt.Println()
+}
+
 // relinkClaimedSite rewrites folderPath's .flowershow, which linked to an
-// anonymous site that has since been claimed into the user's account, to link
-// to that site by name (dropping the anonymous fields). It returns the new
-// local config.
-func relinkClaimedSite(folderPath string, anonCfg *localconfig.Config, site api.SiteDetail) *localconfig.Config {
+// anonymous site that is now in the user's account, to link to that site by
+// name (dropping the anonymous fields), and prints msg with the site's URL.
+// It returns the new local config.
+func relinkClaimedSite(folderPath string, anonCfg *localconfig.Config, projectName, siteURL, msg string) *localconfig.Config {
 	cfg := *anonCfg
 	cfg.Anon, cfg.SiteID, cfg.ClaimToken, cfg.ExpiresAt, cfg.LiveURL, cfg.ClaimURL = false, "", "", "", "", ""
-	cfg.SiteName = site.ProjectName
+	cfg.SiteName = projectName
 	if err := localconfig.Write(folderPath, &cfg); err != nil {
 		ui.PrintWarning(fmt.Sprintf("Couldn't update .flowershow: %s", err))
 	} else {
 		localconfig.ForgetClaim(anonCfg.SiteID)
 	}
-	fmt.Printf("\n%s This folder's site was claimed into your account; updating %s\n\n", ui.Green("✓"), site.URL)
+	fmt.Printf("\n%s %s %s\n\n", ui.Green("✓"), msg, siteURL)
 	return &cfg
 }
 
@@ -446,9 +609,11 @@ func processingError(failed int) error {
 func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folderPath string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time) error {
 	defer api.SetTokenOverride("")
 
+	lastResult.Anon = true
 	if saved != nil && saved.ClaimToken != "" {
 		api.SetTokenOverride(saved.ClaimToken)
 		site := api.Site{ID: saved.SiteID, URL: saved.LiveURL}
+		lastResult.ClaimURL, lastResult.ExpiresAt = saved.ClaimURL, saved.ExpiresAt
 		failed, err := syncToSite(site, "anonymous site", discovered, sp, startTime, false)
 		if err != nil {
 			var httpErr *api.HTTPError
@@ -496,6 +661,11 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 	}
 	sp.Succeed("Site created")
 	api.SetTokenOverride(created.ClaimToken)
+	lastResult.URL, lastResult.SiteID, lastResult.SiteName = created.LiveURL, created.SiteID, created.ProjectName
+	lastResult.ClaimURL, lastResult.ExpiresAt = created.ClaimURL, created.ExpiresAt
+	// Print the claim link now, not only at the end: if the upload is
+	// interrupted (e.g. an agent's tool call times out), it isn't lost.
+	fmt.Printf("  Site: %s\n  Claim link (keep it; claim to keep the site): %s\n", created.LiveURL, created.ClaimURL)
 
 	// Link the folder straight away (not after upload), so a failed upload
 	// can be retried into the same site.
@@ -529,9 +699,9 @@ func runAnonPublish(saved *localconfig.Config, isFolderMode, canLink bool, folde
 	printAnonSuccess(created.LiveURL, created.ClaimURL, created.ExpiresAt)
 	switch {
 	case !isFolderMode:
-		fmt.Println(anonSingleFilesNote)
+		fmt.Println(anonNotLinkableNote)
 	case !canLink:
-		fmt.Println("This folder's .flowershow links it to a site in your account, so it was left unchanged and this anonymous site can't be updated from here.")
+		fmt.Println("This folder's .flowershow still links it to your account site, so this anonymous site can't be updated from here.")
 	}
 	return processingError(failed)
 }
@@ -595,6 +765,11 @@ func doSync(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.
 // request itself is returned unprinted, so the caller can explain it. It
 // returns the number of files that failed to process (see waitForProcessing).
 func syncToSite(site api.Site, siteName string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time, reportPlanErr bool) (int, error) {
+	if lastResult.Anon {
+		lastResult.URL, lastResult.SiteID = site.URL, site.ID
+	} else {
+		recordSite(site, siteName)
+	}
 	fmt.Printf("  Publishing to: %s\n", ui.Cyan(site.URL))
 
 	var fileMetadata []api.FileMetadata
