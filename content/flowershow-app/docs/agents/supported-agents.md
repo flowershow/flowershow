@@ -101,7 +101,7 @@ curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli
 fl login
 ```
 
-See the [CLI reference](/docs/reference/cli#installation) for Windows and manual installs. The CLI is the Go binary `fl`; the old npm packages `flowershow` and `@flowershow/publish` are deprecated, so don't let an agent install them.
+See the [CLI reference](/docs/reference/cli#installation) for Windows and manual installs. The CLI is the Go binary `fl`.
 
 ## What the agent can do
 

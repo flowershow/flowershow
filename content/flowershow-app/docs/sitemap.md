@@ -44,7 +44,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Apply a theme](/docs/reference/apply-a-theme) — Apply one of Flowershow's themes from the dashboard or config.json, and customize it further.
 - [Backlinks](/docs/reference/backlinks) — Show a list of pages that link to the current page.
 - [Changelog](/docs/reference/changelog) — Publish a changelog: Flowershow turns a changelog folder or a CHANGELOG.md file into a timeline page automatically
-- [Flowershow CLI](/docs/reference/cli) — Install and use fl, the Flowershow CLI, to publish your notes from the terminal. A single binary, no Node.js or npm needed (the old npm packages are deprecated).
+- [Flowershow CLI](/docs/reference/cli) — Install and use fl, the Flowershow CLI, to publish your notes from the terminal. A single binary, no Node.js or npm needed.
 - [Comments](/docs/reference/comments) — Enable comments on your site's pages. Powered by Giscus and GitHub Discussions.
 - [`config.json` file](/docs/reference/config-file) — Reference for all available options in the config.json site configuration file.
 - [Content filtering](/docs/reference/content-filtering) — Control which files and directories get published
