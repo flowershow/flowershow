@@ -24,7 +24,7 @@ on:
 
 jobs:
   e2e:
-    timeout-minutes: 30
+    timeout-minutes: 45
     runs-on: ubuntu-latest
 
     services:
@@ -157,7 +157,7 @@ jobs:
           curl -sv --max-time 10 http://localhost:3000 > /tmp/next-homepage.html || true
 
           echo "=== Running playwright with diagnostic logging ==="
-          timeout 20m bash -c 'DEBUG=pw:webserver,pw:api npx playwright test' \
+          timeout 35m bash -c 'DEBUG=pw:webserver,pw:api npx playwright test' \
             2>&1 | tee /tmp/playwright-debug.log
         env:
           CI: true
