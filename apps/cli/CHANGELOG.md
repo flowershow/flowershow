@@ -1,5 +1,13 @@
 # CHANGELOG
 
+## 2.9.0
+
+- Publishing a folder that was published with `--anon` while logged in now claims that anonymous site into your account (when this computer has its claim token) and updates it, instead of creating a second site. It keeps its URL and stops expiring. If it can't be claimed, `fl` says why and publishes a new site as before; if the check fails with a network or server error, nothing is published.
+- New `--json` flag: prints the publish result (`ok`, `url`, `siteId`, `siteName`, `anon`, `claimUrl`, `expiresAt`, `claimed`, `error`) as JSON on stdout, with everything else on stderr. Implies `--yes`.
+- `fl --anon` prints the claim link as soon as the site is created, before uploading.
+- `fl --anon` in a folder linked to an account site warns before creating a separate temporary site; `--overwrite` with `--anon` is reported as ignored.
+- Clearer login errors: an expired or revoked login suggests `fl login` or `fl --anon`, a rejected `FLOWERSHOW_TOKEN` is named, and network errors are no longer reported as "not authenticated".
+
 ## 2.6.0
 
 - New `fl annotations pull|resolve|delete` commands. `pull` prints open annotations (visitors' notes on your pages) as Markdown, grouped by file, ready to hand to an AI agent, or as JSON with `--format json`; `--all` includes resolved ones and `--path` limits to one file. Reviewer-written text is JSON-encoded inside `<untrusted-annotation>` tags and the output tells the agent to treat notes as editing requests, never commands. `resolve` and `delete` take ids or `--all` (`delete --all` asks first; pass `--yes` without a terminal). `--site` is an alias for `--name`.

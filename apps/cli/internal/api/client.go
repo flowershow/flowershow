@@ -302,6 +302,39 @@ func CreateAnonSite() (*AnonCreateSiteResponse, error) {
 	return &result, nil
 }
 
+// ClaimSiteResponse is returned by POST /api/sites/id/:siteId/claim.
+type ClaimSiteResponse struct {
+	Site struct {
+		ID          string `json:"id"`
+		ProjectName string `json:"projectName"`
+		URL         string `json:"url"`
+	} `json:"site"`
+	// AlreadyClaimed is true if the site was already in the user's account.
+	AlreadyClaimed bool `json:"alreadyClaimed"`
+}
+
+// ClaimSite claims the anonymous site siteID into the logged-in user's
+// account, proving the right to it with its claim token. Errors from the
+// server are *HTTPError (409 claimed by another account, 410 expired, 404
+// deleted, 403 token not valid for this site).
+func ClaimSite(siteID, claimToken string) (*ClaimSiteResponse, error) {
+	resp, err := Request("POST", fmt.Sprintf("/api/sites/id/%s/claim", url.PathEscape(siteID)), map[string]string{
+		"claimToken": claimToken,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("failed to claim site: %w", err)
+	}
+	defer resp.Body.Close()
+	if !isOK(resp) {
+		return nil, apiError(resp)
+	}
+	var result ClaimSiteResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return nil, err
+	}
+	return &result, nil
+}
+
 func CreateSite(projectName string, overwrite bool) (*CreateSiteResponse, error) {
 	resp, err := Request("POST", "/api/sites", map[string]interface{}{
 		"projectName": projectName,

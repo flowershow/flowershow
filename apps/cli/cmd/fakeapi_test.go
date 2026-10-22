@@ -47,6 +47,8 @@ type fakeAPI struct {
 	uploadFails     bool              // PUT /upload/... returns 500
 	siteStatus      map[string]int    // site ID -> forced HTTP status for sync/status (e.g. 410)
 	claimTokens     map[string]string // claim token -> the one site ID it authorises
+	claimCalls      []string          // "<Authorization> <claimToken>" of each POST .../claim
+	claimStatus     int               // forced HTTP status for POST .../claim (e.g. 409)
 
 	annotations      []api.Annotation // returned by GET /api/sites/id/:id/annotations
 	annotationsQuery []string         // raw query of each annotations request
@@ -254,6 +256,36 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		default:
 			writeJSON(w, 404, map[string]string{"error": "not_found", "message": "Site not found"})
 		}
+	case strings.HasPrefix(path, "/api/sites/id/") && strings.HasSuffix(path, "/claim") && r.Method == "POST":
+		// Mirrors POST /api/sites/id/:id/claim: the user's token plus the
+		// site's claim token moves an anonymous site into the account.
+		id := strings.TrimSuffix(strings.TrimPrefix(path, "/api/sites/id/"), "/claim")
+		var body struct {
+			ClaimToken string `json:"claimToken"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		f.mu.Lock()
+		defer f.mu.Unlock()
+		f.claimCalls = append(f.claimCalls, authz+" "+body.ClaimToken)
+		if authz != "Bearer "+testToken {
+			writeJSON(w, 401, map[string]string{"error": "unauthorized", "message": "Not authenticated"})
+			return
+		}
+		if f.claimStatus != 0 {
+			writeJSON(w, f.claimStatus, map[string]string{"error": "x", "message": fakeGoneServerMsg})
+			return
+		}
+		if f.claimTokens[body.ClaimToken] != id {
+			writeJSON(w, 403, map[string]string{"error": "forbidden", "message": "This claim token is not valid for this site"})
+			return
+		}
+		delete(f.claimTokens, body.ClaimToken)
+		site := api.Site{ID: id, ProjectName: "quiet-otter-anon", URL: anonLiveURL}
+		f.sites[site.ProjectName] = site
+		writeJSON(w, 200, map[string]interface{}{
+			"site":           map[string]string{"id": id, "projectName": site.ProjectName, "url": site.URL},
+			"alreadyClaimed": false,
+		})
 	case strings.HasPrefix(path, "/api/sites/id/") && strings.HasSuffix(path, "/sync") && r.Method == "POST":
 		id := strings.TrimSuffix(strings.TrimPrefix(path, "/api/sites/id/"), "/sync")
 		var body struct {

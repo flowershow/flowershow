@@ -155,6 +155,10 @@ func PollForToken(apiURL, deviceCode string, interval, expiresIn int) (string, e
 	return "", errors.New("authorization timed out. Please try again")
 }
 
+// ErrUnauthorized is returned (wrapped) by GetUserInfo when the server
+// rejects the token: expired, revoked or mistyped.
+var ErrUnauthorized = errors.New("token rejected")
+
 func GetUserInfo(apiURL, token string) (*UserInfo, error) {
 	req, err := http.NewRequest("GET", apiURL+"/api/user", nil)
 	if err != nil {
@@ -168,6 +172,9 @@ func GetUserInfo(apiURL, token string) (*UserInfo, error) {
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode == 401 || resp.StatusCode == 403 {
+		return nil, fmt.Errorf("%w: %s", ErrUnauthorized, resp.Status)
+	}
 	if resp.StatusCode != 200 {
 		return nil, fmt.Errorf("failed to get user info: %s", resp.Status)
 	}
