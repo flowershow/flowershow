@@ -44,7 +44,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Apply a theme](/docs/reference/apply-a-theme) — Apply one of Flowershow's themes from the dashboard or config.json, and customize it further.
 - [Backlinks](/docs/reference/backlinks) — Show a list of pages that link to the current page.
 - [Changelog](/docs/reference/changelog) — Publish a changelog: Flowershow turns a changelog folder or a CHANGELOG.md file into a timeline page automatically
-- [Flowershow CLI](/docs/reference/cli) — Learn how to use the Flowershow CLI to publish your notes directly from your terminal.
+- [Flowershow CLI](/docs/reference/cli) — Install and use fl, the Flowershow CLI, to publish your notes from the terminal. A single binary, no Node.js or npm needed (the old npm packages are deprecated).
 - [Comments](/docs/reference/comments) — Enable comments on your site's pages. Powered by Giscus and GitHub Discussions.
 - [`config.json` file](/docs/reference/config-file) — Reference for all available options in the config.json site configuration file.
 - [Content filtering](/docs/reference/content-filtering) — Control which files and directories get published
@@ -62,11 +62,13 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Knowledge Graph](/docs/reference/knowledge-graph) — Show an interactive graph of how your notes connect to each other.
 - [List component](/docs/reference/list-component) — Create organized lists and content catalogs by automatically listing files in a specified directory.
 - [Listing pages](/docs/reference/listings) — A blog index, a grid of projects, a compact archive, a team page or the latest posts on your home page, from any folder, in plain Markdown.
+- [llms.txt](/docs/reference/llms-txt) — Serve an auto-generated /llms.txt that lists your pages with links to their Markdown, so AI assistants can find and read your content.
 - [Math equations](/docs/reference/math) — Write math equations with LaTeX syntax.
 - [Mermaid diagrams](/docs/reference/mermaid) — Create diagrams and visualizations using a popular, text-based syntax.
 - [Navbar configuration](/docs/reference/navbar) — Set logo, title, links and socials in your navigation bar, replace its content with your own HTML, or hide it on a page.
 - [Obsidian Bases Syntax (Beta)](/docs/reference/obsidian-bases) — Detailed reference for Obsidian Bases syntax, including filters, formulas, and view types.
 - [Obsidian Canvas](/docs/reference/obsidian-canvas) — Render Obsidian Canvas (.canvas) files as visual diagrams on your Flowershow site.
+- [Page actions (copy as Markdown, open in ChatGPT or Claude)](/docs/reference/page-actions) — Add a small menu beside each page title so readers can copy the page as Markdown or open it in ChatGPT or Claude.
 - [Page authors](/docs/reference/page-authors) — Create dedicated profile pages for authors of your content and list them in page headers
 - [Page headers](/docs/reference/page-headers) — Configure page headers and SEO meta tags.
 - [Page scripts](/docs/reference/page-scripts) — Load your own JavaScript on a single page with the scripts frontmatter field. Runs on every visit, including when readers navigate within your site.
@@ -90,7 +92,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 ## Agents
 
 - [Publishing HTML](/docs/agents/html) — How to publish HTML pages and sites with Flowershow, standalone or inside Markdown pages. Written for AI agents and the people using them.
-- [Markdown access](/docs/agents/markdown-access) — Every page on a Flowershow site is also served as raw markdown. Append .md to any URL to get clean, agent-readable content.
+- [Markdown access](/docs/agents/markdown-access) — Every Markdown page on a Flowershow site is also served as raw markdown. Append .md to its URL to get clean, agent-readable content.
 - [Publish from Claude and ChatGPT (beta)](/docs/agents/mcp) — Add Flowershow as a connector in Claude or ChatGPT, then ask it to publish what you've made. You get a live website link, with no account needed.
 - [Skills](/docs/agents/skills) — Install the Flowershow skill so your AI assistant can publish and manage Flowershow sites — via the fl CLI, a GitHub repository, or the Obsidian plugin.
 - [Supported agents](/docs/agents/supported-agents) — Which AI agents can use the Flowershow skill, how to install it in each (one file, no Node.js needed), and what each agent can do.

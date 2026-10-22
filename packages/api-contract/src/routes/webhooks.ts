@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   DomainVerificationSchema,
   ErrorSchema,
+  LlmsTxtParamsSchema,
   OgImagePageParamsSchema,
   OgImageSiteParamsSchema,
   RobotsParamsSchema,
@@ -256,6 +257,33 @@ export function registerWebhooksRoutes(registry: OpenAPIRegistry) {
       },
       '404': {
         description: 'Site not found',
+        content: { 'text/plain': { schema: z.string() } },
+      },
+    },
+  });
+
+  registry.registerPath({
+    method: 'get',
+    path: '/api/llms/{user}/{project}',
+    operationId: 'getLlmsTxt',
+    summary: 'Generate llms.txt',
+    description:
+      "Serves a site's llms.txt (https://llmstxt.org), reached as `/llms.txt` on site hosts. A published `llms.txt` file is served as-is. Otherwise, when `enableLlmsTxt` is on, lists the site's published Markdown pages with links to their `.md` source. Never generated for anonymous or password-protected sites.",
+    tags: ['SEO'],
+    security: [],
+    request: {
+      params: LlmsTxtParamsSchema,
+    },
+    responses: {
+      '200': {
+        description: 'llms.txt content',
+        content: { 'text/plain': { schema: z.string() } },
+      },
+      '302': {
+        description: "Redirect to the same file on the site's own host",
+      },
+      '404': {
+        description: 'Site not found, or llms.txt not enabled',
         content: { 'text/plain': { schema: z.string() } },
       },
     },

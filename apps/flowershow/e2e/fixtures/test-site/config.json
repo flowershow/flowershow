@@ -26,6 +26,8 @@
   ],
   "showToc": true,
   "enableRss": true,
+  "showPageActions": true,
+  "enableLlmsTxt": true,
   "footer": {
     "navigation": [
       {

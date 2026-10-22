@@ -183,6 +183,8 @@
     "/docs/reference/canvas-demo-v2.canvas"
   ],
   "showEditLink": true,
+  "showPageActions": true,
+  "enableLlmsTxt": true,
   "redirects": [
     {
       "from": "/changelog/2026-10-04-social-preview-cards",

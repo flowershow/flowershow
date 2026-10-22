@@ -141,6 +141,18 @@ export interface SiteConfig {
   enableRss?: boolean;
   showBuiltWithButton?: boolean;
   showRawLink?: boolean;
+  /**
+   * Show a page actions menu beside the title of Markdown pages: copy the page
+   * as Markdown, view its `.md` source, or open it in ChatGPT or Claude. Off by
+   * default.
+   */
+  showPageActions?: boolean;
+  /**
+   * Serve an auto-generated `/llms.txt` listing the site's pages with links to
+   * their Markdown source. Off by default; a published `llms.txt` always wins.
+   * Never generated for anonymous or password-protected sites.
+   */
+  enableLlmsTxt?: boolean;
   syntaxMode?: 'auto' | 'md' | 'mdx';
 
   // Not configurable via dashboard — set in config.json only

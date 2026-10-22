@@ -492,6 +492,13 @@ export const RssParamsSchema = z.object({
 });
 export type RssParams = z.infer<typeof RssParamsSchema>;
 
+// GET /api/llms/:user/:project (served at /llms.txt on site hosts)
+export const LlmsTxtParamsSchema = z.object({
+  user: z.string(),
+  project: z.string(),
+});
+export type LlmsTxtParams = z.infer<typeof LlmsTxtParamsSchema>;
+
 // GET /api/og/:user/:project/:slug*
 export const OgImageParamsSchema = z.object({
   user: z.string(),

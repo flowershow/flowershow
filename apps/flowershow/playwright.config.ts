@@ -62,6 +62,8 @@ export default defineConfig({
       testMatch: [
         '**/links-and-embeds.spec.ts',
         '**/rss.spec.ts',
+        // /llms.txt is routed per host: check the custom-domain rewrite too.
+        '**/llms-txt.spec.ts',
         // Raw HTML is served only on the site's own host: exercise it on a
         // custom domain too (middleware rewrite + host check end to end).
         '**/html-page.spec.ts',

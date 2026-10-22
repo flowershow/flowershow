@@ -29,7 +29,7 @@ const GROUPS = [
     title: 'Page header, hero, and rendered content',
     description:
       'Page identity, hero content, Markdown body, code controls, images, and task-list hooks.',
-    dom: `.page-hero-container\n└─ .page-hero[.has-image | .image-full]\nmain.page-main (structural wrapper)\n├─ .page-header\n│  ├─ .page-header-title\n│  ├─ .page-header-description\n│  └─ .page-header-metadata-container\n└─ .page-body (structural wrapper)\n   └─ .rendered-mdx[.is-plain]`,
+    dom: `.page-hero-container\n└─ .page-hero[.has-image | .image-full]\nmain.page-main (structural wrapper)\n├─ .page-header\n│  ├─ .page-header-title (or .page-header-title-row > h1.page-header-title, .page-header-actions)\n│  │  └─ .page-actions > button.page-actions-copy, button.page-actions-toggle, .page-actions-menu > .page-actions-item (showPageActions)\n│  ├─ .page-header-description\n│  └─ .page-header-metadata-container\n└─ .page-body (structural wrapper)\n   └─ .rendered-mdx[.is-plain]`,
   },
   {
     id: 'post',
@@ -153,7 +153,8 @@ export function classifyClassName(name) {
   if (/^(site-subnav|site-tree|site-sidebar|sidebar-drawer)/.test(name))
     return 'sidebar';
   if (/^(page-toc|toc(?:-|$))/.test(name)) return 'toc';
-  if (/^list-component|^listing-page(?:$|-)|^listing-layout$/.test(name)) return 'listings';
+  if (/^list-component|^listing-page(?:$|-)|^listing-layout$/.test(name))
+    return 'listings';
   if (/^post-/.test(name)) return 'post';
   if (/^tags?-/.test(name)) return 'tags';
   if (/^changelog/.test(name)) return 'changelog';
@@ -163,7 +164,7 @@ export function classifyClassName(name) {
   if (/^(graph-|pdf-|canvas-|image-lightbox)/.test(name)) return 'embeds';
   if (/^(error-|not-found)/.test(name)) return 'errors';
   if (
-    /^(page-(header|hero)|rendered-mdx|heading-link|pre-|contains-task-list)/.test(
+    /^(page-(header|hero|actions)|rendered-mdx|heading-link|pre-|contains-task-list)/.test(
       name,
     )
   ) {

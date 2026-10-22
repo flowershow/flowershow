@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **348 styled class selectors**:
-**346 stable semantic hooks** and **2 non-contract
+and currently documents **358 styled class selectors**:
+**356 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -193,7 +193,8 @@ Page identity, hero content, Markdown body, code controls, images, and task-list
 └─ .page-hero[.has-image | .image-full]
 main.page-main (structural wrapper)
 ├─ .page-header
-│  ├─ .page-header-title
+│  ├─ .page-header-title (or .page-header-title-row > h1.page-header-title, .page-header-actions)
+│  │  └─ .page-actions > button.page-actions-copy, button.page-actions-toggle, .page-actions-menu > .page-actions-item (showPageActions)
 │  ├─ .page-header-description
 │  └─ .page-header-metadata-container
 └─ .page-body (structural wrapper)
@@ -204,6 +205,16 @@ main.page-main (structural wrapper)
 | --- | --- |
 | <code>.contains-task-list</code> | Hook |
 | <code>.heading-link</code> | Hook |
+| <code>.page-actions</code> | Hook |
+| <code>.page-actions-copy</code> | Hook |
+| <code>.page-actions-external</code> | Hook |
+| <code>.page-actions-icon</code> | Hook |
+| <code>.page-actions-item</code> | Hook |
+| <code>.page-actions-item-description</code> | Hook |
+| <code>.page-actions-item-text</code> | Hook |
+| <code>.page-actions-item-title</code> | Hook |
+| <code>.page-actions-menu</code> | Hook |
+| <code>.page-actions-toggle</code> | Hook |
 | <code>.page-header</code> | Hook |
 | <code>.page-header-actions</code> | Hook |
 | <code>.page-header-author-avatar</code> | Hook |

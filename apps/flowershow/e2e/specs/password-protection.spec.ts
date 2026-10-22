@@ -28,6 +28,11 @@ test.describe('Password-protected site', () => {
       expect(page.url()).toContain('/_login');
     });
 
+    test('llms.txt redirects to login', async ({ page }) => {
+      await page.goto('/llms.txt');
+      expect(page.url()).toContain('/_login');
+    });
+
     test('direct API call to non-image raw file returns 401', async ({
       page,
       baseURL,
@@ -78,6 +83,13 @@ test.describe('Password-protected site', () => {
       const response = await page.goto('/docs/test.html');
       expect(page.url()).not.toContain('/_login');
       expect(response?.status()).toBe(200);
+    });
+
+    test('llms.txt is never generated, even with enableLlmsTxt on', async ({
+      page,
+    }) => {
+      const response = await page.request.get('/llms.txt');
+      expect(response.status()).toBe(404);
     });
 
     test('custom.css is a privately cached same-origin stylesheet', async ({

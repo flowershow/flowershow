@@ -136,6 +136,8 @@ function buildConfigShape(mode: Mode) {
     enableRss: z.boolean(),
     showBuiltWithButton: z.boolean(),
     showRawLink: z.boolean(),
+    showPageActions: z.boolean(),
+    enableLlmsTxt: z.boolean(),
     syntaxMode: enumOrString(['auto', 'md', 'mdx']),
     showHero: z.boolean(),
     hero: z.union([z.boolean(), heroObjectSchema]),
