@@ -561,6 +561,10 @@
       "to": "/docs/reference/analytics"
     },
     {
+      "from": "/contact",
+      "to": "/support"
+    },
+    {
       "from": "/blog/2026-10-11-listing-pages-tutorial",
       "to": "/blog/listing-pages-tutorial"
     }
