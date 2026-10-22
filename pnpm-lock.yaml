@@ -412,8 +412,8 @@ importers:
         specifier: ^10.5.7
         version: 10.5.7(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(esbuild@0.28.2)(rollup@4.62.4)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.9.6)(react@19.2.1))(vite@7.3.6(@types/node@26.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.23.12)(yaml@2.9.0))(webpack@5.105.2(esbuild@0.28.2)(postcss@8.5.26))
       '@storybook/addon-vitest':
-        specifier: ^10.5.7
-        version: 10.5.7(@vitest/browser@3.2.7)(@vitest/runner@3.2.7)(react@19.2.1)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.9.6)(react@19.2.1))(vitest@3.2.7)
+        specifier: ^10.6.2
+        version: 10.6.2(@vitest/browser@3.2.7)(@vitest/runner@3.2.7)(react@19.2.1)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.9.6)(react@19.2.1))(vitest@3.2.7)
       '@storybook/nextjs-vite':
         specifier: ^10.5.7
         version: 10.5.7(@babel/core@7.29.7)(@types/react-dom@19.2.2(@types/react@19.2.2))(@types/react@19.2.2)(esbuild@0.28.2)(next@15.5.28(@babel/core@7.29.7)(@opentelemetry/api@1.9.1)(@playwright/test@1.62.1)(@types/node@26.2.0)(react-dom@19.2.1(react@19.2.1))(react@19.2.1))(react-dom@19.2.1(react@19.2.1))(react@19.2.1)(rollup@4.62.4)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.9.6)(react@19.2.1))(typescript@5.9.3)(vite@7.3.6(@types/node@26.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.23.12)(yaml@2.9.0))(webpack@5.105.2(esbuild@0.28.2)(postcss@8.5.26))
@@ -4058,14 +4058,14 @@ packages:
       '@types/react':
         optional: true
 
-  '@storybook/addon-vitest@10.5.7':
-    resolution: {integrity: sha512-7NK7Kzazc2vb2h8nGlH15QlUn5J6/LV0xF70VziAK0bxu3r1JupLCoBvckX39vHzFXiAZljXZtt1Wq/OidBxow==}
+  '@storybook/addon-vitest@10.6.2':
+    resolution: {integrity: sha512-gyyBzncvUyEgWQR3LinnGuI4UsWIUYLyw1u8i244aTxmY4uxCYjsDmUNkaSr8xQzNz8nh2Ckh3G4bO4SvJ6nJQ==}
     peerDependencies:
-      '@vitest/browser': ^3.0.0 || ^4.0.0
-      '@vitest/browser-playwright': ^4.0.0
-      '@vitest/runner': ^3.0.0 || ^4.0.0
-      storybook: ^10.5.7
-      vitest: ^3.0.0 || ^4.0.0
+      '@vitest/browser': ^3.0.0 || ^4.0.0 || ^5.0.0
+      '@vitest/browser-playwright': ^4.0.0 || ^5.0.0
+      '@vitest/runner': ^3.0.0 || ^4.0.0 || ^5.0.0
+      storybook: ^10.6.2
+      vitest: ^3.0.0 || ^4.0.0 || ^5.0.0
     peerDependenciesMeta:
       '@vitest/browser':
         optional: true
@@ -4105,6 +4105,11 @@ packages:
 
   '@storybook/icons@2.1.0':
     resolution: {integrity: sha512-Fxh9vYpX9bQqFeHRiY8h2ApeRGDzRSMLwJwNZ/AIRqnyOKHxRKL+yFe+ctEkVJmuptRE9u1Hrn8ZZNHyfDKKNg==}
+    peerDependencies:
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+
+  '@storybook/icons@2.2.0':
+    resolution: {integrity: sha512-FpUB/xizIrV1ILhCIYFo+TtQNN9YEoLjfcnAW0JtOXL+BcM2aisSysI0B54JMWDnljriXySBHgN6ps4s9lb75A==}
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
@@ -5299,8 +5304,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  baseline-browser-mapping@2.11.30:
-    resolution: {integrity: sha512-YJs6Pz17RMNv8HoyKREtCY38E3BV1nPkWVmIb+XN1uHC1Vqt3KZCH/uJH9ZKRoiKb/icZ6tvehyee6RZNbFfRA==}
+  baseline-browser-mapping@2.11.31:
+    resolution: {integrity: sha512-b0k7wXlWjpuL/Uxb/pYlpjY0ej5BjAmurtPUk3eRGuloI4yjK32m8TiKUQ81l1ptcLjKS/KH2+uqIolZti1x4Q==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -14945,10 +14950,10 @@ snapshots:
       - vite
       - webpack
 
-  '@storybook/addon-vitest@10.5.7(@vitest/browser@3.2.7)(@vitest/runner@3.2.7)(react@19.2.1)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.9.6)(react@19.2.1))(vitest@3.2.7)':
+  '@storybook/addon-vitest@10.6.2(@vitest/browser@3.2.7)(@vitest/runner@3.2.7)(react@19.2.1)(storybook@10.5.7(@types/react@19.2.2)(prettier@3.9.6)(react@19.2.1))(vitest@3.2.7)':
     dependencies:
       '@storybook/global': 5.0.0
-      '@storybook/icons': 2.1.0(react@19.2.1)
+      '@storybook/icons': 2.2.0(react@19.2.1)
       storybook: 10.5.7(@types/react@19.2.2)(prettier@3.9.6)(react@19.2.1)
     optionalDependencies:
       '@vitest/browser': 3.2.7(playwright@1.62.1)(vite@7.3.6(@types/node@26.2.0)(jiti@1.21.7)(terser@5.46.0)(tsx@4.23.12)(yaml@2.9.0))(vitest@3.2.7)
@@ -14981,6 +14986,10 @@ snapshots:
   '@storybook/global@5.0.0': {}
 
   '@storybook/icons@2.1.0(react@19.2.1)':
+    dependencies:
+      react: 19.2.1
+
+  '@storybook/icons@2.2.0(react@19.2.1)':
     dependencies:
       react: 19.2.1
 
@@ -16341,7 +16350,7 @@ snapshots:
 
   baseline-browser-mapping@2.11.13: {}
 
-  baseline-browser-mapping@2.11.30:
+  baseline-browser-mapping@2.11.31:
     optional: true
 
   basic-ftp@5.3.1:
@@ -16428,7 +16437,7 @@ snapshots:
 
   browserslist@4.29.4:
     dependencies:
-      baseline-browser-mapping: 2.11.30
+      baseline-browser-mapping: 2.11.31
       caniuse-lite: 1.0.30001819
       electron-to-chromium: 1.5.463
       node-releases: 2.0.60
