@@ -138,8 +138,8 @@ importers:
         specifier: 0.0.0-insiders.589ea90
         version: 0.0.0-insiders.589ea90(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
       '@modelcontextprotocol/sdk':
-        specifier: ^1.31.0
-        version: 1.31.0(zod@4.4.3)
+        specifier: ^1.32.0
+        version: 1.32.0(zod@4.4.3)
       '@mui/material':
         specifier: ^7.3.11
         version: 7.3.11(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.1))(@types/react@19.2.2)(react@19.2.1))(@types/react@19.2.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)
@@ -2025,11 +2025,11 @@ packages:
       react: ^18 || ^19 || ^19.0.0-rc
       react-dom: ^18 || ^19 || ^19.0.0-rc
 
-  '@hono/node-server@2.1.3':
-    resolution: {integrity: sha512-TA//nWMqPhbfdfneACk6t5a9eqbS9lABEPyKn0/xZTah3H3U2XaVg85rJFl0/Fyit0I552YDHgXGVSf3GwqbUw==}
+  '@hono/node-server@2.1.5':
+    resolution: {integrity: sha512-MgP/I06GdvsilDspMk/qmRzpk8LOUStP6jFAbSRi40W09DhoyUn+Mj7eyKICPqeYKybOjVFLVIAQzvu1bfIa7Q==}
     engines: {node: '>=20'}
     peerDependencies:
-      hono: ^4
+      hono: ^4 || ^5.0.0-0
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2455,8 +2455,8 @@ packages:
   '@mermaid-js/parser@1.2.1':
     resolution: {integrity: sha512-n12NohV3mrUyUL2o93IgG/ifeW9FTyeJn3zDxkhwa8MJ9Fxg3HQMlA3RiGmD/3UnJvheztkjjQAjA2T4LmUcpw==}
 
-  '@modelcontextprotocol/sdk@1.31.0':
-    resolution: {integrity: sha512-UvTMgnNlnIBO/22ob2RcVGDlcvOslQs8T59+FTGdA0L27a39fdGF/EDETNtDVK4DZGpwomlsYpRdA8UXcVL/pw==}
+  '@modelcontextprotocol/sdk@1.32.0':
+    resolution: {integrity: sha512-8BviX/hK4Gd2eL1KdTwm0gfl4d3wdoErW0Jd00h6nomUAtk6IJk5vwQJc6kfWtJTzN5OEV/lgIiJKI8fiDGAlA==}
     engines: {node: '>=18'}
     peerDependencies:
       '@cfworker/json-schema': ^4.1.1
@@ -2858,6 +2858,7 @@ packages:
   '@opentelemetry/sdk-trace-base@2.5.1':
     resolution: {integrity: sha512-iZH3Gw8cxQn0gjpOjJMmKLd9GIaNh/E3v3ST67vyzLSxHBs14HsG4dy7jMYyC5WXGdBVEcM7U/XTF5hCQxjDMw==}
     engines: {node: ^18.19.0 || >=20.6.0}
+    deprecated: Use @opentelemetry/sdk-trace package
     peerDependencies:
       '@opentelemetry/api': '>=1.3.0 <1.10.0'
 
@@ -5298,8 +5299,8 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  baseline-browser-mapping@2.11.29:
-    resolution: {integrity: sha512-YeesxhUmR4h5y5V8KF8iBCqJb8YFrBJ++XBTeGcWIaQOYXGN19JM0FoiOjAhwuDoln8owMgXcWBmgHtYSkky2w==}
+  baseline-browser-mapping@2.11.30:
+    resolution: {integrity: sha512-YJs6Pz17RMNv8HoyKREtCY38E3BV1nPkWVmIb+XN1uHC1Vqt3KZCH/uJH9ZKRoiKb/icZ6tvehyee6RZNbFfRA==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
@@ -5373,8 +5374,8 @@ packages:
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
-  browserslist@4.29.3:
-    resolution: {integrity: sha512-1R4kiYKXGViqEN0CnoDrXc1StD9niAwu+j2dukWzrD4bJgsD4lDmEp0CRbc6E/vYJIfTHwPmwyaKtVSudICdPA==}
+  browserslist@4.29.4:
+    resolution: {integrity: sha512-2TcbbiwXEq+N0kD36tykpCfyyQigUXmuwNQbnPp4Xk4PX9JOqVIKjJlIDjpH7uY6tmRGoAd+apeT1p60T8wsdA==}
     engines: {node: ^6 || ^7 || ^8 || ^9 || ^10 || ^11 || ^12 || >=13.7}
     hasBin: true
 
@@ -5433,6 +5434,9 @@ packages:
 
   caniuse-lite@1.0.30001816:
     resolution: {integrity: sha512-+8Yx7BXCoqk6IF8yTicjfUR6D/ldJzdlsodlEOiOSPmhK844WIgk67/zIQaGAOxNkZyyvBlrRFnLvqKIoqbAFw==}
+
+  caniuse-lite@1.0.30001818:
+    resolution: {integrity: sha512-XJbgo4adscw7R4MZU4/qVFkoMyPaNUAWmdNY4o/k9x7fFwmv4frIlndI9lWuaxviW9ObiZel9LuncnQPn6hQ5A==}
 
   canvas-color-tracker@1.3.2:
     resolution: {integrity: sha512-ryQkDX26yJ3CXzb3hxUVNlg1NKE4REc5crLBq661Nxzr8TNd236SaEf2ffYLXyI5tSABSeguHLqcVq4vf9L3Zg==}
@@ -5644,8 +5648,8 @@ packages:
     resolution: {integrity: sha512-5IKcdX0nnYavi6G7TtOhwkYzyjfJlatbjMjuLSfE2kYT5pMDOilZ4OvMhi637CcDICTmz3wARPoyhqyX1Y+XvA==}
     engines: {node: ^14.18.0 || >=16.10.0}
 
-  content-disposition@1.1.0:
-    resolution: {integrity: sha512-5jRCH9Z/+DRP7rkvY83B+yGIGX96OYdJmzngqnw2SBSxqCFPd0w2km3s5iawpGX8krnwSGmF0FW5Nhr0Hfai3g==}
+  content-disposition@2.0.1:
+    resolution: {integrity: sha512-e+H0ZXHSWYrENhQzw1LPuP4oF5MzVKmDU6d3hxlvaPEYLLg62MxtQNPRx4SYSuYJSBUgnQIG4HIN2tEtNv7Dog==}
     engines: {node: '>=18'}
 
   content-type@1.0.5:
@@ -6337,8 +6341,8 @@ packages:
   electron-to-chromium@1.5.405:
     resolution: {integrity: sha512-bNglH7lPH5l+yHOes7Zr4VqxhOy4BQ9ZBUX4VdoFgxMpzJk7W1ZoO3Vgd9Pxa9PyjQ76sfm2aKH/nzEcCNRlew==}
 
-  electron-to-chromium@1.5.459:
-    resolution: {integrity: sha512-4SC9HHSFjO/liAhifpdOL5hG9b4BP7/5G3y3UPZVO8trlAXr1CaUEEJL0gWK3kOcYcZrOA5rkwG45Gra/lTIgg==}
+  electron-to-chromium@1.5.463:
+    resolution: {integrity: sha512-nVWNU6ltFjopvOdD44J4zoBkgO0M+WZiFKKFV7EjebOH9z0KNphk6bCEjplXtJofL21ARIuuwWOCsFkBVklm6w==}
 
   element-size@1.1.1:
     resolution: {integrity: sha512-eaN+GMOq/Q+BIWy0ybsgpcYImjGIdNLyjLFJU4XsLHXYQao5jCNb36GyN6C2qwmDDYSfIBmKpPpr4VnBdLCsPQ==}
@@ -6733,14 +6737,14 @@ packages:
     resolution: {integrity: sha512-KfYbmpRm0VbLjEvVa9yGwCi9GI34xvi7A/HXYWQO65CSD2u3MczUJSuwXKFIxlGsgBQizV9q5J9NHj4VG0n+pA==}
     engines: {node: '>=12.0.0'}
 
-  express-rate-limit@8.7.0:
-    resolution: {integrity: sha512-hOwV7WOxXfjRpAM1DSJWZDXx3GhplwD8IfwuwvogD8i1Qnkgosw/H45s4ZnFAUHDAhPjlY9hLBvJhKmGMyY26g==}
+  express-rate-limit@8.7.1:
+    resolution: {integrity: sha512-2FXbqkygil3mZiXzEtM0IjE/UBmBNot0J1GEVrJT4JbrvwOSoEtqtO+wHbiMQELWe1eNvHoYRg2dkjOid+6JkA==}
     engines: {node: '>= 16'}
     peerDependencies:
       express: '>= 4.11'
 
-  express@5.2.1:
-    resolution: {integrity: sha512-hIS4idWWai69NezIdRt2xFVofaF4j+6INOpJlVOLDO8zXGpUVEVzIYk12UUi2JzjEzWL3IOAxcTubgz9Po0yXw==}
+  express@5.3.0:
+    resolution: {integrity: sha512-qCqy1xSoaugxOD4IVHb1ZWdkvCF2W3aE2okKouWj8VwJ+ztskSiXoBnCSJqfKT+cVPJhuJqe9YLbY425+Zh00g==}
     engines: {node: '>= 18'}
 
   ext@1.7.0:
@@ -6797,8 +6801,8 @@ packages:
   fast-shallow-equal@1.0.0:
     resolution: {integrity: sha512-HPtaa38cPgWvaCFmRNhlc6NG7pv6NUHqjPgVAkWGoB9mQMwYB27/K0CvOM5Czy+qpT3e8XJ6Q4aPAnzpNpzNaw==}
 
-  fast-uri@3.1.8:
-    resolution: {integrity: sha512-GZMtZUTNRpOVIECoXwLNZS5xUGE+mVNbTB8h/7Rwh2TFWcBQiPzTgyZi05BF9UMZKkLJv8XBRJTlU7zg8+ZfMg==}
+  fast-uri@3.1.9:
+    resolution: {integrity: sha512-hS/0Wt3Ya043oKXs0sIxrMpKQITXhMLIrVAKKXi4gozGC9v7YRWVnXIZzjNPTO02M9BdxLCWqK1yRXgNziVyJQ==}
 
   fast-xml-builder@1.3.1:
     resolution: {integrity: sha512-pIM/1n3ntFXKYrUZwW7QCK0gAW7XY+wzj1YMIV3tLDvPj/V+zTGJK5e3/4WJfwj0qWw2ElNXiTixda/R+3YSug==}
@@ -7257,8 +7261,8 @@ packages:
   hoist-non-react-statics@3.3.2:
     resolution: {integrity: sha512-/gGivxi8JPKWNm/W0jSmzcMPpfpPLc3dY/6GxhX2hQ9iGj3aDfklV4ET7NjKpSinLpJ5vafa9iiGIEZg10SfBw==}
 
-  hono@4.13.12:
-    resolution: {integrity: sha512-6E2QDAc9Ick9Sq77ZrGS/dk2WUYni91aufTw6LJKpV7w8kW5/GxVUc650FOADOmlwg3K+f7Pun6XlV+pYmW6gw==}
+  hono@4.13.13:
+    resolution: {integrity: sha512-CQ46U0ZkAGmbT/4UxdzzGJpacP2IeKgY4a5/tOI9AABbpOMfK739wfDXmv1usCk+3RkKj1hQy4/fjhiwa2xlrA==}
     engines: {node: '>=16.9.0'}
 
   hsl-regex@1.0.0:
@@ -9755,10 +9759,15 @@ packages:
   scheduler@0.27.0:
     resolution: {integrity: sha512-eNv+WrVbKu1f3vbYJT/xtiF5syA5HPIMtf9IgY/nKg0sWqzAUEvqY/xm7OcZc/qafLx/iO9FgOmeSAp4v5ti/Q==}
 
-  schema-utils@4.6.0:
-    resolution: {integrity: sha512-q8cvkEp4bRQdWcLvB3vmxpZAlS25Hxws10nCK+rUxUfuB7e430dYZZJ5z5yAoOGBbbDtve8cUg8DFfc3ue12TA==}
+  schema-utils@4.8.1:
+    resolution: {integrity: sha512-x39pYlJPyH7Uge5QO64B9XGP9zLDc9WNmiQZc+CE3IzZPvMu3lHOuAMGpYNoPixEL7MSWlGhYTg5UlLSL8G6iw==}
     engines: {node: '>= 10.13.0'}
     hasBin: true
+    peerDependencies:
+      webpack: ^5.112.0
+    peerDependenciesMeta:
+      webpack:
+        optional: true
 
   screenfull@5.2.0:
     resolution: {integrity: sha512-9BakfsO2aUQN2K9Fdbj87RJIEZ82Q9IGim7FqM5OsebfoFC6ZHXgDq/KvniuLTPdeM8wY2o6Dj3WQ7KeQCj3cA==}
@@ -10999,8 +11008,8 @@ packages:
   warning@4.0.3:
     resolution: {integrity: sha512-rpJyN222KWIvHJ/F53XSZv0Zl/accqHR8et1kpaMTD/fLCRxtV8iX8czMzY7sVZupTI3zcUTg8eycS2kNF9l6w==}
 
-  watchpack@2.6.2:
-    resolution: {integrity: sha512-67nxRd7I5uAyn+KamYsCqU30iVgCgZ4aj8ZOGzmxs7zNPuvlnoYltm6+6JkOjEcD6WVXdu1BfH+gVQs3FUuW7Q==}
+  watchpack@2.6.3:
+    resolution: {integrity: sha512-s3NZy0QpTY9qGqzc0wtz4qI28z3+5qKbbAec4MV4G9N3CfgZ9wgvQRr0cl2jh/tqkWG1NWHkmVMHZpCamev5Wg==}
     engines: {node: '>=10.13.0'}
 
   weak-map@1.0.8:
@@ -12985,9 +12994,9 @@ snapshots:
       react-dom: 19.2.1(react@19.2.1)
       use-sync-external-store: 1.6.0(react@19.2.1)
 
-  '@hono/node-server@2.1.3(hono@4.13.12)':
+  '@hono/node-server@2.1.5(hono@4.13.13)':
     dependencies:
-      hono: 4.13.12
+      hono: 4.13.13
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -13373,9 +13382,9 @@ snapshots:
     dependencies:
       '@chevrotain/types': 11.1.2
 
-  '@modelcontextprotocol/sdk@1.31.0(zod@4.4.3)':
+  '@modelcontextprotocol/sdk@1.32.0(zod@4.4.3)':
     dependencies:
-      '@hono/node-server': 2.1.3(hono@4.13.12)
+      '@hono/node-server': 2.1.5(hono@4.13.13)
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       content-type: 1.0.5
@@ -13383,9 +13392,9 @@ snapshots:
       cross-spawn: 7.0.6
       eventsource: 3.0.7
       eventsource-parser: 3.1.1
-      express: 5.2.1
-      express-rate-limit: 8.7.0(express@5.2.1)
-      hono: 4.13.12
+      express: 5.3.0
+      express-rate-limit: 8.7.1(express@5.3.0)
+      hono: 4.13.13
       jose: 6.2.8
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
@@ -16057,7 +16066,7 @@ snapshots:
   ajv@8.20.0:
     dependencies:
       fast-deep-equal: 3.1.3
-      fast-uri: 3.1.8
+      fast-uri: 3.1.9
       json-schema-traverse: 1.0.0
       require-from-string: 2.0.2
 
@@ -16335,7 +16344,7 @@ snapshots:
 
   baseline-browser-mapping@2.11.13: {}
 
-  baseline-browser-mapping@2.11.29:
+  baseline-browser-mapping@2.11.30:
     optional: true
 
   basic-ftp@5.3.1:
@@ -16420,13 +16429,13 @@ snapshots:
       node-releases: 2.0.53
       update-browserslist-db: 1.3.1(browserslist@4.28.8)
 
-  browserslist@4.29.3:
+  browserslist@4.29.4:
     dependencies:
-      baseline-browser-mapping: 2.11.29
-      caniuse-lite: 1.0.30001816
-      electron-to-chromium: 1.5.459
+      baseline-browser-mapping: 2.11.30
+      caniuse-lite: 1.0.30001818
+      electron-to-chromium: 1.5.463
       node-releases: 2.0.59
-      update-browserslist-db: 1.3.4(browserslist@4.29.3)
+      update-browserslist-db: 1.3.4(browserslist@4.29.4)
     optional: true
 
   buffer-crc32@0.2.13:
@@ -16479,6 +16488,9 @@ snapshots:
   caniuse-lite@1.0.30001809: {}
 
   caniuse-lite@1.0.30001816: {}
+
+  caniuse-lite@1.0.30001818:
+    optional: true
 
   canvas-color-tracker@1.3.2:
     dependencies:
@@ -16690,7 +16702,7 @@ snapshots:
 
   consola@3.4.2: {}
 
-  content-disposition@1.1.0: {}
+  content-disposition@2.0.1: {}
 
   content-type@1.0.5: {}
 
@@ -17450,7 +17462,7 @@ snapshots:
 
   electron-to-chromium@1.5.405: {}
 
-  electron-to-chromium@1.5.459:
+  electron-to-chromium@1.5.463:
     optional: true
 
   element-size@1.1.1: {}
@@ -18135,20 +18147,20 @@ snapshots:
 
   expect-type@1.4.0: {}
 
-  express-rate-limit@8.7.0(express@5.2.1):
+  express-rate-limit@8.7.1(express@5.3.0):
     dependencies:
       debug: 4.4.3
-      express: 5.2.1
+      express: 5.3.0
       ip-address: 10.7.4
     transitivePeerDependencies:
       - supports-color
 
-  express@5.2.1:
+  express@5.3.0:
     dependencies:
       accepts: 2.0.0
       body-parser: 2.3.0
-      content-disposition: 1.1.0
-      content-type: 1.0.5
+      content-disposition: 2.0.1
+      content-type: 2.1.0
       cookie: 0.7.2
       cookie-signature: 1.2.2
       debug: 4.4.3
@@ -18239,7 +18251,7 @@ snapshots:
 
   fast-shallow-equal@1.0.0: {}
 
-  fast-uri@3.1.8: {}
+  fast-uri@3.1.9: {}
 
   fast-xml-builder@1.3.1:
     dependencies:
@@ -18938,7 +18950,7 @@ snapshots:
     dependencies:
       react-is: 16.13.1
 
-  hono@4.13.12: {}
+  hono@4.13.13: {}
 
   hsl-regex@1.0.0: {}
 
@@ -22394,12 +22406,14 @@ snapshots:
 
   scheduler@0.27.0: {}
 
-  schema-utils@4.6.0:
+  schema-utils@4.8.1(webpack@5.105.2(esbuild@0.28.2)(postcss@8.5.26)):
     dependencies:
       '@types/json-schema': 7.0.15
       ajv: 8.20.0
       ajv-formats: 3.0.1(ajv@8.20.0)
       ajv-keywords: 5.1.0(ajv@8.20.0)
+    optionalDependencies:
+      webpack: 5.105.2(esbuild@0.28.2)(postcss@8.5.26)
     optional: true
 
   screenfull@5.2.0: {}
@@ -23111,7 +23125,7 @@ snapshots:
     dependencies:
       '@jridgewell/trace-mapping': 0.3.31
       jest-worker: 27.5.1
-      schema-utils: 4.6.0
+      schema-utils: 4.8.1(webpack@5.105.2(esbuild@0.28.2)(postcss@8.5.26))
       terser: 5.46.0
       webpack: 5.105.2(esbuild@0.28.2)(postcss@8.5.26)
     optionalDependencies:
@@ -23627,9 +23641,9 @@ snapshots:
       escalade: 3.2.0
       picocolors: 1.1.1
 
-  update-browserslist-db@1.3.4(browserslist@4.29.3):
+  update-browserslist-db@1.3.4(browserslist@4.29.4):
     dependencies:
-      browserslist: 4.29.3
+      browserslist: 4.29.4
       escalade: 3.2.0
       picocolors: 1.1.1
     optional: true
@@ -24190,7 +24204,7 @@ snapshots:
     dependencies:
       loose-envify: 1.4.0
 
-  watchpack@2.6.2:
+  watchpack@2.6.3:
     dependencies:
       graceful-fs: 4.2.11
     optional: true
@@ -24224,7 +24238,7 @@ snapshots:
       '@webassemblyjs/wasm-parser': 1.14.1
       acorn: 8.19.0
       acorn-import-phases: 1.0.4(acorn@8.19.0)
-      browserslist: 4.29.3
+      browserslist: 4.29.4
       chrome-trace-event: 1.0.4
       enhanced-resolve: 5.26.0
       es-module-lexer: 2.3.2
@@ -24236,10 +24250,10 @@ snapshots:
       loader-runner: 4.3.2
       mime-types: 2.1.35
       neo-async: 2.6.2
-      schema-utils: 4.6.0
+      schema-utils: 4.8.1(webpack@5.105.2(esbuild@0.28.2)(postcss@8.5.26))
       tapable: 2.3.3
       terser-webpack-plugin: 5.6.1(esbuild@0.28.2)(postcss@8.5.26)(webpack@5.105.2(esbuild@0.28.2)(postcss@8.5.26))
-      watchpack: 2.6.2
+      watchpack: 2.6.3
       webpack-sources: 3.6.0
     transitivePeerDependencies:
       - '@minify-html/node'
