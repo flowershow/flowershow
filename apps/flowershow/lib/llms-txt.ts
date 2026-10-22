@@ -109,7 +109,11 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
 
   const listed = input.pages
     .filter((p) => isListedPage(p, hidePrefixes))
-    .sort((a, b) => (sortKey(a.path) < sortKey(b.path) ? -1 : 1));
+    .sort((a, b) => {
+      const ka = sortKey(a.path).toLowerCase();
+      const kb = sortKey(b.path).toLowerCase();
+      return ka < kb ? -1 : ka > kb ? 1 : 0;
+    });
   const truncated = listed.length > LLMS_TXT_MAX_PAGES;
   const pages = listed.slice(0, LLMS_TXT_MAX_PAGES);
 

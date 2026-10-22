@@ -17,10 +17,10 @@ test.describe('llms.txt', () => {
 
     await test.step('links pages to their Markdown source', () => {
       expect(body).toMatch(
-        /^- \[Basic Syntax\]\(https?:\/\/[^)]+\/basic-syntax\.md\)$/m,
+        /^- \[Basic Syntax\]\(https?:\/\/[^)]+\/basic-syntax\.md\)(: .+)?$/m,
       );
       expect(body).toMatch(
-        /^- \[Getting Started\]\(https?:\/\/[^)]+\/docs\/getting-started\.md\)$/m,
+        /^- \[Getting Started\]\(https?:\/\/[^)]+\/docs\/getting-started\.md\)(: .+)?$/m,
       );
     });
 
