@@ -1,5 +1,9 @@
 import { SitemapParamsSchema } from '@flowershow/api-contract';
-import { NextRequest } from 'next/server';
+import type { NextRequest } from 'next/server';
+import {
+  anonRobotsHeaders,
+  isExpiredTemporarySite,
+} from '@/lib/anonymous-site';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { notDraftSql } from '@/lib/listing/draft-sql';
 import { listingDirSlug, virtualListingDirs } from '@/lib/listing/route';
@@ -41,7 +45,8 @@ export async function GET(
     },
   });
 
-  if (!site) {
+  // Expired anonymous sites stop being served before the cleanup cron runs.
+  if (!site || isExpiredTemporarySite(site)) {
     return new Response('Not found', { status: 404 });
   }
 
@@ -142,6 +147,7 @@ export async function GET(
     headers: {
       'Content-Type': 'application/xml',
       'X-Content-Type-Options': 'nosniff',
+      ...anonRobotsHeaders(site),
     },
   });
 }

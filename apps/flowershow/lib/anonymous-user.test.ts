@@ -14,6 +14,7 @@ import {
   CLAIM_TOKEN_PREFIX,
   generateOwnershipToken,
   generateSiteClaimToken,
+  verifyOwnershipToken,
   verifySiteClaimToken,
 } from './anonymous-user';
 
@@ -52,6 +53,23 @@ describe('site claim tokens', () => {
   it('rejects a tampered token', () => {
     const token = generateSiteClaimToken('site-1', ANON);
     expect(verifySiteClaimToken(token.slice(0, -2) + 'xx')).toBeNull();
+  });
+
+  it('accepts only HS256 (pinned algorithm)', () => {
+    const payload = {
+      type: 'site_claim',
+      siteId: 'site-1',
+      anonymousUserId: ANON,
+    };
+    const hs512 = jwt.sign(payload, 'test-secret', { algorithm: 'HS512' });
+    expect(verifySiteClaimToken(`${CLAIM_TOKEN_PREFIX}${hs512}`)).toBeNull();
+    const ownership512 = jwt.sign(
+      { anonymousUserId: ANON, type: 'anonymous_ownership' },
+      'test-secret',
+      { algorithm: 'HS512' },
+    );
+    expect(verifyOwnershipToken(ownership512)).toBeNull();
+    expect(verifyOwnershipToken(generateOwnershipToken(ANON))).toBe(ANON);
   });
 
   it('builds an https claim URL with the token in the fragment (never sent to servers)', () => {

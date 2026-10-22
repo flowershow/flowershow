@@ -1,14 +1,18 @@
 import { RssParamsSchema } from '@flowershow/api-contract';
+import { Prisma } from '@prisma/client';
 import type { NextRequest } from 'next/server';
 import type { SiteConfig } from '@/components/types';
+import {
+  anonRobotsHeaders,
+  isExpiredTemporarySite,
+} from '@/lib/anonymous-site';
 import { fetchFile } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
 import { buildRssFeed } from '@/lib/rss';
 import { hasSiteAccess } from '@/lib/site-access';
-import { isSiteOwnHost, redirectToSiteOwnHost } from '@/lib/site-host';
 import { resolveSiteConfig, resolveSiteName } from '@/lib/site-config';
+import { isSiteOwnHost, redirectToSiteOwnHost } from '@/lib/site-host';
 import prisma from '@/server/db';
-import { Prisma } from '@prisma/client';
 
 export async function GET(
   request: NextRequest,
@@ -54,7 +58,8 @@ export async function GET(
     },
   });
 
-  if (!site) {
+  // Expired anonymous sites stop being served before the cleanup cron runs.
+  if (!site || isExpiredTemporarySite(site)) {
     return new Response('Not found', { status: 404 });
   }
 
@@ -108,6 +113,7 @@ export async function GET(
     headers: {
       'Content-Type': 'application/rss+xml; charset=utf-8',
       'X-Content-Type-Options': 'nosniff',
+      ...anonRobotsHeaders(site),
     },
   });
 }

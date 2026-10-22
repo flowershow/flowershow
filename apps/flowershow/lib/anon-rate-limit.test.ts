@@ -21,6 +21,20 @@ describe('anon create rate limit', () => {
     expect(hashIp('1.2.3.4')).not.toBe(hashIp('1.2.3.5'));
   });
 
+  it('is an HMAC keyed by ANON_IP_HASH_SECRET, falling back to the JWT secret', async () => {
+    const { createHmac } = await import('node:crypto');
+    const { env } = await import('@/env.mjs');
+    const hmac = (key: string) =>
+      createHmac('sha256', key).update('1.2.3.4').digest('hex');
+    expect(hashIp('1.2.3.4')).toBe(hmac('test-secret'));
+    (env as unknown as Record<string, string>).ANON_IP_HASH_SECRET = 'ip-key';
+    try {
+      expect(hashIp('1.2.3.4')).toBe(hmac('ip-key'));
+    } finally {
+      delete (env as unknown as Record<string, string>).ANON_IP_HASH_SECRET;
+    }
+  });
+
   it('allows below the limit and counts only the last hour', async () => {
     count.mockResolvedValue(ANON_CREATE_LIMIT_PER_HOUR - 1);
     const now = new Date('2026-10-01T12:00:00Z');

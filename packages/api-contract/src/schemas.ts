@@ -339,6 +339,42 @@ export const ClaimSiteResponseSchema = z.object({
 });
 export type ClaimSiteResponse = z.infer<typeof ClaimSiteResponseSchema>;
 
+// POST /api/sites/id/:siteId/claim (CLI/PAT bearer token + claim token)
+export const ClaimSiteWithTokenRequestSchema = z.object({
+  claimToken: z.string().min(1),
+});
+export type ClaimSiteWithTokenRequest = z.infer<
+  typeof ClaimSiteWithTokenRequestSchema
+>;
+
+export const ClaimSiteWithTokenResponseSchema = z.object({
+  site: z.object({
+    id: z.string(),
+    projectName: z.string(),
+    url: z.string(),
+  }),
+  /** True if the site was already in the caller's account (nothing changed). */
+  alreadyClaimed: z.boolean(),
+});
+export type ClaimSiteWithTokenResponse = z.infer<
+  typeof ClaimSiteWithTokenResponseSchema
+>;
+
+// POST /api/sites/claim/preview (claim page: what the link would claim)
+export const ClaimPreviewRequestSchema = z.object({
+  siteId: z.string().min(1),
+  claimToken: z.string().min(1),
+});
+export type ClaimPreviewRequest = z.infer<typeof ClaimPreviewRequestSchema>;
+
+export const ClaimPreviewResponseSchema = z.object({
+  siteId: z.string(),
+  projectName: z.string(),
+  liveUrl: z.string(),
+  expiresAt: z.string().nullable(),
+});
+export type ClaimPreviewResponse = z.infer<typeof ClaimPreviewResponseSchema>;
+
 // ---------------------------------------------------------------------------
 // GitHub App Schemas
 // GET /api/github-app/callback
@@ -542,8 +578,12 @@ export const AnnotationSchema = z.object({
 });
 export type Annotation = z.infer<typeof AnnotationSchema>;
 
-export const ListAnnotationsResponseSchema = z.object({ annotations: z.array(AnnotationSchema) });
-export type ListAnnotationsResponse = z.infer<typeof ListAnnotationsResponseSchema>;
+export const ListAnnotationsResponseSchema = z.object({
+  annotations: z.array(AnnotationSchema),
+});
+export type ListAnnotationsResponse = z.infer<
+  typeof ListAnnotationsResponseSchema
+>;
 
 export const CreateAnnotationRequestSchema = z.object({
   path: z.string().min(1).max(1024),
@@ -551,21 +591,35 @@ export const CreateAnnotationRequestSchema = z.object({
   note: z.string().trim().min(1).max(ANNOTATION_LIMITS.note),
   authorName: z.string().trim().max(ANNOTATION_LIMITS.name).optional(),
 });
-export type CreateAnnotationRequest = z.infer<typeof CreateAnnotationRequestSchema>;
+export type CreateAnnotationRequest = z.infer<
+  typeof CreateAnnotationRequestSchema
+>;
 
-export const CreateAnnotationResponseSchema = z.object({ annotation: AnnotationSchema });
-export type CreateAnnotationResponse = z.infer<typeof CreateAnnotationResponseSchema>;
+export const CreateAnnotationResponseSchema = z.object({
+  annotation: AnnotationSchema,
+});
+export type CreateAnnotationResponse = z.infer<
+  typeof CreateAnnotationResponseSchema
+>;
 
 export const AnnotationsBulkRequestSchema = z.object({
   action: z.enum(['resolve', 'reopen', 'delete']),
-  ids: z.array(z.string().min(1)).min(1).max(ANNOTATION_LIMITS.perSite).optional(),
+  ids: z
+    .array(z.string().min(1))
+    .min(1)
+    .max(ANNOTATION_LIMITS.perSite)
+    .optional(),
   all: z.literal(true).optional(),
   path: z.string().min(1).max(1024).optional(),
 });
-export type AnnotationsBulkRequest = z.infer<typeof AnnotationsBulkRequestSchema>;
+export type AnnotationsBulkRequest = z.infer<
+  typeof AnnotationsBulkRequestSchema
+>;
 
 export const AnnotationsBulkResponseSchema = z.object({ count: z.number() });
-export type AnnotationsBulkResponse = z.infer<typeof AnnotationsBulkResponseSchema>;
+export type AnnotationsBulkResponse = z.infer<
+  typeof AnnotationsBulkResponseSchema
+>;
 
 export const AnnotationSettingsSchema = z.object({
   /** Site-level setting (dashboard config merged with config.json). */
@@ -575,8 +629,12 @@ export const AnnotationSettingsSchema = z.object({
 });
 export type AnnotationSettings = z.infer<typeof AnnotationSettingsSchema>;
 
-export const UpdateAnnotationSettingsRequestSchema = z.object({ annotations: z.boolean() });
-export type UpdateAnnotationSettingsRequest = z.infer<typeof UpdateAnnotationSettingsRequestSchema>;
+export const UpdateAnnotationSettingsRequestSchema = z.object({
+  annotations: z.boolean(),
+});
+export type UpdateAnnotationSettingsRequest = z.infer<
+  typeof UpdateAnnotationSettingsRequestSchema
+>;
 
 // Site owner sign-in (site-scoped owner cookie, flowershow-1pr.15)
 

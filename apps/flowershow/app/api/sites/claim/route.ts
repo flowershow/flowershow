@@ -30,7 +30,11 @@ function rejectCrossSite(request: NextRequest): NextResponse | null {
     : fetchSite === 'same-origin';
   if (!sameOrigin) {
     return NextResponse.json(
-      { success: false, error: 'Cross-origin requests are not allowed' },
+      {
+        success: false,
+        error: 'Cross-origin requests are not allowed',
+        code: 'cross_origin',
+      },
       { status: 403 },
     );
   }
