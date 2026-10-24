@@ -6,12 +6,22 @@
 
 **MANDATORY WORKFLOW:**
 
-1. **Note remaining work** - Summarise anything that needs follow-up in the hand-off; only file GitHub issues if explicitly asked
+1. **Note remaining work** - Log follow-ups as beads (`bd create`, with description and acceptance criteria); add `--external-ref gh-N` if it came from a GitHub issue
 2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished GitHub issues, update in-progress items
-4. **Clean up** - Clear stashes, prune remote branches
+3. **Update status** - Close finished beads (and GitHub issues via `Fixes #N`), update in-progress items
+4. **Clean up** - Clear stashes, remove stale worktrees, prune remote branches
 5. **Verify** - All changes committed
-6. **Hand off** - Provide context for next session
+6. **Hand off** - TL;DR first (what shipped, what's open, your recommendation), then point at the plan in `docs/plans/` and the beads
+
+## Working style
+
+- **Don't ask without recommending.** Every question to the user carries a **bold recommendation**. Default to deciding, note the decision, and keep going.
+- **Plans** live in `docs/plans/YYYY-MM-DD-*.md` (dated snapshots; status lives in beads). Get the spec approved, commit it, then write the plan.
+- **Independent review before shipping** non-trivial plans and PRs: see [docs/agents/review.md](docs/agents/review.md).
+- **Delegate** multi-part work to subagents and match the model to the task (haiku/sonnet for mechanical work, opus for design, review and research). Check their results yourself (e.g. `gh pr checks`) rather than relaying "waiting".
+- **Small content, docs and dev-tooling changes** go straight to `main` with no PR. Code changes get a PR.
+- **Verify in the real thing:** check visible changes on the deployed site or a throwaway `fl` preview site, not a Docker/local setup.
+- **Keep this file short:** put long procedures in `docs/agents/*.md` and link them here.
 
 ## REST API and api-contract
 
@@ -81,9 +91,9 @@ This applies to any user-visible change: adding/removing tools, renaming command
 
 ### Issue tracker
 
-GitHub Issues is the issue tracker. See `docs/agents/issue-tracker.md`.
+**Beads (`bd`) is the work tracker**: plan, claim (`bd update <id> --claim`), log and close work there. **GitHub Issues is the public front door** for user reports. When a GitHub issue becomes work, create a bead with `--external-ref gh-N`, and the fix PR says `Fixes #N`. Internal work only needs a bead. See `docs/agents/issue-tracker.md`.
 
-**When you start work on an issue, claim it first:** assign it to `@me` and set its project Status to "🏗 In progress". Commands are in `docs/agents/issue-tracker.md#claiming-an-issue`.
+**When you start work on a GitHub issue, also claim it there:** assign it to `@me` and set its project Status to "🏗 In progress". Commands are in `docs/agents/issue-tracker.md#claiming-an-issue`.
 
 ### Triage categories and labels
 
@@ -107,6 +117,7 @@ To write or review a tutorial, how-to or feature overview page, use the `write-t
 2. **Fixes and small improvements are bullets, not entries.** Add them under a `**Fixes**` heading in the most related entry. A fix gets its own entry only if users must act or were seriously affected (data loss, security, breaking change).
 3. **New entries are for new capabilities.** Title them by what users can now do ("Publish without an account"), not by what changed in the code.
 4. **Add a screenshot when it helps users see the change**, e.g. a new UI or a visible result (`image:` in frontmatter, a ~1440px `.webp` in `content/flowershow-app/assets/`). Take it from the live page or a throwaway `fl` preview site. Skip it for config options and other changes a picture wouldn't explain.
+5. **Don't announce small fixes** few users could have hit. If you merge or delete entries, drop their redirects too.
 
 Create `content/flowershow-app/changelog/YYYY-MM-DD-short-slug.md`:
 
@@ -140,4 +151,4 @@ If the change introduces a feature users need to understand or configure, create
 
 ### Blog post
 
-Every flowershow.app blog post gets its own public-domain woodblock-print cover in `image:`. How to pick and add one: [docs/blog-covers.md](docs/blog-covers.md).
+Every flowershow.app blog post gets its own public-domain woodblock-print cover in `image:`. How to pick and add one: [docs/blog-covers.md](docs/blog-covers.md). Slugs are plain (no date prefix); the date goes in frontmatter only.

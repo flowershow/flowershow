@@ -1,6 +1,8 @@
-# Issue tracker: GitHub
+# Issue tracker: beads + GitHub
 
-Issues and PRDs for this repo live as **GitHub Issues** at `github.com/flowershow/flowershow`. Use the `gh` CLI for all create/read/update operations.
+**Beads (`bd`) is the team's work tracker** for planning, breaking work down and tracking it during and across sessions (`bd ready`, `bd create`, `bd update <id> --claim`, `bd close`). Run `bd prime` for the full workflow.
+
+**GitHub Issues** at `github.com/flowershow/flowershow` is the public front door: user reports and things outsiders follow. When one becomes work, create a bead with `--external-ref gh-N`; the fix PR says `Fixes #N` and the bead is closed too. Use the `gh` CLI for GitHub operations below.
 
 ## Issue types
 
@@ -41,7 +43,7 @@ gh project item-edit --id "$ITEM" --project-id PVT_kwDOBlO6L84ADb7F \
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue.
+Create a bead. Also create a GitHub issue only if outsiders need to follow it.
 
 ## When a skill says "fetch the relevant ticket"
 
