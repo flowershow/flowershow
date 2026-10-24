@@ -16,6 +16,33 @@
 4. **Funnel + `ai`/`host_app` flags + UTMs.** No bead anywhere; without it the success targets (`flwrprd-4oi.14`) and 12-18 review can't judge the launch. M, by 11-03.
 5. **Directory shelves this week:** `k8j.2` Registry (DNS TXT), publish privacy policy (`k8j.4`), `k8j.3`, PSL `w1y.1`. Each S; review lead time is the cost.
 
+## Who does what
+
+**Agent, almost entirely alone** (PR + independent review; Ola reviews code PRs where she owns the area):
+
+- `flwrprd-4oi.3` partial publish (MCP + API: update only the files sent; explicit delete list).
+- `w5n` + `88b` first-publish 404 / "Already in sync".
+- Funnel events, `ai`/`host_app` flags, UTMs.
+- Skill file-list confirmation + wiki-link title leak check.
+- `k8j.3` plugin bundle; `k8j.4` 512px icon + `destructiveHint`; prep all directory submissions.
+- `3fr.6` docs/changelog/drop beta (after the client test).
+- Load-test script (Rufus OKs the run against prod).
+- `5cr.1` worker deploy check; diagnose the red release workflow.
+- Beads/GH hygiene: missing beads, priorities, AC, closes with evidence.
+- Teams phase 0 (#919): authz helper, #1329 / `itv`, honest Premium claim.
+- Post-launch: #1427, `a3j` quick wins, `zcs` SEO pages, Dependabot.
+
+**Needs Rufus:**
+
+- `3fr.5` / `h4a` client test with real Claude + ChatGPT accounts. The agent preps the script and fixes what breaks. Due 10-27.
+- DNS TXT records for the Registry (`k8j.2`) and PSL (`w1y.1`).
+- Account-gated submissions (Claude connectors, ChatGPT apps). The agent prepares everything.
+- Approve the privacy policy; approve the pricing AI-line copy.
+- Homepage review (10-29); success targets (11-10); blog post + founder quote (11-11).
+- Proof: clip, 5+ outside sites, 1–3 quotes.
+- Decisions: go/no-go 11-12, Ola's capacity and cut order, teams target customer + billing (#919), `1gh.7` dismissals.
+- `akk` NPM_TOKEN rotation (npm account; Rufus or Ola).
+
 ## Now (before go/no-go 11-12)
 
 | # | Item | Why now | Size | Owner | Blocked by |
