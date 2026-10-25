@@ -611,6 +611,192 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
     });
   });
 
+  describe('merge mode with in-flight publishes', () => {
+    const blobUpdatedAt = new Date('2026-01-01T00:00:00Z');
+    const laterPublish = new Date('2026-01-01T00:05:00Z');
+    const uploading = (path: string, changeType: 'added' | 'updated') => ({
+      path,
+      status: 'uploading',
+      changeType,
+      publish: { startedAt: laterPublish },
+    });
+    const deletedLater = (path: string) => ({
+      path,
+      status: 'success',
+      changeType: 'deleted',
+      publish: { startedAt: laterPublish },
+    });
+
+    it('uploads a file re-added right after a delete, even with the same sha', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
+        { path: 'gone.md', sha: 'same', size: 1, updatedAt: blobUpdatedAt },
+      ] as any);
+      vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+        deletedLater('gone.md'),
+      ] as any);
+
+      const res = await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [{ path: 'gone.md', size: 1, sha: 'same' }],
+        }),
+        makeParams(SITE_ID),
+      );
+      const body = await res.json();
+      expect(body.unchanged).toEqual([]);
+      expect(body.toUpload.map((f: any) => f.path)).toEqual(['gone.md']);
+    });
+
+    it('treats a sent path another publish is still uploading as changed', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
+        { path: 'a.md', sha: 'same', size: 1, updatedAt: blobUpdatedAt },
+      ] as any);
+      vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+        uploading('a.md', 'updated'),
+      ] as any);
+
+      const res = await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [{ path: 'a.md', size: 1, sha: 'same' }],
+        }),
+        makeParams(SITE_ID),
+      );
+      const body = await res.json();
+      expect(body.unchanged).toEqual([]);
+      expect(body.toUpdate.map((f: any) => f.path)).toEqual(['a.md']);
+    });
+
+    it('ignores a delete of a path a newer publish already deleted', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
+        { path: 'gone.md', sha: 'x', size: 1, updatedAt: blobUpdatedAt },
+      ] as any);
+      vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+        deletedLater('gone.md'),
+      ] as any);
+
+      const res = await POST(
+        makeRequest({ mode: 'merge', files: [], delete: ['gone.md'] }),
+        makeParams(SITE_ID),
+      );
+      const body = await res.json();
+      expect(body.deleted).toEqual([]);
+      expect(deleteFile).not.toHaveBeenCalled();
+    });
+
+    it('does not cancel uploads of unsent paths, so a later revert of one is still changed', async () => {
+      const blobs = [
+        { path: 'a.md', sha: 'a-old', size: 1, updatedAt: blobUpdatedAt },
+        { path: 'b.md', sha: 'b-old', size: 1, updatedAt: blobUpdatedAt },
+      ];
+      // Another publish is uploading a new version of a.md.
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(blobs as any);
+      vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+        uploading('a.md', 'updated'),
+      ] as any);
+
+      await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [{ path: 'b.md', size: 1, sha: 'b-new' }],
+        }),
+        makeParams(SITE_ID),
+      );
+      // The cancel is scoped to b.md: a.md's upload stays in flight.
+      expect(prisma.publishFile.updateMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ path: { in: ['b.md'] } }),
+        }),
+      );
+
+      // Reverting a.md to the sha still in the Blob table must re-upload it,
+      // or the in-flight upload would win.
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(blobs as any);
+      vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+        uploading('a.md', 'updated'),
+        uploading('b.md', 'updated'),
+      ] as any);
+      const res = await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [{ path: 'a.md', size: 1, sha: 'a-old' }],
+        }),
+        makeParams(SITE_ID),
+      );
+      const body = await res.json();
+      expect(body.unchanged).toEqual([]);
+      expect(body.toUpdate.map((f: any) => f.path)).toEqual(['a.md']);
+    });
+
+    describe('anonymous whole-site limits', () => {
+      const ANON_OWNER = '3f1c2b7a-1d2e-4f3a-9b4c-5d6e7f8a9b0c';
+      const anonRequest = (body: unknown) =>
+        makeRequest(body, {
+          headers: {
+            Authorization: `Bearer ${generateSiteClaimToken(SITE_ID, ANON_OWNER)}`,
+          },
+        });
+      const blobs = (n: number) =>
+        Array.from({ length: n }, (_, i) => ({
+          path: `p-${i}.html`,
+          sha: `s-${i}`,
+          size: 10,
+          updatedAt: blobUpdatedAt,
+        }));
+
+      beforeEach(() => {
+        vi.mocked(prisma.site.findUnique).mockResolvedValue({
+          id: SITE_ID,
+          userId: ANONYMOUS_USER_ID,
+          anonymousOwnerId: ANON_OWNER,
+          expiresAt: new Date(Date.now() + 86400000),
+        } as any);
+      });
+
+      it('counts new files other publishes are still uploading', async () => {
+        vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(
+          blobs(199) as any,
+        );
+        vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+          uploading('pending.html', 'added'),
+        ] as any);
+
+        const res = await POST(
+          anonRequest({
+            mode: 'merge',
+            files: [{ path: 'one-more.html', size: 10, sha: 'x' }],
+          }),
+          makeParams(SITE_ID),
+        );
+
+        expect(res.status).toBe(413);
+        expect(prisma.publish.create).not.toHaveBeenCalled();
+      });
+
+      it('does not double-count an in-flight new file this merge sends or deletes', async () => {
+        vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(
+          blobs(199) as any,
+        );
+        vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+          uploading('pending.html', 'added'),
+          uploading('dropped.html', 'added'),
+        ] as any);
+
+        const res = await POST(
+          anonRequest({
+            mode: 'merge',
+            files: [{ path: 'pending.html', size: 10, sha: 'x' }],
+            delete: ['dropped.html'],
+          }),
+          makeParams(SITE_ID),
+        );
+
+        expect(res.status).toBe(200);
+        expect((await res.json()).summary.toUpload).toBe(1);
+      });
+    });
+  });
+
   describe('dryRun mode', () => {
     it('returns the diff plan without creating a publish record', async () => {
       vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([]);

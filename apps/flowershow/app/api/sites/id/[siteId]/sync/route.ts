@@ -102,7 +102,8 @@ export async function POST(
         : validatePublishFiles(files);
     if (validationError) return validationError;
 
-    const { existingBlobs, inFlightPaths } = await loadServerFileState(siteId);
+    const { existingBlobs, inFlightPaths, inFlightAdds } =
+      await loadServerFileState(siteId);
 
     const existingBlobMap = new Map(
       existingBlobs.map((blob) => [blob.path, blob]),
@@ -157,7 +158,23 @@ export async function POST(
         const kept = existingBlobs
           .filter((b) => !deleting.has(b.path) && !localFileMap.has(b.path))
           .map((b) => ({ path: b.path, size: b.size, sha: b.sha }));
-        const siteError = validateAnonPublishFiles([...kept, ...files]);
+        // New files other publishes are still uploading have no Blob row yet
+        // but will land. Count them (file count only: PublishFile has no
+        // size). Paths this merge sends or deletes are excluded: those
+        // uploads get canceled below.
+        const pending = [...inFlightAdds]
+          .filter(
+            (path) =>
+              !existingBlobMap.has(path) &&
+              !localFileMap.has(path) &&
+              !deleteSet.has(path),
+          )
+          .map((path) => ({ path, size: 0, sha: 'in-flight' }));
+        const siteError = validateAnonPublishFiles([
+          ...kept,
+          ...pending,
+          ...files,
+        ]);
         if (siteError) return siteError;
       }
     }
@@ -403,6 +420,8 @@ const RECENT_PUBLISH_WINDOW_MS = 15 * 60 * 1000;
  * - A path deleted by a recent publish after its Blob row was last written
  *   is dropped from `existingBlobs`: it is already gone from R2, the Blob row
  *   is only waiting for the worker's delete event.
+ * - `inFlightAdds` is the subset of `inFlightPaths` being uploaded as new
+ *   files (no Blob row yet); merge mode counts them towards anonymous limits.
  */
 async function loadServerFileState(siteId: string) {
   const blobs = await prisma.blob.findMany({
@@ -432,10 +451,12 @@ async function loadServerFileState(siteId: string) {
   });
 
   const inFlightPaths = new Set<string>();
+  const inFlightAdds = new Set<string>();
   const latestDelete = new Map<string, Date>();
   for (const f of recentFiles) {
     if (f.status === 'uploading') {
       inFlightPaths.add(f.path);
+      if (f.changeType === 'added') inFlightAdds.add(f.path);
     } else {
       const prev = latestDelete.get(f.path);
       if (!prev || f.publish.startedAt > prev) {
@@ -449,7 +470,7 @@ async function loadServerFileState(siteId: string) {
     return !(deletedAt && deletedAt > blob.updatedAt);
   });
 
-  return { existingBlobs, inFlightPaths };
+  return { existingBlobs, inFlightPaths, inFlightAdds };
 }
 
 function generateDryRunPlaceholders(
