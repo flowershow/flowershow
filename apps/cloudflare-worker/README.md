@@ -19,7 +19,7 @@ Two publish paths share one Queue consumer and one `PublishFinalizerWorkflow`.
 1. Terminates any in-flight `GitHubSyncWorkflow` for the site, then starts a new one.
 2. Workflow creates the `Publish` record, diffs the GitHub tree against stored `Blob` records, creates `PublishFile` rows, and starts `PublishFinalizerWorkflow`.
 3. Workflow uploads files to R2 with `publishId` in object metadata. Deleted files are removed from R2 immediately with terminal `PublishFile` rows; Blob/Typesense cleanup follows via `DeleteObject` → queue consumer.
-4. Each R2 PUT fires a queue event. The consumer reads the file, computes a git-compatible SHA-1, upserts the `Blob`, indexes in Typesense, and flips the `PublishFile` row to `success` (or `error`).
+4. Each R2 PUT fires a queue event. The consumer reads the file, computes a git-compatible SHA-1, upserts the `Blob`, indexes in Typesense, and flips the `PublishFile` row to `success` (or `error`). A Typesense failure never fails the file, since the page is already live, but it is always reported to PostHog (`source: worker_typesense_index` / `worker_typesense_delete`). If Typesense rejects the document itself (HTTP 400, e.g. `authors` is not a list), the row is set to `error` with `Not added to search: <reason>` so the author sees it.
 5. `PublishFinalizerWorkflow` polls every 10 s until no `uploading` rows remain, then sets `Publish.completedAt` and revalidates Next.js cache tags.
 
 **Presigned path** (`POST /start-finalizer`) — CLI, Obsidian, dashboard:
@@ -142,13 +142,13 @@ MinIO fires a webhook to the worker's `/queue` endpoint, which enqueues the even
 
 ### Unit tests
 
-Pure function tests — no external services required.
+No external services required. Tests run inside workerd (the Workers runtime) via [`@cloudflare/vitest-pool-workers`](https://developers.cloudflare.com/workers/testing/vitest-integration/), using the compatibility date and flags at the top of `wrangler.flowershow.toml`, so code or dependencies that work in Node but break in Workers fail here rather than in production. Outbound `fetch` is mocked with `fetchMock` from `cloudflare:test`.
 
 ```bash
 npm test
 ```
 
-Runs `test/unit/github-sync-workflow.test.js` and `test/unit/queue-consumer.test.js` via Vitest.
+Runs `test/unit/*.test.js` via Vitest.
 
 ### E2E tests
 
@@ -248,9 +248,10 @@ test/
   unit/
     github-sync-workflow.test.js — Unit tests for the GitHub sync workflow
     queue-consumer.test.js       — Unit tests for the queue consumer
+    search-indexing.test.js      — Typesense indexing through the real client and runtime fetch
 
 wrangler.flowershow.toml — Workers config: queues, workflows, crons, R2 bindings, environments
-vitest.unit.config.js    — Vitest config for unit tests
+vitest.unit.config.js    — Vitest config for unit tests (runs in workerd)
 vitest.e2e.config.js     — Vitest config for E2E tests (single-fork, 30s timeout per test)
 .dev.vars.example        — Template for local environment variables
 ```

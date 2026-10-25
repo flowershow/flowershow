@@ -36,11 +36,13 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
       RETURNING id
     `;
     if (deleted.length === 0) return;
-    try {
-      await typesense.deleteDocument(siteId, `${deleted[0].id}`);
-    } catch (_) {
-      // Document may not exist in Typesense (e.g. non-indexed file type)
-    }
+    await removeFromTypesense({
+      typesense,
+      env,
+      siteId,
+      blobId: deleted[0].id,
+      path,
+    });
     return msg.ack();
   }
 
@@ -79,6 +81,7 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
       storage,
       sql,
       typesense,
+      env,
       siteId,
       branch,
       path,
@@ -181,6 +184,7 @@ async function processMarkdownFile({
   storage,
   sql,
   typesense,
+  env,
   siteId,
   branch,
   path,
@@ -220,12 +224,14 @@ async function processMarkdownFile({
     await syncLinks(sql, siteId, blobId, markdown);
     const tags = extractTags(body, metadata);
     await syncTags(sql, siteId, blobId, tags);
+    let searchError = null;
     if (isDraft(metadata)) {
       // A draft is reachable by URL but never in search: drop any earlier document
-      await removeFromTypesense({ typesense, siteId, blobId });
+      await removeFromTypesense({ typesense, env, siteId, blobId, path });
     } else {
-      await indexInTypesense({
+      searchError = await indexInTypesense({
         typesense,
+        env,
         siteId,
         blobId,
         path,
@@ -234,10 +240,11 @@ async function processMarkdownFile({
         tags,
       });
     }
-    // The page is live, but bad frontmatter is still an error the author must
-    // see (fl output, dashboard publish history).
-    if (frontmatterError) {
-      await updatePublishFile(sql, publishId, path, 'error', frontmatterError);
+    // The page is live, but bad frontmatter or a document search rejected is
+    // still an error the author must see (fl output, dashboard publish history).
+    const fileError = frontmatterError ?? searchError;
+    if (fileError) {
+      await updatePublishFile(sql, publishId, path, 'error', fileError);
     } else {
       await updatePublishFile(sql, publishId, path, 'success');
     }
@@ -632,17 +639,48 @@ function getUnixTimestamp(value) {
   return Number.isNaN(date.getTime()) ? null : date.getTime() / 1000;
 }
 
-async function removeFromTypesense({ typesense, siteId, blobId }) {
+/**
+ * Search failures never fail the publish (the page is live without them), so
+ * they must reach PostHog: in Oct 2026 every upsert failed silently for a week.
+ */
+async function reportSearchError(env, source, { siteId, path, error }) {
+  console.error(`${source} failed: ${siteId} - ${path}: ${error?.message}`);
+  await captureError(env, {
+    siteId,
+    path,
+    error_message: error?.message,
+    error_name: error?.name,
+    http_status: error?.httpStatus ?? null,
+    source,
+  });
+}
+
+/**
+ * Remove a page's search document. 404 means it was never indexed (e.g. a draft
+ * from the start); any other failure leaves a deleted or draft page findable.
+ */
+async function removeFromTypesense({ typesense, env, siteId, blobId, path }) {
   if (!typesense) return;
   try {
     await typesense.deleteDocument(siteId, `${blobId}`);
-  } catch (_) {
-    // Not indexed (e.g. a draft from the start)
+  } catch (error) {
+    if (error?.httpStatus === 404) return;
+    await reportSearchError(env, 'worker_typesense_delete', {
+      siteId,
+      path,
+      error,
+    });
   }
 }
 
+/**
+ * Upsert a page's search document. Returns an author-facing error when
+ * Typesense rejects the document itself (400, e.g. `authors` is not a list),
+ * which only the author can fix; null otherwise.
+ */
 async function indexInTypesense({
   typesense,
+  env,
   siteId,
   blobId,
   path,
@@ -650,7 +688,7 @@ async function indexInTypesense({
   metadata,
   tags = [],
 }) {
-  if (!typesense) return;
+  if (!typesense) return null;
   try {
     const document = {
       title: metadata.title,
@@ -663,7 +701,15 @@ async function indexInTypesense({
       id: `${blobId}`,
     };
     await typesense.upsertDocument(siteId, document);
-  } catch {
-    console.error(`Failed indexing document: ${`${siteId} - ${path}`}`);
+    return null;
+  } catch (error) {
+    await reportSearchError(env, 'worker_typesense_index', {
+      siteId,
+      path,
+      error,
+    });
+    return error?.httpStatus === 400
+      ? `Not added to search: ${error.reason}`
+      : null;
   }
 }

@@ -42,7 +42,9 @@ export function getPostgresClient(env) {
  * Typesense client built on the runtime's `fetch`, not the `typesense` SDK: the
  * SDK sends requests through axios, whose fetch adapter (>= 1.20) always sets
  * `cache: 'default'`, which workerd rejects, so every call failed.
- * Non-2xx responses throw an Error carrying `httpStatus`.
+ * Non-2xx responses throw an Error carrying `httpStatus` and `reason` (the
+ * `message` from Typesense's JSON error body, e.g. "Field `authors` must be an
+ * array.").
  */
 export function getTypesenseClient(env) {
   if (!env.TYPESENSE_API_KEY || !env.TYPESENSE_HOST) return null;
@@ -59,10 +61,18 @@ export function getTypesenseClient(env) {
       signal: AbortSignal.timeout(2000),
     });
     if (!res.ok) {
+      const text = await res.text();
+      let reason = text;
+      try {
+        reason = JSON.parse(text).message ?? text;
+      } catch {
+        // not JSON: keep the raw body
+      }
       const error = new Error(
-        `Typesense ${method} ${path}: ${res.status} ${await res.text()}`,
+        `Typesense ${method} ${path}: ${res.status} ${reason}`,
       );
       error.httpStatus = res.status;
+      error.reason = reason;
       throw error;
     }
     return res.json();
