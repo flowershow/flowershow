@@ -532,8 +532,8 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
         makeParams(SITE_ID),
       );
 
-      const { where } = vi.mocked(prisma.publishFile.findMany).mock
-        .calls[0]?.[0] as any;
+      const [args] = vi.mocked(prisma.publishFile.findMany).mock.calls[0] ?? [];
+      const where = (args as any).where;
       expect(where.OR).toEqual([
         { status: 'uploading' },
         { status: 'success', changeType: 'deleted' },
