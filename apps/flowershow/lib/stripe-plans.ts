@@ -82,7 +82,6 @@ export const PLANS: Record<PlanType, Plan> = {
       'Custom head code',
       'Custom navbar & footer',
       'Priority support',
-      'Team collaboration',
       'Custom branding',
     ],
     price: {
