@@ -58,6 +58,7 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
           path,
           publishId,
         });
+        await revalidateIfPublishDone({ sql, env, siteId, publishId });
       } catch (e) {
         console.error('Error processing non-markdown file:', {
           siteId,
@@ -84,6 +85,7 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
       path,
       publishId,
     });
+    await revalidateIfPublishDone({ sql, env, siteId, publishId });
     msg.ack();
   } catch (err) {
     const rawKey = msg.body.object.key;
@@ -107,6 +109,39 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
       error_name: err.name,
       source: 'worker_process_file',
     });
+  }
+}
+
+/**
+ * Purge the app's cached site data as soon as the last file of a publish has
+ * been processed, instead of waiting for the PublishFinalizerWorkflow's next
+ * 10s poll. The app caches tRPC lookups (including "page not found") for 60s
+ * under the site-id tag, so a page requested after `fl` reports success but
+ * before the finalizer revalidated would 404 for several seconds.
+ *
+ * Never throws: the finalizer revalidates again as a fallback.
+ */
+export async function revalidateIfPublishDone({ sql, env, siteId, publishId }) {
+  if (!publishId || !env?.NEXTJS_APP_URL || !env?.INTERNAL_API_SECRET) return;
+  try {
+    const [{ count }] = await sql`
+      SELECT COUNT(*) AS count FROM "PublishFile"
+      WHERE publish_id = ${publishId} AND status = 'uploading'
+    `;
+    if (Number(count) !== 0) return;
+    const resp = await fetch(`${env.NEXTJS_APP_URL}/api/internal/revalidate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-internal-secret': env.INTERNAL_API_SECRET,
+      },
+      body: JSON.stringify({ tags: [siteId] }),
+    });
+    if (!resp.ok) {
+      console.error(`Revalidate failed: ${resp.status} for site ${siteId}`);
+    }
+  } catch (err) {
+    console.error(`Revalidate error for site ${siteId}: ${err.message}`);
   }
 }
 

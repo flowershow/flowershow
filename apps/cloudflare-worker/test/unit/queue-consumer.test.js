@@ -7,6 +7,7 @@ import {
   extractTags,
   extractTitle,
   handleMessage,
+  revalidateIfPublishDone,
   isSupportedImagePath,
   normalizePermalink,
   parseMarkdown,
@@ -861,4 +862,80 @@ test('handleMessage - invalid frontmatter publishes the page and records a file 
   const update = queries.find((q) => q.text.startsWith('UPDATE "PublishFile"'));
   expect(update.text).toContain("status = 'error'");
   expect(update.values[0]).toMatch(/^Invalid YAML frontmatter/);
+});
+
+// Cache purge as soon as a publish's last file is processed (flowershow-w5n)
+
+const REVALIDATE_ENV = {
+  NEXTJS_APP_URL: 'https://app.example',
+  INTERNAL_API_SECRET: 's3cret',
+};
+
+function sqlWithPending(pending) {
+  const queries = [];
+  const sql = (strings) => {
+    queries.push(strings.join('?').replace(/\s+/g, ' ').trim());
+    return [{ count: String(pending) }];
+  };
+  return { sql, queries };
+}
+
+test('revalidateIfPublishDone - purges the site tag when no files are pending', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  vi.stubGlobal('fetch', fetchMock);
+  const { sql } = sqlWithPending(0);
+
+  await revalidateIfPublishDone({
+    sql,
+    env: REVALIDATE_ENV,
+    siteId: 'site-1',
+    publishId: 'pub-1',
+  });
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  const [url, init] = fetchMock.mock.calls[0];
+  expect(url).toBe('https://app.example/api/internal/revalidate');
+  expect(init.headers['x-internal-secret']).toBe('s3cret');
+  expect(JSON.parse(init.body)).toEqual({ tags: ['site-1'] });
+  vi.unstubAllGlobals();
+});
+
+test('revalidateIfPublishDone - does nothing while other files are still uploading', async () => {
+  const fetchMock = vi.fn();
+  vi.stubGlobal('fetch', fetchMock);
+  const { sql } = sqlWithPending(2);
+
+  await revalidateIfPublishDone({
+    sql,
+    env: REVALIDATE_ENV,
+    siteId: 'site-1',
+    publishId: 'pub-1',
+  });
+
+  expect(fetchMock).not.toHaveBeenCalled();
+  vi.unstubAllGlobals();
+});
+
+test('revalidateIfPublishDone - skips legacy uploads without a publish id and never throws', async () => {
+  const fetchMock = vi.fn().mockRejectedValue(new Error('network down'));
+  vi.stubGlobal('fetch', fetchMock);
+  const { sql, queries } = sqlWithPending(0);
+
+  await revalidateIfPublishDone({
+    sql,
+    env: REVALIDATE_ENV,
+    siteId: 'site-1',
+    publishId: null,
+  });
+  expect(queries).toHaveLength(0);
+
+  await expect(
+    revalidateIfPublishDone({
+      sql,
+      env: REVALIDATE_ENV,
+      siteId: 'site-1',
+      publishId: 'pub-1',
+    }),
+  ).resolves.toBeUndefined();
+  vi.unstubAllGlobals();
 });

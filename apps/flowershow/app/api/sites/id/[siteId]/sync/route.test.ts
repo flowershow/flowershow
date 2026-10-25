@@ -13,7 +13,11 @@ vi.mock('@/server/db', () => ({
     site: { findUnique: vi.fn() },
     blob: { findMany: vi.fn() },
     publish: { create: vi.fn(), findMany: vi.fn() },
-    publishFile: { updateMany: vi.fn(), createMany: vi.fn() },
+    publishFile: {
+      updateMany: vi.fn(),
+      createMany: vi.fn(),
+      findMany: vi.fn(),
+    },
   },
 }));
 
@@ -101,6 +105,7 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
     vi.mocked(prisma.publishFile.createMany).mockResolvedValue({
       count: 0,
     } as any);
+    vi.mocked(prisma.publishFile.findMany).mockResolvedValue([]);
   });
 
   describe('authentication', () => {
@@ -489,6 +494,98 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       const body = await res.json();
       expect(body.deleted).toEqual([]);
       expect(body.deleteFailed).toEqual(['old.md']);
+    });
+  });
+
+  describe('in-flight publishes (Blob table lagging the worker)', () => {
+    const blobUpdatedAt = new Date('2026-01-01T00:00:00Z');
+    const laterPublish = new Date('2026-01-01T00:05:00Z');
+
+    it('does not report a path as unchanged while another publish is still uploading it', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
+        { path: 'a.md', sha: 'same', updatedAt: blobUpdatedAt },
+      ] as any);
+      vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+        {
+          path: 'a.md',
+          status: 'uploading',
+          changeType: 'updated',
+          publish: { startedAt: laterPublish },
+        },
+      ] as any);
+
+      const res = await POST(
+        makeRequest({ files: [{ path: 'a.md', size: 1, sha: 'same' }] }),
+        makeParams(SITE_ID),
+      );
+      const body = await res.json();
+      expect(body.unchanged).toEqual([]);
+      expect(body.toUpdate.map((f: any) => f.path)).toEqual(['a.md']);
+    });
+
+    it('re-uploads a file another publish deleted before the Blob row was removed', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
+        { path: 'gone.md', sha: 'same', updatedAt: blobUpdatedAt },
+      ] as any);
+      vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+        {
+          path: 'gone.md',
+          status: 'success',
+          changeType: 'deleted',
+          publish: { startedAt: laterPublish },
+        },
+      ] as any);
+
+      const res = await POST(
+        makeRequest({ files: [{ path: 'gone.md', size: 1, sha: 'same' }] }),
+        makeParams(SITE_ID),
+      );
+      const body = await res.json();
+      expect(body.unchanged).toEqual([]);
+      expect(body.toUpload.map((f: any) => f.path)).toEqual(['gone.md']);
+    });
+
+    it('does not report an already-deleted path as deleted again', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
+        { path: 'gone.md', sha: 'x', updatedAt: blobUpdatedAt },
+      ] as any);
+      vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+        {
+          path: 'gone.md',
+          status: 'success',
+          changeType: 'deleted',
+          publish: { startedAt: laterPublish },
+        },
+      ] as any);
+
+      const res = await POST(
+        makeRequest({ files: [{ path: 'other.md', size: 1, sha: 'y' }] }),
+        makeParams(SITE_ID),
+      );
+      const body = await res.json();
+      expect(body.deleted).toEqual([]);
+      expect(deleteFile).not.toHaveBeenCalled();
+    });
+
+    it('ignores a delete older than the Blob row (file was re-added since)', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
+        { path: 'back.md', sha: 'same', updatedAt: laterPublish },
+      ] as any);
+      vi.mocked(prisma.publishFile.findMany).mockResolvedValueOnce([
+        {
+          path: 'back.md',
+          status: 'success',
+          changeType: 'deleted',
+          publish: { startedAt: blobUpdatedAt },
+        },
+      ] as any);
+
+      const res = await POST(
+        makeRequest({ files: [{ path: 'back.md', size: 1, sha: 'same' }] }),
+        makeParams(SITE_ID),
+      );
+      const body = await res.json();
+      expect(body.unchanged).toEqual(['back.md']);
     });
   });
 
