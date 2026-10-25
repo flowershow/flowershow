@@ -33,14 +33,23 @@ export type PublishInput = {
   claimToken?: string;
   /** Name for a new account site (signed in, no siteId). */
   name?: string;
-  /** Paths to remove from an existing site (siteId only; not with replace). */
+  /** Paths to remove from an existing site (siteId only; not with replaceWholeSite). */
   delete?: string[];
   /**
    * Make `files` the site's complete content, removing every other file.
    * Default false: an update only adds or changes the files sent.
    */
-  replace?: boolean;
+  replaceWholeSite?: boolean;
+  /**
+   * With replaceWholeSite on an existing site: the number of files the
+   * replace will remove, as reported by a first call without it. Guards
+   * against wiping a site by accident.
+   */
+  confirmDeleteCount?: number;
 };
+
+/** How many paths to list when asking the model to confirm a replace. */
+const CONFIRM_LIST_MAX = 20;
 
 /** Who is publishing: anonymous (claim-token sites) or an authenticated user. */
 export type PublishMode = { kind: 'anon' } | { kind: 'user'; userId: string };
@@ -67,7 +76,7 @@ export interface PublishDeps {
     siteId: string,
     files: FileMetadata[],
     credential: PublishCredential,
-    options: { mode: SyncMode; delete: string[] },
+    options: { mode: SyncMode; delete: string[]; dryRun?: boolean },
   ): Promise<SyncResponse>;
   upload(
     url: string,
@@ -222,9 +231,9 @@ function decodeDeletes(input: PublishInput, filePaths: Set<string>): string[] {
       'delete only applies when updating an existing site (pass its siteId).',
     );
   }
-  if (input.replace) {
+  if (input.replaceWholeSite) {
     throw new PublishError(
-      'Use either delete or replace, not both: with replace, every file not sent is removed anyway.',
+      'Use either delete or replaceWholeSite, not both: with replaceWholeSite, every file not sent is removed anyway.',
     );
   }
   if (list.length > MAX_DELETE) {
@@ -274,7 +283,9 @@ async function mapLimit<T>(
  * link), an existing anonymous site (siteId + claimToken), or, with an
  * account token, an existing site of that account (siteId). An update only
  * adds or changes the files sent and removes the paths in `delete`; other
- * files are kept. With `replace`, the files sent become the whole site.
+ * files are kept. With `replaceWholeSite`, the files sent become the whole
+ * site; on an existing site that removes files only once the caller confirms
+ * how many (`confirmDeleteCount`, from a first, refused call).
  */
 export async function publish(
   input: PublishInput,
@@ -293,7 +304,12 @@ export async function publish(
   );
   // Deleting from an existing site needs no files.
   const files = decodeFiles(input.files, toDelete.length > 0);
-  const syncMode: SyncMode = input.replace ? 'replace' : 'merge';
+  const syncMode: SyncMode = input.replaceWholeSite ? 'replace' : 'merge';
+  if (input.confirmDeleteCount !== undefined && !input.replaceWholeSite) {
+    throw new PublishError(
+      'confirmDeleteCount only applies with replaceWholeSite. To remove specific files, list them in delete.',
+    );
+  }
 
   let target: Omit<PublishResult, 'message'>;
   let credential: PublishCredential;
@@ -346,18 +362,32 @@ export async function publish(
   // From here on the site exists: never lose its claim link.
   let step = 'sync';
   let deleted: string[] = [];
+  let deleteFailed: string[] = [];
   try {
-    const plan = await deps.sync(
-      target.siteId,
-      files.map((f) => ({
-        path: f.path,
-        size: f.bytes.byteLength,
-        sha: gitBlobSha(f.bytes),
-      })),
-      credential,
-      { mode: syncMode, delete: toDelete },
-    );
+    const manifest = files.map((f) => ({
+      path: f.path,
+      size: f.bytes.byteLength,
+      sha: gitBlobSha(f.bytes),
+    }));
+    // A replace of an existing site removes every file not sent: check what
+    // that would be first, and only go ahead once the caller has confirmed.
+    if (syncMode === 'replace' && !createdNow) {
+      const dry = await deps.sync(target.siteId, manifest, credential, {
+        mode: 'replace',
+        delete: [],
+        dryRun: true,
+      });
+      const removing = dry.deleted;
+      if (removing.length > 0 && input.confirmDeleteCount !== removing.length) {
+        throw new PublishError(confirmReplaceMessage(removing, input));
+      }
+    }
+    const plan = await deps.sync(target.siteId, manifest, credential, {
+      mode: syncMode,
+      delete: toDelete,
+    });
     deleted = plan.deleted;
+    deleteFailed = plan.deleteFailed ?? [];
     // Only look the URL up once sync has authorised the caller for this site.
     if (!target.liveUrl) target.liveUrl = await deps.siteUrl(target.siteId);
 
@@ -394,15 +424,35 @@ export async function publish(
     if (now() + pollIntervalMs > deadline) break;
     await deps.sleep(pollIntervalMs);
   }
-  const notDeleted = toDelete.filter((p) => !deleted.includes(p));
+  const notFound = toDelete.filter(
+    (p) => !deleted.includes(p) && !deleteFailed.includes(p),
+  );
   return {
     ...target,
     message: summarise(target, last, mode, {
       deleted,
-      notDeleted,
-      replace: !!input.replace,
+      deleteFailed,
+      notFound,
+      replace: !!input.replaceWholeSite,
     }),
   };
+}
+
+function confirmReplaceMessage(
+  removing: string[],
+  input: Pick<PublishInput, 'confirmDeleteCount'>,
+): string {
+  const n = removing.length;
+  const shown = removing.slice(0, CONFIRM_LIST_MAX).join(', ');
+  const more = n > CONFIRM_LIST_MAX ? ` and ${n - CONFIRM_LIST_MAX} more` : '';
+  const mismatch =
+    input.confirmDeleteCount !== undefined
+      ? ` (confirmDeleteCount was ${input.confirmDeleteCount}, but the site has changed or the count is wrong)`
+      : '';
+  return [
+    `Nothing was published. Replacing the whole site would permanently remove ${n} file(s) that were not sent${mismatch}: ${shown}${more}.`,
+    `Ask the user first whether they really want to remove ${n === 1 ? 'this file' : `these ${n} files`}. If they only meant to change some pages, call publish again without replaceWholeSite and send just those files (other files are kept). If they confirm, call publish again with the same files, replaceWholeSite: true and confirmDeleteCount: ${n}.`,
+  ].join('\n\n');
 }
 
 function withRetryHint(
@@ -430,7 +480,12 @@ function summarise(
   target: Omit<PublishResult, 'message'>,
   last: StatusResult | null,
   mode: PublishMode,
-  removed: { deleted: string[]; notDeleted: string[]; replace: boolean },
+  removed: {
+    deleted: string[];
+    deleteFailed: string[];
+    notFound: string[];
+    replace: boolean;
+  },
 ): string {
   const parts = [`Published: ${target.liveUrl}`];
   if (removed.replace && removed.deleted.length) {
@@ -440,9 +495,14 @@ function summarise(
   } else if (removed.deleted.length) {
     parts.push(`Deleted: ${removed.deleted.join(', ')}`);
   }
-  if (removed.notDeleted.length) {
+  if (removed.deleteFailed.length) {
     parts.push(
-      `Not deleted (no such file on the site): ${removed.notDeleted.join(', ')}`,
+      `Could not delete (please try again): ${removed.deleteFailed.join(', ')}`,
+    );
+  }
+  if (removed.notFound.length) {
+    parts.push(
+      `Not deleted, because no such file was found on the site (if it was published moments ago it may still be processing; try again shortly): ${removed.notFound.join(', ')}`,
     );
   }
   if (!last || last.status === 'pending') {
@@ -475,7 +535,7 @@ function summarise(
 }
 
 const UPDATE_HINT =
-  'To remove files, list their paths in delete; to make the files you send the whole site, set replace to true.';
+  'To remove files, list their paths in delete. Only if the user asks to start the site over, set replaceWholeSite to true (the files you send become the whole site).';
 
 const NAME_MAX = 60;
 

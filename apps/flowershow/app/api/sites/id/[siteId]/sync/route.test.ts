@@ -372,6 +372,124 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       expect(res.status).toBe(413);
       expect(prisma.publish.create).not.toHaveBeenCalled();
     });
+
+    describe('anonymous whole-site limits', () => {
+      const ANON_OWNER = '3f1c2b7a-1d2e-4f3a-9b4c-5d6e7f8a9b0c';
+      const anonRequest = (body: unknown) =>
+        makeRequest(body, {
+          headers: {
+            Authorization: `Bearer ${generateSiteClaimToken(SITE_ID, ANON_OWNER)}`,
+          },
+        });
+      const blobs = (n: number, size = 10) =>
+        Array.from({ length: n }, (_, i) => ({
+          path: `p-${i}.html`,
+          sha: `s-${i}`,
+          size,
+        }));
+
+      beforeEach(() => {
+        vi.mocked(prisma.site.findUnique).mockResolvedValue({
+          id: SITE_ID,
+          userId: ANONYMOUS_USER_ID,
+          anonymousOwnerId: ANON_OWNER,
+          expiresAt: new Date(Date.now() + 86400000),
+        } as any);
+      });
+
+      it('allows updating a file on a site at exactly 200 files', async () => {
+        vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(
+          blobs(200) as any,
+        );
+
+        const res = await POST(
+          anonRequest({
+            mode: 'merge',
+            files: [{ path: 'p-0.html', size: 10, sha: 'changed' }],
+          }),
+          makeParams(SITE_ID),
+        );
+
+        expect(res.status).toBe(200);
+        expect((await res.json()).summary.toUpdate).toBe(1);
+      });
+
+      it('allows adding a file to a full site when a delete frees room', async () => {
+        vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(
+          blobs(200) as any,
+        );
+
+        const res = await POST(
+          anonRequest({
+            mode: 'merge',
+            files: [{ path: 'new.html', size: 10, sha: 'x' }],
+            delete: ['p-1.html'],
+          }),
+          makeParams(SITE_ID),
+        );
+
+        expect(res.status).toBe(200);
+        const body = await res.json();
+        expect(body.summary.toUpload).toBe(1);
+        expect(body.deleted).toEqual(['p-1.html']);
+      });
+
+      it('returns 413 when the merge takes the site over 50 MB', async () => {
+        // 5 existing files of 10 MB each = 50 MB; one more byte is too much.
+        vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(
+          blobs(5, 10 * 1024 * 1024) as any,
+        );
+
+        const res = await POST(
+          anonRequest({
+            mode: 'merge',
+            files: [{ path: 'extra.html', size: 1, sha: 'x' }],
+          }),
+          makeParams(SITE_ID),
+        );
+
+        expect(res.status).toBe(413);
+        expect((await res.json()).message).toMatch(/50 MB/);
+        expect(prisma.publish.create).not.toHaveBeenCalled();
+      });
+    });
+
+    it('cancels only earlier in-flight uploads of the paths it sends or deletes', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(existing as any);
+
+      await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [{ path: 'about.md', size: 12, sha: 'about-new' }],
+          delete: ['old.md'],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(prisma.publishFile.updateMany).toHaveBeenCalledWith({
+        where: {
+          publish: { siteId: SITE_ID, completedAt: null },
+          status: 'uploading',
+          publishId: { not: PUBLISH_ID },
+          path: { in: ['about.md', 'old.md'] },
+        },
+        data: { status: 'canceled' },
+      });
+    });
+
+    it('reports paths whose deletion failed in deleteFailed', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(existing as any);
+      vi.mocked(deleteFile).mockRejectedValueOnce(new Error('R2 error'));
+
+      const res = await POST(
+        makeRequest({ mode: 'merge', files: [], delete: ['old.md'] }),
+        makeParams(SITE_ID),
+      );
+
+      const body = await res.json();
+      expect(body.deleted).toEqual([]);
+      expect(body.deleteFailed).toEqual(['old.md']);
+    });
   });
 
   describe('dryRun mode', () => {
@@ -628,15 +746,15 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
         makeParams(SITE_ID),
       );
 
-      expect(prisma.publishFile.updateMany).toHaveBeenCalledWith(
-        expect.objectContaining({
-          where: expect.objectContaining({
-            status: 'uploading',
-            publishId: { not: PUBLISH_ID },
-          }),
-          data: { status: 'canceled' },
-        }),
-      );
+      // Replace mode supersedes every earlier upload, whatever its path.
+      expect(prisma.publishFile.updateMany).toHaveBeenCalledWith({
+        where: {
+          publish: { siteId: SITE_ID, completedAt: null },
+          status: 'uploading',
+          publishId: { not: PUBLISH_ID },
+        },
+        data: { status: 'canceled' },
+      });
     });
 
     it('does not create PublishFile records for legacy clients', async () => {

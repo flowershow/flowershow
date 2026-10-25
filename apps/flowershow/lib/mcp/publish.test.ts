@@ -577,38 +577,157 @@ describe('publish (partial updates)', () => {
       });
       expect(deps.upload).not.toHaveBeenCalled();
       expect(res.message).toContain('Deleted: old.md');
-      expect(res.message).toContain(
-        'Not deleted (no such file on the site): missing.md',
+      expect(res.message).toMatch(
+        /Not deleted, because no such file was found on the site \(.*may still be processing.*\): missing\.md/,
       );
     },
   );
 
-  it.each([
-    ['anonymous', { kind: 'anon' as const }, { claimToken: 'fs_claim_old' }],
-    ['signed in', USER, { userId: 'u1' }],
-  ])(
-    'replaces the whole site only when replace is true (%s)',
-    async (_label, mode, credential) => {
+  it('reports deletes that failed separately from missing files', async () => {
+    deps = makeDeps({
+      sync: vi.fn().mockResolvedValue({
+        toUpload: [],
+        toUpdate: [],
+        deleted: [],
+        deleteFailed: ['stuck.md'],
+        unchanged: [],
+        summary: { toUpload: 0, toUpdate: 0, deleted: 0, unchanged: 0 },
+      }),
+    });
+    const res = await publish(
+      { files: [], delete: ['stuck.md', 'missing.md'], siteId: 'site-u' },
+      USER,
+      deps,
+    );
+    expect(res.message).toContain(
+      'Could not delete (please try again): stuck.md',
+    );
+    expect(res.message).toMatch(/no such file was found.*: missing\.md$/m);
+  });
+
+  describe('replaceWholeSite', () => {
+    const DRY = { mode: 'replace', delete: [], dryRun: true };
+    const REPLACE = { mode: 'replace', delete: [] };
+
+    it.each([
+      ['anonymous', { kind: 'anon' as const }, { claimToken: 'fs_claim_old' }],
+      ['signed in', USER, { userId: 'u1' }],
+    ])(
+      'refuses to remove files without confirmDeleteCount, listing them (%s)',
+      async (_label, mode, credential) => {
+        deps = withDeleted(['a.md', 'b.md']);
+        await expect(
+          publish(
+            {
+              files: [page],
+              replaceWholeSite: true,
+              siteId: 'site-9',
+              claimToken: 'fs_claim_old',
+            },
+            mode,
+            deps,
+          ),
+        ).rejects.toThrow(
+          /Nothing was published.*remove 2 file\(s\).*: a\.md, b\.md\.[\s\S]*Ask the user first[\s\S]*confirmDeleteCount: 2/,
+        );
+        expect(deps.sync).toHaveBeenCalledTimes(1);
+        expect(deps.sync).toHaveBeenCalledWith(
+          'site-9',
+          expect.any(Array),
+          credential,
+          DRY,
+        );
+        expect(deps.upload).not.toHaveBeenCalled();
+      },
+    );
+
+    it('replaces the site once the count is confirmed', async () => {
       deps = withDeleted(['a.md', 'b.md']);
       const res = await publish(
         {
           files: [page],
-          replace: true,
-          siteId: 'site-9',
-          claimToken: 'fs_claim_old',
+          replaceWholeSite: true,
+          confirmDeleteCount: 2,
+          siteId: 'site-u',
         },
-        mode,
+        USER,
         deps,
       );
-      expect(deps.sync).toHaveBeenCalledWith(
-        'site-9',
+      expect(deps.sync).toHaveBeenCalledTimes(2);
+      expect(deps.sync).toHaveBeenNthCalledWith(
+        1,
+        'site-u',
         expect.any(Array),
-        credential,
-        { mode: 'replace', delete: [] },
+        { userId: 'u1' },
+        DRY,
+      );
+      expect(deps.sync).toHaveBeenNthCalledWith(
+        2,
+        'site-u',
+        expect.any(Array),
+        { userId: 'u1' },
+        REPLACE,
       );
       expect(res.message).toMatch(/removed 2 file\(s\) that were not sent/);
-    },
-  );
+    });
+
+    it('refuses when the confirmed count no longer matches', async () => {
+      deps = withDeleted(['a.md', 'b.md', 'c.md']);
+      await expect(
+        publish(
+          {
+            files: [page],
+            replaceWholeSite: true,
+            confirmDeleteCount: 2,
+            siteId: 'site-u',
+          },
+          USER,
+          deps,
+        ),
+      ).rejects.toThrow(
+        /confirmDeleteCount was 2.*remove 3|remove 3.*confirmDeleteCount was 2/,
+      );
+      expect(deps.sync).toHaveBeenCalledTimes(1);
+    });
+
+    it('lists only the first 20 paths', async () => {
+      deps = withDeleted(Array.from({ length: 25 }, (_, i) => `p${i}.md`));
+      const err = await publish(
+        { files: [page], replaceWholeSite: true, siteId: 'site-u' },
+        USER,
+        deps,
+      ).catch((e: Error) => e);
+      expect((err as Error).message).toMatch(/p19\.md and 5 more\./);
+      expect((err as Error).message).not.toContain('p20.md');
+    });
+
+    it('goes ahead without confirmation when nothing would be removed', async () => {
+      deps = withDeleted([]);
+      await publish(
+        { files: [page], replaceWholeSite: true, siteId: 'site-u' },
+        USER,
+        deps,
+      );
+      expect(deps.sync).toHaveBeenCalledTimes(2);
+      expect(deps.sync).toHaveBeenLastCalledWith(
+        'site-u',
+        expect.any(Array),
+        { userId: 'u1' },
+        REPLACE,
+      );
+    });
+
+    it('skips the dry run for a site created by this call', async () => {
+      await publish({ files: [html], replaceWholeSite: true }, USER, deps);
+      expect(deps.sync).toHaveBeenCalledTimes(1);
+      expect(deps.sync).toHaveBeenCalledWith(
+        'site-new',
+        expect.any(Array),
+        { userId: 'u1' },
+        REPLACE,
+      );
+    });
+  });
 
   it('normalises and de-duplicates delete paths', async () => {
     await publish(
@@ -638,9 +757,14 @@ describe('publish (partial updates)', () => {
       /existing site/,
     ],
     [
-      'delete with replace',
-      { files: [html], delete: ['a.md'], replace: true, siteId: 'site-u' },
-      /either delete or replace/,
+      'delete with replaceWholeSite',
+      {
+        files: [html],
+        delete: ['a.md'],
+        replaceWholeSite: true,
+        siteId: 'site-u',
+      },
+      /either delete or replaceWholeSite/,
     ],
     [
       'a path in both files and delete',
@@ -653,9 +777,14 @@ describe('publish (partial updates)', () => {
       /Invalid path to delete/,
     ],
     [
-      'replace with no files (would empty the site)',
-      { files: [], replace: true, siteId: 'site-u' },
+      'replaceWholeSite with no files (would empty the site)',
+      { files: [], replaceWholeSite: true, siteId: 'site-u' },
       /No files to publish/,
+    ],
+    [
+      'confirmDeleteCount without replaceWholeSite',
+      { files: [html], confirmDeleteCount: 3, siteId: 'site-u' },
+      /only applies with replaceWholeSite/,
     ],
   ])('rejects %s before any API call', async (_label, input, message) => {
     await expect(publish(input, USER, deps)).rejects.toThrow(message);

@@ -41,7 +41,7 @@ export interface McpDeps extends PublishDeps {
 
 // How updates work, shared by both publish descriptions.
 const UPDATE_RULES =
-  'To remove pages or files, list their paths in delete (files can then be empty). Only to start the site over, set replace to true: the files you send become the whole site and every other file is removed.';
+  'To remove pages or files, list their paths in delete (files can then be empty). Only when the user explicitly asks to start the site over, set replaceWholeSite to true: the files you send become the whole site and every other file is removed. If that would remove existing files, the call is refused and tells you how many and which; ask the user, then call again with confirmDeleteCount set to that number.';
 
 // What the model sees: phrased around what users actually ask for.
 const PUBLISH_DESCRIPTION = `Publish files as a live website on Flowershow and get a shareable URL. Use when the user says "publish this", "put this online", "make this a website", "share this as a page" or "host this".
@@ -125,11 +125,19 @@ export function createFlowershowMcpServer(
           .describe(
             'Paths of existing files to remove from the site (with siteId), e.g. ["old-page.md"]',
           ),
-        replace: z
+        replaceWholeSite: z
           .boolean()
           .optional()
           .describe(
-            'Set true only to start the site over: the files sent become the whole site and all other files are removed. Default false.',
+            'Set true only when the user asks to start the site over: the files sent become the whole site and all other files are permanently removed. Never use it to update a few pages. Default false.',
+          ),
+        confirmDeleteCount: z
+          .number()
+          .int()
+          .nonnegative()
+          .optional()
+          .describe(
+            'With replaceWholeSite: the number of existing files the replace will remove, as reported by the refused first call. Set it only after the user has confirmed.',
           ),
         ...(signedIn && {
           name: z
@@ -143,7 +151,7 @@ export function createFlowershowMcpServer(
       annotations: {
         title: 'Publish to Flowershow',
         readOnlyHint: false,
-        // Updates keep files not sent, but delete and replace remove files.
+        // Updates keep files not sent, but delete and replaceWholeSite remove files.
         destructiveHint: true,
         idempotentHint: false,
         openWorldHint: true,

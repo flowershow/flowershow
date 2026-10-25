@@ -154,6 +154,20 @@ describe('realMcpDeps', () => {
     expect(await ctx.params).toEqual({ siteId: 'site-1' });
   });
 
+  it('sends a dry run as ?dryRun=true without counting it against the site limit', async () => {
+    sync.mockResolvedValue(NextResponse.json({ toUpload: [], toUpdate: [] }));
+    const token = generateSiteClaimToken('site-1', 'anon-1');
+    await realMcpDeps().sync(
+      'site-1',
+      [],
+      { claimToken: token },
+      { mode: 'replace', delete: [], dryRun: true },
+    );
+    const [req] = sync.mock.calls[0] ?? [];
+    expect(req.nextUrl.searchParams.get('dryRun')).toBe('true');
+    expect(checkAnonUpdateLimit).not.toHaveBeenCalled();
+  });
+
   it('acts for a signed-in user with the in-process marker, never forwarding a bearer', async () => {
     sync.mockResolvedValue(NextResponse.json({ toUpload: [], toUpdate: [] }));
     await realMcpDeps().sync('site-1', [], { userId: 'u1' }, MERGE);

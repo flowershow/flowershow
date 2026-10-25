@@ -146,7 +146,9 @@ export function realMcpDeps(caller?: AnonCaller): McpDeps {
     async sync(siteId, files, credential, options) {
       // Per-site limit on anonymous publishes. Only for a claim token that is
       // genuinely for this site, so nobody can use up another site's budget.
+      // A dry run changes nothing, so it doesn't count.
       if (
+        !options.dryRun &&
         'claimToken' in credential &&
         verifySiteClaimToken(credential.claimToken)?.siteId === siteId &&
         !(await checkAnonUpdateLimit(siteId))
@@ -158,7 +160,7 @@ export function realMcpDeps(caller?: AnonCaller): McpDeps {
       const res = await syncPOST(
         internalRequest(
           'POST',
-          `/api/sites/id/${encodeURIComponent(siteId)}/sync`,
+          `/api/sites/id/${encodeURIComponent(siteId)}/sync${options.dryRun ? '?dryRun=true' : ''}`,
           credential,
           { files, mode: options.mode, delete: options.delete },
         ),

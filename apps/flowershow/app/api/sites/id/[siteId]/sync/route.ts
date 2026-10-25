@@ -187,13 +187,18 @@ export async function POST(
       });
       publishId = publish.id;
 
-      // Cancel all uploading files from prior in-progress publishes for this site.
+      // Cancel uploading files from prior in-progress publishes for this site.
       // Their finalizers will detect completion on the next poll and set completedAt.
+      // A replace supersedes every earlier publish; a merge only supersedes
+      // earlier uploads of the paths it sends or deletes.
       await prisma.publishFile.updateMany({
         where: {
           publish: { siteId, completedAt: null },
           status: 'uploading',
           publishId: { not: publish.id },
+          ...(mode === 'merge' && {
+            path: { in: [...files.map((f) => f.path), ...deleteList] },
+          }),
         },
         data: { status: 'canceled' },
       });
@@ -328,6 +333,9 @@ export async function POST(
       toUpload: uploadUrls,
       toUpdate: updateUrls,
       deleted: deletedPaths,
+      ...(deletedPaths.length < toDelete.length && {
+        deleteFailed: toDelete.filter((p) => !deletedPaths.includes(p)),
+      }),
       unchanged,
       summary: {
         toUpload: uploadUrls.length,

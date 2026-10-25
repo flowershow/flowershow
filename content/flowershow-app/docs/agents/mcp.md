@@ -42,7 +42,9 @@ Ask in your own words, for example:
 
 > Publish this report as a website.
 
-Your AI replies with the live link and a claim link. To change the site in the same conversation, ask it to update the page: it republishes to the same address. An update sends only the files that changed and keeps the rest of the site as it is. To remove a page, ask your AI to delete it; to start the site over, ask it to replace the whole site.
+Your AI replies with the live link and a claim link. To change the site in the same conversation, ask it to update the page: it republishes to the same address. An update sends only the files that changed and keeps the rest of the site as it is. To remove a page, ask your AI to delete it; to start the site over, ask it to replace the whole site (it checks with you first if that would remove existing files).
+
+If the site was published from the CLI, Obsidian or GitHub, pages your AI adds through the connector are removed the next time you publish from that source, because it publishes your folder or repo as the whole site.
 
 A new conversation creates a new site, and once you've claimed a site the connector can no longer update it. So make your changes first, then claim the site when you're happy with it.
 
@@ -79,5 +81,5 @@ With a token, `list-sites` shows your sites, and `publish` updates the one you n
 
 | Tool | What it does |
 |---|---|
-| `publish` | Publishes files (text, or base64 for binary). Without `siteId`: creates a new site and returns `liveUrl`, `claimUrl`, `claimToken` and `expiresAt`. With `siteId` (plus `claimToken` when not using an account token): adds or updates the files sent and keeps the others. `delete` lists paths to remove; `replace: true` makes the files sent the whole site, removing everything else. |
+| `publish` | Publishes files (text, or base64 for binary). Without `siteId`: creates a new site and returns `liveUrl`, `claimUrl`, `claimToken` and `expiresAt`. With `siteId` (plus `claimToken` when not using an account token): adds or updates the files sent and keeps the others. `delete` lists paths to remove; `replaceWholeSite: true` makes the files sent the whole site, removing everything else. If that would remove existing files, the call is refused with the count and paths, and goes ahead only when repeated with `confirmDeleteCount` set to that count. |
 | `list-sites` | Account tokens only: lists your sites with their `siteId` and URL. |

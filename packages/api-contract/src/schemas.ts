@@ -255,6 +255,8 @@ export const SyncResponseSchema = z.object({
   toUpload: z.array(PresignedUrlSchema),
   toUpdate: z.array(PresignedUrlSchema),
   deleted: z.array(z.string()),
+  /** Paths that should have been deleted but whose deletion failed (retry). */
+  deleteFailed: z.array(z.string()).optional(),
   unchanged: z.array(z.string()),
   summary: z.object({
     toUpload: z.number(),
