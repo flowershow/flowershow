@@ -17,6 +17,7 @@ describe.each([
     expect(fn(undefined, site)).toBe(false);
     expect(fn(null, site)).toBe(false);
     expect(fn('', site)).toBe(false);
+    expect(fn('', { userId: '' })).toBe(false);
   });
   it('denies a missing site', () => {
     expect(fn('owner-1', null)).toBe(false);

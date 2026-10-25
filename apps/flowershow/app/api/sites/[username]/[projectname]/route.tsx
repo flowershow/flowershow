@@ -66,6 +66,7 @@ export async function GET(
   }
 
   // If authenticated and user owns the site, return extended data for CLI usage
+  // TODO(#919): inline owner check; switch to canManageSite once editors exist.
   if (auth?.userId && site.user.id === auth.userId) {
     const extendedSite = await prisma.site.findUnique({
       where: { id: site.id },

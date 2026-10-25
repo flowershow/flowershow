@@ -1,4 +1,4 @@
-import { canManageSite } from '@/lib/site-authz';
+import { isSiteOwner } from '@/lib/site-authz';
 import { jwtVerify, SignJWT } from 'jose';
 import { env } from '@/env.mjs';
 import { normalizeHost } from '@/lib/site-host';
@@ -132,7 +132,8 @@ export async function getSiteOwnerFromRequest(
     siteId: site.id,
     host: request.headers.get('host') ?? '',
   });
-  return canManageSite(userId, site) ? userId : null;
+  // Owner-only for now; widen deliberately to canManageSite in #919 if editors get the owner cookie.
+  return isSiteOwner(userId, site) ? userId : null;
 }
 
 /**

@@ -186,6 +186,7 @@ export const siteRouter = createTRPCRouter({
     .output(fullSiteSchema.nullable())
     .query(async ({ ctx, input }): Promise<FullSite | null> => {
       return await ctx.db.site.findFirst({
+        // TODO(#919): site-ownership scope in the query; editors need canManageSite here.
         where: { id: input.id, userId: ctx.session.user.id },
         select: fullSiteSelect,
       });
@@ -467,7 +468,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.id },
         select: { id: true, userId: true },
       });
-      if (!site || !canManageSite(ctx.session.user.id, site)) {
+      if (!site || !isSiteOwner(ctx.session.user.id, site)) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
       }
 
@@ -2049,7 +2050,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.siteId },
       });
 
-      if (!site || !canManageSite(ctx.session.user.id, site)) {
+      if (!site || !isSiteOwner(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -2111,7 +2112,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.siteId },
       });
 
-      if (!site || !canManageSite(ctx.session.user.id, site)) {
+      if (!site || !isSiteOwner(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -2202,7 +2203,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: siteId },
       });
 
-      if (!site || !canManageSite(ctx.session.user.id, site)) {
+      if (!site || !isSiteOwner(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
