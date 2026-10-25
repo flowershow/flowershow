@@ -17,6 +17,7 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "~0.12.21",
     "@cloudflare/workers-types": "^4.20260621.1",
     "vitest": "catalog:",
     "wrangler": "^4.149.0"

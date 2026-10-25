@@ -15,3 +15,5 @@ Publishing adds pages to search again, and we've re-indexed every page published
 
 - After you overwrite a site, navigation, wiki-links and the index page now refresh the moment your last file is processed, instead of staying stale for a few seconds.
 - `fl` no longer says "Already in sync" right after another folder overwrote the same site. Files that are still being processed or were just deleted count as changed.
+- A page search can't index because of its frontmatter (for example `authors` written as plain text instead of a list) now shows an error in your publish output and publish history, such as `Not added to search: Field authors must be an array.` Before, it was silently left out of search.
+- Unpublished pages (`publish: false`), drafts and deleted pages are removed from your site's search again. Before, they could still show up in search results after they were taken down. We've cleared these stale entries.

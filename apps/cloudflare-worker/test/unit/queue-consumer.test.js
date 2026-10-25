@@ -470,7 +470,7 @@ test('syncTags - republish reconciles: adds new, removes stale, upserts casing/s
   expect(book.source).toBe('inline'); // source updated
 });
 
-test('syncTags - never touches another blob’s rows', async () => {
+test("syncTags - never touches another blob's rows", async () => {
   const sql = createMockTagSql([
     {
       id: 'y1',
@@ -491,7 +491,7 @@ test('syncTags - never touches another blob’s rows', async () => {
   ).toEqual(['new']);
 });
 
-test('syncTags - clearing all tags deletes the blob’s existing rows', async () => {
+test("syncTags - clearing all tags deletes the blob's existing rows", async () => {
   const sql = createMockTagSql([
     {
       id: 'z1',
