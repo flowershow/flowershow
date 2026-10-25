@@ -1,3 +1,4 @@
+import { isSiteOwner } from '@/lib/site-authz';
 import {
   ClaimSiteWithTokenRequestSchema,
   type ClaimSiteWithTokenResponse,
@@ -70,7 +71,7 @@ export async function POST(
           where: { id: siteId },
           select: { userId: true },
         });
-        if (owner?.userId !== auth.userId) {
+        if (!isSiteOwner(auth.userId, owner)) {
           return deny(
             409,
             'claimed',

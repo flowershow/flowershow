@@ -1,3 +1,4 @@
+import { isSiteOwner } from '@/lib/site-authz';
 import { type NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { env } from '@/env.mjs';
@@ -71,7 +72,8 @@ export async function GET(
     select: { id: true, userId: true, subdomain: true, customDomain: true },
   });
   // Same answer for "no such site" and "not yours": don't confirm site ids.
-  if (!site || site.userId !== userId) {
+  // Owner-only (editors do not get the owner cookie); revisit in #919.
+  if (!site || !isSiteOwner(userId, site)) {
     return text(403, 'You are signed in, but you do not own this site.');
   }
   const origin = getSiteOwnOrigin(site);

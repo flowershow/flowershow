@@ -1,3 +1,4 @@
+import { canManageSite } from '@/lib/site-authz';
 import { type NextRequest, NextResponse } from 'next/server';
 import {
   ANONYMOUS_USER_ID,
@@ -89,7 +90,7 @@ export async function authorizeSiteRequest(
     select: { id: true, userId: true },
   });
   if (!site) return deny(404, 'not_found', 'Site not found');
-  if (site.userId !== auth.userId)
+  if (!canManageSite(auth.userId, site))
     return deny(403, 'forbidden', 'You do not have access to this site');
   return { ok: true, kind: 'user', userId: auth.userId };
 }

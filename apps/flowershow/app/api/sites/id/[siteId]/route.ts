@@ -1,3 +1,4 @@
+import { canManageSite, isSiteOwner } from '@/lib/site-authz';
 import type {
   DeleteSiteResponse,
   GetSiteResponse,
@@ -83,7 +84,7 @@ export async function GET(
     }
 
     // Check ownership
-    if (site.userId !== auth.userId) {
+    if (!canManageSite(auth.userId, site)) {
       return NextResponse.json(
         { error: 'forbidden', message: 'You do not have access to this site' },
         { status: 403 },
@@ -187,7 +188,7 @@ export async function DELETE(
     }
 
     // Check ownership
-    if (site.userId !== auth.userId) {
+    if (!isSiteOwner(auth.userId, site)) {
       return NextResponse.json(
         { error: 'forbidden', message: 'You do not have access to this site' },
         { status: 403 },

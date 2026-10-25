@@ -1,3 +1,4 @@
+import { canManageSite } from '@/lib/site-authz';
 import {
   DeleteFilesRequestSchema,
   type DeleteFilesResponse,
@@ -70,7 +71,7 @@ export async function POST(
       );
     }
 
-    if (site.userId !== userId) {
+    if (!canManageSite(userId, site)) {
       return NextResponse.json(
         { error: 'forbidden', message: 'You do not have access to this site' },
         { status: 403 },
@@ -260,7 +261,7 @@ export async function DELETE(
       );
     }
 
-    if (site.userId !== auth.userId) {
+    if (!canManageSite(auth.userId, site)) {
       return NextResponse.json(
         { error: 'forbidden', message: 'You do not have access to this site' },
         { status: 403 },

@@ -1,3 +1,4 @@
+import { canManageSite } from '@/lib/site-authz';
 import { after, type NextRequest, NextResponse } from 'next/server';
 import { validateAccessToken } from '@/lib/cli-auth';
 import PostHogClient from '@/lib/server-posthog';
@@ -49,7 +50,7 @@ export async function authorizeOwner<
   const site = await loadSite();
   if (!site)
     return { response: errorResponse(404, 'not_found', 'Site not found') };
-  if (site.userId !== auth.userId) {
+  if (!canManageSite(auth.userId, site)) {
     return {
       response: errorResponse(
         403,

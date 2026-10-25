@@ -1,3 +1,4 @@
+import { isSiteOwner } from '@/lib/site-authz';
 import { Prisma } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { jwtVerify } from 'jose';
@@ -33,7 +34,8 @@ export async function hasSiteAccess(
   ctx: AccessCtx,
 ): Promise<boolean> {
   if (!site || site.privacyMode !== 'PASSWORD') return true;
-  if (ctx.session?.user?.id === site.userId) return true;
+  // TODO(#919): editors (canManageSite) should bypass the password gate too.
+  if (isSiteOwner(ctx.session?.user?.id, site)) return true;
 
   const cookieHeader = ctx.headers.get('cookie') ?? '';
   const cookieName = SITE_ACCESS_COOKIE_NAME(siteId);
