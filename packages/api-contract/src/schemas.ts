@@ -235,8 +235,19 @@ export const DeleteSiteResponseSchema = z.object({
 });
 export type DeleteSiteResponse = z.infer<typeof DeleteSiteResponseSchema>;
 
+/**
+ * `mode` (default "replace"): "replace" makes `files` the site's complete
+ * content, so existing files left out are deleted (what the CLI does).
+ * "merge" only adds or updates the files sent, keeps everything else, and
+ * deletes just the paths listed in `delete`.
+ */
+export const SyncModeSchema = z.enum(['replace', 'merge']);
+export type SyncMode = z.infer<typeof SyncModeSchema>;
+
 export const SyncRequestSchema = z.object({
   files: z.array(FileMetadataSchema),
+  mode: SyncModeSchema.optional(),
+  delete: z.array(z.string()).max(1000).optional(),
 });
 export type SyncRequest = z.infer<typeof SyncRequestSchema>;
 

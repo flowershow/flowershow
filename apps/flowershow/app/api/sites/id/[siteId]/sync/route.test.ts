@@ -249,6 +249,131 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
     });
   });
 
+  describe('merge mode', () => {
+    const existing = [
+      { path: 'index.md', sha: 'index-sha', size: 10 },
+      { path: 'about.md', sha: 'about-sha', size: 10 },
+      { path: 'old.md', sha: 'old-sha', size: 10 },
+    ];
+
+    it('keeps existing files that are not sent', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(existing as any);
+
+      const res = await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [{ path: 'about.md', size: 12, sha: 'about-new' }],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.toUpdate.map((f: { path: string }) => f.path)).toEqual([
+        'about.md',
+      ]);
+      expect(body.deleted).toEqual([]);
+      expect(deleteFile).not.toHaveBeenCalled();
+    });
+
+    it('deletes only the paths listed in delete, ignoring unknown paths', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(existing as any);
+
+      const res = await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [],
+          delete: ['old.md', 'never-existed.md'],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.deleted).toEqual(['old.md']);
+      expect(deleteFile).toHaveBeenCalledTimes(1);
+      expect(deleteFile).toHaveBeenCalledWith({
+        projectId: SITE_ID,
+        path: 'old.md',
+      });
+      expect(prisma.publishFile.createMany).toHaveBeenCalledWith({
+        data: [
+          expect.objectContaining({ path: 'old.md', changeType: 'deleted' }),
+        ],
+      });
+    });
+
+    it('rejects delete without mode merge', async () => {
+      const res = await POST(
+        makeRequest({ files: [], delete: ['old.md'] }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(400);
+      expect(deleteFile).not.toHaveBeenCalled();
+    });
+
+    it('rejects a path that is both sent and deleted', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(existing as any);
+
+      const res = await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [{ path: 'old.md', size: 1, sha: 'x' }],
+          delete: ['old.md'],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(400);
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects an unknown mode', async () => {
+      const res = await POST(
+        makeRequest({ files: [], mode: 'append' }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(400);
+    });
+
+    it('applies the anonymous limits to the whole site after the merge', async () => {
+      const ANON_OWNER = '3f1c2b7a-1d2e-4f3a-9b4c-5d6e7f8a9b0c';
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        id: SITE_ID,
+        userId: ANONYMOUS_USER_ID,
+        anonymousOwnerId: ANON_OWNER,
+        expiresAt: new Date(Date.now() + 86400000),
+      } as any);
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(
+        Array.from({ length: 200 }, (_, i) => ({
+          path: `p-${i}.html`,
+          sha: `s-${i}`,
+          size: 10,
+        })) as any,
+      );
+
+      const res = await POST(
+        makeRequest(
+          {
+            mode: 'merge',
+            files: [{ path: 'one-more.html', size: 10, sha: 'x' }],
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${generateSiteClaimToken(SITE_ID, ANON_OWNER)}`,
+            },
+          },
+        ),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(413);
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+  });
+
   describe('dryRun mode', () => {
     it('returns the diff plan without creating a publish record', async () => {
       vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([]);

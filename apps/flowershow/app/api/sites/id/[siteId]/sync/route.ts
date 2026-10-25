@@ -1,4 +1,8 @@
-import type { PresignedUrl, SyncResponse } from '@flowershow/api-contract';
+import {
+  type PresignedUrl,
+  SyncRequestSchema,
+  type SyncResponse,
+} from '@flowershow/api-contract';
 import { type NextRequest, NextResponse } from 'next/server';
 import {
   checkCliVersion,
@@ -32,7 +36,8 @@ import prisma from '@/server/db';
  *
  * Compares local files with existing files in the database:
  * - Returns presigned URLs for new or modified files
- * - Deletes files that no longer exist from R2
+ * - Deletes files that no longer exist from R2 (mode "replace", the default),
+ *   or only the paths listed in `delete` (mode "merge")
  * - Identifies unchanged files
  *
  * Query parameters:
@@ -69,6 +74,28 @@ export async function POST(
       );
     }
 
+    const options = SyncRequestSchema.pick({
+      mode: true,
+      delete: true,
+    }).safeParse(body);
+    if (!options.success) {
+      return NextResponse.json(
+        { error: 'invalid_request', message: options.error.message },
+        { status: 400 },
+      );
+    }
+    const mode = options.data.mode ?? 'replace';
+    const deleteList = options.data.delete ?? [];
+    if (mode === 'replace' && deleteList.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'invalid_request',
+          message: 'delete is only allowed with mode "merge"',
+        },
+        { status: 400 },
+      );
+    }
+
     const validationError =
       access.kind === 'anon'
         ? validateAnonPublishFiles(files)
@@ -77,7 +104,7 @@ export async function POST(
 
     const existingBlobs = await prisma.blob.findMany({
       where: { siteId },
-      select: { path: true, sha: true },
+      select: { path: true, sha: true, size: true },
     });
 
     const existingBlobMap = new Map(
@@ -101,9 +128,37 @@ export async function POST(
       }
     }
 
-    for (const existingBlob of existingBlobs) {
-      if (!localFileMap.has(existingBlob.path)) {
-        toDelete.push(existingBlob.path);
+    if (mode === 'replace') {
+      for (const existingBlob of existingBlobs) {
+        if (!localFileMap.has(existingBlob.path)) {
+          toDelete.push(existingBlob.path);
+        }
+      }
+    } else {
+      const deleteSet = new Set(deleteList);
+      const overlap = files.find((f) => deleteSet.has(f.path));
+      if (overlap) {
+        return NextResponse.json(
+          {
+            error: 'invalid_request',
+            message: `Path ${overlap.path} is in both files and delete`,
+          },
+          { status: 400 },
+        );
+      }
+      // Only paths that exist on this site; unknown paths are ignored.
+      for (const existingBlob of existingBlobs) {
+        if (deleteSet.has(existingBlob.path)) toDelete.push(existingBlob.path);
+      }
+      // Anonymous limits apply to the whole site after the change, so a
+      // series of merges can't grow it past what one replace could.
+      if (access.kind === 'anon') {
+        const deleting = new Set(toDelete);
+        const kept = existingBlobs
+          .filter((b) => !deleting.has(b.path) && !localFileMap.has(b.path))
+          .map((b) => ({ path: b.path, size: b.size, sha: b.sha }));
+        const siteError = validateAnonPublishFiles([...kept, ...files]);
+        if (siteError) return siteError;
       }
     }
 

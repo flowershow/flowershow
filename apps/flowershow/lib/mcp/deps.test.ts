@@ -56,6 +56,8 @@ beforeEach(() => {
   mockEnv.env.MCP_ANON_HOURLY_LIMIT = undefined;
 });
 
+const MERGE = { mode: 'merge' as const, delete: [] };
+
 describe('realMcpDeps', () => {
   it('creates anonymous sites in one shared MCP bucket (chat apps call from their own IPs)', async () => {
     create.mockResolvedValue({ ok: true, site: { siteId: 's1' } });
@@ -117,7 +119,7 @@ describe('realMcpDeps', () => {
     const token = generateSiteClaimToken('site-1', 'anon-1');
     vi.mocked(checkAnonUpdateLimit).mockResolvedValueOnce(false);
     const err = await realMcpDeps()
-      .sync('site-1', [], { claimToken: token })
+      .sync('site-1', [], { claimToken: token }, MERGE)
       .catch((e) => e);
     expect(checkAnonUpdateLimit).toHaveBeenCalledWith('site-1');
     expect(err).toBeInstanceOf(PublishError);
@@ -127,25 +129,34 @@ describe('realMcpDeps', () => {
   it("does not count a claim token for another site against this site's limit", async () => {
     sync.mockResolvedValue(NextResponse.json({ toUpload: [], toUpdate: [] }));
     const token = generateSiteClaimToken('site-other', 'anon-1');
-    await realMcpDeps().sync('site-1', [], { claimToken: token });
-    await realMcpDeps().sync('site-1', [], { userId: 'u1' });
+    await realMcpDeps().sync('site-1', [], { claimToken: token }, MERGE);
+    await realMcpDeps().sync('site-1', [], { userId: 'u1' }, MERGE);
     expect(checkAnonUpdateLimit).not.toHaveBeenCalled();
   });
 
-  it('calls the sync route in-process with the claim token and file list', async () => {
+  it('calls the sync route in-process with the claim token, file list, mode and deletes', async () => {
     sync.mockResolvedValue(NextResponse.json({ toUpload: [], toUpdate: [] }));
     const files = [{ path: 'a.md', size: 1, sha: 'x' }];
-    await realMcpDeps().sync('site-1', files, { claimToken: 'fs_claim_t' });
+    await realMcpDeps().sync(
+      'site-1',
+      files,
+      { claimToken: 'fs_claim_t' },
+      { mode: 'merge', delete: ['old.md'] },
+    );
     const [req, ctx] = sync.mock.calls[0] ?? [];
     expect(req.headers.get('authorization')).toBe('Bearer fs_claim_t');
     expect(mcpInternalCaller(req)).toEqual({});
-    expect(await req.json()).toEqual({ files });
+    expect(await req.json()).toEqual({
+      files,
+      mode: 'merge',
+      delete: ['old.md'],
+    });
     expect(await ctx.params).toEqual({ siteId: 'site-1' });
   });
 
   it('acts for a signed-in user with the in-process marker, never forwarding a bearer', async () => {
     sync.mockResolvedValue(NextResponse.json({ toUpload: [], toUpdate: [] }));
-    await realMcpDeps().sync('site-1', [], { userId: 'u1' });
+    await realMcpDeps().sync('site-1', [], { userId: 'u1' }, MERGE);
     const [req] = sync.mock.calls[0] ?? [];
     expect(req.headers.get('authorization')).toBeNull();
     expect(mcpInternalCaller(req)).toEqual({ userId: 'u1' });
@@ -185,7 +196,7 @@ describe('realMcpDeps', () => {
       NextResponse.json({ error: 'claimed', message: 'm' }, { status: 409 }),
     );
     const err = await realMcpDeps()
-      .sync('site-1', [], { claimToken: 'fs_claim_t' })
+      .sync('site-1', [], { claimToken: 'fs_claim_t' }, MERGE)
       .catch((e) => e);
     expect(err).toBeInstanceOf(ApiError);
     expect(err).toMatchObject({ status: 409, code: 'claimed' });

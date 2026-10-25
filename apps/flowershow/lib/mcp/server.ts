@@ -2,6 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
 import {
   ApiError,
+  MAX_DELETE,
   MAX_FILES,
   MAX_TOTAL_BYTES,
   type PublishDeps,
@@ -38,18 +39,22 @@ export interface McpDeps extends PublishDeps {
   ): Promise<ClaimedSite>;
 }
 
+// How updates work, shared by both publish descriptions.
+const UPDATE_RULES =
+  'To remove pages or files, list their paths in delete (files can then be empty). Only to start the site over, set replace to true: the files you send become the whole site and every other file is removed.';
+
 // What the model sees: phrased around what users actually ask for.
 const PUBLISH_DESCRIPTION = `Publish files as a live website on Flowershow and get a shareable URL. Use when the user says "publish this", "put this online", "make this a website", "share this as a page" or "host this".
 
 Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, served as-is) and supporting files such as CSS, JS, JSON and images: one page or a small site, up to ${MAX_FILES} files and ${MAX_TOTAL_BYTES / 1024 / 1024} MB per call. Name the home page index.md or index.html.
 
-Without an account this creates a new site that expires in 7 days and returns a claim link: always show the user the live URL and the claim link exactly as returned, so they can keep the site. To update that site later in the conversation, call publish again with its siteId and claimToken and the complete set of files: the files you send replace the site's content, and files left out are removed. For bigger sites, suggest the Flowershow CLI (fl).`;
+Without an account this creates a new site that expires in 7 days and returns a claim link: always show the user the live URL and the claim link exactly as returned, so they can keep the site. To update that site later in the conversation, call publish again with its siteId and claimToken and only the files you changed or added: files you don't send are kept as they are. ${UPDATE_RULES} For bigger sites, suggest the Flowershow CLI (fl).`;
 
 const ACCOUNT_PUBLISH_DESCRIPTION = `Publish files as a live website in the user's Flowershow account and get a shareable URL. Use when the user says "publish this", "put this online", "make this a website", "share this as a page", "host this" or "update my site".
 
 Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, served as-is) and supporting files such as CSS, JS, JSON and images: one page or a small site, up to ${MAX_FILES} files and ${MAX_TOTAL_BYTES / 1024 / 1024} MB per call. Name the home page index.md or index.html.
 
-Without siteId this creates a new site in the account (optionally give it a name; otherwise it is named after the home page's first heading). With siteId it replaces the content of that site: send the complete set of files, since files left out are removed. Use list-sites to find a site to update. To keep an anonymous site published earlier in the conversation (one with a claimToken), call claim-site first. For bigger sites, suggest the Flowershow CLI (fl).`;
+Without siteId this creates a new site in the account (optionally give it a name; otherwise it is named after the home page's first heading). With siteId it updates that site: send only the files you changed or added, since files you don't send are kept as they are. ${UPDATE_RULES} Use list-sites to find a site to update. To keep an anonymous site published earlier in the conversation (one with a claimToken), call claim-site first. For bigger sites, suggest the Flowershow CLI (fl).`;
 
 const fileShape = z.object({
   path: z
@@ -98,7 +103,11 @@ export function createFlowershowMcpServer(
       title: 'Publish to Flowershow',
       description: signedIn ? ACCOUNT_PUBLISH_DESCRIPTION : PUBLISH_DESCRIPTION,
       inputSchema: {
-        files: z.array(fileShape).describe('The complete set of site files'),
+        files: z
+          .array(fileShape)
+          .describe(
+            'Files to add or update. When updating a site, send only the files that changed; other files are kept. Can be empty when only deleting.',
+          ),
         siteId: z
           .string()
           .optional()
@@ -108,6 +117,19 @@ export function createFlowershowMcpServer(
           .optional()
           .describe(
             'The claimToken returned when the anonymous site was created (needed with siteId when not signed in)',
+          ),
+        delete: z
+          .array(z.string())
+          .max(MAX_DELETE)
+          .optional()
+          .describe(
+            'Paths of existing files to remove from the site (with siteId), e.g. ["old-page.md"]',
+          ),
+        replace: z
+          .boolean()
+          .optional()
+          .describe(
+            'Set true only to start the site over: the files sent become the whole site and all other files are removed. Default false.',
           ),
         ...(signedIn && {
           name: z
@@ -121,7 +143,7 @@ export function createFlowershowMcpServer(
       annotations: {
         title: 'Publish to Flowershow',
         readOnlyHint: false,
-        // Updating a site replaces its content (files left out are removed).
+        // Updates keep files not sent, but delete and replace remove files.
         destructiveHint: true,
         idempotentHint: false,
         openWorldHint: true,

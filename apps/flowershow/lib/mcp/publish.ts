@@ -1,6 +1,7 @@
 import type {
   AnonCreateSiteResponse,
   FileMetadata,
+  SyncMode,
   SyncResponse,
 } from '@flowershow/api-contract';
 import { validateSiteName } from '@/lib/validate-site-name';
@@ -16,6 +17,8 @@ export const MAX_FILES = 50;
 export const MAX_TOTAL_BYTES = 3 * 1024 * 1024;
 export const MAX_REQUEST_BYTES = 4 * 1024 * 1024;
 const MAX_PATH_BYTES = 1024;
+/** Paths per call in `delete` (matches the sync route's limit). */
+export const MAX_DELETE = 1000;
 const UPLOAD_CONCURRENCY = 6;
 
 export type PublishFileInput = {
@@ -30,6 +33,13 @@ export type PublishInput = {
   claimToken?: string;
   /** Name for a new account site (signed in, no siteId). */
   name?: string;
+  /** Paths to remove from an existing site (siteId only; not with replace). */
+  delete?: string[];
+  /**
+   * Make `files` the site's complete content, removing every other file.
+   * Default false: an update only adds or changes the files sent.
+   */
+  replace?: boolean;
 };
 
 /** Who is publishing: anonymous (claim-token sites) or an authenticated user. */
@@ -57,6 +67,7 @@ export interface PublishDeps {
     siteId: string,
     files: FileMetadata[],
     credential: PublishCredential,
+    options: { mode: SyncMode; delete: string[] },
   ): Promise<SyncResponse>;
   upload(
     url: string,
@@ -132,8 +143,10 @@ function decodeBase64(path: string, value: string): Uint8Array {
   return new Uint8Array(Buffer.from(b64, 'base64'));
 }
 
-function decodeFiles(files: PublishFileInput[]) {
-  if (files.length === 0) throw new PublishError('No files to publish.');
+function decodeFiles(files: PublishFileInput[], allowEmpty: boolean) {
+  if (files.length === 0 && !allowEmpty) {
+    throw new PublishError('No files to publish.');
+  }
   if (files.length > MAX_FILES) {
     throw new PublishError(
       `Too many files (${files.length}); the limit is ${MAX_FILES} per call. ${CLI_HINT}`,
@@ -200,6 +213,44 @@ function explain(
   }
 }
 
+/** Validate and normalise the `delete` list (same path rules as files). */
+function decodeDeletes(input: PublishInput, filePaths: Set<string>): string[] {
+  const list = input.delete ?? [];
+  if (list.length === 0) return [];
+  if (!input.siteId) {
+    throw new PublishError(
+      'delete only applies when updating an existing site (pass its siteId).',
+    );
+  }
+  if (input.replace) {
+    throw new PublishError(
+      'Use either delete or replace, not both: with replace, every file not sent is removed anyway.',
+    );
+  }
+  if (list.length > MAX_DELETE) {
+    throw new PublishError(
+      `Too many paths to delete (${list.length}); the limit is ${MAX_DELETE} per call.`,
+    );
+  }
+  const paths = new Set<string>();
+  for (const raw of list) {
+    const path = raw.replace(/\\/g, '/');
+    const problem = invalidPath(path);
+    if (problem) {
+      throw new PublishError(
+        `Invalid path to delete ${JSON.stringify(raw)}: ${problem}.`,
+      );
+    }
+    if (filePaths.has(path)) {
+      throw new PublishError(
+        `${path} is in both files and delete: send it to update it, or list it in delete to remove it.`,
+      );
+    }
+    paths.add(path);
+  }
+  return [...paths];
+}
+
 /** Run `fn` over `items` with at most `limit` in flight. */
 async function mapLimit<T>(
   items: T[],
@@ -221,8 +272,9 @@ async function mapLimit<T>(
 /**
  * Publish files to a Flowershow site: a new anonymous site (with a claim
  * link), an existing anonymous site (siteId + claimToken), or, with an
- * account token, an existing site of that account (siteId). The files replace
- * the site's content: files not included are removed.
+ * account token, an existing site of that account (siteId). An update only
+ * adds or changes the files sent and removes the paths in `delete`; other
+ * files are kept. With `replace`, the files sent become the whole site.
  */
 export async function publish(
   input: PublishInput,
@@ -235,7 +287,13 @@ export async function publish(
     pollDeadlineMs = 35_000,
     now = Date.now,
   } = opts;
-  const files = decodeFiles(input.files);
+  const toDelete = decodeDeletes(
+    input,
+    new Set(input.files.map((f) => f.path.replace(/\\/g, '/'))),
+  );
+  // Deleting from an existing site needs no files.
+  const files = decodeFiles(input.files, toDelete.length > 0);
+  const syncMode: SyncMode = input.replace ? 'replace' : 'merge';
 
   let target: Omit<PublishResult, 'message'>;
   let credential: PublishCredential;
@@ -287,6 +345,7 @@ export async function publish(
 
   // From here on the site exists: never lose its claim link.
   let step = 'sync';
+  let deleted: string[] = [];
   try {
     const plan = await deps.sync(
       target.siteId,
@@ -296,7 +355,9 @@ export async function publish(
         sha: gitBlobSha(f.bytes),
       })),
       credential,
+      { mode: syncMode, delete: toDelete },
     );
+    deleted = plan.deleted;
     // Only look the URL up once sync has authorised the caller for this site.
     if (!target.liveUrl) target.liveUrl = await deps.siteUrl(target.siteId);
 
@@ -333,7 +394,15 @@ export async function publish(
     if (now() + pollIntervalMs > deadline) break;
     await deps.sleep(pollIntervalMs);
   }
-  return { ...target, message: summarise(target, last, mode) };
+  const notDeleted = toDelete.filter((p) => !deleted.includes(p));
+  return {
+    ...target,
+    message: summarise(target, last, mode, {
+      deleted,
+      notDeleted,
+      replace: !!input.replace,
+    }),
+  };
 }
 
 function withRetryHint(
@@ -361,8 +430,21 @@ function summarise(
   target: Omit<PublishResult, 'message'>,
   last: StatusResult | null,
   mode: PublishMode,
+  removed: { deleted: string[]; notDeleted: string[]; replace: boolean },
 ): string {
   const parts = [`Published: ${target.liveUrl}`];
+  if (removed.replace && removed.deleted.length) {
+    parts.push(
+      `Replaced the site's content: removed ${removed.deleted.length} file(s) that were not sent.`,
+    );
+  } else if (removed.deleted.length) {
+    parts.push(`Deleted: ${removed.deleted.join(', ')}`);
+  }
+  if (removed.notDeleted.length) {
+    parts.push(
+      `Not deleted (no such file on the site): ${removed.notDeleted.join(', ')}`,
+    );
+  }
   if (!last || last.status === 'pending') {
     parts.push(
       'Some files are still processing, so the first load may take a few seconds.',
@@ -382,15 +464,18 @@ function summarise(
   }
   if (mode.kind === 'anon') {
     parts.push(
-      'To change the site later in this conversation, call publish again with siteId and claimToken and the complete set of files (files left out are removed).',
+      `To change the site later in this conversation, call publish again with siteId and claimToken and only the files that changed (other files are kept). ${UPDATE_HINT}`,
     );
   } else {
     parts.push(
-      `The site is in the user's Flowershow account (siteId ${target.siteId}). To change it later, call publish with this siteId and the complete set of files (files left out are removed).`,
+      `The site is in the user's Flowershow account (siteId ${target.siteId}). To change it later, call publish with this siteId and only the files that changed (other files are kept). ${UPDATE_HINT}`,
     );
   }
   return parts.join('\n\n');
 }
+
+const UPDATE_HINT =
+  'To remove files, list their paths in delete; to make the files you send the whole site, set replace to true.';
 
 const NAME_MAX = 60;
 

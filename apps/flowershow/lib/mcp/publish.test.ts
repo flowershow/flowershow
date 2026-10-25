@@ -52,6 +52,7 @@ function makeDeps(over: Partial<PublishDeps> = {}): PublishDeps {
 }
 
 const html = { path: 'index.html', content: '<h1>hi</h1>' };
+const MERGE = { mode: 'merge', delete: [] };
 let deps: PublishDeps;
 beforeEach(() => {
   deps = makeDeps();
@@ -83,6 +84,7 @@ describe('publish (anonymous)', () => {
         { path: 'img/logo.png', size: 3, sha: gitBlobSha(png) },
       ],
       { claimToken: 'fs_claim_new' },
+      MERGE,
     );
     expect(deps.upload).toHaveBeenCalledTimes(2);
     expect(deps.upload).toHaveBeenCalledWith(
@@ -112,9 +114,12 @@ describe('publish (anonymous)', () => {
       deps,
     );
     expect(deps.createAnonSite).not.toHaveBeenCalled();
-    expect(deps.sync).toHaveBeenCalledWith('site-9', expect.any(Array), {
-      claimToken: 'fs_claim_old',
-    });
+    expect(deps.sync).toHaveBeenCalledWith(
+      'site-9',
+      expect.any(Array),
+      { claimToken: 'fs_claim_old' },
+      MERGE,
+    );
     expect(res.siteId).toBe('site-9');
     expect(res.claimToken).toBe('fs_claim_old');
     expect(res.liveUrl).toBe('https://notes-alice.flowershow.me');
@@ -312,6 +317,7 @@ describe('publish (base64)', () => {
       'site-1',
       [{ path: 'a.png', size: 4, sha: gitBlobSha(png) }],
       { claimToken: 'fs_claim_new' },
+      MERGE,
     );
   });
 
@@ -400,9 +406,12 @@ describe('publish (signed in)', () => {
     const res = await publish({ files: [html], siteId: 'site-u' }, USER, deps);
     expect(deps.createAnonSite).not.toHaveBeenCalled();
     expect(deps.createUserSite).not.toHaveBeenCalled();
-    expect(deps.sync).toHaveBeenCalledWith('site-u', expect.any(Array), {
-      userId: 'u1',
-    });
+    expect(deps.sync).toHaveBeenCalledWith(
+      'site-u',
+      expect.any(Array),
+      { userId: 'u1' },
+      MERGE,
+    );
     expect(deps.status).toHaveBeenCalledWith('site-u', { userId: 'u1' });
     expect(res.liveUrl).toBe('https://notes-alice.flowershow.me');
     expect(res.claimUrl).toBeUndefined();
@@ -441,9 +450,12 @@ describe('publish (signed in)', () => {
       deps,
     );
     expect(deps.createUserSite).toHaveBeenCalledWith('u1', 'My Notes');
-    expect(deps.sync).toHaveBeenCalledWith('site-new', expect.any(Array), {
-      userId: 'u1',
-    });
+    expect(deps.sync).toHaveBeenCalledWith(
+      'site-new',
+      expect.any(Array),
+      { userId: 'u1' },
+      MERGE,
+    );
     expect(res).toMatchObject({
       siteId: 'site-new',
       liveUrl: 'https://my-notes-alice.flowershow.me',
@@ -494,5 +506,160 @@ describe('siteNameFor', () => {
     [[enc('index.md', '# ///')], 'site-abc123'],
   ])('%#', (files, expected) => {
     expect(siteNameFor(undefined, files, () => 'abc123')).toBe(expected);
+  });
+});
+
+describe('publish (partial updates)', () => {
+  const withDeleted = (deleted: string[]) =>
+    makeDeps({
+      sync: vi.fn().mockImplementation(async (_siteId, files) => ({
+        toUpload: files.map((f: { path: string }) => ({
+          path: f.path,
+          uploadUrl: `https://upload/${f.path}`,
+          contentType: 'text/markdown',
+        })),
+        toUpdate: [],
+        deleted,
+        unchanged: [],
+        summary: {
+          toUpload: files.length,
+          toUpdate: 0,
+          deleted: deleted.length,
+          unchanged: 0,
+        },
+        publishId: 'pub-1',
+      })),
+    });
+  const page = { path: 'about.md', content: '# About' };
+
+  it.each([
+    ['anonymous', { kind: 'anon' as const }, { claimToken: 'fs_claim_old' }],
+    ['signed in', USER, { userId: 'u1' }],
+  ])(
+    'sends only the given files in merge mode by default (%s)',
+    async (_label, mode, credential) => {
+      const res = await publish(
+        { files: [page], siteId: 'site-9', claimToken: 'fs_claim_old' },
+        mode,
+        deps,
+      );
+      expect(deps.sync).toHaveBeenCalledWith(
+        'site-9',
+        [expect.objectContaining({ path: 'about.md' })],
+        credential,
+        { mode: 'merge', delete: [] },
+      );
+      expect(res.message).toMatch(/other files are kept/);
+      expect(res.message).toMatch(/delete/);
+    },
+  );
+
+  it.each([
+    ['anonymous', { kind: 'anon' as const }, { claimToken: 'fs_claim_old' }],
+    ['signed in', USER, { userId: 'u1' }],
+  ])(
+    'deletes the listed paths, with no files needed (%s)',
+    async (_label, mode, credential) => {
+      deps = withDeleted(['old.md']);
+      const res = await publish(
+        {
+          files: [],
+          delete: ['old.md', 'missing.md'],
+          siteId: 'site-9',
+          claimToken: 'fs_claim_old',
+        },
+        mode,
+        deps,
+      );
+      expect(deps.sync).toHaveBeenCalledWith('site-9', [], credential, {
+        mode: 'merge',
+        delete: ['old.md', 'missing.md'],
+      });
+      expect(deps.upload).not.toHaveBeenCalled();
+      expect(res.message).toContain('Deleted: old.md');
+      expect(res.message).toContain(
+        'Not deleted (no such file on the site): missing.md',
+      );
+    },
+  );
+
+  it.each([
+    ['anonymous', { kind: 'anon' as const }, { claimToken: 'fs_claim_old' }],
+    ['signed in', USER, { userId: 'u1' }],
+  ])(
+    'replaces the whole site only when replace is true (%s)',
+    async (_label, mode, credential) => {
+      deps = withDeleted(['a.md', 'b.md']);
+      const res = await publish(
+        {
+          files: [page],
+          replace: true,
+          siteId: 'site-9',
+          claimToken: 'fs_claim_old',
+        },
+        mode,
+        deps,
+      );
+      expect(deps.sync).toHaveBeenCalledWith(
+        'site-9',
+        expect.any(Array),
+        credential,
+        { mode: 'replace', delete: [] },
+      );
+      expect(res.message).toMatch(/removed 2 file\(s\) that were not sent/);
+    },
+  );
+
+  it('normalises and de-duplicates delete paths', async () => {
+    await publish(
+      {
+        files: [],
+        delete: ['docs\\old.md', 'docs/old.md'],
+        siteId: 'site-u',
+      },
+      USER,
+      deps,
+    );
+    expect(deps.sync).toHaveBeenCalledWith(
+      'site-u',
+      [],
+      { userId: 'u1' },
+      {
+        mode: 'merge',
+        delete: ['docs/old.md'],
+      },
+    );
+  });
+
+  it.each([
+    [
+      'delete without siteId',
+      { files: [html], delete: ['a.md'] },
+      /existing site/,
+    ],
+    [
+      'delete with replace',
+      { files: [html], delete: ['a.md'], replace: true, siteId: 'site-u' },
+      /either delete or replace/,
+    ],
+    [
+      'a path in both files and delete',
+      { files: [html], delete: ['index.html'], siteId: 'site-u' },
+      /both files and delete/,
+    ],
+    [
+      'an invalid delete path',
+      { files: [], delete: ['../x'], siteId: 'site-u' },
+      /Invalid path to delete/,
+    ],
+    [
+      'replace with no files (would empty the site)',
+      { files: [], replace: true, siteId: 'site-u' },
+      /No files to publish/,
+    ],
+  ])('rejects %s before any API call', async (_label, input, message) => {
+    await expect(publish(input, USER, deps)).rejects.toThrow(message);
+    expect(deps.sync).not.toHaveBeenCalled();
+    expect(deps.createUserSite).not.toHaveBeenCalled();
   });
 });
