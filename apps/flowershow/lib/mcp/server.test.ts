@@ -181,6 +181,109 @@ describe('Flowershow MCP server', () => {
     expect(d.createAnonSite).not.toHaveBeenCalled();
   });
 
+  it.each([
+    ['anonymous', { kind: 'anon' } as McpMode],
+    ['signed in', USER],
+  ])(
+    'tells the model updates are partial, with delete and replaceWholeSite (%s)',
+    async (_label, mode) => {
+      const client = await connect(mode, deps());
+      const { tools } = await client.listTools();
+      const publishTool = tools.find((t) => t.name === 'publish');
+      expect(publishTool?.description).toMatch(/kept as they are/);
+      expect(publishTool?.description).not.toMatch(
+        /files left out are removed/,
+      );
+      expect(publishTool?.inputSchema.properties).toHaveProperty('delete');
+      expect(publishTool?.inputSchema.properties).toHaveProperty(
+        'replaceWholeSite',
+      );
+      expect(publishTool?.inputSchema.properties).toHaveProperty(
+        'confirmDeleteCount',
+      );
+      expect(publishTool?.inputSchema.properties).not.toHaveProperty('replace');
+      expect(publishTool?.description).toMatch(/confirmDeleteCount/);
+    },
+  );
+
+  it.each([
+    ['anonymous', { kind: 'anon' } as McpMode, { claimToken: 'fs_claim_x' }],
+    ['signed in', USER, { userId: 'u1' }],
+  ])(
+    'updates one page and deletes another without replacing the site (%s)',
+    async (_label, mode, credential) => {
+      const d = deps();
+      const client = await connect(mode, d);
+      const res = await client.callTool({
+        name: 'publish',
+        arguments: {
+          siteId: 'site-1',
+          claimToken: 'fs_claim_x',
+          files: [{ path: 'index.html', content: '<h1>v2</h1>' }],
+          delete: ['old.html'],
+        },
+      });
+      expect(res.isError).toBeFalsy();
+      expect(d.sync).toHaveBeenCalledWith(
+        'site-1',
+        [expect.objectContaining({ path: 'index.html' })],
+        credential,
+        { mode: 'merge', delete: ['old.html'] },
+      );
+    },
+  );
+
+  it('replaces the whole site only when asked to (dry run first)', async () => {
+    const d = deps();
+    const client = await connect(USER, d);
+    await client.callTool({
+      name: 'publish',
+      arguments: {
+        siteId: 'site-1',
+        replaceWholeSite: true,
+        files: [{ path: 'index.html', content: '<h1>new</h1>' }],
+      },
+    });
+    expect(d.sync).toHaveBeenNthCalledWith(
+      1,
+      'site-1',
+      expect.any(Array),
+      { userId: 'u1' },
+      { mode: 'replace', delete: [], dryRun: true },
+    );
+    expect(d.sync).toHaveBeenLastCalledWith(
+      'site-1',
+      expect.any(Array),
+      { userId: 'u1' },
+      { mode: 'replace', delete: [] },
+    );
+  });
+
+  it('refuses a replace that would remove files until confirmed', async () => {
+    const d = deps();
+    vi.mocked(d.sync).mockResolvedValue({
+      toUpload: [],
+      toUpdate: [],
+      deleted: ['old.html'],
+      unchanged: ['index.html'],
+      summary: { toUpload: 0, toUpdate: 0, deleted: 1, unchanged: 1 },
+    });
+    const client = await connect(USER, d);
+    const res = await client.callTool({
+      name: 'publish',
+      arguments: {
+        siteId: 'site-1',
+        replaceWholeSite: true,
+        files: [{ path: 'index.html', content: '<h1>new</h1>' }],
+      },
+    });
+    expect(res.isError).toBe(true);
+    expect(JSON.stringify(res.content)).toMatch(
+      /remove 1 file\(s\).*old\.html.*confirmDeleteCount: 1/,
+    );
+    expect(d.sync).toHaveBeenCalledTimes(1);
+  });
+
   it('claims an anonymous site into the account', async () => {
     const d = deps();
     const client = await connect(USER, d);

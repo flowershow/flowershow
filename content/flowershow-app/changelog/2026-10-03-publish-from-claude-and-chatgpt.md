@@ -17,3 +17,7 @@ You can now publish straight from a chat in the Claude and ChatGPT apps. Add `ht
 This is a beta. The connector can't sign in to your account yet, so make your changes first, then claim the site. Tell us how it goes on [Discord](https://discord.gg/JChzM5VdFn).
 
 In coding agents such as Claude Code, Codex and Cursor, keep using the [Flowershow skill](/docs/agents/skills). The [Publish with AI](/publish-with-ai) page now shows both paths.
+
+**Fixes**
+
+- Editing one page from a chat no longer wipes the rest of the site: connector updates now change only the files the AI sends. The AI can delete named pages, and replaces the whole site only when you ask it to start over.

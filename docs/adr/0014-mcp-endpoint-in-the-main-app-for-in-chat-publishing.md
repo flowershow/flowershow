@@ -12,7 +12,7 @@ ADR 0005 dropped the MCP server because our users' agents had shells and could r
 
 ## Decision
 
-1. **Ship a remote MCP server whose main tool is `publish`, taking file contents in the request** (text, or base64 for binary), so a cloud model can publish what it made without a filesystem. Without auth it creates an anonymous site and returns the live URL, a claim link and a claim token; calling `publish` again with `siteId` and `claimToken` replaces that site's content. With a personal access token (`Authorization: Bearer fs_pat_…`) it publishes into the account's sites by `siteId`, and `list-sites` is available. OAuth is a later step.
+1. **Ship a remote MCP server whose main tool is `publish`, taking file contents in the request** (text, or base64 for binary), so a cloud model can publish what it made without a filesystem. Without auth it creates an anonymous site and returns the live URL, a claim link and a claim token; calling `publish` again with `siteId` and `claimToken` updates that site (originally: replaced its content; since #1508 an update adds or changes only the files sent, see Consequences). With a personal access token (`Authorization: Bearer fs_pat_…`) it publishes into the account's sites by `siteId`, and `list-sites` is available. OAuth is a later step.
 
 2. **Host it inside the main Next.js app at `/api/mcp`, not as a separate service** (the merged plan proposed reviving the Express app as its own Vercel project at `mcp.flowershow.app`):
    - **Shipping and iteration:** no new project, DNS or deploy pipeline; it ships with a normal merge.
@@ -29,6 +29,6 @@ ADR 0005 dropped the MCP server because our users' agents had shells and could r
 ## Consequences
 
 - Anyone can publish an anonymous site through a public endpoint without an account, at a global rate. Before announcing MCP publicly, anonymous HTML needs abuse controls (`flowershow-ctv`: sandbox or banner, abuse reports, `flowershow.me` on the Public Suffix List).
-- Updates resend the whole site; there's no single-file edit tool yet.
+- ~~Updates resend the whole site; there's no single-file edit tool yet.~~ Superseded by #1508: updates use the sync route's `merge` mode, so they add or change only the files sent and remove only the paths listed in `delete`. Replacing the whole site needs `replaceWholeSite: true`, and when that would remove existing files, a `confirmDeleteCount` matching a dry run.
 - The model must relay the claim link; the tool result tells it to, verbatim.
 - Claude custom connectors can't send a bearer header, so account publishing from claude.ai and ChatGPT needs OAuth (v2, `docs/plans/2026-02-20-mcp-oauth.md`). Account tokens work today from clients that let you set headers (e.g. Claude Code's `.mcp.json`, the MCP Inspector).
