@@ -1,4 +1,4 @@
-import { expect, test, vi } from 'vitest';
+import { afterEach, expect, test, vi } from 'vitest';
 import {
   computeAppPath,
   extractImageDimensions,
@@ -7,6 +7,7 @@ import {
   extractTags,
   extractTitle,
   handleMessage,
+  revalidateIfPublishDone,
   isSupportedImagePath,
   normalizePermalink,
   parseMarkdown,
@@ -861,4 +862,201 @@ test('handleMessage - invalid frontmatter publishes the page and records a file 
   const update = queries.find((q) => q.text.startsWith('UPDATE "PublishFile"'));
   expect(update.text).toContain("status = 'error'");
   expect(update.values[0]).toMatch(/^Invalid YAML frontmatter/);
+});
+
+// Cache purge as soon as a publish's last file is processed (flowershow-w5n)
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+const REVALIDATE_ENV = {
+  NEXTJS_APP_URL: 'https://app.example',
+  INTERNAL_API_SECRET: 's3cret',
+};
+
+function sqlWithPending(pending) {
+  const queries = [];
+  const sql = (strings) => {
+    queries.push(strings.join('?').replace(/\s+/g, ' ').trim());
+    return [{ count: String(pending) }];
+  };
+  return { sql, queries };
+}
+
+test('revalidateIfPublishDone - purges the site tag when no files are pending', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  vi.stubGlobal('fetch', fetchMock);
+  const { sql } = sqlWithPending(0);
+
+  await revalidateIfPublishDone({
+    sql,
+    env: REVALIDATE_ENV,
+    siteId: 'site-1',
+    publishId: 'pub-1',
+  });
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  const [url, init] = fetchMock.mock.calls[0];
+  expect(url).toBe('https://app.example/api/internal/revalidate');
+  expect(init.headers['x-internal-secret']).toBe('s3cret');
+  expect(JSON.parse(init.body)).toEqual({ tags: ['site-1'] });
+  expect(init.signal).toBeInstanceOf(AbortSignal);
+});
+
+test('revalidateIfPublishDone - does nothing while other files are still uploading', async () => {
+  const fetchMock = vi.fn();
+  vi.stubGlobal('fetch', fetchMock);
+  const { sql } = sqlWithPending(2);
+
+  await revalidateIfPublishDone({
+    sql,
+    env: REVALIDATE_ENV,
+    siteId: 'site-1',
+    publishId: 'pub-1',
+  });
+
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+test('revalidateIfPublishDone - skips legacy uploads without a publish id and never throws', async () => {
+  const fetchMock = vi.fn().mockRejectedValue(new Error('network down'));
+  vi.stubGlobal('fetch', fetchMock);
+  const { sql, queries } = sqlWithPending(0);
+
+  await revalidateIfPublishDone({
+    sql,
+    env: REVALIDATE_ENV,
+    siteId: 'site-1',
+    publishId: null,
+  });
+  expect(queries).toHaveLength(0);
+
+  await expect(
+    revalidateIfPublishDone({
+      sql,
+      env: REVALIDATE_ENV,
+      siteId: 'site-1',
+      publishId: 'pub-1',
+    }),
+  ).resolves.toBeUndefined();
+});
+
+test('revalidateIfPublishDone - a timed-out revalidate is swallowed', async () => {
+  const timeout = new DOMException('The operation timed out', 'TimeoutError');
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(timeout));
+  const { sql } = sqlWithPending(0);
+
+  await expect(
+    revalidateIfPublishDone({
+      sql,
+      env: REVALIDATE_ENV,
+      siteId: 'site-1',
+      publishId: 'pub-1',
+    }),
+  ).resolves.toBeUndefined();
+});
+
+function publishSql(pending) {
+  const { sql: base, queries } = createRecordingSql();
+  const sql = (strings, ...values) => {
+    const text = strings.join('?').replace(/\s+/g, ' ').trim();
+    if (text.startsWith('SELECT COUNT(*)')) {
+      queries.push({ text, values });
+      return [{ count: String(pending) }];
+    }
+    return base(strings, ...values);
+  };
+  sql.begin = base.begin;
+  return { sql, queries };
+}
+
+function publishStorage(content) {
+  const storage = createR2Storage(content);
+  storage.client.head = async () => ({
+    customMetadata: { 'publish-id': 'pub-1' },
+  });
+  return storage;
+}
+
+test('handleMessage - revalidates after marking the file success, then acks', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  vi.stubGlobal('fetch', fetchMock);
+  const { sql, queries } = publishSql(0);
+  const msg = putMessage('a.md');
+
+  await handleMessage({
+    msg,
+    storage: publishStorage('# A'),
+    sql,
+    typesense: createTypesenseMock().typesense,
+    env: REVALIDATE_ENV,
+  });
+
+  const successIdx = queries.findIndex(
+    (q) =>
+      q.text.startsWith('UPDATE "PublishFile"') &&
+      q.text.includes("status = 'success'"),
+  );
+  const countIdx = queries.findIndex((q) => q.text.startsWith('SELECT COUNT'));
+  expect(successIdx).toBeGreaterThanOrEqual(0);
+  expect(countIdx).toBeGreaterThan(successIdx);
+  expect(queries[countIdx].values).toEqual(['pub-1']);
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(msg.ack).toHaveBeenCalled();
+});
+
+test('handleMessage - revalidates on the non-markdown path', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  vi.stubGlobal('fetch', fetchMock);
+  const { sql } = publishSql(0);
+  const msg = putMessage('custom.css');
+
+  await handleMessage({
+    msg,
+    storage: publishStorage('body{}'),
+    sql,
+    typesense: createTypesenseMock().typesense,
+    env: REVALIDATE_ENV,
+  });
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
+  expect(msg.ack).toHaveBeenCalled();
+});
+
+test('handleMessage - a revalidate failure still acks the message', async () => {
+  vi.stubGlobal('fetch', vi.fn().mockRejectedValue(new Error('hang')));
+  const { sql } = publishSql(0);
+  const msg = putMessage('a.md');
+
+  await handleMessage({
+    msg,
+    storage: publishStorage('# A'),
+    sql,
+    typesense: createTypesenseMock().typesense,
+    env: REVALIDATE_ENV,
+  });
+
+  expect(msg.ack).toHaveBeenCalled();
+});
+
+test('handleMessage - revalidates even when the last markdown file errors', async () => {
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  vi.stubGlobal('fetch', fetchMock);
+  const { sql } = publishSql(0);
+  const storage = publishStorage('# A');
+  storage.client.get = async () => {
+    throw new Error('r2 read failed');
+  };
+  const msg = putMessage('a.md');
+
+  await handleMessage({
+    msg,
+    storage,
+    sql,
+    typesense: createTypesenseMock().typesense,
+    env: REVALIDATE_ENV,
+  });
+
+  expect(fetchMock).toHaveBeenCalledTimes(1);
 });

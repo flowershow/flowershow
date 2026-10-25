@@ -10,3 +10,8 @@ showToc: false
 From October 18, pages you published or updated didn't reach your site's search index, though the publish itself succeeded and the pages were live. Sites created in that week had no search results at all.
 
 Publishing adds pages to search again, and we've re-indexed every page published during the outage, so you don't need to republish anything. Search is turned on with `enableSearch` in [[config-file|config.json]].
+
+**Fixes**
+
+- After you overwrite a site, navigation, wiki-links and the index page now refresh the moment your last file is processed, instead of staying stale for a few seconds.
+- `fl` no longer says "Already in sync" right after another folder overwrote the same site. Files that are still being processed or were just deleted count as changed.
