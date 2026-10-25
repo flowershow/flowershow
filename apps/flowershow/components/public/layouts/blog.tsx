@@ -4,13 +4,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 
 import type { Breadcrumb } from '@/lib/breadcrumbs';
-import { safeDate } from '@/lib/utils';
+import { isFrontmatterDate, safeDate } from '@/lib/utils';
 
 interface Props extends React.PropsWithChildren {
   title: string;
   description?: string;
   showHero?: boolean;
-  date?: string;
+  /** Frontmatter value: untyped YAML, so anything but a date-like scalar is skipped. */
+  date?: unknown;
   /** Pre-computed label, e.g. "8 min read". Omitted when reading time is off. */
   readingTime?: string;
   /** Trail shown above the title; the last crumb is the current page. */
@@ -144,7 +145,7 @@ export const BlogLayout: React.FC<Props> = ({
               </div>
             )}
 
-            {date && (
+            {isFrontmatterDate(date) && (
               <div className="page-header-date">
                 <CalendarIcon className="page-header-date-icon" />
                 {parsedDate ? (
@@ -154,7 +155,7 @@ export const BlogLayout: React.FC<Props> = ({
                 ) : (
                   // Not a parseable date (e.g. a range like "1964-1982"); render
                   // the raw frontmatter value rather than crashing the render.
-                  <span>{date}</span>
+                  <span>{String(date)}</span>
                 )}
               </div>
             )}

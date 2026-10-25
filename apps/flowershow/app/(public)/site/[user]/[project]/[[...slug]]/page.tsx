@@ -96,7 +96,11 @@ import {
 } from '@/lib/post/route';
 import { resolveConfigRedirect } from '@/lib/config-redirect';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
-import { ensureLeadingSlash, normalizeAuthors } from '@/lib/utils';
+import {
+  ensureLeadingSlash,
+  frontmatterText,
+  normalizeAuthors,
+} from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
 import BacklinksPanel from './_components/backlinks-panel';
@@ -245,7 +249,7 @@ export async function generateMetadata(props: {
     ? `#${tagFromHref(decodedSlug.slice('/tags/'.length))}`
     : undefined;
   const title = buildPageTitle(
-    metadata?.title ??
+    frontmatterText(metadata?.title) ??
       (isChangelogFallback
         ? 'Changelog'
         : isTagIndexRoute
@@ -567,6 +571,8 @@ export default async function SitePage(props: {
   });
 
   const metadata = blob.metadata as PageMetadata | null; // TODO types
+  // Display-safe title: an unfilled `title: {{title}}` is a YAML map, not text
+  const pageTitle = frontmatterText(metadata?.title);
 
   // A CHANGELOG.md with no version headings is just a normal page
   if (changelog?.kind === 'file' && !hasVersionSections(pageContent ?? '')) {
@@ -645,8 +651,7 @@ export default async function SitePage(props: {
     siteFilePaths,
     permalinksMapping,
     imageDimensions,
-    changelog:
-      changelog?.kind === 'file' ? { title: metadata?.title } : undefined,
+    changelog: changelog?.kind === 'file' ? { title: pageTitle } : undefined,
     showTags,
     scripts: pageScripts,
     listing: {
@@ -668,7 +673,7 @@ export default async function SitePage(props: {
         route: pageLevelRoute,
         page: listingPageNumber,
         publicUrl: listingPublicUrl,
-        pageTitle: metadata?.title,
+        pageTitle,
         locale,
         onPaginate,
       })
@@ -799,7 +804,11 @@ export default async function SitePage(props: {
     metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false;
   const showRightColumn = showToc || showKnowledgeGraph;
   const heroConfig = resolveHeroConfig(
-    metadata && { ...metadata, description: displayDescription(metadata) },
+    metadata && {
+      ...metadata,
+      title: pageTitle ?? '',
+      description: displayDescription(metadata),
+    },
     siteConfig,
   );
   const showHero = heroConfig.showHero && !changelog;
@@ -836,7 +845,7 @@ export default async function SitePage(props: {
     ? pageHeaderBreadcrumbs({
         tree: siteTree ?? [],
         pagePath: blob.path,
-        title: metadata?.title,
+        title: pageTitle,
         section: metadata?.section,
       })
     : undefined;
@@ -869,7 +878,7 @@ export default async function SitePage(props: {
     ) : undefined;
 
   const pageHeaderProps = {
-    title: metadata?.title ?? '',
+    title: pageTitle ?? '',
     description: displayDescription(metadata) ?? '',
     date: metadata?.date,
     readingTime: pageReadingTime,
@@ -935,7 +944,7 @@ export default async function SitePage(props: {
                   site={site}
                   dir={changelog.dir}
                   page={changelogPage!}
-                  title={metadata?.title || 'Changelog'}
+                  title={pageTitle || 'Changelog'}
                   intro={
                     pageContent?.trim() ? (
                       // Keyed by page number so `?page=` navigation remounts
@@ -985,7 +994,7 @@ export default async function SitePage(props: {
               </ChangelogEntryPage>
             ) : isPost ? (
               <PostLayout
-                title={metadata?.title ?? ''}
+                title={pageTitle ?? ''}
                 description={displayDescription(metadata) ?? ''}
                 eyebrow={linkCollectionCrumb(
                   breadcrumbs?.slice(0, -1) ?? [],

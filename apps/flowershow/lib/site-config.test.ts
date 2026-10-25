@@ -181,6 +181,11 @@ describe('buildPageTitle', () => {
     expect(buildPageTitle(1984, 'My Site')).toBe('1984 | My Site');
     expect(buildPageTitle(true, 'My Site')).toBe('true | My Site');
   });
+
+  it('falls back to the brand for an unfilled `title: {{title}}` placeholder', () => {
+    // YAML reads `{{title}}` as a nested map, not text
+    expect(buildPageTitle({ '{ title }': null }, 'My Site')).toBe('My Site');
+  });
 });
 
 describe('validateConfigPatch', () => {

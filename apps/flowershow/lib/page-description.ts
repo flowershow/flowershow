@@ -1,3 +1,4 @@
+import { frontmatterText } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 
 /**
@@ -11,6 +12,5 @@ export function displayDescription(
   metadata: Pick<PageMetadata, 'description' | 'computed'> | null | undefined,
 ): string | undefined {
   if (!metadata || metadata.computed?.includes('description')) return undefined;
-  const d = metadata.description;
-  return d == null || d === '' ? undefined : String(d);
+  return frontmatterText(metadata.description);
 }

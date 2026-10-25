@@ -16,3 +16,7 @@ Readers can now see where a page sits in your site and jump back up a level. The
 - **Styling:** the trail uses the `.page-header-breadcrumbs` class.
 
 See [[page-headers#breadcrumbs|Page headers]] for details.
+
+**Fixes**
+
+- Published Obsidian templates with unfilled placeholders like `date: {{date}}` or `title: {{title}}` in their frontmatter no longer show an error page. The page now renders, and the header skips the placeholder field.

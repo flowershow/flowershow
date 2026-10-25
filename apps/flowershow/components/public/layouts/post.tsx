@@ -7,7 +7,7 @@ import type { Breadcrumb } from '@/lib/breadcrumbs';
 import { formatLongDate } from '@/lib/listing/dates';
 import type { ListingItem } from '@/lib/listing/items';
 import type { PostHero } from '@/lib/post/hero';
-import { safeDate } from '@/lib/utils';
+import { isFrontmatterDate, safeDate } from '@/lib/utils';
 
 export type PostAuthor = {
   key: string;
@@ -36,13 +36,8 @@ interface PostLayoutProps {
 
 const MAX_AVATARS = 3;
 
-/** A frontmatter date worth showing: a string, a number or a Date (never an object or list). */
-const isDateValue = (date: unknown) =>
-  date instanceof Date ||
-  ((typeof date === 'string' || typeof date === 'number') && date !== '');
-
 function PostDate({ date, locale }: { date: unknown; locale: string }) {
-  if (!isDateValue(date)) return null;
+  if (!isFrontmatterDate(date)) return null;
   const parsed = safeDate(date);
   const iso = parsed?.toISOString().slice(0, 10);
   return (
@@ -88,7 +83,7 @@ function Byline({
   locale: string;
   readingTime?: string;
 }) {
-  const hasDate = isDateValue(date);
+  const hasDate = isFrontmatterDate(date);
   if (authors.length === 0 && !hasDate && !readingTime) return null;
   const avatars = authors.filter((a) => a.avatar).slice(0, MAX_AVATARS);
   // Same wrappers as the page header (themes lay the byline out with them):

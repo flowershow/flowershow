@@ -69,6 +69,35 @@ export function safeDate(value: unknown): Date | null {
 }
 
 /**
+ * A frontmatter date worth showing: a string, a number or a Date, never an
+ * object or list. YAML reads an unfilled template placeholder
+ * (`date: {{date}}`) as a nested map, which React cannot render.
+ */
+export function isFrontmatterDate(
+  value: unknown,
+): value is string | number | Date {
+  return (
+    value instanceof Date ||
+    ((typeof value === 'string' || typeof value === 'number') && value !== '')
+  );
+}
+
+/**
+ * A frontmatter value as display text, or undefined when it has none.
+ *
+ * YAML gives scalars of any type (`title: 1984` is a number) and reads an
+ * unfilled Obsidian template placeholder (`title: {{title}}`) as a nested map.
+ * Rendering that map as a React child crashes the page, so anything that isn't
+ * a string, number or boolean is dropped.
+ */
+export function frontmatterText(value: unknown): string | undefined {
+  if (typeof value === 'string') return value === '' ? undefined : value;
+  if (typeof value === 'number' || typeof value === 'boolean')
+    return String(value);
+  return undefined;
+}
+
+/**
  * Normalizes a user-controlled frontmatter `authors` value into a clean list of
  * author strings.
  *

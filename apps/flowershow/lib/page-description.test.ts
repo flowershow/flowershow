@@ -20,5 +20,11 @@ describe('displayDescription', () => {
     expect(displayDescription({ description: 42 as unknown as string })).toBe(
       '42',
     );
+    // An unfilled `description: {{description}}` is a YAML map, not text
+    expect(
+      displayDescription({
+        description: { '{ description }': null } as unknown as string,
+      }),
+    ).toBeUndefined();
   });
 });
