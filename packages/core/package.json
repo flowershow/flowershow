@@ -29,5 +29,10 @@
     "vitest": "catalog:"
   },
   "license": "MIT",
-  "author": "Flowershow"
+  "author": "Flowershow",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/flowershow/flowershow.git",
+    "directory": "packages/core"
+  }
 }

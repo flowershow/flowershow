@@ -15,6 +15,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+      id-token: write # npm trusted publishing (OIDC)
     steps:
       - name: Checkout Repo
         uses: actions/checkout@v4
@@ -22,10 +23,11 @@ jobs:
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
 
-      - name: Setup Node.js 22.x
+      # Node 24 ships npm 11, which trusted publishing needs (>= 11.5.1)
+      - name: Setup Node.js 24.x
         uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           cache: "pnpm"
           registry-url: "https://registry.npmjs.org"
 
@@ -39,7 +41,6 @@ jobs:
           publish: pnpm release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # changesets creates a GitHub release for each npm package it publishes
       # (e.g. @flowershow/remark-wiki-link@x.y.z), and GitHub marks the newest one

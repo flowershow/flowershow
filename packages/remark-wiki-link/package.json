@@ -10,7 +10,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/flowershow/remark-wiki-link.git"
+    "url": "git+https://github.com/flowershow/flowershow.git",
+    "directory": "packages/remark-wiki-link"
   },
   "keywords": [
     "remark",
