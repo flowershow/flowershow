@@ -1,6 +1,5 @@
 import { S3Client } from '@aws-sdk/client-s3';
 import postgres from 'postgres';
-import { Client } from 'typesense';
 
 const REQUIRED_ENV_VARS = [
   'DATABASE_URL',
@@ -39,17 +38,45 @@ export function getPostgresClient(env) {
   });
 }
 
+/**
+ * Typesense client built on the runtime's `fetch`, not the `typesense` SDK: the
+ * SDK sends requests through axios, whose fetch adapter (>= 1.20) always sets
+ * `cache: 'default'`, which workerd rejects, so every call failed.
+ * Non-2xx responses throw an Error carrying `httpStatus`.
+ */
 export function getTypesenseClient(env) {
   if (!env.TYPESENSE_API_KEY || !env.TYPESENSE_HOST) return null;
-  return new Client({
-    nodes: [
-      {
-        host: env.TYPESENSE_HOST,
-        port: Number.parseInt(env.TYPESENSE_PORT, 10),
-        protocol: env.TYPESENSE_PROTOCOL,
+  const baseUrl = `${env.TYPESENSE_PROTOCOL}://${env.TYPESENSE_HOST}:${env.TYPESENSE_PORT}`;
+
+  async function request(method, path, body) {
+    const res = await fetch(`${baseUrl}${path}`, {
+      method,
+      headers: {
+        'X-TYPESENSE-API-KEY': env.TYPESENSE_API_KEY,
+        'Content-Type': 'application/json',
       },
-    ],
-    apiKey: env.TYPESENSE_API_KEY,
-    connectionTimeoutSeconds: 2,
-  });
+      body: body === undefined ? undefined : JSON.stringify(body),
+      signal: AbortSignal.timeout(2000),
+    });
+    if (!res.ok) {
+      const error = new Error(
+        `Typesense ${method} ${path}: ${res.status} ${await res.text()}`,
+      );
+      error.httpStatus = res.status;
+      throw error;
+    }
+    return res.json();
+  }
+
+  const collection = (name) => `/collections/${encodeURIComponent(name)}`;
+  return {
+    upsertDocument: (name, document) =>
+      request('POST', `${collection(name)}/documents?action=upsert`, document),
+    deleteDocument: (name, id) =>
+      request(
+        'DELETE',
+        `${collection(name)}/documents/${encodeURIComponent(id)}`,
+      ),
+    deleteCollection: (name) => request('DELETE', collection(name)),
+  };
 }

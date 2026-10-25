@@ -37,10 +37,7 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
     `;
     if (deleted.length === 0) return;
     try {
-      await typesense
-        .collections(siteId)
-        .documents(`${deleted[0].id}`)
-        .delete();
+      await typesense.deleteDocument(siteId, `${deleted[0].id}`);
     } catch (_) {
       // Document may not exist in Typesense (e.g. non-indexed file type)
     }
@@ -638,7 +635,7 @@ function getUnixTimestamp(value) {
 async function removeFromTypesense({ typesense, siteId, blobId }) {
   if (!typesense) return;
   try {
-    await typesense.collections(siteId).documents(`${blobId}`).delete();
+    await typesense.deleteDocument(siteId, `${blobId}`);
   } catch (_) {
     // Not indexed (e.g. a draft from the start)
   }
@@ -665,7 +662,7 @@ async function indexInTypesense({
       tags: tags.map((t) => t.tag),
       id: `${blobId}`,
     };
-    await typesense.collections(siteId).documents().upsert(document);
+    await typesense.upsertDocument(siteId, document);
   } catch {
     console.error(`Failed indexing document: ${`${siteId} - ${path}`}`);
   }

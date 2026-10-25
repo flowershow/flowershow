@@ -656,16 +656,12 @@ function createR2Storage(content) {
 function createTypesenseMock() {
   const calls = { upsert: 0, deleted: [] };
   const typesense = {
-    collections: (siteId) => ({
-      documents: (id) => ({
-        upsert: async () => {
-          calls.upsert += 1;
-        },
-        delete: async () => {
-          calls.deleted.push({ siteId, id });
-        },
-      }),
-    }),
+    upsertDocument: async () => {
+      calls.upsert += 1;
+    },
+    deleteDocument: async (siteId, id) => {
+      calls.deleted.push({ siteId, id });
+    },
   };
   return { typesense, calls };
 }

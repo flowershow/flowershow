@@ -257,7 +257,7 @@ async function cleanupExpiredSites({ sql, storage, typesense }) {
       await deleteSiteStorage(storage, site.id);
       if (typesense) {
         try {
-          await typesense.collections(`${site.id}`).delete();
+          await typesense.deleteCollection(`${site.id}`);
         } catch (err) {
           if (err?.httpStatus !== 404) {
             console.error(

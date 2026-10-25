@@ -91,9 +91,6 @@ importers:
       postgres:
         specifier: ^3.4.4
         version: 3.4.8
-      typesense:
-        specifier: ^2.0.3
-        version: 2.1.0(@babel/runtime@7.29.10)
     devDependencies:
       '@cloudflare/workers-types':
         specifier: ^4.20260621.1
