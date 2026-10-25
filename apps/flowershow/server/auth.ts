@@ -1,3 +1,4 @@
+import { canManageSite } from '@/lib/site-authz';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import axios from 'axios';
 import { getServerSession, type NextAuthOptions } from 'next-auth';
@@ -442,7 +443,7 @@ export function withSiteAuth(action: any) {
         id: siteId,
       },
     });
-    if (!site || site.userId !== session.user.id) {
+    if (!site || !canManageSite(session.user.id, site)) {
       return {
         error: 'Not authorized',
       };

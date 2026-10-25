@@ -1,3 +1,4 @@
+import { isSiteOwner } from '@/lib/site-authz';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { env } from '@/env.mjs';
@@ -90,7 +91,7 @@ export const stripeRouter = createTRPCRouter({
         });
       }
 
-      if (site.userId !== ctx.session.user.id) {
+      if (!isSiteOwner(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Not authorized',
@@ -129,7 +130,7 @@ export const stripeRouter = createTRPCRouter({
         });
       }
 
-      if (site.userId !== ctx.session.user.id) {
+      if (!isSiteOwner(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Not authorized',
@@ -248,7 +249,7 @@ export const stripeRouter = createTRPCRouter({
         });
       }
 
-      if (site.userId !== ctx.session.user.id) {
+      if (!isSiteOwner(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Not authorized',
@@ -289,7 +290,7 @@ export const stripeRouter = createTRPCRouter({
         });
       }
 
-      if (site.userId !== ctx.session.user.id) {
+      if (!isSiteOwner(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Not authorized',

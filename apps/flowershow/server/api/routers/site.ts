@@ -1,3 +1,4 @@
+import { canManageSite, isSiteOwner } from '@/lib/site-authz';
 import {
   isSiteChromeFile,
   matchLinkTarget,
@@ -312,7 +313,7 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -466,7 +467,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.id },
         select: { id: true, userId: true },
       });
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
       }
 
@@ -525,7 +526,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.id },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -601,7 +602,7 @@ export const siteRouter = createTRPCRouter({
         },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -652,7 +653,7 @@ export const siteRouter = createTRPCRouter({
         select: { id: true, userId: true, configJson: true },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -682,7 +683,7 @@ export const siteRouter = createTRPCRouter({
         select: { id: true, userId: true },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -710,7 +711,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.id },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !isSiteOwner(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -756,7 +757,7 @@ export const siteRouter = createTRPCRouter({
           select: { id: true, userId: true },
         });
 
-        if (!site || site.userId !== ctx.session.user.id) {
+        if (!site || !canManageSite(ctx.session.user.id, site)) {
           throw new TRPCError({
             code: 'NOT_FOUND',
             message: 'Site not found',
@@ -837,7 +838,7 @@ export const siteRouter = createTRPCRouter({
         select: { id: true, userId: true },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
       }
 
@@ -2048,7 +2049,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.siteId },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -2110,7 +2111,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.siteId },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
@@ -2201,7 +2202,7 @@ export const siteRouter = createTRPCRouter({
         where: { id: siteId },
       });
 
-      if (!site || site.userId !== ctx.session.user.id) {
+      if (!site || !canManageSite(ctx.session.user.id, site)) {
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',

@@ -1,3 +1,4 @@
+import { canManageSite } from '@/lib/site-authz';
 import { notFound, redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 import SiteTabs from '@/components/dashboard/site-tabs';
@@ -29,7 +30,7 @@ export default async function SiteTabsLayout({
     },
   });
 
-  if (!site || site.userId !== session.user.id) {
+  if (!site || !canManageSite(session.user.id, site)) {
     notFound();
   }
 

@@ -1,3 +1,4 @@
+import { canManageSite } from '@/lib/site-authz';
 import { type NextRequest } from 'next/server';
 import { consumeOwnerCode } from '@/lib/site-owner-code';
 import {
@@ -66,7 +67,7 @@ export async function GET(
 
   const userId = await consumeOwnerCode(params.get('code'), site.id);
   // The code proves who signed in; they must still own the site now.
-  if (!userId || userId !== site.userId) return failed(returnPath);
+  if (!userId || !canManageSite(userId, site)) return failed(returnPath);
 
   const token = await signOwnerToken({ siteId: site.id, userId, host });
   return new Response(null, {

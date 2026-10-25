@@ -1,3 +1,4 @@
+import { canManageSite } from '@/lib/site-authz';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { applyAnnotationsBulk } from '@/lib/annotations/bulk';
@@ -22,7 +23,8 @@ async function ownedSite(ctx: Ctx, siteId: string) {
       user: { select: { username: true } },
     },
   });
-  if (!site || site.userId !== ctx.session.user.id) throw notFound('Site');
+  if (!site || !canManageSite(ctx.session.user.id, site))
+    throw notFound('Site');
   return { ...site, id: siteId };
 }
 
@@ -32,7 +34,7 @@ async function ownedAnnotation(ctx: Ctx, id: string) {
     where: { id },
     select: { id: true, siteId: true, site: { select: { userId: true } } },
   });
-  if (!annotation || annotation.site.userId !== ctx.session.user.id) {
+  if (!annotation || !canManageSite(ctx.session.user.id, annotation.site)) {
     throw notFound('Annotation');
   }
   return annotation;

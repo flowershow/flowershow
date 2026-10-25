@@ -1,3 +1,4 @@
+import { canManageSite } from '@/lib/site-authz';
 import type {
   PublishFileStatus,
   PublicStatusResponse,
@@ -61,7 +62,7 @@ export async function GET(
           );
         }
 
-        if (site.userId !== auth?.userId) {
+        if (!canManageSite(auth?.userId, site)) {
           return NextResponse.json(
             {
               error: 'forbidden',

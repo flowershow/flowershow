@@ -1,3 +1,4 @@
+import { canManageSite } from '@/lib/site-authz';
 import { jwtVerify, SignJWT } from 'jose';
 import { env } from '@/env.mjs';
 import { normalizeHost } from '@/lib/site-host';
@@ -131,7 +132,7 @@ export async function getSiteOwnerFromRequest(
     siteId: site.id,
     host: request.headers.get('host') ?? '',
   });
-  return userId && userId === site.userId ? userId : null;
+  return canManageSite(userId, site) ? userId : null;
 }
 
 /**
