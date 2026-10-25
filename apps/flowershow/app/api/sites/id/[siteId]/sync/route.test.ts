@@ -523,6 +523,28 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       expect(body.toUpdate.map((f: any) => f.path)).toEqual(['a.md']);
     });
 
+    it('scopes the PublishFile lookup to the site, relevant rows and a bounded time window', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([] as any);
+      const before = Date.now();
+
+      await POST(
+        makeRequest({ files: [{ path: 'a.md', size: 1, sha: 'x' }] }),
+        makeParams(SITE_ID),
+      );
+
+      const { where } = vi.mocked(prisma.publishFile.findMany).mock
+        .calls[0]?.[0] as any;
+      expect(where.OR).toEqual([
+        { status: 'uploading' },
+        { status: 'success', changeType: 'deleted' },
+      ]);
+      expect(where.publish.siteId).toBe(SITE_ID);
+      // Bounded for unfinished publishes too, so orphans age out
+      const gt = where.publish.startedAt.gt.getTime();
+      expect(gt).toBeLessThan(before);
+      expect(gt).toBeGreaterThan(before - 60 * 60 * 1000);
+    });
+
     it('re-uploads a file another publish deleted before the Blob row was removed', async () => {
       vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
         { path: 'gone.md', sha: 'same', updatedAt: blobUpdatedAt },

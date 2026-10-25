@@ -410,16 +410,13 @@ async function loadServerFileState(siteId: string) {
     select: { path: true, sha: true, size: true, updatedAt: true },
   });
 
+  const windowStart = new Date(Date.now() - RECENT_PUBLISH_WINDOW_MS);
   const recentFiles = await prisma.publishFile.findMany({
     where: {
       publish: {
         siteId,
-        OR: [
-          { completedAt: null },
-          {
-            startedAt: { gt: new Date(Date.now() - RECENT_PUBLISH_WINDOW_MS) },
-          },
-        ],
+        // Bounded for unfinished publishes too, so orphans age out
+        startedAt: { gt: windowStart },
       },
       OR: [
         { status: 'uploading' },

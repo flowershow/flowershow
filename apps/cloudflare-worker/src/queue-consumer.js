@@ -76,16 +76,21 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
       return msg.ack();
     }
 
-    await processMarkdownFile({
-      storage,
-      sql,
-      typesense,
-      siteId,
-      branch,
-      path,
-      publishId,
-    });
-    await revalidateIfPublishDone({ sql, env, siteId, publishId });
+    try {
+      await processMarkdownFile({
+        storage,
+        sql,
+        typesense,
+        siteId,
+        branch,
+        path,
+        publishId,
+      });
+    } finally {
+      // Also purge when this file errored: its row is no longer 'uploading',
+      // so it may have been the last one.
+      await revalidateIfPublishDone({ sql, env, siteId, publishId });
+    }
     msg.ack();
   } catch (err) {
     const rawKey = msg.body.object.key;
@@ -112,14 +117,17 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
   }
 }
 
+const REVALIDATE_TIMEOUT_MS = 3000;
+
 /**
  * Purge the app's cached site data as soon as the last file of a publish has
  * been processed, instead of waiting for the PublishFinalizerWorkflow's next
- * 10s poll. The app caches tRPC lookups (including "page not found") for 60s
- * under the site-id tag, so a page requested after `fl` reports success but
- * before the finalizer revalidated would 404 for several seconds.
+ * 10s poll. The app caches successful tRPC lookups (nav, wiki-links, index,
+ * page blobs) for 60s under the site-id tag, so after an overwrite they can
+ * stay stale for several seconds after `fl` reports success.
  *
- * Never throws: the finalizer revalidates again as a fallback.
+ * Never throws (including on timeout), so a revalidate failure never causes a
+ * queue retry: the finalizer revalidates again as a fallback.
  */
 export async function revalidateIfPublishDone({ sql, env, siteId, publishId }) {
   if (!publishId || !env?.NEXTJS_APP_URL || !env?.INTERNAL_API_SECRET) return;
@@ -136,6 +144,8 @@ export async function revalidateIfPublishDone({ sql, env, siteId, publishId }) {
         'x-internal-secret': env.INTERNAL_API_SECRET,
       },
       body: JSON.stringify({ tags: [siteId] }),
+      // Sits on the ack path: never let a slow app hold up (or retry) the batch.
+      signal: AbortSignal.timeout(REVALIDATE_TIMEOUT_MS),
     });
     if (!resp.ok) {
       console.error(`Revalidate failed: ${resp.status} for site ${siteId}`);

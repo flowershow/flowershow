@@ -13,5 +13,5 @@ Publishing adds pages to search again, and we've re-indexed every page published
 
 **Fixes**
 
-- A page you just published no longer shows "not found" for a few seconds after `fl` says it's done. Your site now refreshes the moment your last file is processed.
+- After you overwrite a site, navigation, wiki-links and the index page now refresh the moment your last file is processed, instead of staying stale for a few seconds.
 - `fl` no longer says "Already in sync" right after another folder overwrote the same site. Files that are still being processed or were just deleted count as changed.
