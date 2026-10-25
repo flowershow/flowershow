@@ -15,7 +15,7 @@ One sitting, about 60–75 minutes, covers `flowershow-3fr.5`, `flowershow-h4a` 
 
 5. Add a connector at `https://flowershow.app/api/mcp/account`, sign in with Flowershow, and approve the consent screen. **Screenshot the consent screen** for the changelog.
 6. New chat: publish a new site. It appears in your dashboard.
-7. Another new chat: "Update <that site>: add an About page." It updates the same site. ⚠️ Until the partial-publish fix (`flowershow-8yy`) is deployed, check whether the other pages survive. If they don't, that's the known bug; note it, don't file it.
+7. Another new chat: "Update <that site>: add an About page." It updates the same site and **the other pages survive** (partial publish, #1508, verified anonymously in prod on 10-26). Then "start the site over with just a home page": the model must first tell you which files would be removed and ask.
 8. In chat, claim the anonymous site from A.
 9. Dashboard → Connected apps → revoke. The next tool call fails with a sign-in prompt. Reconnect, and it works again.
 
