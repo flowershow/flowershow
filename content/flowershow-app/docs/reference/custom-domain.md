@@ -46,7 +46,7 @@ If you already have a TXT record with the same name (e.g. `_vercel`) from a prev
 
 ### 3. Configure DNS records
 
-Once ownership is verified, point your domain to Flowershow's servers using the values shown in your dashboard.
+Once ownership is verified, point your domain to Flowershow's servers using the values shown in your dashboard, under the custom domain field. Once your domain is working, they stay available under **DNS records** there, in case you change DNS providers or need to set a record again.
 
 **For a root domain** (e.g. `myblog.com`):
 - Add an **A record**

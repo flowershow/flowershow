@@ -23,3 +23,7 @@ When you move a section of your site, every old link to it used to need its own 
 - **First match wins**, so a rule for one renamed page goes above the folder rule.
 
 See [[redirects|URL redirects]] for all the options.
+
+**Fixes**
+
+- **DNS records for your custom domain stay visible.** The dashboard used to hide the A and CNAME values once your domain was working, so if you removed a record by accident there was nowhere to look them up. They're now under **DNS records** below the custom domain field.

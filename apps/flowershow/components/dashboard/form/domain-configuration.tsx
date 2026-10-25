@@ -30,7 +30,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
 
   const { status, domainJson, configJson } = useDomainStatus({ domain });
 
-  if (!status || status === 'Valid Configuration' || !domainJson) return null;
+  if (!status || !domainJson) return null;
 
   const domainName = domainJson.name ?? domain;
   const apexName = domainJson.apexName ?? domain.split('.').slice(-2).join('.');
@@ -50,6 +50,89 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
   const aRecordValue =
     configJson?.recommendedIPv4?.find((r) => r.rank === 1)?.value?.[0] ??
     '76.76.21.21';
+
+  const dnsRecords = (
+    <>
+      <div className="flex justify-start space-x-4">
+        <button
+          type="button"
+          onClick={() => setRecordType('A')}
+          className={`${
+            activeRecordType == 'A'
+              ? 'border-black text-black dark:border-white dark:text-zinc-100  '
+              : 'border-white text-stone-400 dark:border-zinc-900 dark:text-zinc-500  '
+          } ease border-b-2 pb-1 text-sm transition-all duration-150`}
+        >
+          A Record{!subdomain && ' (recommended)'}
+        </button>
+        <button
+          type="button"
+          onClick={() => setRecordType('CNAME')}
+          className={`${
+            activeRecordType == 'CNAME'
+              ? 'border-black text-black dark:border-white dark:text-zinc-100  '
+              : 'border-white text-stone-400 dark:border-zinc-900 dark:text-zinc-500  '
+          } ease border-b-2 pb-1 text-sm transition-all duration-150`}
+        >
+          CNAME Record{subdomain && ' (recommended)'}
+        </button>
+      </div>
+      <div className="my-3 text-left">
+        <p className="my-5 text-sm ">
+          To point your {subdomain ? 'subdomain' : 'apex domain'} (
+          <InlineSnippet>{domainName}</InlineSnippet>) at Flowershow, set the
+          following {activeRecordType} record on your DNS provider:
+        </p>
+        <div className="flex items-center justify-start space-x-10 rounded-md bg-stone-50 p-2 dark:bg-zinc-950  ">
+          <div>
+            <p className="text-sm font-bold">Type</p>
+            <p className="mt-2 font-mono text-sm">{activeRecordType}</p>
+          </div>
+          <div>
+            <p className="text-sm font-bold">Name</p>
+            <p className="mt-2 font-mono text-sm">{subdomain ?? '@'}</p>
+          </div>
+          <div>
+            <p className="text-sm font-bold">Value</p>
+            <p className="mt-2 font-mono text-sm">
+              {activeRecordType === 'A' ? aRecordValue : cnameTarget}
+            </p>
+          </div>
+          <div>
+            <p className="text-sm font-bold">TTL</p>
+            <p className="mt-2 font-mono text-sm">86400</p>
+          </div>
+        </div>
+        <p className="mt-5 text-sm ">
+          Note: for TTL, if <InlineSnippet>86400</InlineSnippet> is not
+          available, set the highest value possible. Also, domain propagation
+          can take up to an hour.
+        </p>
+        <div className="mt-4 flex items-start space-x-2 rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950/40">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500 dark:text-blue-400" />
+          <p className="text-sm text-blue-800 dark:text-blue-400">
+            If you are using Cloudflare, make sure to set the proxy status to{' '}
+            <strong>&quot;DNS only&quot;</strong> (grey cloud icon) instead of
+            &quot;Proxied&quot; (orange cloud icon). Cloudflare&apos;s proxy can
+            interfere with SSL certificate provisioning.
+          </p>
+        </div>
+      </div>
+    </>
+  );
+
+  // A working domain keeps its records one click away, so users who change
+  // DNS providers or delete a record can set it up again.
+  if (status === 'Valid Configuration') {
+    return (
+      <details className="border-t border-stone-200 px-10 py-5 dark:border-zinc-700">
+        <summary className="cursor-pointer text-sm font-semibold">
+          DNS records
+        </summary>
+        <div className="mt-4">{dnsRecords}</div>
+      </details>
+    );
+  }
 
   return (
     <div className="border-t border-stone-200 px-10 pb-5 pt-7 dark:border-zinc-700 ">
@@ -106,75 +189,7 @@ export default function DomainConfiguration({ domain }: { domain: string }) {
       ) : status === 'Unknown Error' ? (
         <p className="mb-5 text-sm ">{domainJson.error.message}</p>
       ) : (
-        <>
-          <div className="flex justify-start space-x-4">
-            <button
-              type="button"
-              onClick={() => setRecordType('A')}
-              className={`${
-                activeRecordType == 'A'
-                  ? 'border-black text-black dark:border-white dark:text-zinc-100  '
-                  : 'border-white text-stone-400 dark:border-zinc-900 dark:text-zinc-500  '
-              } ease border-b-2 pb-1 text-sm transition-all duration-150`}
-            >
-              A Record{!subdomain && ' (recommended)'}
-            </button>
-            <button
-              type="button"
-              onClick={() => setRecordType('CNAME')}
-              className={`${
-                activeRecordType == 'CNAME'
-                  ? 'border-black text-black dark:border-white dark:text-zinc-100  '
-                  : 'border-white text-stone-400 dark:border-zinc-900 dark:text-zinc-500  '
-              } ease border-b-2 pb-1 text-sm transition-all duration-150`}
-            >
-              CNAME Record{subdomain && ' (recommended)'}
-            </button>
-          </div>
-          <div className="my-3 text-left">
-            <p className="my-5 text-sm ">
-              To configure your {subdomain ? 'subdomain' : 'apex domain'} (
-              <InlineSnippet>{domainName}</InlineSnippet>
-              ), set the following {activeRecordType} record on your DNS
-              provider to continue:
-            </p>
-            <div className="flex items-center justify-start space-x-10 rounded-md bg-stone-50 p-2 dark:bg-zinc-950  ">
-              <div>
-                <p className="text-sm font-bold">Type</p>
-                <p className="mt-2 font-mono text-sm">{activeRecordType}</p>
-              </div>
-              <div>
-                <p className="text-sm font-bold">Name</p>
-                <p className="mt-2 font-mono text-sm">{subdomain ?? '@'}</p>
-              </div>
-              <div>
-                <p className="text-sm font-bold">Value</p>
-                <p className="mt-2 font-mono text-sm">
-                  {activeRecordType === 'A' ? aRecordValue : cnameTarget}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm font-bold">TTL</p>
-                <p className="mt-2 font-mono text-sm">86400</p>
-              </div>
-            </div>
-            <p className="mt-5 text-sm ">
-              Note: for TTL, if <InlineSnippet>86400</InlineSnippet> is not
-              available, set the highest value possible. Also, domain
-              propagation can take up to an hour.
-            </p>
-            <div className="mt-4 flex items-start space-x-2 rounded-md border border-blue-200 bg-blue-50 p-3 dark:border-blue-900 dark:bg-blue-950/40">
-              <Info className="mt-0.5 h-4 w-4 shrink-0 text-blue-500 dark:text-blue-400" />
-              <p className="text-sm text-blue-800 dark:text-blue-400">
-                If you are using Cloudflare, make sure to set the proxy status
-                to <strong>&quot;DNS only&quot;</strong> (grey cloud icon)
-                instead of &quot;Proxied&quot; (orange cloud icon).
-                Cloudflare&apos;s proxy can interfere with SSL certificate
-                provisioning.
-              </p>
-            </div>
-          </div>
-        </>
+        dnsRecords
       )}
     </div>
   );
