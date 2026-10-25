@@ -15,3 +15,4 @@ Publishing adds pages to search again, and we've re-indexed every page published
 
 - After you overwrite a site, navigation, wiki-links and the index page now refresh the moment your last file is processed, instead of staying stale for a few seconds.
 - `fl` no longer says "Already in sync" right after another folder overwrote the same site. Files that are still being processed or were just deleted count as changed.
+- Older versions of the `fl` CLI now wait for pages to finish processing before reporting success, so the site no longer shows a 404 for a few seconds right after publishing.

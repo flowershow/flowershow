@@ -11,6 +11,16 @@ import PostHogClient from '@/lib/server-posthog';
 import { authorizeSiteRequest } from '@/lib/site-auth';
 import prisma from '@/server/db';
 
+// Legacy per-blob status values read by `fl` CLI < 2.7.0. Without these old
+// CLIs see no pending files and report success before pages are processed.
+const LEGACY_SYNC_STATUS: Record<string, PublishFileStatus['syncStatus']> = {
+  uploading: 'UPLOADING',
+  error: 'ERROR',
+  success: 'SUCCESS',
+  canceled: 'SUCCESS',
+  expired: 'SUCCESS',
+};
+
 /**
  * GET /api/sites/id/:siteId/status
  * Get processing status derived from the latest Publish record
@@ -156,6 +166,9 @@ export async function GET(
             status: pf.status,
             error: pf.error ?? null,
             extension: pf.path.split('.').pop() ?? null,
+            // Deprecated aliases for `fl` CLI < 2.7.0 (see api-contract)
+            syncStatus: LEGACY_SYNC_STATUS[pf.status] ?? 'SUCCESS',
+            syncError: pf.error ?? null,
           }),
         ),
       } satisfies StatusResponse);

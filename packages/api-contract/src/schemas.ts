@@ -110,6 +110,13 @@ export const PublishFileStatusSchema = z.object({
   status: z.enum(['uploading', 'success', 'error', 'canceled', 'expired']),
   error: z.string().nullable(),
   extension: z.string().nullable(),
+  /**
+   * @deprecated Legacy per-blob status read by `fl` CLI < 2.7.0. Use `status`.
+   * uploading -> UPLOADING, success/canceled/expired -> SUCCESS, error -> ERROR.
+   */
+  syncStatus: z.enum(['UPLOADING', 'PROCESSING', 'SUCCESS', 'ERROR']),
+  /** @deprecated Legacy alias of `error` read by `fl` CLI < 2.7.0. Use `error`. */
+  syncError: z.string().nullable(),
 });
 export type PublishFileStatus = z.infer<typeof PublishFileStatusSchema>;
 

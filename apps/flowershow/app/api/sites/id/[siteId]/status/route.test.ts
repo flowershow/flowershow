@@ -153,3 +153,44 @@ describe('GET /api/sites/id/:siteId/status — claim token', () => {
     expect(body.status).toBe('error');
   });
 });
+
+describe('GET /api/sites/id/:siteId/status — legacy CLI fields', () => {
+  const ANON_OWNER = '3f1c2b7a-1d2e-4f3a-9b4c-5d6e7f8a9b0c';
+  const anonSite = {
+    id: 'site-1',
+    userId: ANONYMOUS_USER_ID,
+    anonymousOwnerId: ANON_OWNER,
+    expiresAt: new Date(Date.now() + 86400000),
+    privacyMode: 'PUBLIC',
+  };
+
+  it('adds syncStatus/syncError alongside status/error on each blob', async () => {
+    findUnique.mockResolvedValue(anonSite);
+    publishFileFindMany.mockResolvedValue([
+      { id: 'a', path: 'a.md', status: 'uploading', error: null },
+      { id: 'b', path: 'b.md', status: 'success', error: null },
+      { id: 'c', path: 'c.md', status: 'canceled', error: null },
+      { id: 'd', path: 'd.md', status: 'error', error: 'boom' },
+    ]);
+
+    const res = await GET(
+      makeReq(generateSiteClaimToken('site-1', ANON_OWNER)),
+      makeParams(),
+    );
+
+    const body = await res.json();
+    expect(
+      body.blobs.map((b: Record<string, unknown>) => [
+        b.status,
+        b.error,
+        b.syncStatus,
+        b.syncError,
+      ]),
+    ).toEqual([
+      ['uploading', null, 'UPLOADING', null],
+      ['success', null, 'SUCCESS', null],
+      ['canceled', null, 'SUCCESS', null],
+      ['error', 'boom', 'ERROR', 'boom'],
+    ]);
+  });
+});
