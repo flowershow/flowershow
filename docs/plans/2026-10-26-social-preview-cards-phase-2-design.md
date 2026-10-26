@@ -2,7 +2,7 @@
 title: Social preview cards — design (phase 2: images and variety)
 status: APPROVED 2026-10-26 (decisions below)
 builds-on: 2026-10-03-social-preview-cards-design.md (phase 1, shipped in #1432)
-bead: none yet (create on approval; `bd` couldn't open the database from this checkout)
+bead: flowershow-d8v.1 (2b: flowershow-d8v.2); related flowershow-e1x, flowershow-tpg
 research: https://github.com/rufuspollock/ux-patterns/blob/main/seo-preview-images/per-page-variation.md (previews on the inner pages of 26 blogs, docs sites and wikis)
 ---
 
