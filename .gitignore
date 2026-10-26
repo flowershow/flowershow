@@ -67,7 +67,6 @@ packages/obsidian-plugin/main.js
 
 # beads
 .bv/
-.beads/
 
 # local git worktrees
 .worktrees/

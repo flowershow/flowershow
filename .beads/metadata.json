@@ -1,0 +1,7 @@
+{
+  "database": "dolt",
+  "backend": "dolt",
+  "dolt_mode": "embedded",
+  "dolt_database": "flowershow",
+  "project_id": "62b5967b-3a24-451d-bf33-8ffd71a3a88d"
+}
