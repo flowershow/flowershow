@@ -728,42 +728,7 @@ Or like this: . . .
 
 ## Obsidian Callouts
 
-```
-> [!info] This is cool!
-> Here's a callout block.
-> It supports **markdown** and [[abc|wikilinks]].
-```
-
-> [!info] This is cool!
-> Here's a callout block.
-> It supports **markdown** and [[abc|wikilinks]].
-
-```
-> [!tip] Title-only callout
-```
-
-> [!tip] Title-only callout
-
-```
-> [!faq]- Are callouts foldable?
-> Yes! In a foldable callout, the contents are hidden when the callout is collapsed.
-```
-
-> [!faq]- Are callouts foldable?
-> Yes! In a foldable callout, the contents are hidden when the callout is collapsed.
-
-```
-> [!question] Can callouts be nested?
-> > [!todo] Yes!, they can.
-> > > [!example]  You can even use multiple layers of nesting.
-```
-
-> [!question] Can callouts be nested?
-> > [!todo] Yes!, they can.
-> > > [!example]  You can even use multiple layers of nesting.
-
-> [!note] Supported callout types
-> Flowershow supports 13 different Obsidian callout types like note, abstract, todo, or tip. See this [Obsidian docs page](https://help.obsidian.md/How+to/Use+callouts) to learn more about different callout types. Aliases work too!
+See the [Callouts reference](./callouts) for syntax, examples, and the full list of supported types and aliases.
 
 ## Comments
 
