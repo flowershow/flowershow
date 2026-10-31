@@ -43,6 +43,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Annotations](/docs/reference/annotations) — Let colleagues select text on your published pages and leave notes, with no account. Then give the open notes to your AI agent with fl annotations pull.
 - [Apply a theme](/docs/reference/apply-a-theme) — Apply one of Flowershow's themes from the dashboard or config.json, and customize it further.
 - [Backlinks](/docs/reference/backlinks) — Show a list of pages that link to the current page.
+- [Callouts](/docs/reference/callouts) — Obsidian callout syntax, supported types and aliases, custom titles, folding, and nesting in Flowershow.
 - [Changelog](/docs/reference/changelog) — Publish a changelog: Flowershow turns a changelog folder or a CHANGELOG.md file into a timeline page automatically
 - [Flowershow CLI](/docs/reference/cli) — Install and use fl, the Flowershow CLI, to publish your notes from the terminal. A single binary, no Node.js or npm needed.
 - [Comments](/docs/reference/comments) — Enable comments on your site's pages. Powered by Giscus and GitHub Discussions.
