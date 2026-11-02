@@ -207,6 +207,31 @@ describe('Flowershow MCP server', () => {
   );
 
   it.each([
+    ['anonymous', { kind: 'anon' } as McpMode],
+    ['signed in', USER],
+  ])(
+    'tells the model to show the files and site, and to ask only when it matters (%s)',
+    async (_label, mode) => {
+      const client = await connect(mode, deps());
+      const { tools } = await client.listTools();
+      const description = tools.find((t) => t.name === 'publish')?.description;
+      expect(description).toMatch(/every path/);
+      expect(description).toMatch(/which site/);
+      expect(description).toMatch(/private or sensitive/);
+      expect(description).toMatch(/delete or replaceWholeSite/);
+      expect(description).toMatch(/new site when the user meant to update/);
+      expect(description).toMatch(/differs? from what the user asked/);
+      expect(description).toMatch(
+        /already named the files, asked for the removal or said to go ahead/,
+      );
+      // Lightweight policy: no mandatory confirm step before every publish.
+      expect(description).not.toMatch(
+        /always (ask|wait)|before every publish/i,
+      );
+    },
+  );
+
+  it.each([
     ['anonymous', { kind: 'anon' } as McpMode, { claimToken: 'fs_claim_x' }],
     ['signed in', USER, { userId: 'u1' }],
   ])(
