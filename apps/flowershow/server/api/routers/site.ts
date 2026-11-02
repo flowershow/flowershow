@@ -2332,13 +2332,18 @@ export const siteRouter = createTRPCRouter({
             orderBy: { sourceBlob: { path: 'asc' } },
           });
 
-          return links
-            .map(({ sourceBlob }) => ({
-              appPath: sourceBlob.appPath,
-              title: (sourceBlob.metadata as Record<string, unknown> | null)
-                ?.title as string | undefined,
-            }))
-            .filter((b) => b.appPath !== null);
+          return (
+            links
+              // A draft is reachable by URL but never advertised: listing it
+              // here would show its title on every page it links to
+              .filter(({ sourceBlob }) => !isDraft(sourceBlob.metadata))
+              .map(({ sourceBlob }) => ({
+                appPath: sourceBlob.appPath,
+                title: (sourceBlob.metadata as Record<string, unknown> | null)
+                  ?.title as string | undefined,
+              }))
+              .filter((b) => b.appPath !== null)
+          );
         },
         undefined,
         {
@@ -2364,7 +2369,7 @@ export const siteRouter = createTRPCRouter({
       return await unstable_cache(
         async (input) => {
           if (!input.blobId) {
-            const [blobs, links] = await Promise.all([
+            const [allBlobs, links] = await Promise.all([
               ctx.db.blob.findMany({
                 where: { siteId: input.siteId, appPath: { not: null } },
                 select: { id: true, appPath: true, metadata: true },
@@ -2376,6 +2381,8 @@ export const siteRouter = createTRPCRouter({
               }),
             ]);
 
+            // A draft is never advertised, so it is not a node (nor its links)
+            const blobs = allBlobs.filter((b) => !isDraft(b.metadata));
             const blobIds = new Set(blobs.map((b) => b.id));
 
             return {
@@ -2421,7 +2428,7 @@ export const siteRouter = createTRPCRouter({
 
           const neighborIdList = [...neighborIds];
 
-          const [blobs, interLinks] = await Promise.all([
+          const [neighborBlobs, interLinks] = await Promise.all([
             ctx.db.blob.findMany({
               where: { id: { in: neighborIdList }, appPath: { not: null } },
               select: { id: true, appPath: true, metadata: true },
@@ -2450,6 +2457,11 @@ export const siteRouter = createTRPCRouter({
             ),
           ];
 
+          // Drop draft neighbours (and their links); a draft focal page keeps
+          // itself, since its viewer is already on it
+          const blobs = neighborBlobs.filter(
+            (b) => b.id === input.blobId || !isDraft(b.metadata),
+          );
           const blobIds = new Set(blobs.map((b) => b.id));
 
           return {
