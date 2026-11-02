@@ -18,6 +18,19 @@ Once installed, your assistant can:
 - Style your site with `custom.css`
 - Walk you through complex setups (custom domain, comments, GitHub connection) step by step
 
+## You see what gets published
+
+Anything you publish can be read by anyone with the link. So every time your assistant publishes, whether it's a new site, an update or an anonymous site, it tells you which files are going out, which site they go to, and anything the publish will remove.
+
+It doesn't ask you to confirm every publish. If you asked it to publish, it goes ahead. It stops and asks first only when:
+
+- a file looks private, such as a draft, personal notes, keys, or data with names or emails;
+- the publish would delete files from your site;
+- it's about to publish a new site you didn't ask for;
+- the files aren't the ones you asked for, for example the folder holds other files too.
+
+To leave a file out, tell it which one. It can add the file to a `.gitignore` in the folder, which `fl` skips.
+
 ## Installation
 
 The skill is a single file, [`SKILL.md`](https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md). Installing it means putting that file in your agent's skills folder. Nothing else is needed.
@@ -40,6 +53,6 @@ For the Claude apps and ChatGPT, you upload the skill instead: see [Supported ag
 
 The skill is a single file, maintained at [github.com/flowershow/skills](https://github.com/flowershow/skills):
 
-- **`SKILL.md`** — behavioral instructions: how to install and authenticate `fl`, publish (including HTML and converted documents), read docs, handle premium features. Instructs the agent to fetch `https://flowershow.app/docs/sitemap.md` to discover available docs, then read the relevant page before making changes.
+- **`SKILL.md`** — behavioral instructions: how to install and authenticate `fl`, show you the file list with every publish and ask when something looks wrong, publish (including HTML and converted documents), read docs, handle premium features. Instructs the agent to fetch `https://flowershow.app/docs/sitemap.md` to discover available docs, then read the relevant page before making changes.
 
 When your assistant encounters a Flowershow task, it loads these instructions and follows them.
