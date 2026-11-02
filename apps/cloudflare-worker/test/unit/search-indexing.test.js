@@ -128,6 +128,21 @@ test('a single scalar author is indexed as a one-item list', async () => {
   expect(JSON.parse(request.body).authors).toEqual(['Ada']);
 });
 
+test('a date with milliseconds is indexed as whole seconds', async () => {
+  let request;
+  typesense()
+    .intercept({ method: 'POST', path: UPSERT_PATH })
+    .reply(201, (req) => {
+      request = req;
+      return {};
+    });
+
+  const result = await publish('---\ndate: 2026-07-17T06:13:44.205Z\n---\nBody');
+
+  expect(result).toEqual({ status: 'success', error: null });
+  expect(JSON.parse(request.body).date).toBe(1784268824);
+});
+
 test('a document Typesense rejects is an author-facing publish error and is reported', async () => {
   typesense()
     .intercept({ method: 'POST', path: UPSERT_PATH })

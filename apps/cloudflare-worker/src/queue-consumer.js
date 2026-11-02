@@ -675,14 +675,18 @@ export async function syncTags(sql, siteId, blobId, tags) {
 }
 
 /**
- * Convert a user-controlled frontmatter `date` into a Unix timestamp (seconds),
- * or null when it isn't a parseable date. Frontmatter dates are often ranges
- * ("1964-1982") or free text, which would otherwise index as NaN.
+ * Convert a user-controlled frontmatter `date` into a Unix timestamp (whole
+ * seconds), or null when it isn't a parseable date. Frontmatter dates are often
+ * ranges ("1964-1982") or free text, which would otherwise index as NaN. The
+ * search `date` field is int64, so a date with milliseconds
+ * (`2026-07-17T06:13:44.205Z`) must not become a fraction.
  */
 function getUnixTimestamp(value) {
   if (value == null || value === '') return null;
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? null : date.getTime() / 1000;
+  return Number.isNaN(date.getTime())
+    ? null
+    : Math.floor(date.getTime() / 1000);
 }
 
 /**
