@@ -411,6 +411,41 @@ describe('PageAnnotations', () => {
       .caretPositionFromPoint;
   });
 
+  it('anchors highlights before the comments show, so an immediate click on one works', async () => {
+    // A slow machine: every clock read jumps past React's 5ms time slice, so
+    // the scheduler yields between a commit and work it queues after it.
+    let now = performance.now();
+    vi.spyOn(performance, 'now').mockImplementation(() => (now += 50));
+    const root = mountContent();
+    apiFetch.mockReturnValueOnce(jsonResponse({ annotations: [annotation()] }));
+    renderOverlay();
+    // Click in the microtask right after the commit that shows the count
+    // (findByText's setTimeout drain would give queued effects a chance to run).
+    await new Promise<void>((resolve) => {
+      const observer = new MutationObserver(() => {
+        if (!screen.queryByText('1 comment')) return;
+        observer.disconnect();
+        resolve();
+      });
+      observer.observe(document.body, {
+        childList: true,
+        subtree: true,
+        characterData: true,
+      });
+    });
+    const text = root.querySelector('p')!.firstChild!;
+    (
+      document as unknown as { caretPositionFromPoint: unknown }
+    ).caretPositionFromPoint = () => ({ offsetNode: text, offset: 12 });
+    fireEvent.click(root.querySelector('p')!, { clientX: 5, clientY: 5 });
+    delete (document as unknown as { caretPositionFromPoint?: unknown })
+      .caretPositionFromPoint;
+    vi.mocked(performance.now).mockRestore();
+    expect(
+      await screen.findByRole('complementary', { name: 'Comments' }),
+    ).toBeInTheDocument();
+  });
+
   describe('on a phone (bottom sheet)', () => {
     let scrollTo: ReturnType<typeof vi.fn>;
     beforeEach(() => {

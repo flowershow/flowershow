@@ -11,6 +11,7 @@ import {
   type FormEvent,
   type KeyboardEvent as ReactKeyboardEvent,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from 'react';
@@ -350,7 +351,8 @@ export default function PageAnnotations({
   );
 
   // Anchor open notes when they change, and again only if the page text changes (e.g. MDX hydration).
-  useEffect(() => {
+  // A layout effect: highlights are clickable in the same commit that shows the comments.
+  useLayoutEffect(() => {
     const root = document.getElementById(rootId);
     if (!root) return;
     let lastText = '';
