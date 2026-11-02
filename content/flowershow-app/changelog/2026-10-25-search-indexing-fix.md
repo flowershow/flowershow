@@ -17,3 +17,4 @@ Publishing adds pages to search again, and we've re-indexed every page published
 - `fl` no longer says "Already in sync" right after another folder overwrote the same site. Files that are still being processed or were just deleted count as changed.
 - A page that search can't index because of its frontmatter (for example a `description` that isn't plain text) now shows an error in your publish output and publish history, such as ``Not added to search: Field `description` must be a string.`` Before, it was silently left out of search. A single author written as `authors: Ada` instead of a list is indexed as usual.
 - Unpublished pages (`publish: false`), drafts and deleted pages are now removed from your site's search. Before, they could still show up in search results after they were taken down. We've cleared these stale entries from every site.
+- Opening a page you just unpublished or deleted now shows "Page not found" instead of an "Internal Server Error" page.
