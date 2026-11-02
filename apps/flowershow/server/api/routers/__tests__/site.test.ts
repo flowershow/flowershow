@@ -302,6 +302,12 @@ function createMockDb({
           if (w.siteId && l.siteId !== w.siteId) return false;
           if (w.targetBlobId?.not === null && l.targetBlobId === null)
             return false;
+          // targetBlobId: X  (backlinks query)
+          if (
+            typeof w.targetBlobId === 'string' &&
+            l.targetBlobId !== w.targetBlobId
+          )
+            return false;
           return true;
         });
 
@@ -346,12 +352,23 @@ function createMockDb({
 
         // Emulate distinct: ['sourceBlobId', 'targetBlobId']
         const seen = new Set<string>();
-        return results.filter((l) => {
+        results = results.filter((l) => {
           const key = `${l.sourceBlobId}|${l.targetBlobId}`;
           if (seen.has(key)) return false;
           seen.add(key);
           return true;
         });
+
+        // getBacklinks selects the joined source blob
+        if (args?.select?.sourceBlob) {
+          return results
+            .map((l) => blobs.find((b) => b.id === l.sourceBlobId))
+            .filter((b) => b !== undefined)
+            .map((b) => ({
+              sourceBlob: { appPath: b.appPath, metadata: b.metadata },
+            }));
+        }
+        return results;
       }),
     },
     tag: {
@@ -1078,6 +1095,96 @@ describe('site.getGraphData', () => {
     await expect(
       caller.site.getGraphData({ siteId: 'site-1', blobId: 'focal' }),
     ).rejects.toThrow('Site access required');
+  });
+});
+
+describe('site.getBacklinks', () => {
+  it('lists published pages that link here, with their titles', async () => {
+    const blobs = [
+      makeBlob({ id: 'target', appPath: '/target' }),
+      makeBlob({
+        id: 'source',
+        appPath: '/source',
+        metadata: { title: 'Source Page' },
+      }),
+    ];
+    const links = [
+      makeLink({ sourceBlobId: 'source', targetBlobId: 'target' }),
+    ];
+    const caller = createCaller(createMockDb({ blobs, links }));
+
+    const result = await caller.site.getBacklinks({
+      siteId: 'site-1',
+      blobId: 'target',
+    });
+
+    expect(result).toEqual([{ appPath: '/source', title: 'Source Page' }]);
+  });
+
+  it('leaves out draft pages, so their titles never show', async () => {
+    const blobs = [
+      makeBlob({ id: 'target', appPath: '/target' }),
+      makeBlob({
+        id: 'secret',
+        appPath: '/secret',
+        metadata: { title: 'Secret Draft', draft: true },
+      }),
+    ];
+    const links = [
+      makeLink({ sourceBlobId: 'secret', targetBlobId: 'target' }),
+    ];
+    const caller = createCaller(createMockDb({ blobs, links }));
+
+    const result = await caller.site.getBacklinks({
+      siteId: 'site-1',
+      blobId: 'target',
+    });
+
+    expect(result).toEqual([]);
+  });
+});
+
+describe('site.getGraphData drafts', () => {
+  const blobs = [
+    makeBlob({ id: 'focal', appPath: '/focal' }),
+    makeBlob({
+      id: 'secret',
+      appPath: '/secret',
+      metadata: { title: 'Secret Draft', draft: 'true' },
+    }),
+  ];
+  const links = [
+    makeLink({ sourceBlobId: 'focal', targetBlobId: 'secret' }),
+    makeLink({ sourceBlobId: 'secret', targetBlobId: 'focal' }),
+  ];
+
+  it('leaves draft pages out of the local graph', async () => {
+    const caller = createCaller(createMockDb({ blobs, links }));
+    const result = await caller.site.getGraphData({
+      siteId: 'site-1',
+      blobId: 'focal',
+    });
+
+    expect(result.nodes.map((n) => n.id)).toEqual(['focal']);
+    expect(result.links).toEqual([]);
+  });
+
+  it('leaves draft pages out of the global graph', async () => {
+    const caller = createCaller(createMockDb({ blobs, links }));
+    const result = await caller.site.getGraphData({ siteId: 'site-1' });
+
+    expect(result.nodes.map((n) => n.id)).toEqual(['focal']);
+    expect(result.links).toEqual([]);
+  });
+
+  it('keeps a draft focal page in its own local graph', async () => {
+    const caller = createCaller(createMockDb({ blobs, links }));
+    const result = await caller.site.getGraphData({
+      siteId: 'site-1',
+      blobId: 'secret',
+    });
+
+    expect(result.nodes.map((n) => n.id).sort()).toEqual(['focal', 'secret']);
   });
 });
 

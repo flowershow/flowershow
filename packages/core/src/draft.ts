@@ -1,7 +1,8 @@
 /**
  * `draft: true` in frontmatter (also the string "true", any case). A draft is
  * reachable by its URL but is never advertised: it stays out of listings,
- * feeds, the sitemap, search, tag pages and the sidebar, and is noindex.
+ * feeds, the sitemap, search, tag pages, the sidebar, backlinks and the
+ * graph, and is noindex.
  * Unlike `publish: false`, it is still ingested (Blob, links, tags).
  */
 export function isDraft(metadata: unknown): boolean {
