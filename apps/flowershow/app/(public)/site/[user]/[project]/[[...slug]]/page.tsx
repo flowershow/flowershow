@@ -7,6 +7,7 @@ import {
 import type { GiscusProps } from '@giscus/react';
 import clsx from 'clsx';
 import { CodeIcon, EditIcon } from 'lucide-react';
+import { TRPCError } from '@trpc/server';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { notFound, permanentRedirect, redirect } from 'next/navigation';
@@ -563,9 +564,22 @@ export default async function SitePage(props: {
         )
       : Promise.resolve(null);
 
-  const pageContent = await api.site.getBlobContent.query({
-    id: blob.id,
-  });
+  // getBlob is cached, so it can still return a page whose Blob row was just
+  // deleted (unpublished or deleted in the last minute: the publish can
+  // revalidate before the worker drops the row). That page is gone: render
+  // 404, not the error page.
+  const pageContent = await api.site.getBlobContent
+    .query({ id: blob.id })
+    .catch((error: Error) => {
+      // The RSC link wraps the procedure's TRPCError as the client error's cause
+      if (
+        error.cause instanceof TRPCError &&
+        error.cause.code === 'NOT_FOUND'
+      ) {
+        notFound();
+      }
+      throw error;
+    });
 
   const metadata = blob.metadata as PageMetadata | null; // TODO types
   // Display-safe title: an unfilled `title: {{title}}` is a YAML map, not text
