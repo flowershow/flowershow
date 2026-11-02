@@ -86,7 +86,7 @@ showReadingTime: true # or false to hide it on this page
 
 ### Breadcrumbs
 
-Show a breadcrumb trail above the page title, e.g. **Guides › Advanced › Tuning**. The trail follows your site's folder structure, the same one the [[sidebar|sidebar]] uses. Folders link to their `index.md` or `README.md` page if they have one. The last crumb is the current page.
+Show a breadcrumb trail above the page title, e.g. **Guides › Advanced › Tuning**. The trail follows your site's folder structure, the same one the [[sidebar|sidebar]] uses. Folders link to their `index.md` or `README.md` page, or to an Obsidian folder note beside them (`guides.md` next to `guides/`), if they have one. The last crumb is the current page.
 
 Breadcrumbs are on by default. Turn them off for the whole site under **Settings → Content → Show Breadcrumbs** in the dashboard, or in `config.json`:
 

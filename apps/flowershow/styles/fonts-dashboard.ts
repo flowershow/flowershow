@@ -1,11 +1,18 @@
-import { Inter } from 'next/font/google';
+// Fonts are self-hosted so `next build` never fetches from Google Fonts, which
+// intermittently returns CSS that next/font/google can't parse and fails the
+// build. The latin subset is loaded via next/font/local (preloaded, with a
+// metric-adjusted fallback); the other subsets come from fontsource's
+// unicode-range faces, listed first in the fallback stack.
+import '@fontsource-variable/inter/wght.css';
 import localFont from 'next/font/local';
 
-export const fontDashboardBody = Inter({
+export const fontDashboardBody = localFont({
+  src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
   variable: '--next-font-dashboard-body',
-  weight: ['200', '300', '400', '500', '600'],
-  subsets: ['latin'],
+  weight: '200 600',
+  display: 'swap',
   fallback: [
+    'Inter Variable',
     'ui-sans-serif',
     'system-ui',
     '-apple-system',
@@ -38,11 +45,13 @@ export const fontDashboardHeading = localFont({
   ],
 });
 
-export const fontBrand = Inter({
+export const fontBrand = localFont({
+  src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
   variable: '--next-font-brand',
-  weight: ['200', '300', '400', '500', '600'],
-  subsets: ['latin'],
+  weight: '200 600',
+  display: 'swap',
   fallback: [
+    'Inter Variable',
     'ui-sans-serif',
     'system-ui',
     '-apple-system',

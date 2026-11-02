@@ -29,6 +29,10 @@ Go to **Settings → Content → Sidebar Order** and choose how items are sorted
 - **Path** — sort items alphabetically by their file path/name
 - **Title** — sort items alphabetically by their document title
 
+## Folder pages
+
+A folder links to its own page when it has one: a `README.md` or `index.md` inside it, or an Obsidian folder note beside it (`projects.md` next to `projects/`). Click the folder name to open the page, or the arrow to expand the folder. The folder's page is not listed again among its children.
+
 ## Showing the sidebar only on specific routes
 
 Go to **Settings → Content → Sidebar Paths** and enter a JSON array of path prefixes. When set, the sidebar only appears on pages whose path starts with one of the listed prefixes, and only displays content within those paths.

@@ -1,11 +1,16 @@
-import { Inter, Lora } from 'next/font/google';
+// Self-hosted for the same reason as fonts-dashboard.ts: latin via
+// next/font/local, other subsets via fontsource's unicode-range faces.
+import '@fontsource-variable/inter/wght.css';
+import '@fontsource-variable/lora/wght.css';
+import localFont from 'next/font/local';
 
-export const fontBody = Lora({
+export const fontBody = localFont({
+  src: '../node_modules/@fontsource-variable/lora/files/lora-latin-wght-normal.woff2',
   variable: '--next-font-body',
-  subsets: ['latin'],
-  weight: ['400', '500', '600'],
+  weight: '400 600',
   display: 'swap',
   fallback: [
+    'Lora Variable',
     'Lora',
     'ui-serif',
     'Georgia',
@@ -16,11 +21,13 @@ export const fontBody = Lora({
   ],
 });
 
-export const fontHeading = Inter({
+export const fontHeading = localFont({
+  src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
   variable: '--next-font-heading',
-  weight: ['200', '300', '400', '500', '600'],
-  subsets: ['latin'],
+  weight: '200 600',
+  display: 'swap',
   fallback: [
+    'Inter Variable',
     'ui-sans-serif',
     'system-ui',
     '-apple-system',
@@ -34,11 +41,13 @@ export const fontHeading = Inter({
   ],
 });
 
-export const fontBrand = Inter({
+export const fontBrand = localFont({
+  src: '../node_modules/@fontsource-variable/inter/files/inter-latin-wght-normal.woff2',
   variable: '--next-font-brand',
-  weight: ['200', '300', '400', '500', '600'],
-  subsets: ['latin'],
+  weight: '200 600',
+  display: 'swap',
   fallback: [
+    'Inter Variable',
     'ui-sans-serif',
     'system-ui',
     '-apple-system',

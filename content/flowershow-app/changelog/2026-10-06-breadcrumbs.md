@@ -20,3 +20,4 @@ See [[page-headers#breadcrumbs|Page headers]] for details.
 **Fixes**
 
 - Published Obsidian templates with unfilled placeholders like `date: {{date}}` or `title: {{title}}` in their frontmatter no longer show an error page. The page now renders, and the header skips the placeholder field.
+- Obsidian folder notes (`projects.md` beside `projects/`) now act as the folder's page in the sidebar and breadcrumbs: the folder name links to the note, which is no longer listed separately among the folder's siblings.
