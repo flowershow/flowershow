@@ -113,16 +113,31 @@ test('a published page is upserted to Typesense', async () => {
   expect(posthogEvents).toEqual([]);
 });
 
-test('a document Typesense rejects is an author-facing publish error and is reported', async () => {
+test('a single scalar author is indexed as a one-item list', async () => {
+  let request;
   typesense()
     .intercept({ method: 'POST', path: UPSERT_PATH })
-    .reply(400, { message: 'Field `authors` must be an array.' });
+    .reply(201, (req) => {
+      request = req;
+      return {};
+    });
 
   const result = await publish('---\nauthors: Ada\n---\nBody');
 
+  expect(result).toEqual({ status: 'success', error: null });
+  expect(JSON.parse(request.body).authors).toEqual(['Ada']);
+});
+
+test('a document Typesense rejects is an author-facing publish error and is reported', async () => {
+  typesense()
+    .intercept({ method: 'POST', path: UPSERT_PATH })
+    .reply(400, { message: 'Field `description` must be a string.' });
+
+  const result = await publish('---\ndescription:\n  a: 1\n---\nBody');
+
   expect(result).toEqual({
     status: 'error',
-    error: 'Not added to search: Field `authors` must be an array.',
+    error: 'Not added to search: Field `description` must be a string.',
   });
   expect(posthogEvents).toHaveLength(1);
   expect(posthogEvents[0].properties).toMatchObject({

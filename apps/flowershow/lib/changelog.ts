@@ -1,6 +1,6 @@
-import { isDraft } from '@flowershow/core';
+import { isDraft, normalizeAuthors } from '@flowershow/core';
 import { displayDescription } from '@/lib/page-description';
-import { ensureLeadingSlash, normalizeAuthors, safeDate } from '@/lib/utils';
+import { ensureLeadingSlash, safeDate } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 
 export const CHANGELOG_DIR_NAME = 'changelog';

@@ -17,6 +17,8 @@ export async function captureError(env, properties) {
         distinct_id: 'system',
         properties,
       }),
+      // Called on the ack path: a slow PostHog must not hold up the batch
+      signal: AbortSignal.timeout(2000),
     });
   } catch {
     // Never let PostHog errors affect the worker

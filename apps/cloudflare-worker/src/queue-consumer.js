@@ -6,6 +6,7 @@ import {
   frontmatterTags,
   isDraft,
   mergePageTags,
+  normalizeAuthors,
   PAGE_FILE_EXTENSIONS,
   tagIdentity,
 } from '@flowershow/core';
@@ -720,8 +721,8 @@ async function removeFromTypesense({ typesense, env, siteId, blobId, path }) {
 
 /**
  * Upsert a page's search document. Returns an author-facing error when
- * Typesense rejects the document itself (400, e.g. `authors` is not a list),
- * which only the author can fix; null otherwise.
+ * Typesense rejects the document itself (400, e.g. a frontmatter field of the
+ * wrong type), which only the author can fix; null otherwise.
  */
 async function indexInTypesense({
   typesense,
@@ -740,7 +741,9 @@ async function indexInTypesense({
       content: body,
       path,
       description: metadata.description,
-      authors: metadata.authors,
+      // `authors: Ada` is valid frontmatter (the app renders it), but the
+      // index field is string[]
+      authors: normalizeAuthors(metadata.authors),
       date: getUnixTimestamp(metadata.date),
       tags: tags.map((t) => t.tag),
       id: `${blobId}`,
