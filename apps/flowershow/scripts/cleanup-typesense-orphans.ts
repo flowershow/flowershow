@@ -1,9 +1,10 @@
 /**
  * Clean Up Orphaned Typesense Documents
  *
- * Removes Typesense documents whose corresponding blob no longer exists in the
- * database. These orphans accumulate when files are deleted via CLI or Obsidian
- * plugin endpoints that didn't previously clean up the search index.
+ * Removes Typesense documents whose page should not be in search: the blob no
+ * longer exists in the database, or it is a draft. These accumulate when a
+ * delete fails (e.g. the worker's Typesense key lacked `documents:delete`
+ * until 2026-11-02) or came through an endpoint that didn't clean up search.
  *
  * USAGE:
  *
@@ -22,10 +23,11 @@
  *
  * WHAT IT DOES:
  *   1. For each site, retrieves all document IDs from the Typesense collection
- *   2. Looks up which blob IDs still exist in the database
- *   3. Deletes Typesense documents whose blob ID is missing from the DB
+ *   2. Looks up which blob IDs still exist in the database, and which are drafts
+ *   3. Deletes Typesense documents whose blob ID is missing or a draft
  */
 
+import { isDraft } from '@flowershow/core';
 import { PrismaClient } from '@prisma/client';
 import { Client as TypesenseClient } from 'typesense';
 
@@ -153,21 +155,24 @@ async function cleanupSite(
 
   console.log(`  Found ${docIds.length} documents in Typesense`);
 
-  // 2. Check which blob IDs still exist in the database
+  // 2. Check which blob IDs still exist in the database and aren't drafts
+  //    (the worker never indexes drafts)
   const existingBlobs = await prisma.blob.findMany({
     where: {
       id: { in: docIds },
       siteId,
     },
-    select: { id: true },
+    select: { id: true, metadata: true },
   });
-  const existingBlobIds = new Set(existingBlobs.map((b) => b.id));
+  const existingBlobIds = new Set(
+    existingBlobs.filter((b) => !isDraft(b.metadata)).map((b) => b.id),
+  );
 
   // 3. Find orphaned documents
   const orphanIds = docIds.filter((id) => !existingBlobIds.has(id));
 
   console.log(
-    `  ${existingBlobIds.size} documents have matching blobs, ${orphanIds.length} are orphaned`,
+    `  ${existingBlobIds.size} documents have matching published blobs, ${orphanIds.length} are orphaned or drafts`,
   );
 
   if (orphanIds.length === 0) {
