@@ -1,6 +1,7 @@
 import {
   frontmatterTags,
   isSiteChromeFile,
+  normalizeAuthors,
   tagFromHref,
 } from '@flowershow/core';
 import type { GiscusProps } from '@giscus/react';
@@ -96,11 +97,7 @@ import {
 } from '@/lib/post/route';
 import { resolveConfigRedirect } from '@/lib/config-redirect';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
-import {
-  ensureLeadingSlash,
-  frontmatterText,
-  normalizeAuthors,
-} from '@/lib/utils';
+import { ensureLeadingSlash, frontmatterText } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
 import { api } from '@/trpc/server';
 import BacklinksPanel from './_components/backlinks-panel';

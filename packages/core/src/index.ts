@@ -1,3 +1,4 @@
+export { normalizeAuthors } from './authors';
 export type { ContentType } from './content-type';
 export { CONTENT_TYPE_EXTENSIONS, getContentType } from './content-type';
 export { extractDescription, markdownToPlainText } from './description';

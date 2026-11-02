@@ -1,6 +1,7 @@
 import {
   markdownToPlainText,
   matchLinkTarget,
+  normalizeAuthors,
   normalizeFrontmatterTags,
   tagMatches,
 } from '@flowershow/core';
@@ -15,7 +16,6 @@ import { resolveContentLink } from '@/lib/resolve-link';
 import {
   ensureLeadingSlash,
   extractWikiLinkTarget,
-  normalizeAuthors,
   safeDate,
 } from '@/lib/utils';
 import { formatListingDate } from './dates';
