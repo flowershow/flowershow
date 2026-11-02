@@ -137,7 +137,9 @@ test('a date with milliseconds is indexed as whole seconds', async () => {
       return {};
     });
 
-  const result = await publish('---\ndate: 2026-07-17T06:13:44.205Z\n---\nBody');
+  const result = await publish(
+    '---\ndate: 2026-07-17T06:13:44.205Z\n---\nBody',
+  );
 
   expect(result).toEqual({ status: 'success', error: null });
   expect(JSON.parse(request.body).date).toBe(1784268824);
