@@ -18,13 +18,16 @@ Once installed, your assistant can:
 - Style your site with `custom.css`
 - Walk you through complex setups (custom domain, comments, GitHub connection) step by step
 
-## You confirm every publish
+## You see what gets published
 
-Anything you publish can be read by anyone with the link, so the skill never publishes without asking. Before every publish, whether it's a new site, an update or an anonymous site, your assistant:
+Anything you publish can be read by anyone with the link. So every time your assistant publishes, whether it's a new site, an update or an anonymous site, it tells you which files are going out, which site they go to, and anything the publish will remove.
 
-1. Lists every file that will go out, and the site it will go to.
-2. Says what the publish will remove (an update deletes from the site any files you've deleted locally) and flags files that look private, such as drafts, personal notes or data with names or emails.
-3. Waits for you to say yes. If you add or remove files, or it changes something after you said yes, it shows the new list and asks again.
+It doesn't ask you to confirm every publish. If you asked it to publish, it goes ahead. It stops and asks first only when:
+
+- a file looks private, such as a draft, personal notes, keys, or data with names or emails;
+- the publish would delete files from your site;
+- it's about to publish a new site you didn't ask for;
+- the files aren't the ones you asked for, for example the folder holds other files too.
 
 To leave a file out, tell it which one. It can add the file to a `.gitignore` in the folder, which `fl` skips.
 
@@ -50,6 +53,6 @@ For the Claude apps and ChatGPT, you upload the skill instead: see [Supported ag
 
 The skill is a single file, maintained at [github.com/flowershow/skills](https://github.com/flowershow/skills):
 
-- **`SKILL.md`** — behavioral instructions: how to install and authenticate `fl`, confirm the file list with you before every publish, publish (including HTML and converted documents), read docs, handle premium features. Instructs the agent to fetch `https://flowershow.app/docs/sitemap.md` to discover available docs, then read the relevant page before making changes.
+- **`SKILL.md`** — behavioral instructions: how to install and authenticate `fl`, show you the file list with every publish and ask when something looks wrong, publish (including HTML and converted documents), read docs, handle premium features. Instructs the agent to fetch `https://flowershow.app/docs/sitemap.md` to discover available docs, then read the relevant page before making changes.
 
 When your assistant encounters a Flowershow task, it loads these instructions and follows them.
