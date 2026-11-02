@@ -1,57 +1,54 @@
 /**
- * Reindex Site Content in Typesense from R2
+ * Reindex Site Content in Typesense
  *
- * This script reads markdown files from R2 for a given site and indexes them
- * in Typesense. Useful for fixing sites that were created via CLI or Obsidian
- * plugin before the ensureSiteCollection fix, where content was uploaded to R2
- * but never indexed in Typesense.
+ * Rebuilds the search documents of a site's markdown pages, for pages that
+ * never made it into search (e.g. the worker's indexing failed, the site
+ * predates its collection, or Typesense rejected a document the worker now
+ * accepts, like `authors: Ada`).
  *
- * The indexing logic mirrors the Cloudflare Worker (cloudflare-worker/src/worker.js)
- * to ensure documents are indexed identically.
+ * Each document is built the way the worker builds it (indexInTypesense in
+ * cloudflare-worker/src/queue-consumer.js), from:
+ *   - the Blob row's metadata, which the worker stored after parsing the
+ *     frontmatter and computing title/description, and
+ *   - the page body, read from R2 ({siteId}/main/raw/{path}).
+ * Drafts are not indexed, and an earlier document of a draft is deleted.
+ * Upserts only: documents of other pages are left alone (see
+ * cleanup-typesense-orphans.ts for removing stale ones).
  *
  * USAGE:
  *
- *   # Reindex a single site:
- *   npx tsx scripts/reindex-site-typesense.ts <site-id>
- *
- *   # Reindex multiple sites (comma or space separated):
- *   npx tsx scripts/reindex-site-typesense.ts site1,site2,site3
- *   npx tsx scripts/reindex-site-typesense.ts site1 site2 site3
+ *   # Reindex sites (comma or space separated):
+ *   npx tsx scripts/reindex-site-typesense.ts site1,site2 site3
  *
  *   # Dry run (preview what would be indexed):
  *   DRY_RUN=true npx tsx scripts/reindex-site-typesense.ts <site-id>
  *
  * REQUIREMENTS:
  *   - Run from the flowershow directory
- *   - .env file with database, S3/R2, and Typesense credentials
- *
- * WHAT IT DOES:
- *   1. Validates the site exists in the database
- *   2. Ensures a Typesense collection exists for the site
- *   3. Lists all objects in R2 under {siteId}/main/raw/
- *   4. Fetches each markdown/mdx file
- *   5. Parses frontmatter and extracts title (matching worker logic)
- *   6. Looks up the Blob ID from the database (used as document ID)
- *   7. Upserts each document into Typesense (a `draft: true` page is not
- *      indexed, and its earlier document, if any, is deleted)
- *   8. Reports summary of indexed/skipped/failed documents
- *
- * RELATED:
- *   - flowershow-8af: Typesense collection not created for CLI/Obsidian/anon publish paths
- *   - flowershow-6bk: This script's tracking issue
+ *   - Env: database (POSTGRES_PRISMA_URL, POSTGRES_URL_NON_POOLING), S3/R2
+ *     (S3_ENDPOINT, S3_ACCESS_KEY_ID, S3_SECRET_ACCESS_KEY, S3_BUCKET_NAME) and
+ *     Typesense (TYPESENSE_ADMIN_API_KEY or a key with documents:create,
+ *     documents:delete and collections:create; NEXT_PUBLIC_TYPESENSE_HOST,
+ *     _PORT, _PROTOCOL)
  */
 
+import { GetObjectCommand, NoSuchKey, S3Client } from '@aws-sdk/client-s3';
 import {
-  GetObjectCommand,
-  ListObjectsV2Command,
-  S3Client,
-} from '@aws-sdk/client-s3';
-import { isDraft } from '@flowershow/core';
+  extractInlineTags,
+  frontmatterTags,
+  isDraft,
+  mergePageTags,
+  normalizeAuthors,
+} from '@flowershow/core';
 import { PrismaClient } from '@prisma/client';
 import matter from 'gray-matter';
 import { Client as TypesenseClient } from 'typesense';
-
-import { safeDate } from '../lib/utils';
+import type { ImportResponse } from 'typesense/lib/Typesense/Documents';
+import {
+  ImportError,
+  ObjectAlreadyExists,
+  ObjectNotFound,
+} from 'typesense/lib/Typesense/Errors';
 
 // ---------------------------------------------------------------------------
 // Configuration — read directly from process.env to avoid env.mjs full validation
@@ -78,6 +75,9 @@ const TYPESENSE_HOST = requireEnv('NEXT_PUBLIC_TYPESENSE_HOST');
 const TYPESENSE_PORT = requireEnv('NEXT_PUBLIC_TYPESENSE_PORT');
 const TYPESENSE_PROTOCOL = requireEnv('NEXT_PUBLIC_TYPESENSE_PROTOCOL');
 
+const FETCH_CONCURRENCY = 16;
+const IMPORT_BATCH_SIZE = 100;
+
 // ---------------------------------------------------------------------------
 // Clients
 // ---------------------------------------------------------------------------
@@ -103,7 +103,7 @@ const typesense = new TypesenseClient({
     },
   ],
   apiKey: TYPESENSE_ADMIN_API_KEY,
-  connectionTimeoutSeconds: 5,
+  connectionTimeoutSeconds: 30,
 });
 
 // ---------------------------------------------------------------------------
@@ -128,15 +128,70 @@ const siteCollectionSchema = {
       optional: true,
     },
     { name: 'date', type: 'int64' as const, facet: false, optional: true },
+    { name: 'tags', type: 'string[]' as const, facet: true, optional: true },
   ],
 };
+
+// ---------------------------------------------------------------------------
+// Document building (mirrors cloudflare-worker/src/queue-consumer.js)
+// ---------------------------------------------------------------------------
+
+// A leading `---` ... `---` block, for stripping frontmatter gray-matter can't parse.
+const FRONTMATTER_BLOCK =
+  /^\uFEFF?---[^\n]*\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/;
+
+/** Page body without frontmatter (worker: splitFrontmatter). */
+function bodyOf(markdown: string): string {
+  try {
+    return matter(markdown, {}).content;
+  } catch {
+    const block = markdown.match(FRONTMATTER_BLOCK)?.[0] ?? '';
+    return markdown.slice(block.length);
+  }
+}
+
+/** Worker: getUnixTimestamp. */
+function unixTimestamp(value: unknown): number | null {
+  if (value == null || value === '') return null;
+  const date = new Date(value as string | number | Date);
+  return Number.isNaN(date.getTime()) ? null : date.getTime() / 1000;
+}
+
+/** Blob.metadata is JSON; the worker always stores an object. */
+function asRecord(value: unknown): Record<string, unknown> {
+  return value !== null && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : {};
+}
+
+/** Worker: indexInTypesense (document) with extractTags. */
+function buildDocument(
+  blobId: string,
+  path: string,
+  metadata: Record<string, unknown>,
+  body: string,
+) {
+  const tags = mergePageTags(
+    frontmatterTags(metadata),
+    extractInlineTags(body),
+  );
+  return {
+    title: metadata.title,
+    content: body,
+    path,
+    description: metadata.description,
+    authors: normalizeAuthors(metadata.authors),
+    date: unixTimestamp(metadata.date),
+    tags: tags.map((t) => t.tag),
+    id: blobId,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function parseSiteIds(args: string[]): string[] {
-  if (args.length === 0) return [];
   return args
     .join(' ')
     .split(/[,\s]+/)
@@ -144,342 +199,220 @@ function parseSiteIds(args: string[]): string[] {
     .filter((id) => id.length > 0);
 }
 
-function isMarkdown(key: string): boolean {
-  return /\.(md|mdx)$/i.test(key);
-}
-
-/**
- * Extract the file path relative to the site root from an R2 key.
- * Key format: {siteId}/main/raw/{path}
- */
-function extractPath(key: string, siteId: string): string {
-  const prefix = `${siteId}/main/raw/`;
-  return key.startsWith(prefix) ? key.slice(prefix.length) : key;
-}
-
-/**
- * Extract a title from the first H1 heading in the markdown body.
- * Mirrors cloudflare-worker/src/parser.js extractTitle().
- */
-function extractTitle(source: string): string | null {
-  const heading = source.trim().match(/^#{1}[ ]+(.*)/);
-  if (heading?.[1]) {
-    const title = heading[1]
-      // replace wikilink with only text value
-      .replace(/\[\[([\S\s]*?)]]/, '$1')
-      // remove markdown formatting
-      .replace(/[_*~`>]/g, '') // remove markdown characters
-      .replace(/\[(.*?)\]\(.*?\)/g, '$1'); // remove links but keep the text
-    return title.trim();
-  }
-  return null;
-}
-
-/**
- * Parse markdown file — mirrors cloudflare-worker/src/parser.js parseMarkdownFile().
- * Returns metadata (frontmatter + resolved title) and body.
- */
-function parseMarkdownFile(
-  markdown: string,
-  path: string,
-): { metadata: Record<string, any>; body: string } {
-  const { data: frontmatter, content: body } = matter(markdown);
-
-  const title =
-    frontmatter.title ||
-    extractTitle(body) ||
-    path
-      .split('/')
-      .pop()
-      ?.replace(/\.(mdx|md)$/, '') ||
-    '';
-
-  return {
-    metadata: {
-      ...frontmatter,
-      title,
-    },
-    body,
-  };
-}
-
-/**
- * List all R2 objects under a prefix (handles pagination).
- */
-async function listAllObjects(prefix: string): Promise<string[]> {
-  const keys: string[] = [];
-  let continuationToken: string | undefined;
-
-  do {
-    const response = await s3.send(
-      new ListObjectsV2Command({
-        Bucket: S3_BUCKET_NAME,
-        Prefix: prefix,
-        ContinuationToken: continuationToken,
-      }),
-    );
-    if (response.Contents) {
-      for (const obj of response.Contents) {
-        if (obj.Key) keys.push(obj.Key);
-      }
-    }
-    continuationToken = response.NextContinuationToken;
-  } while (continuationToken);
-
-  return keys;
-}
-
-/**
- * Fetch a file's content from R2 as a string.
- */
+/** Fetch a file's content from R2 as a string; null when it isn't there. */
 async function fetchFileContent(key: string): Promise<string | null> {
   try {
     const response = await s3.send(
-      new GetObjectCommand({
-        Bucket: S3_BUCKET_NAME,
-        Key: key,
-      }),
+      new GetObjectCommand({ Bucket: S3_BUCKET_NAME, Key: key }),
     );
     return (await response.Body?.transformToString()) ?? null;
-  } catch (error: any) {
-    if (error?.name === 'NoSuchKey') return null;
+  } catch (error) {
+    if (error instanceof NoSuchKey) return null;
     throw error;
   }
 }
 
-/**
- * Ensure a Typesense collection exists for the site, creating it if needed.
- */
+/** Run `fn` over `items` with at most `limit` in flight. */
+async function mapPool<T, R>(
+  items: T[],
+  limit: number,
+  fn: (item: T) => Promise<R>,
+): Promise<R[]> {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, items.length) }, async () => {
+      while (next < items.length) {
+        const i = next++;
+        results[i] = await fn(items[i]!);
+      }
+    }),
+  );
+  return results;
+}
+
+/** Ensure a Typesense collection exists for the site, creating it if needed. */
 async function ensureCollection(siteId: string): Promise<void> {
   try {
-    await typesense.collections().create({
-      name: siteId,
-      ...siteCollectionSchema,
-    });
-    console.log(`  Created Typesense collection: ${siteId}`);
-  } catch (error: any) {
-    if (error?.httpStatus === 409) {
-      console.log(`  Typesense collection already exists: ${siteId}`);
-    } else {
-      throw error;
-    }
+    await typesense
+      .collections()
+      .create({ name: siteId, ...siteCollectionSchema });
+    console.log(`  Created Typesense collection`);
+  } catch (error) {
+    if (!(error instanceof ObjectAlreadyExists)) throw error;
   }
+}
+
+/** Upsert documents in batches; returns per-document failures. */
+async function importDocuments(
+  siteId: string,
+  documents: Record<string, unknown>[],
+): Promise<{ id: string; error: string }[]> {
+  const failures: { id: string; error: string }[] = [];
+  for (let i = 0; i < documents.length; i += IMPORT_BATCH_SIZE) {
+    const batch = documents.slice(i, i + IMPORT_BATCH_SIZE);
+    let results: ImportResponse[];
+    try {
+      results = await typesense
+        .collections(siteId)
+        .documents()
+        .import(batch, { action: 'upsert' });
+    } catch (error) {
+      // typesense-js throws ImportError when any document in the batch fails
+      if (!(error instanceof ImportError)) throw error;
+      results = error.importResults;
+    }
+    results.forEach((result, j) => {
+      if (!result.success) {
+        failures.push({
+          id: String(batch[j]!.id),
+          error: result.error ?? 'unknown error',
+        });
+      }
+    });
+  }
+  return failures;
 }
 
 // ---------------------------------------------------------------------------
 // Main
 // ---------------------------------------------------------------------------
 
-async function reindexSite(siteId: string, dryRun: boolean) {
-  console.log(`\nProcessing site: ${siteId}`);
-  console.log('-'.repeat(50));
+type SiteResult = {
+  indexed: number;
+  drafts: number;
+  notInR2: number;
+  failed: number;
+  notFound: boolean;
+};
 
-  // 1. Verify site exists
+async function reindexSite(
+  siteId: string,
+  dryRun: boolean,
+): Promise<SiteResult> {
+  const result: SiteResult = {
+    indexed: 0,
+    drafts: 0,
+    notInR2: 0,
+    failed: 0,
+    notFound: false,
+  };
+
   const site = await prisma.site.findUnique({
     where: { id: siteId },
-    select: {
-      id: true,
-      projectName: true,
-      user: { select: { ghUsername: true } },
-    },
+    select: { projectName: true, user: { select: { ghUsername: true } } },
   });
-
   if (!site) {
-    console.log(`  Site not found in database. Skipping.`);
-    return { indexed: 0, skipped: 0, errors: 0, notFound: true };
+    console.log(`\n${siteId}: site not found, skipping`);
+    return { ...result, notFound: true };
   }
-
-  const siteLabel = `${site.user?.ghUsername ?? 'unknown'}/${site.projectName}`;
-  console.log(`  Site: ${siteLabel}`);
-
-  // 2. Ensure Typesense collection exists
-  if (!dryRun) {
-    await ensureCollection(siteId);
-  } else {
-    console.log(`  [DRY RUN] Would ensure Typesense collection exists`);
-  }
-
-  // 3. List all markdown files in R2
-  const prefix = `${siteId}/main/raw/`;
-  const allKeys = await listAllObjects(prefix);
-  const markdownKeys = allKeys.filter(isMarkdown);
-
   console.log(
-    `  Found ${allKeys.length} total objects, ${markdownKeys.length} markdown files`,
+    `\n${siteId} (${site.user?.ghUsername ?? 'unknown'}/${site.projectName})`,
   );
 
-  if (markdownKeys.length === 0) {
-    console.log(`  No markdown files to index.`);
-    return { indexed: 0, skipped: 0, errors: 0, notFound: false };
-  }
-
-  // 4. Pre-fetch all blob IDs for this site so we can use them as document IDs
-  //    (mirrors the worker which uses Blob.id as the Typesense document ID)
+  // The worker indexes every .md/.mdx page with a Blob row
   const blobs = await prisma.blob.findMany({
-    where: { siteId },
-    select: { id: true, path: true },
+    where: { siteId, path: { endsWith: '.md' } },
+    select: { id: true, path: true, metadata: true },
   });
-  const blobByPath = new Map(blobs.map((b) => [b.path, b.id]));
+  blobs.push(
+    ...(await prisma.blob.findMany({
+      where: { siteId, path: { endsWith: '.mdx' } },
+      select: { id: true, path: true, metadata: true },
+    })),
+  );
 
-  // 5. Process each markdown file
-  let indexed = 0;
-  let skipped = 0;
-  let errors = 0;
+  const draftIds = blobs.filter((b) => isDraft(b.metadata)).map((b) => b.id);
+  const pages = blobs.filter((b) => !isDraft(b.metadata));
+  result.drafts = draftIds.length;
 
-  for (const key of markdownKeys) {
-    const filePath = extractPath(key, siteId);
-
-    // Skip files inside _flowershow/ directory (matches worker behavior)
-    if (filePath.includes('_flowershow/')) {
-      console.log(`    [SKIP] ${filePath} — _flowershow/ directory`);
-      skipped++;
-      continue;
+  const built = await mapPool(pages, FETCH_CONCURRENCY, async (blob) => {
+    const markdown = await fetchFileContent(`${siteId}/main/raw/${blob.path}`);
+    if (markdown == null) {
+      console.log(`    [SKIP] ${blob.path}: not in R2`);
+      return null;
     }
+    return buildDocument(
+      blob.id,
+      blob.path,
+      asRecord(blob.metadata),
+      bodyOf(markdown),
+    );
+  });
+  const documents = built.filter((d) => d !== null);
+  result.notInR2 = pages.length - documents.length;
 
-    // Look up the blob ID — the worker uses this as the Typesense document ID
-    const blobId = blobByPath.get(filePath);
-    if (!blobId) {
-      console.log(`    [SKIP] ${filePath} — no Blob record in database`);
-      skipped++;
-      continue;
-    }
-
-    try {
-      const content = await fetchFileContent(key);
-      if (!content) {
-        console.log(`    [SKIP] ${filePath} — empty or not found in R2`);
-        skipped++;
-        continue;
-      }
-
-      // Parse frontmatter + extract title (mirrors worker's parseMarkdownFile)
-      const { metadata, body } = parseMarkdownFile(content, filePath);
-
-      // Skip files with publish: false (worker deletes these, we just skip)
-      if (metadata.publish === false) {
-        console.log(`    [SKIP] ${filePath} — publish: false`);
-        skipped++;
-        continue;
-      }
-
-      // Drafts are never in search (matches worker behavior): drop any
-      // document indexed before the page became a draft
-      if (isDraft(metadata)) {
-        if (!dryRun) {
-          try {
-            await typesense.collections(siteId).documents(`${blobId}`).delete();
-          } catch {
-            // not indexed
-          }
-        }
-        console.log(
-          `    [SKIP] ${filePath} — draft: true${dryRun ? ' (would remove from search)' : ' (removed from search)'}`,
-        );
-        skipped++;
-        continue;
-      }
-
-      // Build document exactly as the worker does (worker.js lines 83-91)
-      const document: Record<string, unknown> = {
-        id: `${blobId}`,
-        title: metadata.title,
-        content: body,
-        path: filePath,
-        description: metadata.description,
-        authors: metadata.authors,
-        date: safeDate(metadata.date)
-          ? safeDate(metadata.date)!.getTime() / 1000
-          : null,
-      };
-
-      if (dryRun) {
-        console.log(
-          `    [DRY RUN] Would index: ${filePath} (blobId: ${blobId}, title: "${metadata.title}")`,
-        );
-        indexed++;
-      } else {
-        await typesense
-          .collections(siteId)
-          .documents()
-          .upsert(document as any);
-        console.log(`    [OK] ${filePath}`);
-        indexed++;
-      }
-    } catch (error: any) {
-      console.error(`    [ERROR] ${filePath}: ${error.message || error}`);
-      errors++;
-    }
+  if (dryRun) {
+    result.indexed = documents.length;
+    console.log(
+      `  [DRY RUN] would index ${documents.length}, remove ${draftIds.length} draft(s); ${result.notInR2} not in R2`,
+    );
+    return result;
   }
 
-  return { indexed, skipped, errors, notFound: false };
+  if (documents.length > 0) {
+    await ensureCollection(siteId);
+    const failures = await importDocuments(siteId, documents);
+    const pathById = new Map(pages.map((p) => [p.id, p.path]));
+    for (const f of failures) {
+      console.log(`    [FAIL] ${pathById.get(f.id)}: ${f.error}`);
+    }
+    result.failed = failures.length;
+    result.indexed = documents.length - failures.length;
+  }
+  for (const id of draftIds) {
+    try {
+      await typesense.collections(siteId).documents(id).delete();
+    } catch (error) {
+      if (!(error instanceof ObjectNotFound)) throw error; // else: not indexed
+    }
+  }
+  console.log(
+    `  indexed ${result.indexed}, failed ${result.failed}, drafts ${result.drafts}, not in R2 ${result.notInR2}`,
+  );
+  return result;
 }
 
 async function main() {
   const dryRun = process.env.DRY_RUN === 'true';
   const siteIds = parseSiteIds(process.argv.slice(2));
 
-  console.log('='.repeat(60));
-  console.log('Reindex Site Content in Typesense from R2');
-  console.log('='.repeat(60));
-  if (dryRun) {
-    console.log('DRY RUN MODE — no changes will be made\n');
-  }
-
   if (siteIds.length === 0) {
     console.error('Error: No site IDs provided');
-    console.log('\nUsage:');
     console.log(
-      '  npx tsx scripts/reindex-site-typesense.ts <site-id1>,<site-id2>,...',
-    );
-    console.log(
-      '  npx tsx scripts/reindex-site-typesense.ts <site-id1> <site-id2> ...',
-    );
-    console.log('\nOptions:');
-    console.log('  DRY_RUN=true   Preview what would be indexed');
-    console.log('\nExamples:');
-    console.log('  npx tsx scripts/reindex-site-typesense.ts clx1abc2def3');
-    console.log(
-      '  DRY_RUN=true npx tsx scripts/reindex-site-typesense.ts clx1abc2def3,clx4ghi5jkl6',
+      '\nUsage: [DRY_RUN=true] npx tsx scripts/reindex-site-typesense.ts <site-id1>,<site-id2> ...',
     );
     process.exit(1);
   }
 
-  console.log(`Sites to reindex: ${siteIds.join(', ')}`);
+  console.log(
+    `Reindexing ${siteIds.length} site(s) in Typesense${dryRun ? ' (DRY RUN)' : ''}`,
+  );
 
-  let totalIndexed = 0;
-  let totalSkipped = 0;
-  let totalErrors = 0;
-  let notFoundCount = 0;
-
+  const total = { indexed: 0, drafts: 0, notInR2: 0, failed: 0, notFound: 0 };
   for (const siteId of siteIds) {
-    const result = await reindexSite(siteId, dryRun);
-    totalIndexed += result.indexed;
-    totalSkipped += result.skipped;
-    totalErrors += result.errors;
-    if (result.notFound) notFoundCount++;
+    const r = await reindexSite(siteId, dryRun);
+    total.indexed += r.indexed;
+    total.drafts += r.drafts;
+    total.notInR2 += r.notInR2;
+    total.failed += r.failed;
+    if (r.notFound) total.notFound++;
   }
 
   console.log('\n' + '='.repeat(60));
-  console.log('Summary');
-  console.log('='.repeat(60));
-  console.log(`Sites requested:    ${siteIds.length}`);
-  console.log(`Sites not found:    ${notFoundCount}`);
-  console.log(`Documents ${dryRun ? 'to index' : 'indexed'}:  ${totalIndexed}`);
-  console.log(`Documents skipped:  ${totalSkipped}`);
-  console.log(`Documents errored:  ${totalErrors}`);
-
-  if (dryRun) {
-    console.log(
-      '\nThis was a dry run. Remove DRY_RUN=true to perform actual indexing.',
-    );
-  }
+  console.log(
+    `Sites:              ${siteIds.length} (${total.notFound} not found)`,
+  );
+  console.log(
+    `Documents ${dryRun ? 'to index' : 'indexed'}:  ${total.indexed}`,
+  );
+  console.log(`Documents failed:   ${total.failed}`);
+  console.log(`Drafts skipped:     ${total.drafts}`);
+  console.log(`Not in R2:          ${total.notInR2}`);
 }
 
 main()
-  .then(async () => {
-    await prisma.$disconnect();
-    console.log('\nScript completed');
-  })
+  .then(() => prisma.$disconnect())
   .catch(async (e) => {
     console.error('\nScript failed with error:', e);
     await prisma.$disconnect();
