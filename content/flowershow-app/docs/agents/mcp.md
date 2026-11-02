@@ -42,6 +42,8 @@ Ask in your own words, for example:
 
 > Publish this report as a website.
 
+When it publishes, your AI tells you which files it is sending and to which site. It stops to check with you first if a file looks private (drafts, personal notes, keys, data with names or emails), if the publish would delete files you didn't ask it to remove, if it would create a new site when you meant to update one, or if the files differ from what you asked for. If you've already named the files or said to go ahead, it publishes straight away.
+
 Your AI replies with the live link and a claim link. To change the site in the same conversation, ask it to update the page: it republishes to the same address. An update sends only the files that changed and keeps the rest of the site as it is. To remove a page, ask your AI to delete it; to start the site over, ask it to replace the whole site (it checks with you first if that would remove existing files).
 
 If the site was published from the CLI, Obsidian or GitHub, pages your AI adds through the connector are removed the next time you publish from that source, because it publishes your folder or repo as the whole site.

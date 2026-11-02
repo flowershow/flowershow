@@ -43,16 +43,25 @@ export interface McpDeps extends PublishDeps {
 const UPDATE_RULES =
   'To remove pages or files, list their paths in delete (files can then be empty). Only when the user explicitly asks to start the site over, set replaceWholeSite to true: the files you send become the whole site and every other file is removed. If that would remove existing files, the call is refused and tells you how many and which; ask the user, then call again with confirmDeleteCount set to that number.';
 
+// Lightweight publish check, shared by both publish descriptions (same policy
+// as the Flowershow skill): show what goes out, stop only when it matters.
+const CHECK_RULES =
+  "Anyone with the link can see what you publish. When you publish, tell the user every path you are sending (and any paths in delete) and which site they go to: a new site, or the one being updated. Stop and ask before calling publish only when it matters: a file looks private or sensitive (drafts, personal notes, keys or passwords, data with people's names or emails), the call removes files (with delete or replaceWholeSite) the user didn't ask to remove, it would create a new site when the user meant to update one, or the set of files differs from what the user asked to publish. If the user already named the files, asked for the removal or said to go ahead, that is their yes.";
+
 // What the model sees: phrased around what users actually ask for.
 const PUBLISH_DESCRIPTION = `Publish files as a live website on Flowershow and get a shareable URL. Use when the user says "publish this", "put this online", "make this a website", "share this as a page" or "host this".
 
 Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, served as-is) and supporting files such as CSS, JS, JSON and images: one page or a small site, up to ${MAX_FILES} files and ${MAX_TOTAL_BYTES / 1024 / 1024} MB per call. Name the home page index.md or index.html.
+
+${CHECK_RULES}
 
 Without an account this creates a new site that expires in 7 days and returns a claim link: always show the user the live URL and the claim link exactly as returned, so they can keep the site. To update that site later in the conversation, call publish again with its siteId and claimToken and only the files you changed or added: files you don't send are kept as they are. ${UPDATE_RULES} For bigger sites, suggest the Flowershow CLI (fl).`;
 
 const ACCOUNT_PUBLISH_DESCRIPTION = `Publish files as a live website in the user's Flowershow account and get a shareable URL. Use when the user says "publish this", "put this online", "make this a website", "share this as a page", "host this" or "update my site".
 
 Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, served as-is) and supporting files such as CSS, JS, JSON and images: one page or a small site, up to ${MAX_FILES} files and ${MAX_TOTAL_BYTES / 1024 / 1024} MB per call. Name the home page index.md or index.html.
+
+${CHECK_RULES}
 
 Without siteId this creates a new site in the account (optionally give it a name; otherwise it is named after the home page's first heading). With siteId it updates that site: send only the files you changed or added, since files you don't send are kept as they are. ${UPDATE_RULES} Use list-sites to find a site to update. To keep an anonymous site published earlier in the conversation (one with a claimToken), call claim-site first. For bigger sites, suggest the Flowershow CLI (fl).`;
 
