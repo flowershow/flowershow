@@ -89,6 +89,45 @@ export function protectWikiLinkAliases(content: string): string {
   );
 }
 
+const SVG_OPEN_TAG = /<svg[\s/>]/g;
+
+// A linear scan rather than a lazy `<svg…</svg>` regex, which goes quadratic
+// on a page full of unclosed `<svg` tags.
+function dropBlankLinesInSvg(text: string): string {
+  const lower = text.toLowerCase();
+  let out = '';
+  let pos = 0;
+  SVG_OPEN_TAG.lastIndex = 0;
+  for (let open = SVG_OPEN_TAG.exec(lower); open; ) {
+    const close = lower.indexOf('</svg', open.index);
+    if (close === -1) break;
+    const end = lower.indexOf('>', close);
+    const stop = end === -1 ? text.length : end + 1;
+    out +=
+      text.slice(pos, open.index) +
+      text.slice(open.index, stop).replace(/\r?\n[ \t]*(?=\r?\n)/g, '');
+    pos = stop;
+    SVG_OPEN_TAG.lastIndex = stop;
+    open = SVG_OPEN_TAG.exec(lower);
+  }
+  return out + text.slice(pos);
+}
+
+/**
+ * A blank line ends a CommonMark HTML block, so a blank line inside an inline
+ * `<svg>` (e.g. in its `<style>`) turns the rest of the SVG into markdown: the
+ * resulting `<p>` breaks the HTML parser out of SVG, and the remaining SVG
+ * elements become lowercased, unclosed HTML that swallows the page (#1427).
+ * SVG never holds markdown, so drop blank lines inside `<svg>…</svg>`.
+ */
+export function protectSvgBlankLines(content: string): string {
+  // Same code split as protectNonMathDollars: text at even indices, code at odd.
+  return content
+    .split(/(```[\s\S]*?```|~~~[\s\S]*?~~~|`[^`\n]*`)/g)
+    .map((segment, i) => (i % 2 === 1 ? segment : dropBlankLinesInSvg(segment)))
+    .join('');
+}
+
 const FRONTMATTER_BLOCK =
   /^\uFEFF?---[^\n]*\r?\n[\s\S]*?\r?\n---[ \t]*(?:\r?\n|$)/;
 
@@ -117,8 +156,10 @@ export async function processMarkdown(
 
   // Protect [[target|alias]] from GFM table cell splitting before unified parses,
   // and escape `$` that isn't part of a real math span so dollar signs in prose
-  // aren't parsed as inline math (#1359).
-  const content = protectNonMathDollars(protectWikiLinkAliases(rawContent));
+  // aren't parsed as inline math (#1359). Keep inline SVGs one HTML block (#1427).
+  const content = protectSvgBlankLines(
+    protectNonMathDollars(protectWikiLinkAliases(rawContent)),
+  );
 
   const processor = unified()
     .use(remarkParse)
