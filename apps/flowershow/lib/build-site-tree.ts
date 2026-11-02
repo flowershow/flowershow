@@ -116,9 +116,24 @@ export function buildSiteTree(
     });
   }
 
+  moveFolderNotesInPlace(root);
   sortTreeInPlace(root, { orderBy, group, caseInsensitive, numeric });
 
   return root;
+}
+
+/**
+ * An Obsidian folder note (`x.md` beside `x/`) is served at the folder's URL,
+ * so it is the folder's page, like an index/README: move it into the folder.
+ */
+function moveFolderNotesInPlace<M>(parent: RootNode<M> | DirNode<M>) {
+  const dirs = parent.children.filter(isDir);
+  parent.children = parent.children.filter((n) => {
+    const dir = isFile(n) && dirs.find((d) => d.urlPath === n.urlPath);
+    if (dir) dir.children.push(n);
+    return !dir;
+  });
+  for (const dir of dirs) moveFolderNotesInPlace(dir);
 }
 
 function sortTreeInPlace<M>(

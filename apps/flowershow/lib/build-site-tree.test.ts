@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { pageHeaderBreadcrumbs } from './breadcrumbs';
 import type { SiteTree } from './build-site-tree';
 import { buildSiteTree, withoutDrafts } from './build-site-tree';
 
@@ -451,5 +452,68 @@ describe('withoutDrafts (sidebar)', () => {
     );
     expect(pruned.map((n) => n.path)).toEqual(['docs', 'a.md']);
     expect(tree.children.map((n) => n.path)).toContain('d.md'); // the input is not mutated
+  });
+});
+
+describe('folder notes (Obsidian `x.md` beside `x/`)', () => {
+  const tree = buildSiteTree([
+    {
+      path: 'projects/pipeline.md',
+      appPath: '/projects/pipeline',
+      metadata: { title: 'Pipeline note' },
+    },
+    {
+      path: 'projects/pipeline/background.md',
+      appPath: '/projects/pipeline/background',
+      metadata: { title: 'Background' },
+    },
+    {
+      path: 'projects/solo.md',
+      appPath: '/projects/solo',
+      metadata: { title: 'Solo' },
+    },
+    {
+      path: 'projects/elsewhere.md',
+      appPath: '/projects/elsewhere',
+      permalink: '/somewhere-else',
+      metadata: { title: 'Elsewhere' },
+    },
+    {
+      path: 'projects/elsewhere/a.md',
+      appPath: '/projects/elsewhere/a',
+      metadata: { title: 'A' },
+    },
+  ] as any[]);
+  const projects = tree.children[0] as any;
+
+  it('puts the note inside its folder, as an index page is', () => {
+    const pipeline = projects.children.find((n: any) => n.name === 'pipeline');
+    expect(pipeline.children.map((n: any) => n.path)).toEqual([
+      'projects/pipeline/background.md',
+      'projects/pipeline.md',
+    ]);
+  });
+
+  it('leaves other pages, and a note served at another URL, where they are', () => {
+    expect(projects.children.map((n: any) => n.path)).toEqual([
+      'projects/elsewhere',
+      'projects/pipeline',
+      'projects/elsewhere.md',
+      'projects/solo.md',
+    ]);
+  });
+
+  it('links the folder crumb to the note', () => {
+    expect(
+      pageHeaderBreadcrumbs({
+        tree: tree.children,
+        pagePath: 'projects/pipeline/background.md',
+        title: 'Background',
+      }),
+    ).toEqual([
+      { label: 'Projects', href: null },
+      { label: 'Pipeline', href: '/projects/pipeline' },
+      { label: 'Background', href: null },
+    ]);
   });
 });
