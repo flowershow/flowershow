@@ -150,11 +150,24 @@ function bodyOf(markdown: string): string {
   }
 }
 
-/** Worker: getUnixTimestamp. */
+/** Worker: getUnixTimestamp. Whole seconds: the field is int64. */
 function unixTimestamp(value: unknown): number | null {
   if (value == null || value === '') return null;
   const date = new Date(value as string | number | Date);
-  return Number.isNaN(date.getTime()) ? null : date.getTime() / 1000;
+  return Number.isNaN(date.getTime())
+    ? null
+    : Math.floor(date.getTime() / 1000);
+}
+
+/** Worker: extractTitle, the first `# heading` without markdown formatting. */
+function extractTitle(body: string): string | null {
+  const heading = body.trim().match(/^#{1}[ ]+(.*)/);
+  if (!heading?.[1]) return null;
+  return heading[1]
+    .replace(/\[\[([\S\s]*?)]]/, '$1')
+    .replace(/[_*~`>]/g, '')
+    .replace(/\[(.*?)\]\(.*?\)/g, '$1')
+    .trim();
 }
 
 /** Blob.metadata is JSON; the worker always stores an object. */
@@ -176,7 +189,16 @@ function buildDocument(
     extractInlineTags(body),
   );
   return {
-    title: metadata.title,
+    // Blobs stored before the worker kept its computed title have none:
+    // compute it as the worker's parseMarkdown does
+    title:
+      metadata.title ||
+      extractTitle(body) ||
+      path
+        .split('/')
+        .pop()
+        ?.replace(/\.(mdx|md)$/, '') ||
+      '',
     content: body,
     path,
     description: metadata.description,
