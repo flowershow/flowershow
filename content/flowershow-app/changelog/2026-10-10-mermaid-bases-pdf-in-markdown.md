@@ -16,3 +16,7 @@ Several features used to work only in MDX pages, so you had to rename a file to 
 - **Copy button on code blocks**: every code block gets one.
 
 If you switched pages to MDX only for these features, you can switch them back.
+
+**Fixes**
+
+- An inline `<svg>` with a blank line inside it (for example in its `<style>`) no longer breaks the page in `.md` pages. Before, the rest of the SVG, including `<animate>` and `<animateMotion>` animations, and the content after it failed to render.
