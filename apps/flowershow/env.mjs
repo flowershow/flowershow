@@ -70,6 +70,16 @@ export const env = createEnv({
     // (/.well-known/oauth-*, /oauth/*). Off by default until the signed-in
     // MCP endpoint ships, so no client discovers a half-built flow.
     MCP_OAUTH_ENABLED: z.enum(['true', 'false']).optional(),
+    // Password sign-in for the one app-review account (lib/review-login.ts).
+    // Off unless 'true'; the email and hash must both be set too. Make the
+    // hash with `scripts/seed-review-account.ts hash`.
+    REVIEW_LOGIN_ENABLED: z.enum(['true', 'false']).optional(),
+    REVIEW_LOGIN_EMAIL: z.string().email().optional(),
+    // Same format as REVIEW_PASSWORD_HASH_PATTERN in lib/review-password.ts.
+    REVIEW_LOGIN_PASSWORD_HASH: z
+      .string()
+      .regex(/^scrypt:[A-Za-z0-9_-]{22,}:[A-Za-z0-9_-]{86}$/)
+      .optional(),
     CF_WORKER_URL: z.string(),
     CF_WORKER_SECRET: z.string(),
     INTERNAL_API_SECRET: z.string().optional(),
@@ -176,6 +186,9 @@ export const env = createEnv({
     ANON_PUBLISH_DISABLED: process.env.ANON_PUBLISH_DISABLED,
     MCP_ANON_HOURLY_LIMIT: process.env.MCP_ANON_HOURLY_LIMIT,
     MCP_OAUTH_ENABLED: process.env.MCP_OAUTH_ENABLED,
+    REVIEW_LOGIN_ENABLED: process.env.REVIEW_LOGIN_ENABLED,
+    REVIEW_LOGIN_EMAIL: process.env.REVIEW_LOGIN_EMAIL,
+    REVIEW_LOGIN_PASSWORD_HASH: process.env.REVIEW_LOGIN_PASSWORD_HASH,
     CF_WORKER_URL: process.env.CF_WORKER_URL,
     CF_WORKER_SECRET: process.env.CF_WORKER_SECRET,
     INTERNAL_API_SECRET: process.env.INTERNAL_API_SECRET,

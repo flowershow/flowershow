@@ -20,6 +20,10 @@ import {
 import { resolveAuthRedirect } from '@/lib/auth-redirect';
 import { sendEmail } from '@/lib/email';
 import { generateUsername } from '@/lib/generate-username';
+import {
+  REVIEW_LOGIN_PROVIDER_ID,
+  reviewLoginProviders,
+} from '@/lib/review-login';
 import PostHogClient from '@/lib/server-posthog';
 import prisma from '@/server/db';
 
@@ -171,6 +175,7 @@ export const authOptions: NextAuthOptions = {
         throw new Error('Failed to send magic-link email');
       },
     }),
+    ...reviewLoginProviders(),
   ],
   pages: {
     signIn: `/login`,
@@ -296,8 +301,14 @@ export const authOptions: NextAuthOptions = {
       // profile: full GitHub or Google profile
       // Magic-link sign-ins have no OAuth profile — the token was already
       // verified by NextAuth before this callback runs, so allow them through
-      // before the OAuth-only account/token logic below.
-      if (account?.provider === 'email') return true;
+      // before the OAuth-only account/token logic below. Same for the review
+      // account, whose password `authorize` checked; it has no Account row.
+      if (
+        account?.provider === 'email' ||
+        account?.provider === REVIEW_LOGIN_PROVIDER_ID
+      ) {
+        return true;
+      }
 
       if (!account || !profile) return false;
 

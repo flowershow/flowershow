@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 import LoadingDots from '@/components/icons/loading-dots';
 import { accountNotLinkedMessage } from '@/lib/account-linking';
+import PasswordLogin from './password-login';
 
 // Basic email shape check — good enough for client-side feedback.
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -19,7 +20,12 @@ const ERROR_MESSAGES: Record<string, string> = {
     'We could not send the sign-in email. Please try again in a moment.',
 };
 
-export default function LoginButton() {
+export default function LoginButton({
+  passwordProviderId,
+}: {
+  /** Set while the review-account password login is switched on. */
+  passwordProviderId: string | null;
+}) {
   const [githubLoading, setGithubLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [emailLoading, setEmailLoading] = useState(false);
@@ -234,6 +240,14 @@ export default function LoginButton() {
           )}
         </button>
       </form>
+
+      {passwordProviderId && (
+        <PasswordLogin
+          providerId={passwordProviderId}
+          callbackUrl={callbackUrl || '/'}
+          disabled={isLoading}
+        />
+      )}
     </div>
   );
 }
