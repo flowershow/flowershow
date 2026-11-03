@@ -29,6 +29,7 @@ const reviewUser = {
   email: REVIEW_EMAIL,
   image: '',
   role: 'USER' as const,
+  accounts: [] as { id: string }[],
 };
 
 let passwordHash: string;
@@ -108,6 +109,19 @@ describe('review-account password login', () => {
   it('rejects a wrong password', async () => {
     await expect(authorize(REVIEW_EMAIL, `${PASSWORD}!`)).resolves.toBeNull();
     await expect(authorize(REVIEW_EMAIL, '')).resolves.toBeNull();
+  });
+
+  it("won't sign in a real account set as the review email by mistake", async () => {
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      ...reviewUser,
+      accounts: [{ id: 'github-account' }],
+    });
+    await expect(authorize(REVIEW_EMAIL, PASSWORD)).resolves.toBeNull();
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      ...reviewUser,
+      role: 'ADMIN',
+    });
+    await expect(authorize(REVIEW_EMAIL, PASSWORD)).resolves.toBeNull();
   });
 
   it('passes the signIn callback, which has no OAuth profile for it', async () => {

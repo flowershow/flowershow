@@ -26,7 +26,14 @@
  *   API_URL              Flowershow API origin of the same environment as the
  *                        database, e.g. https://flowershow.app
  *   POSTGRES_PRISMA_URL  that environment's database
- *   REVIEW_USERNAME      username for a new account (default "app-review")
+ *   REVIEW_USERNAME      the review account's username (default "app-review").
+ *                        An existing user with this email is only updated if
+ *                        its username matches, so a real account is never
+ *                        touched.
+ *
+ * Switching the login off doesn't sign reviewers out: sessions last 30 days
+ * and the connector's OAuth tokens stay valid. To end access, revoke them in
+ * the review account's dashboard (Access tokens) or delete the user.
  *
  * The sites are published through the REST API (as the CLI does) with a
  * short-lived token for the account, deleted when the script ends.
@@ -228,7 +235,10 @@ function apiDeps(apiUrl: string, token: string): PublishDeps {
 async function hash() {
   const chunks: Buffer[] = [];
   for await (const chunk of process.stdin) chunks.push(chunk as Buffer);
-  const password = Buffer.concat(chunks).toString('utf8');
+  // `echo` adds a newline that isn't part of the password.
+  const password = Buffer.concat(chunks)
+    .toString('utf8')
+    .replace(/\r?\n$/, '');
   if (password.length < 16) {
     console.error('Use a password of at least 16 characters.');
     process.exit(1);
@@ -245,13 +255,25 @@ async function seed() {
   try {
     const existing = await prisma.user.findUnique({
       where: { email },
-      select: { id: true, username: true, accounts: { select: { id: true } } },
+      select: {
+        id: true,
+        username: true,
+        role: true,
+        accounts: { select: { id: true }, take: 1 },
+      },
     });
-    // The password login signs in whoever owns REVIEW_LOGIN_EMAIL: refuse to
-    // turn a real person's GitHub or Google account into the review account.
-    if (existing && existing.accounts.length > 0) {
+    // The password login signs in whoever owns REVIEW_LOGIN_EMAIL, and this
+    // script replaces sites: only ever touch the review account itself, never
+    // a real person's account (magic-link users have no Account rows either,
+    // hence the username check).
+    if (
+      existing &&
+      (existing.username !== username ||
+        existing.accounts.length > 0 ||
+        existing.role !== 'USER')
+    ) {
       console.error(
-        `${email} belongs to an account with GitHub or Google sign-in. Use a dedicated email for the review account.`,
+        `${email} belongs to another account (username ${existing.username}). Use a dedicated email for the review account, or set REVIEW_USERNAME if this is it.`,
       );
       process.exit(1);
     }

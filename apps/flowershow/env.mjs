@@ -75,7 +75,11 @@ export const env = createEnv({
     // hash with `scripts/seed-review-account.ts hash`.
     REVIEW_LOGIN_ENABLED: z.enum(['true', 'false']).optional(),
     REVIEW_LOGIN_EMAIL: z.string().email().optional(),
-    REVIEW_LOGIN_PASSWORD_HASH: z.string().startsWith('scrypt:').optional(),
+    // Same format as REVIEW_PASSWORD_HASH_PATTERN in lib/review-password.ts.
+    REVIEW_LOGIN_PASSWORD_HASH: z
+      .string()
+      .regex(/^scrypt:[A-Za-z0-9_-]{22,}:[A-Za-z0-9_-]{86}$/)
+      .optional(),
     CF_WORKER_URL: z.string(),
     CF_WORKER_SECRET: z.string(),
     INTERNAL_API_SECRET: z.string().optional(),

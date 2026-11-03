@@ -12,6 +12,10 @@ import prisma from '@/server/db';
  * way, and only while REVIEW_LOGIN_ENABLED=true; otherwise the provider and
  * the form don't exist. Create the account with
  * scripts/seed-review-account.ts.
+ *
+ * Switching it off stops new sign-ins only: existing sessions (30 days) and
+ * the MCP connector's OAuth tokens keep working. To end access, also revoke
+ * the account's grants (dashboard → Access tokens) or delete the user.
  */
 export const REVIEW_LOGIN_PROVIDER_ID = 'review-login';
 
@@ -41,8 +45,13 @@ async function authorizeReviewLogin(
   ) {
     return null;
   }
-  const user = await prisma.user.findUnique({ where: { email: config.email } });
-  if (!user) return null;
+  const user = await prisma.user.findUnique({
+    where: { email: config.email },
+    include: { accounts: { select: { id: true }, take: 1 } },
+  });
+  // Never a real person's account set here by mistake: the review account
+  // has no GitHub or Google sign-in and no admin role.
+  if (!user || user.accounts.length > 0 || user.role !== 'USER') return null;
   return {
     id: user.id,
     name: user.name ?? user.username,

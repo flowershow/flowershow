@@ -51,7 +51,8 @@ export default function PasswordLogin({
       });
       if (res?.ok && !res.error) {
         // Full navigation so the new session cookie is used everywhere.
-        window.location.assign(res.url ?? callbackUrl);
+        // res.url has been through the server's redirect allow-list.
+        window.location.assign(res.url ?? '/');
         return;
       }
       toast.error('Wrong email or password.');
