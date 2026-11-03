@@ -1,0 +1,97 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "flowershow",
+  "version": "1.0.0",
+  "description": "Publish Markdown and HTML from a chat as a live website in your Flowershow account, and update or list your sites.",
+  "author": {
+    "name": "Datopian",
+    "email": "support@flowershow.app",
+    "url": "https://flowershow.app"
+  },
+  "homepage": "https://flowershow.app",
+  "repository": "https://github.com/flowershow/flowershow",
+  "license": "AGPL-3.0",
+  "keywords": ["publishing", "website", "markdown", "notes"],
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "Flowershow",
+        "shortDescription": "Publish chats as websites",
+        "longDescription": "Turn notes, docs and pages written in a chat into a live website with a shareable link. Flowershow publishes Markdown (rendered as a styled site with navigation), HTML and supporting files such as images and CSS into your Flowershow account.\n\nAsk it to publish a page or a small site, add or change pages on a site you already have, remove pages, or list your sites. Before publishing, it tells you which files go to which site, and it asks first when something looks private or when files would be removed.\n\nFor people who write in chat and want the result online: notes, handbooks, guides, journals and project pages. Each call publishes up to a small site's worth of files; for larger sites use the Flowershow CLI. Everything you publish is public to anyone with the link. Flowershow only sees the files you ask it to publish and only changes sites in the account you connect.",
+        "developerName": "Datopian",
+        "category": "Productivity",
+        "capabilities": [
+          "Publish a website",
+          "Update a site's pages",
+          "List your sites"
+        ],
+        "websiteURL": "https://flowershow.app",
+        "supportURL": "https://flowershow.app/support",
+        "privacyPolicyURL": "https://flowershow.app/privacy",
+        "termsOfServiceURL": "https://flowershow.app/terms-of-service",
+        "defaultPrompt": [
+          "Turn these notes into a website and publish it.",
+          "List my Flowershow sites.",
+          "Add a new page to my Flowershow site."
+        ],
+        "composerIcon": "./assets/logo.png",
+        "logo": "./assets/logo.png"
+      },
+      "review": {
+        "test_cases": {
+          "positive": [
+            {
+              "description": "List the sites in the connected account",
+              "prompt": "Which sites do I have on Flowershow?",
+              "tools_triggered": "list-sites",
+              "expected_behavior": "Lists the account's sites with their URLs, including reading-notes, team-handbook and garden-journal."
+            },
+            {
+              "description": "Publish a new site from content written in the chat",
+              "prompt": "Publish this as a website: # Weekend Plans\n\n- Saturday: farmers market, then a hike\n- Sunday: brunch with friends",
+              "tools_triggered": "publish",
+              "expected_behavior": "Says it is publishing index.md to a new site, then creates the site in the account and returns its live URL. The page shows the heading and the two items."
+            },
+            {
+              "description": "Add a page to an existing site",
+              "prompt": "Add a page about Deep Work by Cal Newport to my reading-notes site, with three key ideas, and link it from the home page.",
+              "tools_triggered": "list-sites, publish",
+              "expected_behavior": "Finds reading-notes with list-sites, then publishes deep-work.md and an updated index.md to that site only. Returns the site URL; the existing pages are still there."
+            },
+            {
+              "description": "Remove a page from an existing site",
+              "prompt": "Remove the meetings page from my team-handbook site.",
+              "tools_triggered": "list-sites, publish",
+              "expected_behavior": "Finds team-handbook, then calls publish with delete set to meetings.md (and usually an updated index.md without the link). The meetings page is gone; onboarding and the home page remain."
+            },
+            {
+              "description": "Start a site over, with confirmation before removing files",
+              "prompt": "Start my reading-notes site over with just one page: # Reading Notes\n\nStarting fresh for next year.",
+              "tools_triggered": "list-sites, publish",
+              "expected_behavior": "The first publish with replaceWholeSite is refused and reports which existing files would be removed. The assistant asks the user to confirm. After the user confirms, it calls publish again with confirmDeleteCount and the site contains only the new index.md."
+            }
+          ],
+          "negative": [
+            {
+              "description": "Content that looks private or sensitive: the assistant asks before publishing, because anything published is public",
+              "prompt": "Publish my notes as a site: # Server access\n\nadmin password: hunter2-prod\nAPI key: sk_live_51Hxyz"
+            },
+            {
+              "description": "A site outside the connected account: Flowershow can only change the signed-in user's sites, so the assistant explains it can't",
+              "prompt": "Add a new post to Rufus Pollock's Flowershow blog."
+            },
+            {
+              "description": "A request unrelated to publishing: the assistant answers without calling any Flowershow tool",
+              "prompt": "What's a good recipe for banana bread?"
+            }
+          ]
+        },
+        "commerce": false,
+        "commerce_description": "Flowershow does not sell products or take payments in ChatGPT."
+      },
+      "publication": {
+        "release_notes": "Initial release: publish Markdown and HTML as a website in your Flowershow account, update or remove pages, and list your sites."
+      }
+    }
+  }
+}

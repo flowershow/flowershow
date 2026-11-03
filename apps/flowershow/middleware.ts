@@ -194,6 +194,10 @@ export default async function middleware(req: NextRequest) {
       return rewrite(`/dragndrop${path}`, req, phBootstrap);
     }
 
+    if (pathname === '/.well-known/openai-apps-challenge') {
+      return rewrite('/api/openai-apps-challenge', req, phBootstrap);
+    }
+
     const oauthPath = oauthRewritePath(pathname);
     if (oauthPath) return rewrite(`${oauthPath}${search}`, req, phBootstrap);
   }
