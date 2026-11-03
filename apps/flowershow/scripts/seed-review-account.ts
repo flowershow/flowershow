@@ -26,10 +26,10 @@
  *   API_URL              Flowershow API origin of the same environment as the
  *                        database, e.g. https://flowershow.app
  *   POSTGRES_PRISMA_URL  that environment's database
- *   REVIEW_USERNAME      the review account's username (default "app-review").
- *                        An existing user with this email is only updated if
- *                        its username matches, so a real account is never
- *                        touched.
+ *
+ * The account's username is REVIEW_USERNAME (lib/review-password.ts). An
+ * existing user with this email is only updated if it has that username, so
+ * a real account is never touched.
  *
  * Switching the login off doesn't sign reviewers out: sessions last 30 days
  * and the connector's OAuth tokens stay valid. To end access, revoke them in
@@ -39,20 +39,20 @@
  * short-lived token for the account, deleted when the script ends.
  */
 
-import { createHash, randomBytes } from 'node:crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type {
   CreateSiteResponse,
   ListSitesResponse,
 } from '@flowershow/api-contract';
-import { PrismaClient } from '@prisma/client';
+import { generatePatToken, hashToken } from '@/lib/cli-auth';
 import {
   ApiError,
   type PublishDeps,
   type PublishFileInput,
   publish,
 } from '@/lib/mcp/publish';
-import { hashReviewPassword } from '@/lib/review-password';
+import { hashReviewPassword, REVIEW_USERNAME } from '@/lib/review-password';
+import prisma from '@/server/db';
 
 // ---------------------------------------------------------------------------
 // Sample sites
@@ -249,8 +249,6 @@ async function hash() {
 async function seed() {
   const email = requireEnv('REVIEW_LOGIN_EMAIL').trim().toLowerCase();
   const apiUrl = requireEnv('API_URL').replace(/\/+$/, '');
-  const username = process.env.REVIEW_USERNAME || 'app-review';
-  const prisma = new PrismaClient();
 
   try {
     const existing = await prisma.user.findUnique({
@@ -268,12 +266,12 @@ async function seed() {
     // hence the username check).
     if (
       existing &&
-      (existing.username !== username ||
+      (existing.username !== REVIEW_USERNAME ||
         existing.accounts.length > 0 ||
         existing.role !== 'USER')
     ) {
       console.error(
-        `${email} belongs to another account (username ${existing.username}). Use a dedicated email for the review account, or set REVIEW_USERNAME if this is it.`,
+        `${email} belongs to another account (username ${existing.username}). Use a dedicated email for the review account.`,
       );
       process.exit(1);
     }
@@ -285,7 +283,7 @@ async function seed() {
       : await prisma.user.create({
           data: {
             email,
-            username,
+            username: REVIEW_USERNAME,
             name: 'App Review',
             emailVerified: new Date(),
           },
@@ -294,12 +292,11 @@ async function seed() {
       `${existing ? 'Updated' : 'Created'} review account ${user.email} (username ${user.username}, id ${user.id})`,
     );
 
-    // A token for this run only; the sync API stores its SHA-256, like
-    // hashToken in lib/cli-auth.ts.
-    const token = `fs_pat_${randomBytes(32).toString('base64url')}`;
+    // A token for this run only.
+    const token = generatePatToken();
     const accessToken = await prisma.accessToken.create({
       data: {
-        token: createHash('sha256').update(token).digest('hex'),
+        token: hashToken(token),
         userId: user.id,
         name: 'seed-review-account',
         type: 'PAT',

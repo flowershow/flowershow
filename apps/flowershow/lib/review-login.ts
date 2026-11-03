@@ -1,7 +1,7 @@
 import type { User } from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import { env } from '@/env.mjs';
-import { verifyReviewPassword } from '@/lib/review-password';
+import { REVIEW_USERNAME, verifyReviewPassword } from '@/lib/review-password';
 import prisma from '@/server/db';
 
 /**
@@ -50,8 +50,15 @@ async function authorizeReviewLogin(
     include: { accounts: { select: { id: true }, take: 1 } },
   });
   // Never a real person's account set here by mistake: the review account
-  // has no GitHub or Google sign-in and no admin role.
-  if (!user || user.accounts.length > 0 || user.role !== 'USER') return null;
+  // has its own username, no GitHub or Google sign-in and no admin role.
+  if (
+    !user ||
+    user.username !== REVIEW_USERNAME ||
+    user.accounts.length > 0 ||
+    user.role !== 'USER'
+  ) {
+    return null;
+  }
   return {
     id: user.id,
     name: user.name ?? user.username,

@@ -25,7 +25,7 @@ const PASSWORD = 'correct horse battery staple';
 const reviewUser = {
   id: 'user-review',
   name: 'OpenAI Review',
-  username: 'openai-review',
+  username: 'app-review',
   email: REVIEW_EMAIL,
   image: '',
   role: 'USER' as const,
@@ -89,7 +89,7 @@ describe('review-account password login', () => {
   it('signs in the review account with its password', async () => {
     await expect(authorize(REVIEW_EMAIL, PASSWORD)).resolves.toMatchObject({
       id: 'user-review',
-      username: 'openai-review',
+      username: 'app-review',
     });
   });
 
@@ -120,6 +120,12 @@ describe('review-account password login', () => {
     prismaMock.user.findUnique.mockResolvedValueOnce({
       ...reviewUser,
       role: 'ADMIN',
+    });
+    await expect(authorize(REVIEW_EMAIL, PASSWORD)).resolves.toBeNull();
+    // A magic-link user has no Account row either; only the username tells.
+    prismaMock.user.findUnique.mockResolvedValueOnce({
+      ...reviewUser,
+      username: 'jane',
     });
     await expect(authorize(REVIEW_EMAIL, PASSWORD)).resolves.toBeNull();
   });
