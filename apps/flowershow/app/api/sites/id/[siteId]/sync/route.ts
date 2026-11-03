@@ -85,6 +85,19 @@ export async function POST(
         { status: 400 },
       );
     }
+    // A mode that was sent but didn't survive parsing (e.g. an app built
+    // against a contract that predates it) must never fall back to a full
+    // replace, which deletes every file not sent.
+    const sentMode = (body as { mode?: unknown }).mode;
+    if (sentMode !== undefined && options.data.mode !== sentMode) {
+      return NextResponse.json(
+        {
+          error: 'invalid_request',
+          message: `Unsupported sync mode ${JSON.stringify(sentMode)}`,
+        },
+        { status: 400 },
+      );
+    }
     const mode = options.data.mode ?? 'replace';
     const deleteList = options.data.delete ?? [];
     if (mode === 'replace' && deleteList.length > 0) {

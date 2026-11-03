@@ -1,3 +1,4 @@
+import { SyncRequestSchema } from '@flowershow/api-contract';
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -334,13 +335,55 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       expect(prisma.publish.create).not.toHaveBeenCalled();
     });
 
-    it('rejects an unknown mode', async () => {
+    it('rejects an unknown mode without deleting anything', async () => {
+      // Not Once: the request is refused before files are loaded.
+      vi.mocked(prisma.blob.findMany).mockResolvedValue(existing as any);
+
       const res = await POST(
         makeRequest({ files: [], mode: 'append' }),
         makeParams(SITE_ID),
       );
 
       expect(res.status).toBe(400);
+      expect(await res.json()).toMatchObject({ error: 'invalid_request' });
+      expect(deleteFile).not.toHaveBeenCalled();
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects a mode the contract build does not know, instead of replacing', async () => {
+      // An app built against a contract that predates `mode` strips it.
+      const stale = SyncRequestSchema.pick({ delete: true });
+      const pick = vi
+        .spyOn(SyncRequestSchema, 'pick')
+        .mockReturnValueOnce(stale as any);
+      vi.mocked(prisma.blob.findMany).mockResolvedValue(existing as any);
+
+      const res = await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [{ path: 'about.md', size: 12, sha: 'about-new' }],
+        }),
+        makeParams(SITE_ID),
+      );
+      pick.mockRestore();
+
+      expect(res.status).toBe(400);
+      expect(deleteFile).not.toHaveBeenCalled();
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+
+    it('still replaces by default when no mode is sent (CLI)', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(existing as any);
+
+      const res = await POST(
+        makeRequest({
+          files: [{ path: 'index.md', size: 10, sha: 'index-sha' }],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      expect((await res.json()).deleted.sort()).toEqual(['about.md', 'old.md']);
     });
 
     it('applies the anonymous limits to the whole site after the merge', async () => {
