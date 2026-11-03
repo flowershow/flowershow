@@ -55,14 +55,14 @@
             {
               "description": "Add a page to an existing site",
               "prompt": "Add a page about Deep Work by Cal Newport to my reading-notes site, with three key ideas, and link it from the home page.",
-              "tools_triggered": "list-sites, publish",
-              "expected_behavior": "Finds reading-notes with list-sites, then publishes deep-work.md and an updated index.md to that site only. Returns the site URL; the existing pages are still there."
+              "tools_triggered": "list-sites, list-files, read-file, publish",
+              "expected_behavior": "Finds reading-notes with list-sites, checks its pages with list-files and reads index.md with read-file, then publishes deep-work.md and the updated index.md (its existing links kept, plus one to the new page) to that site only. Returns the site URL; the existing pages are still there."
             },
             {
               "description": "Remove a page from an existing site",
               "prompt": "Remove the meetings page from my team-handbook site.",
-              "tools_triggered": "list-sites, publish",
-              "expected_behavior": "Finds team-handbook, then calls publish with delete set to meetings.md (and usually an updated index.md without the link). The meetings page is gone; onboarding and the home page remain."
+              "tools_triggered": "list-sites, list-files, publish",
+              "expected_behavior": "Finds team-handbook, checks its files with list-files to get the page's path, then calls publish with delete set to meetings.md (and usually an updated index.md without the link). The meetings page is gone; onboarding and the home page remain."
             },
             {
               "description": "Start a site over, with confirmation before removing files",
