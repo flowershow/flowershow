@@ -4,6 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { ApiError, type PublishDeps } from './publish';
 import {
   createFlowershowMcpServer,
+  LIST_FILES_MAX,
   type McpDeps,
   type McpMode,
 } from './server';
@@ -55,6 +56,12 @@ function deps(over: Partial<McpDeps> = {}): McpDeps {
         lastPublishedAt: '2026-10-18T09:00:00.000Z',
       },
     ]),
+    listFiles: vi.fn().mockResolvedValue([
+      { path: 'about.md', size: 12, updatedAt: '2026-10-18T09:00:00.000Z' },
+      { path: 'blog/one.md', size: 30, updatedAt: '2026-10-18T09:00:00.000Z' },
+      { path: 'index.md', size: 20, updatedAt: '2026-10-18T09:00:00.000Z' },
+    ]),
+    readFile: vi.fn().mockResolvedValue('# Home\n\n- [About](about.md)\n'),
     claimSite: vi.fn().mockResolvedValue({
       siteId: 'site-1',
       name: 'p',
@@ -84,14 +91,20 @@ describe('Flowershow MCP server', () => {
     expect(publish?.annotations?.destructiveHint).toBe(true);
   });
 
-  it('adds list-sites with an account token', async () => {
+  it('adds list-sites, list-files and read-file with an account token', async () => {
     const client = await connect(USER, deps());
     const { tools } = await client.listTools();
     expect(tools.map((t) => t.name).sort()).toEqual([
       'claim-site',
+      'list-files',
       'list-sites',
       'publish',
+      'read-file',
     ]);
+    for (const name of ['list-files', 'read-file']) {
+      const tool = tools.find((t) => t.name === name);
+      expect(tool?.annotations?.readOnlyHint).toBe(true);
+    }
     const publish = tools.find((t) => t.name === 'publish');
     expect(publish?.description).toMatch(/account/);
     expect(publish?.description).not.toMatch(/expires in 7 days/);
@@ -161,6 +174,122 @@ describe('Flowershow MCP server', () => {
         },
       ],
     });
+  });
+
+  it('lists the files on a site as the token user, never a user from the arguments', async () => {
+    const d = deps();
+    const client = await connect(USER, d);
+    const res = await client.callTool({
+      name: 'list-files',
+      arguments: { siteId: 's1', userId: 'u2' },
+    });
+    expect(res.isError).toBeFalsy();
+    expect(d.listFiles).toHaveBeenCalledWith('u1', 's1');
+    expect(res.structuredContent).toMatchObject({
+      siteId: 's1',
+      total: 3,
+      truncated: false,
+    });
+    const text = (res.content as { text: string }[])[0]?.text;
+    expect(text).toMatch(/3 file\(s\) on site s1/);
+    expect(text).toMatch(/^index\.md \(20 bytes\)$/m);
+  });
+
+  it('lists one folder when asked', async () => {
+    const client = await connect(USER, deps());
+    const res = await client.callTool({
+      name: 'list-files',
+      arguments: { siteId: 's1', folder: '/blog/' },
+    });
+    expect(res.structuredContent).toMatchObject({
+      files: [expect.objectContaining({ path: 'blog/one.md' })],
+      total: 1,
+    });
+  });
+
+  it('caps a long file list and says how to see the rest', async () => {
+    const many = Array.from({ length: LIST_FILES_MAX + 5 }, (_, i) => ({
+      path: `p${String(i).padStart(5, '0')}.md`,
+      size: 1,
+      updatedAt: '2026-10-18T09:00:00.000Z',
+    }));
+    const client = await connect(
+      USER,
+      deps({ listFiles: vi.fn().mockResolvedValue(many) }),
+    );
+    const res = await client.callTool({
+      name: 'list-files',
+      arguments: { siteId: 's1' },
+    });
+    const out = res.structuredContent as {
+      files: unknown[];
+      total: number;
+      truncated: boolean;
+    };
+    expect(out.files).toHaveLength(LIST_FILES_MAX);
+    expect(out.total).toBe(LIST_FILES_MAX + 5);
+    expect(out.truncated).toBe(true);
+    expect((res.content as { text: string }[])[0]?.text).toMatch(/pass folder/);
+  });
+
+  it.each([
+    ['list-files', { siteId: 'not-mine' }],
+    ['read-file', { siteId: 'not-mine', path: 'index.md' }],
+  ])("reports someone else's site as not found (%s)", async (name, args) => {
+    const notFound = new ApiError(
+      404,
+      'not_found',
+      'Site not found in your account. Use list-sites to see your sites.',
+    );
+    const client = await connect(
+      USER,
+      deps({
+        listFiles: vi.fn().mockRejectedValue(notFound),
+        readFile: vi.fn().mockRejectedValue(notFound),
+      }),
+    );
+    const res = await client.callTool({ name, arguments: args });
+    expect(res.isError).toBe(true);
+    expect((res.content as { text: string }[])[0]?.text).toBe(notFound.message);
+  });
+
+  it('reads a file as the token user, with the path normalised', async () => {
+    const d = deps();
+    const client = await connect(USER, d);
+    const res = await client.callTool({
+      name: 'read-file',
+      arguments: { siteId: 's1', path: '/index.md' },
+    });
+    expect(res.isError).toBeFalsy();
+    expect(d.readFile).toHaveBeenCalledWith('u1', 's1', 'index.md');
+    expect(res.structuredContent).toEqual({
+      siteId: 's1',
+      path: 'index.md',
+      content: '# Home\n\n- [About](about.md)\n',
+    });
+  });
+
+  it('hides internal read errors from the model', async () => {
+    const client = await connect(
+      USER,
+      deps({ readFile: vi.fn().mockRejectedValue(new Error('S3 down')) }),
+    );
+    const res = await client.callTool({
+      name: 'read-file',
+      arguments: { siteId: 's1', path: 'index.md' },
+    });
+    expect(res.isError).toBe(true);
+    const text = (res.content as { text: string }[])[0]?.text;
+    expect(text).toMatch(/went wrong while reading the file/);
+    expect(text).not.toMatch(/S3/);
+  });
+
+  it('tells the signed-in model to check the site and read a page before changing it', async () => {
+    const client = await connect(USER, deps());
+    const { tools } = await client.listTools();
+    const description = tools.find((t) => t.name === 'publish')?.description;
+    expect(description).toMatch(/list-files/);
+    expect(description).toMatch(/read-file/);
   });
 
   it('keeps the anonymous tool surface unchanged (no name argument)', async () => {

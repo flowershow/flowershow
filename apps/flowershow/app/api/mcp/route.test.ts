@@ -46,8 +46,10 @@ describe('/api/mcp', () => {
     expect(res.status).toBe(200);
     expect((await toolNames(res)).sort()).toEqual([
       'claim-site',
+      'list-files',
       'list-sites',
       'publish',
+      'read-file',
     ]);
   });
 

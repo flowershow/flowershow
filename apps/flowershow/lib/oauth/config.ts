@@ -5,7 +5,7 @@ import { env } from '@/env.mjs';
  * docs/plans/2026-10-18-mcp-oauth-design.md.
  */
 
-/** The single scope: list own sites, create sites, publish to and claim sites. */
+/** The single scope: list own sites and read their files, create sites, publish to and claim sites. */
 export const SCOPE_SITES_WRITE = 'sites:write';
 export const SUPPORTED_SCOPES = [SCOPE_SITES_WRITE] as const;
 

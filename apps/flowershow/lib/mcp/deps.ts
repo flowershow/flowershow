@@ -8,8 +8,11 @@ import { hashIp } from '@/lib/anon-rate-limit';
 import { createAnonSite } from '@/lib/anon-site';
 import { verifySiteClaimToken } from '@/lib/anonymous-user';
 import { claimAnonSite } from '@/lib/claim-anon-site';
+import { fetchFile, getContentType } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
 import PostHogClient from '@/lib/server-posthog';
+import { canManageSite } from '@/lib/site-authz';
+import { loadServerFileState } from '@/lib/site-file-state';
 import prisma from '@/server/db';
 import { markMcpInternal } from './internal-request';
 import {
@@ -21,7 +24,7 @@ import {
   signInHint,
 } from './limits';
 import { ApiError, type PublishCredential, PublishError } from './publish';
-import type { McpDeps } from './server';
+import { type McpDeps, READ_FILE_MAX_BYTES } from './server';
 
 /**
  * Rate-limit key for anonymous sites created through MCP. Chat apps (claude.ai,
@@ -74,6 +77,27 @@ async function json<T>(res: Response): Promise<T> {
   }
   return data as T;
 }
+
+/**
+ * Throw unless the user may manage the site. Missing and someone else's site
+ * get the same 404, so the tools can't be used to probe which sites exist.
+ */
+async function assertCanManage(userId: string, siteId: string) {
+  const site = await prisma.site.findUnique({
+    where: { id: siteId },
+    select: { userId: true },
+  });
+  if (!canManageSite(userId, site)) {
+    throw new ApiError(
+      404,
+      'not_found',
+      'Site not found in your account. Use list-sites to see your sites.',
+    );
+  }
+}
+
+/** Content types read-file returns as text (Markdown, HTML, CSS, JSON, YAML, SVG, ...). */
+const TEXT_CONTENT_TYPE = /^text\/|[/+](json|xml|yaml|toml|x-ndjson|x-subrip)$/;
 
 /**
  * Production dependencies for the MCP tools. Sync and status call the
@@ -231,6 +255,50 @@ export function realMcpDeps(caller?: AnonCaller): McpDeps {
         url: getSiteUrl(s),
         lastPublishedAt: s.publishes[0]?.startedAt.toISOString() ?? null,
       }));
+    },
+
+    async listFiles(userId, siteId) {
+      await assertCanManage(userId, siteId);
+      // Same view of the site as the sync route diffs against.
+      const { existingBlobs } = await loadServerFileState(siteId);
+      return existingBlobs
+        .map((b) => ({
+          path: b.path,
+          size: b.size,
+          updatedAt: b.updatedAt.toISOString(),
+        }))
+        .sort((a, b) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0));
+    },
+
+    async readFile(userId, siteId, path) {
+      await assertCanManage(userId, siteId);
+      const notFound = new ApiError(
+        404,
+        'not_found',
+        `There is no file ${JSON.stringify(path)} on this site. Use list-files to see its paths.`,
+      );
+      // Only paths the site has: never fetch an arbitrary storage key.
+      const { existingBlobs } = await loadServerFileState(siteId);
+      const blob = existingBlobs.find((b) => b.path === path);
+      if (!blob) throw notFound;
+      const type = getContentType(path.split('.').pop() ?? '');
+      if (!TEXT_CONTENT_TYPE.test(type)) {
+        throw new ApiError(
+          415,
+          'not_text',
+          `${path} is not a text file (${type}); read-file returns text files only.`,
+        );
+      }
+      if (blob.size > READ_FILE_MAX_BYTES) {
+        throw new ApiError(
+          413,
+          'too_large',
+          `${path} is ${Math.ceil(blob.size / 1024)} KB; read-file returns files up to ${READ_FILE_MAX_BYTES / 1024} KB. For bigger files, use the Flowershow CLI (fl).`,
+        );
+      }
+      const content = await fetchFile({ projectId: siteId, path });
+      if (content === null) throw notFound;
+      return content;
     },
 
     async claimSite(userId, siteId, claimToken) {

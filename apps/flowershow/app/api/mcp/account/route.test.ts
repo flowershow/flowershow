@@ -114,8 +114,10 @@ describe('/api/mcp/account', () => {
     expect(res.status).toBe(200);
     expect(await toolNames(res)).toEqual([
       'claim-site',
+      'list-files',
       'list-sites',
       'publish',
+      'read-file',
     ]);
   });
 
@@ -202,8 +204,10 @@ describe('/api/mcp with OAuth tokens', () => {
     expect(res.status).toBe(200);
     expect(await toolNames(res)).toEqual([
       'claim-site',
+      'list-files',
       'list-sites',
       'publish',
+      'read-file',
     ]);
   });
 

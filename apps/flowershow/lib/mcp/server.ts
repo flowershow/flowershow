@@ -29,8 +29,26 @@ export type SiteSummary = {
 
 export type ClaimedSite = { siteId: string; name: string; url: string };
 
+export type SiteFile = { path: string; size: number; updatedAt: string };
+
+/** Most paths `list-files` returns in one call (use `folder` to narrow). */
+export const LIST_FILES_MAX = 1000;
+/** Largest file `read-file` returns. */
+export const READ_FILE_MAX_BYTES = 256 * 1024;
+
 export interface McpDeps extends PublishDeps {
   listSites(userId: string): Promise<SiteSummary[]>;
+  /**
+   * Files currently on a site the user may manage, sorted by path. Throws
+   * ApiError 404 (same message whether the site is missing or not theirs).
+   */
+  listFiles(userId: string, siteId: string): Promise<SiteFile[]>;
+  /**
+   * Text content of one file on a site the user may manage. Throws ApiError
+   * with a message for the model when the site or file isn't there, or the
+   * file is not text or is over READ_FILE_MAX_BYTES.
+   */
+  readFile(userId: string, siteId: string, path: string): Promise<string>;
   /** Move an anonymous site into the user's account (see lib/claim-anon-site.ts). */
   claimSite(
     userId: string,
@@ -63,7 +81,7 @@ Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, 
 
 ${CHECK_RULES}
 
-Without siteId this creates a new site in the account (optionally give it a name; otherwise it is named after the home page's first heading). With siteId it updates that site: send only the files you changed or added, since files you don't send are kept as they are. ${UPDATE_RULES} Use list-sites to find a site to update. To keep an anonymous site published earlier in the conversation (one with a claimToken), call claim-site first. For bigger sites, suggest the Flowershow CLI (fl).`;
+Without siteId this creates a new site in the account (optionally give it a name; otherwise it is named after the home page's first heading). With siteId it updates that site: send only the files you changed or added, since files you don't send are kept as they are. ${UPDATE_RULES} Use list-sites to find a site to update and list-files to see which files it already has. Before changing an existing file (for example adding a link to the home page), get its current text with read-file and send it back with your change, so nothing already on the page is lost. To keep an anonymous site published earlier in the conversation (one with a claimToken), call claim-site first. For bigger sites, suggest the Flowershow CLI (fl).`;
 
 const fileShape = z.object({
   path: z
@@ -85,19 +103,28 @@ const publishOutput = {
   message: z.string(),
 };
 
-function toolError(err: unknown) {
+function toolError(err: unknown, doing = 'publishing') {
   const text =
     err instanceof PublishError
       ? err.message
-      : 'Something went wrong while publishing. Please try again in a moment.';
-  if (!(err instanceof PublishError)) console.error('MCP publish error:', err);
+      : `Something went wrong while ${doing}. Please try again in a moment.`;
+  if (!(err instanceof PublishError)) console.error(`MCP ${doing} error:`, err);
   return { isError: true, content: [{ type: 'text' as const, text }] };
+}
+
+/** An ApiError from a deps call carries a message meant for the model. */
+function readError(err: unknown, doing: string) {
+  return toolError(
+    err instanceof ApiError ? new PublishError(err.message) : err,
+    doing,
+  );
 }
 
 /**
  * A Flowershow MCP server for one request (stateless). Anonymous callers get
  * `publish` (new or claim-token sites); signed-in callers (PAT, CLI or OAuth
- * token) get `publish` into their account, `list-sites` and `claim-site`.
+ * token) get `publish` into their account, `list-sites`, `list-files`,
+ * `read-file` and `claim-site`.
  */
 export function createFlowershowMcpServer(
   mode: McpMode,
@@ -191,7 +218,7 @@ export function createFlowershowMcpServer(
       {
         title: 'List my Flowershow sites',
         description:
-          'List the sites in the signed-in Flowershow account, with their siteId (use it with publish to update a site), URL and when each was last published.',
+          'List the sites in the signed-in Flowershow account, with their siteId (use it with list-files to see what a site has, and with publish to update it), URL and when each was last published.',
         outputSchema: {
           sites: z.array(
             z.object({
@@ -222,6 +249,107 @@ export function createFlowershowMcpServer(
           ],
           structuredContent: { sites },
         };
+      },
+    );
+
+    server.registerTool(
+      'list-files',
+      {
+        title: 'List the files on a Flowershow site',
+        description: `List the files currently on one of the signed-in user's Flowershow sites: each path, its size in bytes and when it last changed. Use it before updating a site in a new conversation, to see which pages exist, pick the right paths to update or delete, and avoid duplicating a page under a new name. Get siteId from list-sites. Returns up to ${LIST_FILES_MAX} paths; for bigger sites, pass folder to list one folder at a time.`,
+        inputSchema: {
+          siteId: z.string().describe('siteId of the site, from list-sites'),
+          folder: z
+            .string()
+            .optional()
+            .describe(
+              'Only list files in this folder (and its subfolders), e.g. "blog"',
+            ),
+        },
+        outputSchema: {
+          siteId: z.string(),
+          files: z.array(
+            z.object({
+              path: z.string(),
+              size: z.number(),
+              updatedAt: z.string(),
+            }),
+          ),
+          total: z.number(),
+          truncated: z.boolean(),
+        },
+        annotations: {
+          title: 'List the files on a Flowershow site',
+          readOnlyHint: true,
+          openWorldHint: false,
+        },
+      },
+      async ({ siteId, folder }) => {
+        try {
+          const all = await deps.listFiles(mode.userId, siteId);
+          const dir = (folder ?? '')
+            .replace(/\\/g, '/')
+            .replace(/^\/+|\/+$/g, '');
+          const matching = dir
+            ? all.filter((f) => f.path.startsWith(`${dir}/`))
+            : all;
+          const files = matching.slice(0, LIST_FILES_MAX);
+          const truncated = matching.length > files.length;
+          const where = dir ? ` in ${dir}/` : '';
+          const text = files.length
+            ? [
+                `${matching.length} file(s)${where} on site ${siteId}${truncated ? ` (showing the first ${files.length}; pass folder to see the rest)` : ''}:`,
+                ...files.map((f) => `${f.path} (${f.size} bytes)`),
+              ].join('\n')
+            : `No files${where} on site ${siteId}.`;
+          return {
+            content: [{ type: 'text' as const, text }],
+            structuredContent: {
+              siteId,
+              files,
+              total: matching.length,
+              truncated,
+            },
+          };
+        } catch (err) {
+          return readError(err, 'listing files');
+        }
+      },
+    );
+
+    server.registerTool(
+      'read-file',
+      {
+        title: 'Read a file on a Flowershow site',
+        description: `Get the current text of one file on one of the signed-in user's Flowershow sites, e.g. index.md. Use it before changing a page that is already on the site, then publish the whole updated file, so the parts you didn't mean to change stay as they are. Text files only (Markdown, HTML, CSS, JS, JSON, ...), up to ${READ_FILE_MAX_BYTES / 1024} KB. Get siteId from list-sites and paths from list-files.`,
+        inputSchema: {
+          siteId: z.string().describe('siteId of the site, from list-sites'),
+          path: z
+            .string()
+            .describe('Path of the file, as returned by list-files'),
+        },
+        outputSchema: {
+          siteId: z.string(),
+          path: z.string(),
+          content: z.string(),
+        },
+        annotations: {
+          title: 'Read a file on a Flowershow site',
+          readOnlyHint: true,
+          openWorldHint: false,
+        },
+      },
+      async ({ siteId, path }) => {
+        const normalised = path.replace(/\\/g, '/').replace(/^\/+/, '');
+        try {
+          const content = await deps.readFile(mode.userId, siteId, normalised);
+          return {
+            content: [{ type: 'text' as const, text: content }],
+            structuredContent: { siteId, path: normalised, content },
+          };
+        } catch (err) {
+          return readError(err, 'reading the file');
+        }
       },
     );
 
@@ -267,10 +395,7 @@ export function createFlowershowMcpServer(
             },
           };
         } catch (err) {
-          if (err instanceof ApiError) {
-            return toolError(new PublishError(err.message));
-          }
-          return toolError(err);
+          return readError(err, 'claiming the site');
         }
       },
     );
