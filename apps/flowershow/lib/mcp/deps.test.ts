@@ -16,7 +16,15 @@ vi.mock('@/app/api/sites/id/[siteId]/status/route', () => ({ GET: vi.fn() }));
 vi.mock('@/app/api/sites/route', () => ({ POST: vi.fn() }));
 vi.mock('@/lib/claim-anon-site', () => ({ claimAnonSite: vi.fn() }));
 vi.mock('@/server/db', () => ({
-  default: { site: { findUnique: vi.fn(), findMany: vi.fn() } },
+  default: {
+    site: { findUnique: vi.fn(), findMany: vi.fn() },
+    blob: { findMany: vi.fn() },
+    publishFile: { findMany: vi.fn() },
+  },
+}));
+vi.mock('@/lib/content-store', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/content-store')>()),
+  fetchFile: vi.fn(),
 }));
 vi.mock('@/lib/server-posthog', () => ({
   default: () => ({ capture: vi.fn(), shutdown: vi.fn() }),
@@ -34,8 +42,12 @@ import { POST as syncPOST } from '@/app/api/sites/id/[siteId]/sync/route';
 import { POST as createSitePOST } from '@/app/api/sites/route';
 import { hashIp } from '@/lib/anon-rate-limit';
 import { createAnonSite } from '@/lib/anon-site';
-import { generateSiteClaimToken } from '@/lib/anonymous-user';
+import {
+  ANONYMOUS_USER_ID,
+  generateSiteClaimToken,
+} from '@/lib/anonymous-user';
 import { claimAnonSite } from '@/lib/claim-anon-site';
+import { fetchFile } from '@/lib/content-store';
 import prisma from '@/server/db';
 import { MCP_ANON_BUCKET, realMcpDeps } from './deps';
 import { mcpInternalCaller } from './internal-request';
@@ -45,6 +57,7 @@ import {
   reportGlobalLimitReached,
 } from './limits';
 import { ApiError, PublishError } from './publish';
+import { READ_FILE_MAX_BYTES } from './server';
 
 const create = createAnonSite as ReturnType<typeof vi.fn>;
 const sync = syncPOST as ReturnType<typeof vi.fn>;
@@ -272,6 +285,118 @@ describe('realMcpDeps', () => {
         status: 409,
         message: expect.stringMatching(/already/),
       });
+    });
+  });
+
+  describe('listFiles and readFile', () => {
+    const findSite = prisma.site.findUnique as ReturnType<typeof vi.fn>;
+    const findBlobs = prisma.blob.findMany as ReturnType<typeof vi.fn>;
+    const findPublishFiles = prisma.publishFile.findMany as ReturnType<
+      typeof vi.fn
+    >;
+    const fetch = fetchFile as ReturnType<typeof vi.fn>;
+    const at = new Date('2026-11-01T10:00:00.000Z');
+    const blob = (path: string, size = 10) => ({
+      path,
+      size,
+      sha: `sha-${path}`,
+      updatedAt: at,
+    });
+    const NOT_FOUND = {
+      status: 404,
+      message:
+        'Site not found in your account. Use list-sites to see your sites.',
+    };
+
+    beforeEach(() => {
+      findSite.mockResolvedValue({ userId: 'u1' });
+      findBlobs.mockResolvedValue([blob('index.md'), blob('about.md')]);
+      findPublishFiles.mockResolvedValue([]);
+    });
+
+    it("lists the owner's files sorted by path, from that site only", async () => {
+      const files = await realMcpDeps().listFiles('u1', 'site-1');
+      expect(findSite).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { id: 'site-1' } }),
+      );
+      expect(findBlobs).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { siteId: 'site-1' } }),
+      );
+      expect(files).toEqual([
+        { path: 'about.md', size: 10, updatedAt: at.toISOString() },
+        { path: 'index.md', size: 10, updatedAt: at.toISOString() },
+      ]);
+    });
+
+    it('leaves out a file a recent publish deleted (Blob row not yet removed)', async () => {
+      findPublishFiles.mockResolvedValue([
+        {
+          path: 'about.md',
+          status: 'success',
+          changeType: 'deleted',
+          publish: { startedAt: new Date(at.getTime() + 1000) },
+        },
+      ]);
+      const files = await realMcpDeps().listFiles('u1', 'site-1');
+      expect(files.map((f) => f.path)).toEqual(['index.md']);
+    });
+
+    it.each([
+      ["another user's site", { userId: 'u2' }],
+      ['an anonymous site', { userId: ANONYMOUS_USER_ID }],
+      ['a missing site', null],
+    ])('refuses %s with the same 404, reading nothing', async (_l, site) => {
+      findSite.mockResolvedValue(site);
+      await expect(
+        realMcpDeps().listFiles('u1', 'site-1'),
+      ).rejects.toMatchObject(NOT_FOUND);
+      await expect(
+        realMcpDeps().readFile('u1', 'site-1', 'index.md'),
+      ).rejects.toMatchObject(NOT_FOUND);
+      expect(findBlobs).not.toHaveBeenCalled();
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it("reads a text file from the site's storage", async () => {
+      fetch.mockResolvedValue('# Home');
+      await expect(
+        realMcpDeps().readFile('u1', 'site-1', 'index.md'),
+      ).resolves.toBe('# Home');
+      expect(fetch).toHaveBeenCalledWith({
+        projectId: 'site-1',
+        path: 'index.md',
+      });
+    });
+
+    it('only reads paths the site has, never an arbitrary storage key', async () => {
+      await expect(
+        realMcpDeps().readFile('u1', 'site-1', '../site-2/main/raw/index.md'),
+      ).rejects.toMatchObject({
+        status: 404,
+        message: expect.stringMatching(/list-files/),
+      });
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('refuses binary files and files over the size limit', async () => {
+      findBlobs.mockResolvedValue([
+        blob('logo.png'),
+        blob('big.md', READ_FILE_MAX_BYTES + 1),
+      ]);
+      await expect(
+        realMcpDeps().readFile('u1', 'site-1', 'logo.png'),
+      ).rejects.toMatchObject({ status: 415 });
+      await expect(
+        realMcpDeps().readFile('u1', 'site-1', 'big.md'),
+      ).rejects.toMatchObject({ status: 413 });
+      expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('reports a file missing from storage as not found', async () => {
+      fetch.mockResolvedValue(null);
+      await expect(
+        realMcpDeps().readFile('u1', 'site-1', 'index.md'),
+      ).rejects.toBeInstanceOf(ApiError);
     });
   });
 });

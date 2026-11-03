@@ -153,9 +153,9 @@ export default async function ConsentPage({
         </p>
         <p>If you allow, it will be able to:</p>
         <ul className="list-inside list-disc pl-1">
-          <li>list your sites</li>
+          <li>list your sites and read the files on them</li>
           <li>create new sites</li>
-          <li>replace the content of sites you own</li>
+          <li>add, change and remove files on sites you own</li>
         </ul>
       </div>
 
