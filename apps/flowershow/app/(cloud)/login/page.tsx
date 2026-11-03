@@ -2,6 +2,10 @@ import { Metadata } from 'next';
 import Image from 'next/image';
 import { Suspense } from 'react';
 import { getConfig } from '@/lib/app-config';
+import {
+  REVIEW_LOGIN_PROVIDER_ID,
+  reviewLoginEnabled,
+} from '@/lib/review-login';
 import LoginButton from './_components/login-button';
 
 const config = getConfig();
@@ -34,7 +38,11 @@ export default function LoginPage() {
               <div className="my-2 h-10 w-full rounded-md border border-primary-faint bg-primary-faint" />
             }
           >
-            <LoginButton />
+            <LoginButton
+              passwordProviderId={
+                reviewLoginEnabled() ? REVIEW_LOGIN_PROVIDER_ID : null
+              }
+            />
           </Suspense>
           <p className="mt-2 text-center text-xs">
             By registering, you agree to our
