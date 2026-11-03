@@ -80,6 +80,9 @@ export const env = createEnv({
       .string()
       .regex(/^scrypt:[A-Za-z0-9_-]{22,}:[A-Za-z0-9_-]{86}$/)
       .optional(),
+    // Domain-verification token from OpenAI's plugin portal, served at
+    // /.well-known/openai-apps-challenge on the home domain.
+    OPENAI_APPS_CHALLENGE: z.string().optional(),
     CF_WORKER_URL: z.string(),
     CF_WORKER_SECRET: z.string(),
     INTERNAL_API_SECRET: z.string().optional(),
@@ -189,6 +192,7 @@ export const env = createEnv({
     REVIEW_LOGIN_ENABLED: process.env.REVIEW_LOGIN_ENABLED,
     REVIEW_LOGIN_EMAIL: process.env.REVIEW_LOGIN_EMAIL,
     REVIEW_LOGIN_PASSWORD_HASH: process.env.REVIEW_LOGIN_PASSWORD_HASH,
+    OPENAI_APPS_CHALLENGE: process.env.OPENAI_APPS_CHALLENGE,
     CF_WORKER_URL: process.env.CF_WORKER_URL,
     CF_WORKER_SECRET: process.env.CF_WORKER_SECRET,
     INTERNAL_API_SECRET: process.env.INTERNAL_API_SECRET,
