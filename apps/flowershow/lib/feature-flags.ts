@@ -1,35 +1,8 @@
-import { Plan } from '@prisma/client';
 import { env } from '@/env.mjs';
+import { Feature, getEntitlements } from '@/lib/entitlements';
 import { FullSite } from '@/server/api/types';
 
-export enum Feature {
-  CustomDomain = 'CustomDomain',
-  NoBranding = 'NoBranding',
-  Search = 'Search',
-  PasswordProtection = 'PasswordProtection',
-  CustomHead = 'CustomHead',
-  PageScripts = 'PageScripts',
-  CustomFooter = 'CustomFooter',
-  CustomNavbar = 'CustomNavbar',
-  // AutoSync = "AutoSync",
-  // Comments = "Comments",
-  // Analytics = "Analytics",
-}
-
-// Define which features are available for each plan
-const PREMIUM_FEATURES: Feature[] = [
-  Feature.CustomDomain,
-  Feature.NoBranding,
-  Feature.Search,
-  Feature.PasswordProtection,
-  Feature.CustomHead,
-  Feature.PageScripts,
-  Feature.CustomFooter,
-  Feature.CustomNavbar,
-  // Feature.AutoSync,
-  // Feature.Comments,
-  // Feature.Analytics,
-];
+export { Feature };
 
 /**
  * Check if a feature is enabled for a site
@@ -38,10 +11,7 @@ export function isFeatureEnabled(
   feature: Feature,
   site: Pick<FullSite, 'customDomain'> & { plan?: FullSite['plan'] | null },
 ): boolean {
-  if (PREMIUM_FEATURES.includes(feature)) {
-    return site.plan === Plan.PREMIUM;
-  }
-  return false;
+  return getEntitlements(site).features.has(feature);
 }
 
 /**
