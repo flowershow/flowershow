@@ -53,6 +53,7 @@ export function TocRailView({
   const [open, setOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
+  const ticksRef = useRef<HTMLSpanElement>(null);
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // Pointer type of the last pointerdown, so the click/focus it causes can tell touch from mouse
   const pointerType = useRef<string | null>(null);
@@ -72,6 +73,19 @@ export function TocRailView({
   }, [cancelClose]);
 
   useEffect(() => cancelClose, [cancelClose]);
+
+  // Flag a tick list taller than the screen so CSS can fade its bottom edge
+  useEffect(() => {
+    const ticks = ticksRef.current;
+    if (!ticks) return;
+    const update = () => {
+      ticks.dataset.overflow =
+        ticks.scrollHeight > ticks.clientHeight ? 'true' : 'false';
+    };
+    update();
+    window.addEventListener('resize', update);
+    return () => window.removeEventListener('resize', update);
+  }, [items.length]);
 
   // Tap (or click) outside closes
   useEffect(() => {
@@ -159,14 +173,17 @@ export function TocRailView({
         onPointerDown={(e) => {
           pointerType.current = e.pointerType;
         }}
-        onClick={() => {
-          const touch = pointerType.current === 'touch';
+        onPointerCancel={() => {
           pointerType.current = null;
-          // Mouse hover has already opened it, so a mouse click only ever opens
-          setOpen((wasOpen) => (touch ? !wasOpen : true));
+        }}
+        onClick={(e) => {
+          // Touch and keyboard (detail 0) toggle; hover has already opened it for a mouse
+          const toggles = pointerType.current === 'touch' || e.detail === 0;
+          pointerType.current = null;
+          setOpen((wasOpen) => (toggles ? !wasOpen : true));
         }}
       >
-        <span className="toc-rail-ticks" aria-hidden="true">
+        <span ref={ticksRef} className="toc-rail-ticks" aria-hidden="true">
           {items.map((item, i) => (
             <span
               key={item.id}

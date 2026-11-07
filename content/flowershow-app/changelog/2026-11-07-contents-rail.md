@@ -1,7 +1,7 @@
 ---
 title: Page contents as a tick rail
 date: 2026-11-07
-description: A quieter table of contents, a column of ticks that opens an outline on hover, plus a Contents block on phones.
+description: A quieter table of contents: a column of ticks that opens an outline on hover, plus a Contents block on narrow screens.
 authors:
   - rufuspollock
 showToc: false
@@ -13,4 +13,4 @@ The rail is opt-in. Set `"toc": { "style": "rail" }` in `config.json`, or `toc: 
 
 **Fixes**
 
-- Phones now get a Contents block on long pages
+- Narrow screens (phones, tablets and, for the classic panel, small laptops) now get a Contents block on long pages

@@ -29,7 +29,7 @@ The table of contents has two styles:
 - `panel` (default): the classic contents panel in the right-hand column.
 - `rail`: a column of short ticks in the right-hand column, one for each `h2` and `h3` heading.
 
-On the rail, the current section's tick is longer and in the accent colour. Ticks above it are darker. Hover over the rail, or tab to it with the keyboard, to open the outline. It opens to the left. Click a title to jump to that section.
+On the rail, the current section's tick is longer and in the accent colour. Ticks for sections you have already passed are darker. Hover over the rail, or tab to it with the keyboard, to open the outline. It opens to the left. Click a title to jump to that section.
 
 The rail shows from 1024px wide, on pages with 3 or more `h2` and `h3` headings.
 

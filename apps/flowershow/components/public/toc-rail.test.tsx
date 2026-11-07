@@ -180,7 +180,26 @@ describe('TocRailView', () => {
     const { nav, button, outline } = renderRail();
     fireEvent.pointerEnter(nav, { pointerType: 'mouse' });
     fireEvent.pointerDown(button, { pointerType: 'mouse' });
-    fireEvent.click(button);
+    fireEvent.click(button, { detail: 1 });
+    expectOpen(button, outline);
+  });
+
+  it('a keyboard click (detail 0) toggles the outline', () => {
+    const { button, outline } = renderRail();
+    act(() => button.focus());
+    expectOpen(button, outline);
+    fireEvent.click(button, { detail: 0 });
+    expectClosed(button, outline);
+    fireEvent.click(button, { detail: 0 });
+    expectOpen(button, outline);
+  });
+
+  it('an abandoned touch press (pointercancel) does not block keyboard focus opening', () => {
+    const { button, outline } = renderRail();
+    fireEvent.pointerDown(button, { pointerType: 'touch' });
+    fireEvent.pointerCancel(button, { pointerType: 'touch' });
+    const link = outline.querySelector('a') as HTMLElement;
+    act(() => link.focus());
     expectOpen(button, outline);
   });
 });

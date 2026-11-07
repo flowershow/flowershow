@@ -24,6 +24,7 @@ test.describe('ToC rail on wide screens', () => {
     await expect(rail).toBeVisible();
     await expect(page.locator('nav.toc')).toHaveCount(0);
     await expect(rail.locator('.toc-rail-tick')).toHaveCount(12);
+    await expect(page.locator('.toc-inline')).toHaveCount(1);
     await expect(page.locator('.toc-inline')).toBeHidden();
 
     const railBox = await box(rail);
@@ -106,6 +107,7 @@ test.describe('ToC rail on wide screens', () => {
     await page.goto(`${basePath}/docs/getting-started`);
     await expect(page.locator('nav.toc')).toBeVisible();
     await expect(page.locator('nav.toc-rail')).toHaveCount(0);
+    await expect(page.locator('.toc-inline')).toHaveCount(1);
     await expect(page.locator('.toc-inline')).toBeHidden();
   });
 });
@@ -116,6 +118,7 @@ test.describe('ToC rail between 1024px and 1280px', () => {
   test('rail shows; the inline block does not', async ({ page, basePath }) => {
     await page.goto(`${basePath}/toc-rail`);
     await expect(page.locator('nav.toc-rail')).toBeVisible();
+    await expect(page.locator('.toc-inline')).toHaveCount(1);
     await expect(page.locator('.toc-inline')).toBeHidden();
   });
 });

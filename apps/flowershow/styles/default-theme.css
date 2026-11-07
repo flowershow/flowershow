@@ -1475,6 +1475,8 @@
     padding: 0;
     overflow: visible; /* the outline overflows the rail to the left */
     max-height: none;
+    /* The sticky container traps the outline's z-index; lift it above page content */
+    z-index: 30;
   }
 
   .toc-rail {
@@ -1498,6 +1500,17 @@
     flex-direction: column;
     align-items: flex-end;
     gap: 8px;
+    /* Very long rails stop at the screen edge; the outline reaches every heading */
+    max-height: calc(100vh - var(--navbar-height) - 4rem);
+    overflow: hidden;
+
+    &[data-overflow="true"] {
+      mask-image: linear-gradient(
+        to bottom,
+        #000 calc(100% - 1.5rem),
+        transparent
+      );
+    }
   }
 
   .toc-rail-tick {
