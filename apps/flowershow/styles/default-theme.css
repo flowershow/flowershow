@@ -1064,13 +1064,14 @@
     }
 
     /* --- ToC rail: a narrow column of ticks from 1024px (the panel waits
-       for 1280px). The left padding mirrors the rail so the text stays
+       for 1280px). Without a sidebar, the left padding (10rem) matches the
+       right side (3rem rail + 4rem gap + 3rem padding) so the text stays
        centred. */
 
     @media (min-width: 1024px) {
       &.is-toc-rail.has-toc {
         grid-template-columns: minmax(0, 1fr) 3rem;
-        padding-left: 3rem;
+        padding-left: 10rem;
       }
       &.is-toc-rail.has-sidebar-and-toc {
         grid-template-columns: var(--width-sidebar, 16rem) minmax(0, 1fr) 3rem;

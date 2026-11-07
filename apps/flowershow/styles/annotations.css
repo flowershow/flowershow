@@ -212,9 +212,10 @@
   html.fs-comments-open .layout-inner.is-toc-rail.has-sidebar-and-toc {
     grid-template-columns: var(--width-sidebar, 16rem) minmax(0, 1fr);
   }
+  /* Back to the base gutter: below 1280px the panel overlays, not docks */
   html.fs-comments-open .layout-inner.is-toc-rail.has-toc {
     grid-template-columns: minmax(0, 1fr);
-    padding-left: 0;
+    padding-left: 3rem;
   }
 }
 
