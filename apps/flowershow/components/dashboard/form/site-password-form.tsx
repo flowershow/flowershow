@@ -51,7 +51,11 @@ export default function SitePasswordProtectionForm({
   //  - a valid replacement password is provided (even if mode didn't change)
   const hasPrivacyModeChanged =
     !!dbPrivacyMode && privacyMode !== dbPrivacyMode;
-  const canSave = !disabled && (hasPrivacyModeChanged || passwordIsValid);
+  // A Free site that still has a password (e.g. after a Premium lapse) may
+  // remove it; setting or changing a password stays Premium-only.
+  const canRemoveOnly = disabled && dbPrivacyMode === 'PASSWORD';
+  const canSave =
+    (!disabled || canRemoveOnly) && (hasPrivacyModeChanged || passwordIsValid);
 
   const setPasswordProtection = api.site.setPasswordProtection.useMutation({
     onSuccess: async () => {
@@ -69,9 +73,10 @@ export default function SitePasswordProtectionForm({
 
   const pending = isLoadingData || setPasswordProtection.isLoading;
   const inputDisabled = disabled || pending;
+  const switchDisabled = (disabled && !canRemoveOnly) || pending;
 
   function handleProtectionToggle(value: boolean) {
-    if (disabled) return;
+    if (disabled && !canRemoveOnly) return;
     setPrivacyMode(value ? 'PASSWORD' : 'PUBLIC');
   }
 
@@ -128,15 +133,15 @@ export default function SitePasswordProtectionForm({
 
         <div className="flex items-center gap-3">
           <Switch
-            disabled={inputDisabled}
+            disabled={switchDisabled}
             checked={isProtectionOn}
             onChange={handleProtectionToggle}
             className={clsx(
-              !inputDisabled && isProtectionOn
+              !switchDisabled && isProtectionOn
                 ? 'bg-indigo-600'
                 : 'bg-gray-200 dark:bg-zinc-700',
               'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2',
-              inputDisabled && 'pointer-events-none opacity-70',
+              switchDisabled && 'pointer-events-none opacity-70',
             )}
           >
             <span className="sr-only">Enable password protection</span>
@@ -184,7 +189,7 @@ export default function SitePasswordProtectionForm({
           <ExternalLinkIcon className="inline h-4" />
         </a>
 
-        {!disabled && (
+        {(!disabled || canRemoveOnly) && (
           <button
             type="submit"
             className={clsx(

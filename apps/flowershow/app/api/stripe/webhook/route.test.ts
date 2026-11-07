@@ -40,6 +40,10 @@ vi.mock('@/server/db', () => ({
   },
 }));
 
+vi.mock('@/lib/storage-limits', () => ({
+  getSiteStorageBytes: vi.fn(),
+}));
+
 vi.mock('@/lib/email', () => ({
   sendEmail: vi
     .fn()
@@ -67,6 +71,7 @@ vi.mock('@/lib/otel-logger', () => ({
 import { sendEmail } from '@/lib/email';
 import { log } from '@/lib/otel-logger';
 import { stripe } from '@/lib/stripe';
+import { getSiteStorageBytes } from '@/lib/storage-limits';
 import prisma from '@/server/db';
 import { POST } from './route';
 
@@ -120,6 +125,7 @@ beforeEach(() => {
   vi.mocked(prisma.site.update).mockResolvedValue({} as any);
   vi.mocked(prisma.user.update).mockResolvedValue({} as any);
   vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...USER } as any);
+  vi.mocked(getSiteStorageBytes).mockResolvedValue(0);
 });
 
 describe('stripe webhook — cancellation split', () => {
@@ -146,6 +152,65 @@ describe('stripe webhook — cancellation split', () => {
       },
     };
   }
+
+  describe('lapse safety', () => {
+    const canceled = () =>
+      subscriptionEvent({
+        status: 'canceled',
+        cancel_at_period_end: false,
+        cancellation_details: { reason: 'payment_failure' },
+      });
+
+    function dbSubWithSite(site: Record<string, unknown>) {
+      const base = makeDbSubscription();
+      return makeDbSubscription({ site: { ...base.site, ...site } }) as any;
+    }
+
+    it('keeps password protection when the subscription lapses and removes the custom domain', async () => {
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
+        dbSubWithSite({
+          privacyMode: 'PASSWORD',
+          customDomain: 'example.com',
+        }),
+      );
+
+      await fireEvent(canceled());
+
+      const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
+      expect(data.plan).toBe('FREE');
+      expect(data.customDomain).toBeNull();
+      expect(data).not.toHaveProperty('privacyMode');
+      expect(data).not.toHaveProperty('accessPasswordHash');
+      expect(data).not.toHaveProperty('tokenVersion');
+      expect(data).not.toHaveProperty('storageAllowanceBytes');
+    });
+
+    it('sets a storage allowance of ceil(total * 1.1) when over the Free cap', async () => {
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
+        dbSubWithSite({ storageAllowanceBytes: null }),
+      );
+      const total = 300 * 1024 * 1024 + 1;
+      vi.mocked(getSiteStorageBytes).mockResolvedValue(total);
+
+      await fireEvent(canceled());
+
+      const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
+      expect(data.storageAllowanceBytes).toBe(BigInt(Math.ceil(total * 1.1)));
+    });
+
+    it('never lowers an existing larger allowance', async () => {
+      const existing = BigInt(900 * 1024 * 1024);
+      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
+        dbSubWithSite({ storageAllowanceBytes: existing }),
+      );
+      vi.mocked(getSiteStorageBytes).mockResolvedValue(300 * 1024 * 1024);
+
+      await fireEvent(canceled());
+
+      const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
+      expect(data.storageAllowanceBytes).toBe(existing);
+    });
+  });
 
   it('voluntary cancellation sends the downgrade email, not the expiry email', async () => {
     vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
