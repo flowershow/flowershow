@@ -65,7 +65,7 @@ Why editors publish to GitHub-synced sites too: the owner can already CLI-publis
 
 ### Plan gating
 
-- **Which pricing plan:** collaborators are included in **Premium** (today's per-site plan), no extra charge and no seats. Organisations (phase 2) would be a separate subscription model, designed with the fs-plans work.
+- **Which pricing plan:** collaborators are included in every **paid** plan, no extra charge and no seats: Premium ($5 per site) today, and Pro ($15, up to 5 sites) and Unlimited ($50) once the account-level plans approved on 2026-11-07 ship (product bead `flwrprd-ox8`, implementation epic `flowershow-gyj`). The gate is `site.plan === PREMIUM` now and moves to the plan resolver from `flowershow-da3` when it lands; `canManageSite` only needs a boolean "is paid". Organisations (phase 2) fit naturally as an account that holds a Pro or Unlimited plan.
 - Inviting requires `site.plan === PREMIUM`. Free sites are owner-only. This makes "team collaboration" a true Premium feature.
 - **Limit: 20 editors per site** (constant `MAX_SITE_MEMBERS`), and at most 20 pending invites per site. No seat billing. Raise the constant on request. Member counts per site go to PostHog as the demand signal for orgs.
 - **If Premium lapses**, memberships stay but editors lose management access until the site is Premium again. Spelled out:
