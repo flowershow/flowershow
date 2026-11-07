@@ -122,7 +122,8 @@ The owner is never a `SiteMember` row. The anonymous sentinel user can never be 
 - The two remaining inline checks (`site.getById` where-clause; `site.user.id === auth.userId` in `/api/sites/[username]/[projectname]`) move to the helper. The unused `withSiteAuth` wrapper in `server/auth.ts` is deleted.
 - Verification is by tests, not a grep gate: the implementation plan lists every `canManageSite` and `isSiteOwner` call site with a router or route test asserting editor allow or deny.
 - List queries (`user.getSites`, `GET /api/sites`, MCP `listSites`) return owned sites plus sites where the user is a member, each with `role: 'owner' | 'editor'`. Bundle counts, rename uniqueness and `connectGitHub` stay owner-scoped by design.
-- Token model is unchanged: a CLI or PAT token acts as its user across every site that user can manage. Removing a member takes effect on their next request because every request re-checks membership. Already-issued presigned upload URLs stay valid until they expire (minutes), but completing a publish re-checks membership, so a removed editor cannot finish one.
+- Token model is unchanged: a CLI or PAT token acts as its user across every site that user can manage. Removing a member takes effect on their next authenticated request because every request re-checks membership. A publish already in flight can still complete: presigned upload URLs stay valid until they expire (minutes) and the finaliser workflow does not authenticate. Accepted for v1; the owner sees the run in publish history with the editor's name.
+- The owner-cookie handshake on the published site (`lib/site-owner-session.ts`) is edge-safe and loads the site before it knows the user, so it is reworked to read the cookie first and then check membership, and `/owner/me` re-checks membership on every call.
 
 ### Invites
 
@@ -142,10 +143,10 @@ The owner is never a `SiteMember` row. The anonymous sentinel user can never be 
 
 ### CLI, MCP and API
 
-- `GET /api/sites` returns owned plus shared sites, each with `role` and `owner.username`. Contract updated first (`packages/api-contract`).
+- `GET /api/sites` returns owned plus shared sites, each with `role` and `owner.username`. Shared sites whose Premium has lapsed are left out of REST and MCP lists (only the dashboard shows them, greyed). Contract updated first (`packages/api-contract`).
 - `GET /api/sites/{username}/{project}` returns extended data to anyone who `canManageSite`, so editors address a shared site as `owner/name`.
 - MCP: `listSites` includes shared sites with `role` and owner; all other tools already go through `assertCanManage`. MCP is in the v1 done-check.
-- CLI (`apps/cli`), its own bead in phase 1 but not blocking the dogfood (Life Itself publishes via GitHub sync and the web): `fl list` shows shared sites as `owner/name`; `fl publish` accepts `owner/name` or a stored `siteId`; a bare `name` resolves only under the caller's own sites, as today. New configs store `siteId` for every site so later publishes do not depend on names. Old CLIs keep today's behaviour (an editor using a bare name creates a site in their own account, as any user can today). The Obsidian plugin follows the same rule in its own repo (follow-up bead).
+- CLI (`apps/cli`), its own bead in phase 1 but not blocking the dogfood (Life Itself publishes via GitHub sync and the web): `fl list` shows shared sites as `owner/name`; `fl publish` accepts `owner/name` or a stored `siteId`; a bare `name` resolves only under the caller's own sites, as today. New configs store `siteId` for every site plus `siteName` as `owner/name` for shared sites, so later publishes do not depend on names, and an old CLI reading a shared link fails on the slash instead of creating a duplicate site. Old CLIs with a bare name keep today's behaviour. The Obsidian plugin follows the same rule in its own repo (follow-up bead).
 - No REST endpoints for member management in phase 1. Members are managed in the dashboard through tRPC (`siteMember.list`, `invite`, `revokeInvite`, `remove`, `leave`). An API can be added when an agent needs it.
 
 ### Emails
@@ -156,7 +157,8 @@ The owner is never a `SiteMember` row. The anonymous sentinel user can never be 
 
 - One additive Prisma migration. No data backfill. `prisma migrate deploy` runs in the Vercel build as today.
 - Ship behind the Premium gate only; no feature flag. Dogfood on a Life Itself site first, then announce in the changelog and restore a truthful "Team collaboration" line to the Premium feature list.
-- Docs page `content/flowershow-app/docs/collaborators.md`; update `CONTEXT.md` (Site definition, annotations moderation) and add an ADR for membership and roles.
+- Docs page `content/flowershow-app/docs/reference/collaborators.md`; update `CONTEXT.md` (Site definition, annotations moderation) and add ADR 0016 for membership and roles.
+- Implementation plan: [[2026-11-07-teams-phase1-site-collaborators-plan]] (16 tasks in four PRs: foundation, members UI, API and MCP, CLI; beads `flowershow-dbg.1` to `.5`).
 
 ### Phase 1.5 (soon after, same model)
 
