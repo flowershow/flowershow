@@ -63,7 +63,10 @@ export function CommentItem({
 export function CommentMeta({ annotation }: { annotation: Annotation }) {
   return (
     <p className="fs-annotations-meta">
-      {annotation.authorName || 'Anonymous'} ·{' '}
+      <span className="fs-annotations-author">
+        {annotation.authorName || 'Anonymous'}
+      </span>{' '}
+      ·{' '}
       <time
         dateTime={annotation.createdAt}
         title={formatDate(annotation.createdAt)}
