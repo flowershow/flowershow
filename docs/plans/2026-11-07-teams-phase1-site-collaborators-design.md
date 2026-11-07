@@ -1,6 +1,6 @@
 # Site collaborators (teams phase 1): design
 
-Status: v2 after critique (Claude builder check and Codex, 2026-11-07), awaiting Rufus's OK. Epic `flowershow-dbg`, GitHub #919. Inputs: [[2026-11-07-teams-codebase-recon]] and [[2026-11-07-teams-landscape-research]].
+Status: v2 after critique (Claude builder check and Codex, 2026-11-07). Rufus: "looks good" (2026-11-07); community feedback requested via [[2026-11-07-teams-options-for-community]] before build. Epic `flowershow-dbg`, GitHub #919. Inputs: [[2026-11-07-teams-codebase-recon]] and [[2026-11-07-teams-landscape-research]].
 
 ## Intent
 
@@ -65,6 +65,7 @@ Why editors publish to GitHub-synced sites too: the owner can already CLI-publis
 
 ### Plan gating
 
+- **Which pricing plan:** collaborators are included in **Premium** (today's per-site plan), no extra charge and no seats. Organisations (phase 2) would be a separate subscription model, designed with the fs-plans work.
 - Inviting requires `site.plan === PREMIUM`. Free sites are owner-only. This makes "team collaboration" a true Premium feature.
 - **Limit: 20 editors per site** (constant `MAX_SITE_MEMBERS`), and at most 20 pending invites per site. No seat billing. Raise the constant on request. Member counts per site go to PostHog as the demand signal for orgs.
 - **If Premium lapses**, memberships stay but editors lose management access until the site is Premium again. Spelled out:
@@ -171,7 +172,16 @@ The owner is never a `SiteMember` row. The anonymous sentinel user can never be 
 
 ### Phase 2 (organisations), decide later
 
-Trigger to revisit: several Premium customers asking for one bill across sites, or sites approaching the 20-editor limit. Then: `Organization`, `OrgMember`, org as site owner, org billing, optional GitHub-org link. Out of scope here.
+Trigger to revisit: several Premium customers asking for one bill across sites, or sites approaching the 20-editor limit. Out of scope here, but phase 1 is built so it evolves without a rewrite:
+
+- `Organization { id, slug, name }` and `OrgMember { orgId, userId, role: OWNER | ADMIN | MEMBER }` are new tables. `Site` gains an optional `orgId`; `Site.userId` stays as the human owner of record for personal sites and becomes the org's billing contact for org sites.
+- `siteRole()` is the only place that changes: it also returns `editor` (or `owner` for org owners and admins) when the site's `orgId` has the user as a member. Call sites, lists and the CLI already work in terms of `role`, so they need no change. `siteAuthzSelect` grows one join.
+- Per-site invites keep working on org sites; they are how an org brings in an outside contributor for one site.
+- Billing: an org subscription is a different Stripe model (one customer, one subscription covering N sites or seats) and is where the fs-plans work (Unlimited plan, limits model) plugs in. Per-site Premium stays for personal sites.
+- Namespace: org sites get `{project}-{orgslug}` subdomains through the existing `buildSubdomain` rule; existing subdomains stay frozen as today (ADR-0011).
+- GitHub-org link is optional on top: an installation on a GitHub org can be attached to the Flowershow org, which also closes #1329 for org members.
+
+Community-facing summary of the options: [[2026-11-07-teams-options-for-community]].
 
 ## Risks and how this design handles them
 
