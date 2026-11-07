@@ -51,13 +51,55 @@ export const TOC_HEADING_SELECTOR = ['h2', 'h3', 'h4', 'h5', 'h6']
   .map((h) => `#mdxpage ${h}:not([data-toc-ignore])`)
   .join(', ');
 
+/** Flat, depth-first list of top-level sections (depth 0) and their children (depth 1). */
+export function flattenToc(
+  sections: TocSection[],
+  maxDepth = 2,
+): Array<{ id: string; title: string; depth: 0 | 1 }> {
+  const out: Array<{ id: string; title: string; depth: 0 | 1 }> = [];
+  const walk = (list: TocSection[], depth: number) => {
+    for (const s of list) {
+      out.push({ id: s.id, title: s.title, depth: depth as 0 | 1 });
+      if (depth + 1 < maxDepth && s.children?.length) {
+        walk(s.children, depth + 1);
+      }
+    }
+  };
+  walk(sections, 0);
+  return out;
+}
+
 export default function TableOfContents({
   className = '',
 }: {
   className?: string;
 }) {
-  const [tableOfContents, setTableOfContents] = useState<TocSection[]>([]);
+  const tableOfContents = useTocHeadings();
   const currentSection = useTableOfContents(tableOfContents);
+
+  if (tableOfContents.length === 0) {
+    return null;
+  }
+
+  return (
+    <nav className="toc">
+      <h3 className="toc-title">On this page</h3>
+      <ol className="toc-list">
+        {tableOfContents.map((section) => (
+          <TocItems
+            key={section.id}
+            section={section}
+            currentSection={currentSection}
+          />
+        ))}
+      </ol>
+    </nav>
+  );
+}
+
+/** Collects the page's headings into a tree; re-runs on navigation and DOM changes under #mdxpage. */
+export function useTocHeadings(): TocSection[] {
+  const [tableOfContents, setTableOfContents] = useState<TocSection[]>([]);
   const currentPath = usePathname();
 
   useEffect(() => {
@@ -88,24 +130,7 @@ export default function TableOfContents({
     }
   }, [currentPath]);
 
-  if (tableOfContents.length === 0) {
-    return null;
-  }
-
-  return (
-    <nav className="toc">
-      <h3 className="toc-title">On this page</h3>
-      <ol className="toc-list">
-        {tableOfContents.map((section) => (
-          <TocItems
-            key={section.id}
-            section={section}
-            currentSection={currentSection}
-          />
-        ))}
-      </ol>
-    </nav>
-  );
+  return tableOfContents;
 }
 
 export function collectHeadings(nodes: NodeListOf<HTMLHeadingElement>) {
@@ -184,7 +209,7 @@ export const useTableOfContents = (tableOfContents) => {
         if (!el) return null;
 
         const style = window.getComputedStyle(el);
-        const scrollMt = parseFloat(style.scrollMarginTop);
+        const scrollMt = parseFloat(style.scrollMarginTop) || 0;
 
         const top = window.scrollY + el.getBoundingClientRect().top - scrollMt;
         return { id, top };
@@ -194,22 +219,34 @@ export const useTableOfContents = (tableOfContents) => {
 
   useEffect(() => {
     if (tableOfContents.length === 0) return;
-    const headings = getHeadings(tableOfContents);
+    let headings = getHeadings(tableOfContents);
     function onScroll() {
       const top = window.scrollY + 4.5;
-      let current = headings[0].id;
+      let current = headings[0]?.id;
       headings.forEach((heading) => {
         if (top >= heading.top) {
           current = heading.id;
         }
-        return current;
       });
       setCurrentSection(current);
     }
+    // Heading positions go stale when images load or the viewport changes
+    function measure() {
+      headings = getHeadings(tableOfContents);
+      onScroll();
+    }
     window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', measure);
+    const resizeObserver =
+      typeof ResizeObserver !== 'undefined'
+        ? new ResizeObserver(measure)
+        : null;
+    resizeObserver?.observe(document.body);
     onScroll();
     return () => {
       window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', measure);
+      resizeObserver?.disconnect();
     };
   }, [getHeadings, tableOfContents]);
 
