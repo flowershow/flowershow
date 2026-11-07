@@ -26,13 +26,7 @@ import {
   validatePublishFiles,
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
-import {
-  checkStorageLimit,
-  getFreePoolBytes,
-  getSiteStorageBytes,
-  storageLimitResponse,
-} from '@/lib/storage-limits';
-import { getEntitlements } from '@/lib/entitlements';
+import { enforceStorageLimit, getSiteStorageBytes } from '@/lib/storage-limits';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
 
@@ -128,24 +122,12 @@ export async function POST(
       currentSiteBytes -
       existingBlobs.reduce((n, b) => n + b.size, 0) +
       files.reduce((n, f) => n + f.size, 0);
-    const usesFreePool =
-      getEntitlements(site).plan === 'FREE' &&
-      site.storageAllowanceBytes === null;
-    const violation = checkStorageLimit({
+    const limited = await enforceStorageLimit(
       site,
       currentSiteBytes,
       projectedSiteBytes,
-      otherFreeSitesBytes: usesFreePool
-        ? await getFreePoolBytes(site.userId, site.id)
-        : 0,
-    });
-    if (violation) {
-      return storageLimitResponse(violation, {
-        id: site.id,
-        plan: site.plan,
-        name: site.projectName,
-      });
-    }
+    );
+    if (limited) return limited;
 
     // Create Publish record
     const publish = await prisma.publish.create({

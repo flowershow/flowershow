@@ -1,4 +1,4 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/server/db', () => ({ default: { $queryRaw: vi.fn() } }));
 vi.mock('@/env.mjs', () => ({
@@ -6,7 +6,12 @@ vi.mock('@/env.mjs', () => ({
 }));
 
 import { GB, MB } from './entitlements';
-import { checkStorageLimit, storageLimitResponse } from './storage-limits';
+import prisma from '@/server/db';
+import {
+  checkStorageLimit,
+  enforceStorageLimit,
+  storageLimitResponse,
+} from './storage-limits';
 
 const free = (storageAllowanceBytes: bigint | null = null) => ({
   id: 's1',
@@ -148,5 +153,51 @@ describe('storageLimitResponse', () => {
     expect(message).toContain('10 GB limit');
     expect(message).toContain('mailto:support@flowershow.app');
     expect(message).toContain('this site');
+  });
+});
+
+describe('enforceStorageLimit', () => {
+  const queryRaw = prisma.$queryRaw as unknown as ReturnType<typeof vi.fn>;
+  const site = (over: Record<string, unknown> = {}) => ({
+    id: 's1',
+    userId: 'owner',
+    plan: 'FREE' as const,
+    storageAllowanceBytes: null,
+    projectName: 'notes',
+    ...over,
+  });
+
+  beforeEach(() => {
+    queryRaw.mockReset();
+    queryRaw.mockResolvedValue([{ total: BigInt(0) }]);
+  });
+
+  it('queries the Free pool for a Free site without allowance', async () => {
+    expect(await enforceStorageLimit(site(), 10 * MB, 20 * MB)).toBeNull();
+    expect(queryRaw).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not query the pool for Premium or grandfathered sites', async () => {
+    await enforceStorageLimit(site({ plan: 'PREMIUM' }), 10 * MB, 20 * MB);
+    await enforceStorageLimit(
+      site({ storageAllowanceBytes: BigInt(1320 * MB) }),
+      10 * MB,
+      20 * MB,
+    );
+    expect(queryRaw).not.toHaveBeenCalled();
+  });
+
+  it('returns a 413 naming the site when over the site limit', async () => {
+    const res = await enforceStorageLimit(site(), 50 * MB, 250 * MB);
+    expect(res?.status).toBe(413);
+    const body = await res?.json();
+    expect(body.error).toBe('storage_limit_exceeded');
+    expect(body.message).toContain('notes');
+  });
+
+  it('returns a 413 when the shared pool would overflow', async () => {
+    queryRaw.mockResolvedValue([{ total: BigInt(950 * MB) }]);
+    const res = await enforceStorageLimit(site(), 10 * MB, 100 * MB);
+    expect(res?.status).toBe(413);
   });
 });

@@ -18,6 +18,7 @@ vi.mock('@/server/auth', () => ({
 
 vi.mock('@/server/db', () => ({
   default: {
+    $queryRaw: vi.fn(),
     site: { findUnique: vi.fn() },
     blob: { findMany: vi.fn() },
     publish: { create: vi.fn() },
@@ -36,7 +37,6 @@ vi.mock('@/lib/content-store', async (importOriginal) => ({
 vi.mock('@/lib/storage-limits', async (importOriginal) => ({
   ...(await importOriginal<typeof import('@/lib/storage-limits')>()),
   getSiteStorageBytes: vi.fn().mockResolvedValue(0),
-  getFreePoolBytes: vi.fn().mockResolvedValue(0),
 }));
 
 vi.mock('@/lib/cloudflare-worker', () => ({
@@ -105,6 +105,7 @@ describe('POST /api/sites/id/[siteId]/files', () => {
     vi.clearAllMocks();
     vi.mocked(prisma.site.findUnique).mockResolvedValue(ownedSite as any);
     vi.mocked(prisma.blob.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ total: BigInt(0) }]);
     vi.mocked(prisma.publish.create).mockResolvedValue({
       id: PUBLISH_ID,
     } as any);

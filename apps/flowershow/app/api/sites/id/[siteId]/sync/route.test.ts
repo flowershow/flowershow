@@ -11,6 +11,7 @@ vi.mock('@/lib/cli-auth', async (importOriginal) => ({
 
 vi.mock('@/server/db', () => ({
   default: {
+    $queryRaw: vi.fn(),
     site: { findUnique: vi.fn() },
     blob: { findMany: vi.fn() },
     publish: { create: vi.fn(), findMany: vi.fn() },
@@ -28,12 +29,6 @@ vi.mock('@/lib/content-store', async (importOriginal) => ({
   generatePresignedUploadUrl: vi
     .fn()
     .mockResolvedValue('https://s3.example.com/presigned'),
-}));
-
-vi.mock('@/lib/storage-limits', async (importOriginal) => ({
-  ...(await importOriginal<typeof import('@/lib/storage-limits')>()),
-  getSiteStorageBytes: vi.fn().mockResolvedValue(0),
-  getFreePoolBytes: vi.fn().mockResolvedValue(0),
 }));
 
 vi.mock('@/lib/cloudflare-worker', () => ({
@@ -65,7 +60,6 @@ import { validateAccessToken } from '@/lib/cli-auth';
 import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
 import { deleteFile, generatePresignedUploadUrl } from '@/lib/content-store';
 import { markMcpInternal } from '@/lib/mcp/internal-request';
-import { getFreePoolBytes } from '@/lib/storage-limits';
 import prisma from '@/server/db';
 import { POST } from './route';
 
@@ -103,6 +97,7 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
     vi.clearAllMocks();
     vi.mocked(prisma.site.findUnique).mockResolvedValue(ownedSite as any);
     vi.mocked(prisma.blob.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ total: BigInt(0) }]);
     vi.mocked(prisma.publish.create).mockResolvedValue({
       id: PUBLISH_ID,
     } as any);
@@ -1219,7 +1214,7 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       );
 
       expect(res.status).toBe(200);
-      expect(getFreePoolBytes).not.toHaveBeenCalled();
+      expect(prisma.$queryRaw).not.toHaveBeenCalled();
     });
 
     it('returns 401 for a tampered claim token', async () => {
@@ -1321,7 +1316,9 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
           updatedAt: new Date(),
         },
       ] as any);
-      vi.mocked(getFreePoolBytes).mockResolvedValue(900 * MBYTES);
+      vi.mocked(prisma.$queryRaw).mockResolvedValue([
+        { total: BigInt(900 * MBYTES) },
+      ]);
 
       const res = await POST(
         makeRequest({
@@ -1332,14 +1329,16 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       );
 
       expect(res.status).toBe(200);
-      expect(getFreePoolBytes).not.toHaveBeenCalled();
+      expect(prisma.$queryRaw).not.toHaveBeenCalled();
     });
 
     it('keys the free pool on the site owner', async () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValue({
         ...freeSite,
       } as any);
-      vi.mocked(getFreePoolBytes).mockResolvedValue(900 * MBYTES);
+      vi.mocked(prisma.$queryRaw).mockResolvedValue([
+        { total: BigInt(900 * MBYTES) },
+      ]);
 
       const res = await POST(
         makeRequest({
@@ -1352,7 +1351,7 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
         makeParams(SITE_ID),
       );
 
-      expect(getFreePoolBytes).toHaveBeenCalledWith(USER_ID, SITE_ID);
+      expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
       expect(res.status).toBe(413);
     });
 

@@ -123,3 +123,39 @@ export function storageLimitResponse(
     { status: 413 },
   );
 }
+
+/**
+ * Check a publish against the site's storage limits. Returns the 413 response
+ * when it would break a limit, otherwise null. The shared Free pool (summed
+ * over the site owner's other Free sites) is only queried for Free sites
+ * without a grandfathered allowance.
+ */
+export async function enforceStorageLimit(
+  site: {
+    id: string;
+    userId: string;
+    plan: Plan | null;
+    storageAllowanceBytes: bigint | null;
+    projectName?: string;
+  },
+  currentSiteBytes: number,
+  projectedSiteBytes: number,
+): Promise<NextResponse | null> {
+  const usesFreePool =
+    getEntitlements(site).limits.freePoolHardBytes !== null &&
+    site.storageAllowanceBytes === null;
+  const violation = checkStorageLimit({
+    site,
+    currentSiteBytes,
+    projectedSiteBytes,
+    otherFreeSitesBytes: usesFreePool
+      ? await getFreePoolBytes(site.userId, site.id)
+      : 0,
+  });
+  if (!violation) return null;
+  return storageLimitResponse(violation, {
+    id: site.id,
+    plan: site.plan,
+    name: site.projectName,
+  });
+}

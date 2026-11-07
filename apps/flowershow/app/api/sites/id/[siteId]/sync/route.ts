@@ -27,12 +27,7 @@ import {
 import PostHogClient from '@/lib/server-posthog';
 import { authorizeSiteRequest } from '@/lib/site-auth';
 import { loadServerFileState } from '@/lib/site-file-state';
-import {
-  checkStorageLimit,
-  getFreePoolBytes,
-  storageLimitResponse,
-} from '@/lib/storage-limits';
-import { getEntitlements } from '@/lib/entitlements';
+import { enforceStorageLimit } from '@/lib/storage-limits';
 import prisma from '@/server/db';
 
 /**
@@ -211,26 +206,12 @@ export async function POST(
         .reduce((n, b) => n + b.size, 0);
       const projectedSiteBytes =
         keptBytes + files.reduce((n, f) => n + f.size, 0);
-      // The shared Free pool only applies to Free sites without an allowance,
-      // and is summed over the site owner's sites, not the caller's.
-      const usesFreePool =
-        getEntitlements(site).plan === 'FREE' &&
-        site.storageAllowanceBytes === null;
-      const violation = checkStorageLimit({
+      const limited = await enforceStorageLimit(
         site,
         currentSiteBytes,
         projectedSiteBytes,
-        otherFreeSitesBytes: usesFreePool
-          ? await getFreePoolBytes(site.userId, site.id)
-          : 0,
-      });
-      if (violation) {
-        return storageLimitResponse(violation, {
-          id: site.id,
-          plan: site.plan,
-          name: site.projectName,
-        });
-      }
+      );
+      if (limited) return limited;
     }
 
     let uploadUrls: PresignedUrl[] = [];
