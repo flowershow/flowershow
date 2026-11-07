@@ -1,4 +1,5 @@
 import { canManageSite } from '@/lib/site-authz';
+import type { Plan } from '@prisma/client';
 import { type NextRequest, NextResponse } from 'next/server';
 import {
   ANONYMOUS_USER_ID,
@@ -8,8 +9,17 @@ import {
 import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 
+/** Site fields the storage-limit check needs. `userId` is the site owner. */
+export type AuthorizedSite = {
+  id: string;
+  userId: string;
+  plan: Plan | null;
+  storageAllowanceBytes: bigint | null;
+  projectName: string;
+};
+
 export type SiteAuthResult =
-  | { ok: true; kind: 'user'; userId: string }
+  | { ok: true; kind: 'user'; userId: string; site: AuthorizedSite }
   | { ok: true; kind: 'anon'; siteId: string }
   | { ok: false; response: NextResponse };
 
@@ -87,10 +97,16 @@ export async function authorizeSiteRequest(
   if (!auth?.userId) return deny(401, 'unauthorized', 'Not authenticated');
   const site = await prisma.site.findUnique({
     where: { id: siteId },
-    select: { id: true, userId: true },
+    select: {
+      id: true,
+      userId: true,
+      plan: true,
+      storageAllowanceBytes: true,
+      projectName: true,
+    },
   });
   if (!site) return deny(404, 'not_found', 'Site not found');
   if (!canManageSite(auth.userId, site))
     return deny(403, 'forbidden', 'You do not have access to this site');
-  return { ok: true, kind: 'user', userId: auth.userId };
+  return { ok: true, kind: 'user', userId: auth.userId, site };
 }

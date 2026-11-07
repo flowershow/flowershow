@@ -30,6 +30,12 @@ vi.mock('@/lib/content-store', async (importOriginal) => ({
     .mockResolvedValue('https://s3.example.com/presigned'),
 }));
 
+vi.mock('@/lib/storage-limits', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/storage-limits')>()),
+  getSiteStorageBytes: vi.fn().mockResolvedValue(0),
+  getFreePoolBytes: vi.fn().mockResolvedValue(0),
+}));
+
 vi.mock('@/lib/cloudflare-worker', () => ({
   startPublishFinalizerWorkflow: vi.fn().mockResolvedValue(undefined),
   terminatePublishFinalizerWorkflows: vi.fn().mockResolvedValue(undefined),
@@ -59,6 +65,7 @@ import { validateAccessToken } from '@/lib/cli-auth';
 import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
 import { deleteFile, generatePresignedUploadUrl } from '@/lib/content-store';
 import { markMcpInternal } from '@/lib/mcp/internal-request';
+import { getFreePoolBytes } from '@/lib/storage-limits';
 import prisma from '@/server/db';
 import { POST } from './route';
 
@@ -1203,6 +1210,18 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       expect(res.status).toBe(410);
     });
 
+    it('skips the storage check for anonymous sites', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(anonSite as any);
+
+      const res = await POST(
+        makeRequest({ files: htmlFiles(1) }, { headers: claimHeaders() }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      expect(getFreePoolBytes).not.toHaveBeenCalled();
+    });
+
     it('returns 401 for a tampered claim token', async () => {
       const res = await POST(
         makeRequest(
@@ -1213,6 +1232,142 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       );
 
       expect(res.status).toBe(401);
+    });
+  });
+
+  describe('storage limits', () => {
+    const MBYTES = 1_048_576;
+    const freeSite = {
+      id: SITE_ID,
+      userId: USER_ID,
+      plan: 'FREE',
+      storageAllowanceBytes: null,
+      projectName: 'notes',
+    };
+
+    const THREE = [
+      { path: 'a.bin', size: 84 * MBYTES, sha: 'a' },
+      { path: 'b.bin', size: 84 * MBYTES, sha: 'b' },
+      { path: 'c.bin', size: 84 * MBYTES, sha: 'c' },
+    ];
+
+    it('returns 413 on a Free site when a replace totals 250 MB', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(freeSite as any);
+
+      const res = await POST(
+        makeRequest({
+          files: [
+            { path: 'a.bin', size: 84 * MBYTES, sha: 'a' },
+            { path: 'b.bin', size: 84 * MBYTES, sha: 'b' },
+            { path: 'c.bin', size: 84 * MBYTES, sha: 'c' },
+          ],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(413);
+      expect((await res.json()).error).toBe('storage_limit_exceeded');
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+
+    it('also rejects dry runs', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(freeSite as any);
+
+      const res = await POST(
+        makeRequest({ files: THREE }, { searchParams: 'dryRun=true' }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(413);
+    });
+
+    it('allows a merge that shrinks a Free site near the limit overall', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(freeSite as any);
+      vi.mocked(prisma.blob.findMany).mockResolvedValue([
+        { path: 'big.bin', sha: 'o', size: 20 * MBYTES, updatedAt: new Date() },
+        {
+          path: 'rest.bin',
+          sha: 'r',
+          size: 170 * MBYTES,
+          updatedAt: new Date(),
+        },
+      ] as any);
+
+      const res = await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [
+            { path: 'big.bin', size: 5 * MBYTES, sha: 'n' },
+            { path: 'new.bin', size: 10 * MBYTES, sha: 'x' },
+          ],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+    });
+
+    it('allows a small edit on a grandfathered Free site over the normal limit', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        ...freeSite,
+        storageAllowanceBytes: BigInt(1320 * MBYTES),
+      } as any);
+      vi.mocked(prisma.blob.findMany).mockResolvedValue([
+        { path: 'note.md', sha: 'o', size: 1000, updatedAt: new Date() },
+        {
+          path: 'rest.bin',
+          sha: 'r',
+          size: 1200 * MBYTES,
+          updatedAt: new Date(),
+        },
+      ] as any);
+      vi.mocked(getFreePoolBytes).mockResolvedValue(900 * MBYTES);
+
+      const res = await POST(
+        makeRequest({
+          mode: 'merge',
+          files: [{ path: 'note.md', size: 3048, sha: 'n' }],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      expect(getFreePoolBytes).not.toHaveBeenCalled();
+    });
+
+    it('keys the free pool on the site owner', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        ...freeSite,
+      } as any);
+      vi.mocked(getFreePoolBytes).mockResolvedValue(900 * MBYTES);
+
+      const res = await POST(
+        makeRequest({
+          files: [0, 1, 2].map((i) => ({
+            path: `f${i}.bin`,
+            size: 50 * MBYTES,
+            sha: `s${i}`,
+          })),
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(getFreePoolBytes).toHaveBeenCalledWith(USER_ID, SITE_ID);
+      expect(res.status).toBe(413);
+    });
+
+    it('returns 413 with the limit and upgrade URL for an MCP caller', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(freeSite as any);
+
+      const res = await POST(
+        markMcpInternal(makeRequest({ files: THREE }), { userId: USER_ID }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(413);
+      const body = await res.json();
+      expect(body.message).toContain('limit');
+      expect(body.message).toContain(body.upgradeUrl);
     });
   });
 });

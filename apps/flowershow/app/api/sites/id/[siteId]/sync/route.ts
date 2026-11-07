@@ -27,6 +27,12 @@ import {
 import PostHogClient from '@/lib/server-posthog';
 import { authorizeSiteRequest } from '@/lib/site-auth';
 import { loadServerFileState } from '@/lib/site-file-state';
+import {
+  checkStorageLimit,
+  getFreePoolBytes,
+  storageLimitResponse,
+} from '@/lib/storage-limits';
+import { getEntitlements } from '@/lib/entitlements';
 import prisma from '@/server/db';
 
 /**
@@ -190,6 +196,40 @@ export async function POST(
           ...files,
         ]);
         if (siteError) return siteError;
+      }
+    }
+
+    // Storage limits (signed-in publishes only; anonymous sites have their own
+    // caps above). Runs for dry runs too, and before any Publish row or
+    // presigned URL exists. Merges that don't grow the site always pass.
+    if (access.kind === 'user') {
+      const { site } = access;
+      const deleting = new Set(toDelete);
+      const currentSiteBytes = existingBlobs.reduce((n, b) => n + b.size, 0);
+      const keptBytes = existingBlobs
+        .filter((b) => !deleting.has(b.path) && !localFileMap.has(b.path))
+        .reduce((n, b) => n + b.size, 0);
+      const projectedSiteBytes =
+        keptBytes + files.reduce((n, f) => n + f.size, 0);
+      // The shared Free pool only applies to Free sites without an allowance,
+      // and is summed over the site owner's sites, not the caller's.
+      const usesFreePool =
+        getEntitlements(site).plan === 'FREE' &&
+        site.storageAllowanceBytes === null;
+      const violation = checkStorageLimit({
+        site,
+        currentSiteBytes,
+        projectedSiteBytes,
+        otherFreeSitesBytes: usesFreePool
+          ? await getFreePoolBytes(site.userId, site.id)
+          : 0,
+      });
+      if (violation) {
+        return storageLimitResponse(violation, {
+          id: site.id,
+          plan: site.plan,
+          name: site.projectName,
+        });
       }
     }
 

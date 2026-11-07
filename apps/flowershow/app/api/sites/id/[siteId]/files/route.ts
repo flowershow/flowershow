@@ -26,6 +26,13 @@ import {
   validatePublishFiles,
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
+import {
+  checkStorageLimit,
+  getFreePoolBytes,
+  getSiteStorageBytes,
+  storageLimitResponse,
+} from '@/lib/storage-limits';
+import { getEntitlements } from '@/lib/entitlements';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
 
@@ -61,7 +68,13 @@ export async function POST(
 
     const site = await prisma.site.findUnique({
       where: { id: siteId },
-      select: { id: true, userId: true },
+      select: {
+        id: true,
+        userId: true,
+        plan: true,
+        storageAllowanceBytes: true,
+        projectName: true,
+      },
     });
 
     if (!site) {
@@ -103,10 +116,36 @@ export async function POST(
     // Fetch existing blobs to determine changeType (added vs updated)
     const existingBlobs = await prisma.blob.findMany({
       where: { siteId, path: { in: files.map((f) => f.path) } },
-      select: { path: true, sha: true },
+      select: { path: true, sha: true, size: true },
     });
 
     const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
+
+    // Storage limits. Only sizes and limits are reported back, never other
+    // sites' contents; the Free pool is summed over the site owner's sites.
+    const currentSiteBytes = await getSiteStorageBytes(siteId);
+    const projectedSiteBytes =
+      currentSiteBytes -
+      existingBlobs.reduce((n, b) => n + b.size, 0) +
+      files.reduce((n, f) => n + f.size, 0);
+    const usesFreePool =
+      getEntitlements(site).plan === 'FREE' &&
+      site.storageAllowanceBytes === null;
+    const violation = checkStorageLimit({
+      site,
+      currentSiteBytes,
+      projectedSiteBytes,
+      otherFreeSitesBytes: usesFreePool
+        ? await getFreePoolBytes(site.userId, site.id)
+        : 0,
+    });
+    if (violation) {
+      return storageLimitResponse(violation, {
+        id: site.id,
+        plan: site.plan,
+        name: site.projectName,
+      });
+    }
 
     // Create Publish record
     const publish = await prisma.publish.create({

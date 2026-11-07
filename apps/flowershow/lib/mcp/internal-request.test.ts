@@ -63,13 +63,14 @@ describe('in-process MCP marker', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.response.status).toBe(403);
 
-    findSite.mockResolvedValue({ id: 's1', userId: 'u1' });
+    const own = { id: 's1', userId: 'u1' };
+    findSite.mockResolvedValue(own);
     expect(
       await authorizeSiteRequest(
         markMcpInternal(req(), { userId: 'u1' }),
         's1',
       ),
-    ).toEqual({ ok: true, kind: 'user', userId: 'u1' });
+    ).toEqual({ ok: true, kind: 'user', userId: 'u1', site: own });
   });
 
   it('cannot be set from the network (headers, or a header named like it)', async () => {

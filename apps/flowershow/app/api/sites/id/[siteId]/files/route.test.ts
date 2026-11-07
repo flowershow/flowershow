@@ -33,6 +33,12 @@ vi.mock('@/lib/content-store', async (importOriginal) => ({
     .mockResolvedValue('https://s3.example.com/presigned'),
 }));
 
+vi.mock('@/lib/storage-limits', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/storage-limits')>()),
+  getSiteStorageBytes: vi.fn().mockResolvedValue(0),
+  getFreePoolBytes: vi.fn().mockResolvedValue(0),
+}));
+
 vi.mock('@/lib/cloudflare-worker', () => ({
   startPublishFinalizerWorkflow: vi.fn().mockResolvedValue(undefined),
 }));
@@ -56,6 +62,7 @@ import { validateAccessToken } from '@/lib/cli-auth';
 import { getServerSession } from 'next-auth';
 import { deleteFile } from '@/lib/content-store';
 import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
+import { getSiteStorageBytes } from '@/lib/storage-limits';
 import prisma from '@/server/db';
 
 const SITE_ID = 'site-1';
@@ -322,6 +329,58 @@ describe('POST /api/sites/id/[siteId]/files', () => {
       await POST(legacyReq, makeParams(SITE_ID));
 
       expect(prisma.publishFile.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('storage limits', () => {
+    const GBYTES = 1_073_741_824;
+    const MBYTES = 1_048_576;
+
+    it('returns 413 when a Premium site would reach 10.5 GB', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        ...ownedSite,
+        plan: 'PREMIUM',
+        storageAllowanceBytes: null,
+        projectName: 'big',
+      } as any);
+      vi.mocked(getSiteStorageBytes).mockResolvedValue(10 * GBYTES);
+
+      const res = await POST(
+        makePostRequest({
+          files: [0, 1, 2, 3, 4].map((i) => ({
+            path: `f${i}.bin`,
+            size: 100 * MBYTES,
+            sha: `s${i}`,
+          })),
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(413);
+      expect((await res.json()).error).toBe('storage_limit_exceeded');
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+
+    it('counts the size of replaced files only once', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        ...ownedSite,
+        plan: 'FREE',
+        storageAllowanceBytes: null,
+        projectName: 'notes',
+      } as any);
+      vi.mocked(getSiteStorageBytes).mockResolvedValue(190 * MBYTES);
+      vi.mocked(prisma.blob.findMany).mockResolvedValue([
+        { path: 'a.bin', sha: 'o', size: 20 * MBYTES },
+      ] as any);
+
+      const res = await POST(
+        makePostRequest({
+          files: [{ path: 'a.bin', size: 25 * MBYTES, sha: 'n' }],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
     });
   });
 });

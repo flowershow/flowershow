@@ -430,6 +430,32 @@ describe('publish (signed in)', () => {
     },
   );
 
+  it('passes the server message through for a user-mode 429', async () => {
+    deps = makeDeps({
+      createUserSite: vi
+        .fn()
+        .mockRejectedValue(
+          new ApiError(429, 'site_limit', 'You have reached the site limit'),
+        ),
+    });
+    await expect(publish({ files: [html] }, USER, deps)).rejects.toThrow(
+      /reached the site limit/,
+    );
+  });
+
+  it('passes the server storage message through for a user-mode 413', async () => {
+    deps = makeDeps({
+      sync: vi
+        .fn()
+        .mockRejectedValue(
+          new ApiError(413, 'storage_limit_exceeded', 'over the 200 MB limit'),
+        ),
+    });
+    await expect(
+      publish({ files: [html], siteId: 'site-u' }, USER, deps),
+    ).rejects.toThrow(/over the 200 MB limit/);
+  });
+
   it('points to claim-site for an anonymous site given with its claimToken', async () => {
     deps = makeDeps({
       sync: vi.fn().mockRejectedValue(new ApiError(403, 'forbidden', 'x')),
