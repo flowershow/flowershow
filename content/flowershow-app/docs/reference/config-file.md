@@ -214,6 +214,19 @@ Show or hide the in-page table of contents. [[table-of-contents|Learn more →]]
 
 ---
 
+### `toc.style`
+
+**Type:** `"panel" | "rail"`  
+**Default:** `"panel"`
+
+Choose how the table of contents looks. `rail` shows a column of short ticks in the right-hand column that opens an outline on hover. Can also be set per page in frontmatter. [[table-of-contents|Learn more →]]
+
+```json
+"toc": { "style": "rail" }
+```
+
+---
+
 ### `showBacklinks`
 
 **Type:** `boolean`  

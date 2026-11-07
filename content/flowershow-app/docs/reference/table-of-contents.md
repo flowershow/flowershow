@@ -22,6 +22,46 @@ showToc: false
 Page content
 ```
 
+## Choose the rail style
+
+The table of contents has two styles:
+
+- `panel` (default): the classic contents panel in the right-hand column.
+- `rail`: a column of short ticks in the right-hand column, one for each `h2` and `h3` heading.
+
+On the rail, the current section's tick is longer and in the accent colour. Ticks above it are darker. Hover over the rail, or tab to it with the keyboard, to open the outline. It opens to the left. Click a title to jump to that section.
+
+The rail shows from 1024px wide, on pages with 3 or more `h2` and `h3` headings.
+
+The rail is opt-in for now. It may become the default later. It is not in the dashboard settings yet, so set it in `config.json` or in page frontmatter.
+
+In `config.json`:
+
+```json
+{
+  "toc": {
+    "style": "rail"
+  }
+}
+```
+
+Or for one page, in frontmatter:
+
+```md
+---
+toc:
+  style: rail
+---
+
+Page content
+```
+
+`showToc: false` still turns the table of contents off completely, whatever the style.
+
+## Contents on narrow screens
+
+On narrower screens a closed **Contents** block appears under the page title, for both styles. Tap it to open the list of headings. The rail switches to this block below 1024px wide, and the classic panel below 1280px wide.
+
 ## Using config.json
 
 If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
@@ -33,3 +73,4 @@ If you want to version-control your configuration, or have your editor's AI agen
 ```
 
 - `showToc`: Set to `false` to disable the table of contents globally. Defaults to `true`.
+- `toc.style`: `"panel"` (default) or `"rail"`. See [Choose the rail style](#choose-the-rail-style).
