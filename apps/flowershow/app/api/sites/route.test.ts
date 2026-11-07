@@ -1,0 +1,123 @@
+import { NextRequest } from 'next/server';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/env.mjs', () => ({
+  env: { NEXT_PUBLIC_HOME_DOMAIN: 'flowershow.app' },
+}));
+vi.mock('@/lib/cli-auth', () => ({
+  checkCliVersion: vi.fn(() => null),
+  getClientInfo: vi.fn(() => ({ client_type: 'cli', client_version: '1' })),
+  validateAccessToken: vi.fn(),
+}));
+vi.mock('@/lib/site-create-limit', async (orig) => ({
+  ...(await orig<typeof import('@/lib/site-create-limit')>()),
+  siteCreateAllowed: vi.fn(),
+}));
+vi.mock('@/lib/email', () => ({ sendEmail: vi.fn() }));
+vi.mock('@/lib/server-posthog', () => ({
+  default: () => ({
+    capture: vi.fn(),
+    captureException: vi.fn(),
+    shutdown: vi.fn(),
+  }),
+}));
+vi.mock('@/lib/typesense', () => ({
+  createSiteCollection: vi.fn(),
+  deleteSiteCollection: vi.fn(),
+}));
+vi.mock('@/server/db', () => ({
+  default: {
+    site: {
+      findFirst: vi.fn(),
+      create: vi.fn(),
+      update: vi.fn(),
+    },
+    user: { findUnique: vi.fn() },
+    blob: { deleteMany: vi.fn() },
+  },
+}));
+
+import { validateAccessToken } from '@/lib/cli-auth';
+import { siteCreateAllowed } from '@/lib/site-create-limit';
+import prisma from '@/server/db';
+import { POST } from './route';
+
+const allowed = siteCreateAllowed as ReturnType<typeof vi.fn>;
+const findFirst = prisma.site.findFirst as ReturnType<typeof vi.fn>;
+const create = prisma.site.create as ReturnType<typeof vi.fn>;
+const update = prisma.site.update as ReturnType<typeof vi.fn>;
+
+const row = {
+  id: 's1',
+  projectName: 'docs',
+  subdomain: 'docs',
+  customDomain: null,
+  userId: 'u1',
+  createdAt: new Date(),
+};
+
+function req(body: unknown) {
+  return new NextRequest('http://localhost/api/sites', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
+}
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  (validateAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue({
+    userId: 'u1',
+  });
+  (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+    username: 'rufus',
+    email: null,
+    name: 'R',
+  });
+  findFirst.mockResolvedValue(null);
+  create.mockResolvedValue(row);
+  update.mockResolvedValue(row);
+  allowed.mockResolvedValue(true);
+});
+
+describe('POST /api/sites rate limit', () => {
+  it('creates and counts a hit for a new site', async () => {
+    const res = await POST(req({ projectName: 'docs' }));
+    expect(res.status).toBe(201);
+    expect(allowed).toHaveBeenCalledWith('u1');
+    expect(create).toHaveBeenCalled();
+  });
+
+  it('returns 429 rate_limited with the message and does not create', async () => {
+    allowed.mockResolvedValue(false);
+    const res = await POST(req({ projectName: 'docs' }));
+    expect(res.status).toBe(429);
+    expect(await res.json()).toEqual({
+      error: 'rate_limited',
+      message:
+        "You've created 20 sites in the last hour. Try again later, or get in touch if you need more.",
+    });
+    expect(create).not.toHaveBeenCalled();
+  });
+
+  it('does not count a name conflict (409)', async () => {
+    findFirst.mockResolvedValue(row);
+    const res = await POST(req({ projectName: 'docs' }));
+    expect(res.status).toBe(409);
+    expect(allowed).not.toHaveBeenCalled();
+  });
+
+  it('does not count a validation failure (400)', async () => {
+    const res = await POST(req({}));
+    expect(res.status).toBe(400);
+    expect(allowed).not.toHaveBeenCalled();
+  });
+
+  it('does not count overwrite=true', async () => {
+    findFirst.mockResolvedValue(row);
+    allowed.mockResolvedValue(false);
+    const res = await POST(req({ projectName: 'docs', overwrite: true }));
+    expect(res.status).toBe(200);
+    expect(allowed).not.toHaveBeenCalled();
+    expect(create).not.toHaveBeenCalled();
+  });
+});

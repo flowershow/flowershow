@@ -12,6 +12,10 @@ import {
 } from '@/lib/cli-auth';
 import { sendEmail } from '@/lib/email';
 import PostHogClient from '@/lib/server-posthog';
+import {
+  SITE_CREATE_LIMIT_MESSAGE,
+  siteCreateAllowed,
+} from '@/lib/site-create-limit';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildSubdomain, ensureUniqueSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
@@ -134,6 +138,12 @@ export async function POST(request: NextRequest) {
             })
             .then(Boolean),
       );
+      if (!(await siteCreateAllowed(auth.userId))) {
+        return NextResponse.json(
+          { error: 'rate_limited', message: SITE_CREATE_LIMIT_MESSAGE },
+          { status: 429 },
+        );
+      }
       site = await prisma.site.create({
         data: {
           projectName: siteName,

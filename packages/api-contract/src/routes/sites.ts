@@ -114,6 +114,11 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         description: 'Site already exists (and overwrite is false)',
         content: { 'application/json': { schema: ErrorResponse } },
       },
+      '429': {
+        description:
+          'Too many sites created in the last hour (`rate_limited`); the message says when to retry',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
       '500': {
         description: 'Internal server error',
         content: { 'application/json': { schema: ErrorResponse } },

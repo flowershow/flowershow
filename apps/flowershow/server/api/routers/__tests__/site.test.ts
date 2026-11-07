@@ -16,7 +16,15 @@ vi.mock('@/server/db', () => ({
 }));
 
 vi.mock('@/lib/stripe', () => ({ stripe: {} }));
-vi.mock('@/lib/typesense', () => ({ deleteSiteCollection: vi.fn() }));
+vi.mock('@/lib/typesense', () => ({
+  createSiteCollection: vi.fn(),
+  deleteSiteCollection: vi.fn(),
+}));
+vi.mock('@/lib/site-create-limit', async (orig) => ({
+  ...(await orig<typeof import('@/lib/site-create-limit')>()),
+  siteCreateAllowed: vi.fn().mockResolvedValue(true),
+}));
+vi.mock('@/lib/email', () => ({ sendEmail: vi.fn() }));
 vi.mock('@/lib/server-posthog', () => {
   const client = {
     capture: vi.fn(),
@@ -46,6 +54,7 @@ vi.mock('@/lib/content-store', () => ({
 import { isDraft, tagIdentity } from '@flowershow/core';
 import { Prisma } from '@prisma/client';
 import { fetchFile } from '@/lib/content-store';
+import { siteCreateAllowed } from '@/lib/site-create-limit';
 import { customCssVersion } from '@/lib/custom-css';
 import { appRouter } from '@/server/api/root';
 
@@ -2064,5 +2073,63 @@ describe('site.getConfig — a bad config.json never 500s the site', () => {
       showTags: false,
       annotations: true,
     });
+  });
+});
+
+describe('site.create rate limit', () => {
+  function createDb(existing: { id: string } | null = null) {
+    const created = makeSite({
+      id: 'new-site',
+      projectName: 'docs',
+      installationRepository: null,
+    });
+    return {
+      site: {
+        findFirst: vi.fn(async () => existing),
+        create: vi.fn(async () => created),
+        findUnique: vi.fn(async () => created),
+      },
+      user: {
+        findUnique: vi.fn(async () => ({
+          email: null,
+          name: 'R',
+          username: 'testuser',
+        })),
+      },
+    };
+  }
+
+  beforeEach(() => {
+    vi.mocked(siteCreateAllowed).mockReset().mockResolvedValue(true);
+  });
+
+  it('counts a hit for the user and creates when allowed', async () => {
+    const db = createDb();
+    await createAuthenticatedCaller(db as any).site.create({
+      projectName: 'docs',
+    });
+    expect(siteCreateAllowed).toHaveBeenCalledWith('user-1');
+    expect(db.site.create).toHaveBeenCalled();
+  });
+
+  it('throws TOO_MANY_REQUESTS with the message and does not create', async () => {
+    vi.mocked(siteCreateAllowed).mockResolvedValue(false);
+    const db = createDb();
+    await expect(
+      createAuthenticatedCaller(db as any).site.create({ projectName: 'docs' }),
+    ).rejects.toMatchObject({
+      code: 'TOO_MANY_REQUESTS',
+      message:
+        "You've created 20 sites in the last hour. Try again later, or get in touch if you need more.",
+    });
+    expect(db.site.create).not.toHaveBeenCalled();
+  });
+
+  it('does not count an invalid name (BAD_REQUEST)', async () => {
+    const db = createDb();
+    await expect(
+      createAuthenticatedCaller(db as any).site.create({ projectName: '///' }),
+    ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
+    expect(siteCreateAllowed).not.toHaveBeenCalled();
   });
 });
