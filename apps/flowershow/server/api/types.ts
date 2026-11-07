@@ -146,6 +146,7 @@ export interface PageMetadata {
   publish?: boolean;
   showSidebar?: boolean;
   showToc?: boolean;
+  toc?: { style?: 'panel' | 'rail' };
   showKnowledgeGraph?: boolean;
   showHero?: boolean;
   hero?:

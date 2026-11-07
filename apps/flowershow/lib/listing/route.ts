@@ -140,6 +140,21 @@ export function hasTocHeadings(content: string): boolean {
 }
 
 /**
+ * How many ATX `##` and `###` headings the page body has outside fenced code
+ * (the headings the ToC rail draws ticks for). The page uses it on the server
+ * so first paint already has the right grid.
+ */
+export function countTocHeadings(markdown: string): number {
+  let count = 0;
+  visit(parseBody(markdown), (node) => {
+    if (node.type !== 'heading') return;
+    const depth = (node as Heading).depth;
+    if (depth === 2 || depth === 3) count++;
+  });
+  return count;
+}
+
+/**
  * Cheap pre-check (no site paths, no body): false means resolveListingRoute
  * returns `none` for this page whatever the site contains, so generateMetadata
  * can skip the site path query on ordinary pages.

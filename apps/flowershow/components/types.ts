@@ -92,6 +92,7 @@ export interface SiteConfig {
     paths?: string[];
   };
   showToc?: boolean;
+  toc?: { style?: 'panel' | 'rail' };
   showKnowledgeGraph?: boolean;
   showEditLink?: boolean;
   /**
