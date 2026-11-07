@@ -503,3 +503,31 @@ button.fs-annotations-quote:hover {
   margin: 0;
   color: var(--color-danger, #dc2626);
 }
+
+/* Replies: same type scale as the note, set off by a hairline. */
+.fs-annotations-replies {
+  list-style: none;
+  margin: 0.625rem 0 0;
+  padding: 0 0 0 0.75rem;
+  border-left: 1px solid var(--fs-line);
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+.fs-annotations-replies .fs-annotations-note {
+  margin: 0.125rem 0 0;
+}
+.fs-annotations-badge {
+  margin-left: 0.4rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: var(--fs-fill);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--fs-muted);
+}
+.fs-annotations-reply-form {
+  margin: 0.625rem 0 0;
+}

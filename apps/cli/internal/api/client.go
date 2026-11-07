@@ -505,6 +505,18 @@ type Annotation struct {
 	Status     string             `json:"status"`
 	PageEdited bool               `json:"pageEdited"`
 	CreatedAt  string             `json:"createdAt"`
+	ResolvedBy *string            `json:"resolvedBy"`
+	Replies    []AnnotationReply  `json:"replies"`
+}
+
+// AnnotationReply is a reply in a note's thread. ByOwner means it was posted
+// with the site owner's login (or token), so it is the site author speaking.
+type AnnotationReply struct {
+	ID         string  `json:"id"`
+	Note       string  `json:"note"`
+	AuthorName *string `json:"authorName"`
+	ByOwner    bool    `json:"byOwner"`
+	CreatedAt  string  `json:"createdAt"`
 }
 
 type ListAnnotationsResponse struct {
@@ -574,6 +586,21 @@ func BulkAnnotations(siteID string, req BulkAnnotationsRequest) (int, error) {
 		return 0, err
 	}
 	return result.Count, nil
+}
+
+// CreateAnnotationReply posts a reply to an annotation as the logged-in owner.
+func CreateAnnotationReply(siteID, annotationID, note string) (*AnnotationReply, error) {
+	resp, err := Request("POST", annotationsEndpoint(siteID, "/"+url.PathEscape(annotationID)+"/replies"), map[string]string{"note": note})
+	if err != nil {
+		return nil, fmt.Errorf("failed to post reply: %w", err)
+	}
+	var result struct {
+		Reply AnnotationReply `json:"reply"`
+	}
+	if err := decodeOK(resp, "post reply", &result); err != nil {
+		return nil, err
+	}
+	return &result.Reply, nil
 }
 
 // GetAnnotationSettings returns the site's annotations setting and open count.

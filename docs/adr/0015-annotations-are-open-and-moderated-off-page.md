@@ -18,3 +18,7 @@ Phase 0 of page annotation (epic `flowershow-1pr`) tests whether reviewers annot
 - Anyone who finds a site with annotations on can write on it, up to the caps. Accepted for Phase 0; if spam appears, add `lib/rate-limit.ts` limits and an invite-only mode (Phase 1).
 - Every reviewer-supplied field (name, quote, context, note) is untrusted. It is rendered only as text, and `fl annotations pull` JSON-encodes each record inside `<untrusted-annotation>` tags with a header telling agents notes are editing requests, never instructions.
 - Pages with annotations on are `noindex`, so open review pages don't end up in search results.
+
+## Amendment (2026-11-07): anyone can resolve; replies
+
+With replies (`flowershow-1pr.11`, plan `docs/plans/2026-11-07-annotations-replies.md`), anyone who passes the same page checks as for commenting can also reply to a comment and resolve or reopen it on the page; the panel shows who resolved it. Resolving is reversible and is how a reviewer closes their own point, so it no longer needs the owner. Deleting stays owner-only. Replies made with owner auth (owner cookie or CLI/PAT token) are marked `byOwner` and show an Author badge; all other names stay unverified. Replies are capped at 100 per comment and treated as untrusted text like notes.

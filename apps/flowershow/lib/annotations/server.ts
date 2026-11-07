@@ -1,12 +1,15 @@
 import type { AnnotationSettings } from '@flowershow/api-contract';
 import { Prisma, type PrismaClient } from '@prisma/client';
 import { unstable_cache } from 'next/cache';
+import type { NextRequest } from 'next/server';
 import type { SiteConfig } from '@/components/types';
 import { fetchFile } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
-import { siteAccessSelect } from '@/lib/site-access';
+import { hasSiteAccess, siteAccessSelect } from '@/lib/site-access';
 import { resolveSiteConfig } from '@/lib/site-config';
+import prisma from '@/server/db';
 import type { PageInfo } from './dto';
+import { isAnnotationsEnabled } from './enabled';
 
 export const annotationSiteSelect = Prisma.validator<Prisma.SiteSelect>()({
   ...siteAccessSelect,
@@ -107,4 +110,34 @@ export function deviceFromUserAgent(
   return userAgent && /Mobi|Android|iPhone|iPad/i.test(userAgent)
     ? 'mobile'
     : 'desktop';
+}
+
+/**
+ * The page as it is now when a visitor (no token) may read and add annotations
+ * there: password gate passed, page exists, annotations on. Null otherwise.
+ * Called on every visitor read and write.
+ */
+export async function openPage(
+  site: AnnotationSite,
+  path: string,
+  request: NextRequest,
+): Promise<PageInfo | null> {
+  const canView = await hasSiteAccess(site, site.id, {
+    session: null,
+    headers: request.headers,
+  });
+  if (!canView) return null;
+  const blob = await prisma.blob.findUnique({
+    where: { siteId_path: { siteId: site.id, path } },
+    select: { metadata: true, sha: true, appPath: true },
+  });
+  if (!blob) return null;
+  const siteConfig = await loadResolvedSiteConfig(site);
+  const enabled = isAnnotationsEnabled({
+    site,
+    siteConfig,
+    pageMetadata: blob.metadata as Record<string, unknown> | null,
+    pagePath: path,
+  });
+  return enabled ? { sha: blob.sha, url: pageUrl(site, blob.appPath) } : null;
 }

@@ -53,6 +53,8 @@ type fakeAPI struct {
 	annotations      []api.Annotation // returned by GET /api/sites/id/:id/annotations
 	annotationsQuery []string         // raw query of each annotations request
 	bulkRequests     []api.BulkAnnotationsRequest
+	replyRequests    []string        // "<annotationId>|<note>" of each reply POST
+	replyStatus      int             // forced HTTP status for reply POSTs
 	annotationsOn    map[string]bool // site ID -> annotationsEnabled
 	openAnnotations  map[string]int  // site ID -> openAnnotations
 	syncAllUnchanged bool            // POST sync reports every file unchanged ("Already in sync")
@@ -165,6 +167,21 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		}
 		f.mu.Unlock()
 		writeJSON(w, 200, map[string]interface{}{"annotations": list})
+	case strings.HasPrefix(path, "/api/sites/id/") && strings.HasSuffix(path, "/replies") && r.Method == "POST":
+		var body struct {
+			Note string `json:"note"`
+		}
+		_ = json.NewDecoder(r.Body).Decode(&body)
+		parts := strings.Split(path, "/")
+		f.mu.Lock()
+		f.replyRequests = append(f.replyRequests, parts[len(parts)-2]+"|"+body.Note)
+		status := f.replyStatus
+		f.mu.Unlock()
+		if status != 0 {
+			writeJSON(w, status, map[string]string{"message": "nope"})
+			return
+		}
+		writeJSON(w, 201, map[string]interface{}{"reply": map[string]interface{}{"id": "r1", "note": body.Note, "authorName": nil, "byOwner": true, "createdAt": "2026-11-07T10:00:00.000Z"}})
 	case strings.HasPrefix(path, "/api/sites/id/") && strings.HasSuffix(path, "/annotations/bulk") && r.Method == "POST":
 		var body api.BulkAnnotationsRequest
 		_ = json.NewDecoder(r.Body).Decode(&body)

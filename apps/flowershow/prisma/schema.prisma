@@ -255,14 +255,31 @@ model Annotation {
   blobSha     String           @map("blob_sha")
   status      AnnotationStatus @default(open)
   resolvedAt  DateTime?        @map("resolved_at")
+  /// Name given when resolving on the page (unverified); null = unknown or resolved by the owner in bulk
+  resolvedBy  String?          @map("resolved_by")
   note        String
   authorName  String?          @map("author_name")
   createdAt   DateTime         @default(now()) @map("created_at")
 
-  site Site @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  site    Site              @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  replies AnnotationReply[]
 
   @@index([siteId, path])
   @@index([siteId, status])
+}
+
+/// A flat reply under an annotation. Text only; no IP stored. byOwner = posted with owner auth.
+model AnnotationReply {
+  id           String   @id @default(cuid())
+  annotationId String   @map("annotation_id")
+  note         String
+  authorName   String?  @map("author_name")
+  byOwner      Boolean  @default(false) @map("by_owner")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  annotation Annotation @relation(fields: [annotationId], references: [id], onDelete: Cascade)
+
+  @@index([annotationId])
 }
 
 /// One-time code for the site-owner sign-in handshake (flowershow-1pr.15).

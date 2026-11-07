@@ -12,4 +12,5 @@ export const ANNOTATION_LIMITS = {
   perPage: 500,
   perSite: 2000,
   bodyBytes: 16384,
+  repliesPerAnnotation: 100,
 } as const;

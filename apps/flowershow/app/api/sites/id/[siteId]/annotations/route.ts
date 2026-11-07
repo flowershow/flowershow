@@ -11,56 +11,23 @@ import {
   type PageInfo,
   toAnnotationDto,
 } from '@/lib/annotations/dto';
-import { isAnnotationsEnabled } from '@/lib/annotations/enabled';
 import {
   authorizeOwner,
   errorResponse,
   invalidBodyResponse,
+  readJsonBody,
   track,
 } from '@/lib/annotations/http';
 import {
-  type AnnotationSite,
   annotationSiteSelect,
   deviceFromUserAgent,
   loadCurrentPages,
-  loadResolvedSiteConfig,
-  pageUrl,
+  openPage,
 } from '@/lib/annotations/server';
 import { checkCliVersion } from '@/lib/cli-auth';
-import { hasSiteAccess } from '@/lib/site-access';
 import prisma from '@/server/db';
 
 type Props = { params: Promise<{ siteId: string }> };
-
-/**
- * The page as it is now when a visitor (no token) may read and add annotations
- * there: password gate passed, page exists, annotations on. Null otherwise.
- * Called on every visitor read and write.
- */
-async function openPage(
-  site: AnnotationSite,
-  path: string,
-  request: NextRequest,
-): Promise<PageInfo | null> {
-  const canView = await hasSiteAccess(site, site.id, {
-    session: null,
-    headers: request.headers,
-  });
-  if (!canView) return null;
-  const blob = await prisma.blob.findUnique({
-    where: { siteId_path: { siteId: site.id, path } },
-    select: { metadata: true, sha: true, appPath: true },
-  });
-  if (!blob) return null;
-  const siteConfig = await loadResolvedSiteConfig(site);
-  const enabled = isAnnotationsEnabled({
-    site,
-    siteConfig,
-    pageMetadata: blob.metadata as Record<string, unknown> | null,
-    pagePath: path,
-  });
-  return enabled ? { sha: blob.sha, url: pageUrl(site, blob.appPath) } : null;
-}
 
 /** GET /api/sites/id/:siteId/annotations?path=&status= */
 export async function GET(request: NextRequest, props: Props) {
@@ -106,6 +73,7 @@ export async function GET(request: NextRequest, props: Props) {
 
   const rows = await prisma.annotation.findMany({
     where: { siteId, ...(path ? { path } : {}), ...(status ? { status } : {}) },
+    include: { replies: { orderBy: { createdAt: 'asc' } } },
     orderBy: [{ path: 'asc' }, { startOffset: 'asc' }, { createdAt: 'asc' }],
   });
   if (isOwnerRequest) {
@@ -126,29 +94,9 @@ export async function GET(request: NextRequest, props: Props) {
 export async function POST(request: NextRequest, props: Props) {
   const { siteId } = await props.params;
 
-  // Reject text/plain and form posts, which cross-site pages can send without a preflight.
-  if (
-    !request.headers
-      .get('content-type')
-      ?.toLowerCase()
-      .startsWith('application/json')
-  )
-    return errorResponse(415, 'unsupported_media_type', 'Send JSON');
-
-  const tooLarge = () =>
-    errorResponse(413, 'payload_too_large', 'Annotation is too large');
-  if (
-    Number(request.headers.get('content-length')) > ANNOTATION_LIMITS.bodyBytes
-  )
-    return tooLarge();
-  const text = await request.text();
-  if (Buffer.byteLength(text) > ANNOTATION_LIMITS.bodyBytes) return tooLarge();
-  let json: unknown = null;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    // falls through to the schema error below
-  }
+  const body = await readJsonBody(request, 'Annotation is too large');
+  if ('response' in body) return body.response;
+  const json = body.json;
 
   const parsed = CreateAnnotationRequestSchema.safeParse(json);
   if (!parsed.success) {

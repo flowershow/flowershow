@@ -1,3 +1,4 @@
+import { ANNOTATION_LIMITS } from '@flowershow/api-contract';
 import { canManageSite } from '@/lib/site-authz';
 import { after, type NextRequest, NextResponse } from 'next/server';
 import { validateAccessToken } from '@/lib/cli-auth';
@@ -21,6 +22,59 @@ export function invalidBodyResponse(
     { error: 'bad_request', error_description: error.message, message },
     { status: 400 },
   );
+}
+
+/**
+ * Read a small JSON request body: JSON content type only (text/plain and form
+ * posts reach a cross-site page without a preflight), capped at
+ * ANNOTATION_LIMITS.bodyBytes. Returns the parsed value (null if it isn't
+ * JSON, left for the schema to reject) or an error response.
+ */
+export async function readJsonBody(
+  request: NextRequest,
+  tooLargeMessage: string,
+): Promise<{ json: unknown } | { response: NextResponse }> {
+  if (
+    !request.headers
+      .get('content-type')
+      ?.toLowerCase()
+      .startsWith('application/json')
+  )
+    return {
+      response: errorResponse(415, 'unsupported_media_type', 'Send JSON'),
+    };
+  const tooLarge = {
+    response: errorResponse(413, 'payload_too_large', tooLargeMessage),
+  };
+  if (
+    Number(request.headers.get('content-length')) > ANNOTATION_LIMITS.bodyBytes
+  )
+    return tooLarge;
+  const text = await request.text();
+  if (Buffer.byteLength(text) > ANNOTATION_LIMITS.bodyBytes) return tooLarge;
+  try {
+    return { json: JSON.parse(text) };
+  } catch {
+    return { json: null };
+  }
+}
+
+/**
+ * Site-owner check for routes that are also open to visitors. True only when
+ * the caller presented owner credentials (bearer token or owner cookie) that
+ * pass; an anonymous caller, or bad credentials, is simply "not the owner".
+ */
+export async function isSiteOwner<Site extends { id: string; userId: string }>(
+  request: NextRequest,
+  site: Site,
+): Promise<boolean> {
+  if (
+    !request.headers.has('authorization') &&
+    !readOwnerCookie(request.headers)
+  )
+    return false;
+  const owner = await authorizeOwner(request, async () => site);
+  return !('response' in owner);
 }
 
 /**

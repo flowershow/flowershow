@@ -61,7 +61,11 @@ describe('POST /api/sites/id/:siteId/annotations/bulk', () => {
     ).toEqual({ count: 2 });
     expect(updateMany).toHaveBeenCalledWith({
       where: { siteId: 'site-1', id: { in: ['a1', 'a2'] }, status: 'open' },
-      data: { status: 'resolved', resolvedAt: expect.any(Date) },
+      data: {
+        status: 'resolved',
+        resolvedAt: expect.any(Date),
+        resolvedBy: null,
+      },
     });
   });
 
@@ -69,7 +73,7 @@ describe('POST /api/sites/id/:siteId/annotations/bulk', () => {
     await POST(req({ action: 'reopen', all: true }), params());
     expect(updateMany).toHaveBeenCalledWith({
       where: { siteId: 'site-1', status: 'resolved' },
-      data: { status: 'open', resolvedAt: null },
+      data: { status: 'open', resolvedAt: null, resolvedBy: null },
     });
   });
 

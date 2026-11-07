@@ -4,10 +4,14 @@ import {
   AnnotationSettingsSchema,
   AnnotationsBulkRequestSchema,
   AnnotationsBulkResponseSchema,
+  CreateAnnotationReplyRequestSchema,
+  CreateAnnotationReplyResponseSchema,
   CreateAnnotationRequestSchema,
   CreateAnnotationResponseSchema,
   ErrorSchema,
   ListAnnotationsResponseSchema,
+  SetAnnotationStatusRequestSchema,
+  SetAnnotationStatusResponseSchema,
   UpdateAnnotationSettingsRequestSchema,
 } from '../schemas.js';
 
@@ -16,6 +20,10 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
   const ListAnnotationsResponse = reg('ListAnnotationsResponse', ListAnnotationsResponseSchema);
   const CreateAnnotationRequest = reg('CreateAnnotationRequest', CreateAnnotationRequestSchema);
   const CreateAnnotationResponse = reg('CreateAnnotationResponse', CreateAnnotationResponseSchema);
+  const CreateAnnotationReplyRequest = reg('CreateAnnotationReplyRequest', CreateAnnotationReplyRequestSchema);
+  const CreateAnnotationReplyResponse = reg('CreateAnnotationReplyResponse', CreateAnnotationReplyResponseSchema);
+  const SetAnnotationStatusRequest = reg('SetAnnotationStatusRequest', SetAnnotationStatusRequestSchema);
+  const SetAnnotationStatusResponse = reg('SetAnnotationStatusResponse', SetAnnotationStatusResponseSchema);
   const AnnotationsBulkRequest = reg('AnnotationsBulkRequest', AnnotationsBulkRequestSchema);
   const AnnotationsBulkResponse = reg('AnnotationsBulkResponse', AnnotationsBulkResponseSchema);
   const AnnotationSettings = reg('AnnotationSettings', AnnotationSettingsSchema);
@@ -65,6 +73,47 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
       '400': error('Invalid request body'),
       '404': error('Site not found, or annotations not on for this page'),
       '409': error('Annotation limit reached for this page or site (`limit_reached`)'),
+      '413': error('Request body too large'),
+      '415': error('Content-Type is not `application/json`'),
+    },
+  });
+
+  const annotationParams = z.object({ siteId: z.string(), annotationId: z.string() });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/api/sites/id/{siteId}/annotations/{annotationId}/replies',
+    operationId: 'createAnnotationReply',
+    summary: 'Reply to an annotation',
+    description:
+      'Open to anyone who can view the comment\'s page (annotations on, password gate passed), or the site owner (bearer token or owner cookie), whose reply is stored with `byOwner: true`. Limits: note 2000, name 60 characters; body 16 KB; 100 replies per annotation.',
+    tags: ['Annotations'],
+    security: [{ bearerToken: [] }, { siteOwnerCookie: [] }, {}],
+    request: { params: annotationParams, body: { content: { 'application/json': { schema: CreateAnnotationReplyRequest } } } },
+    responses: {
+      '201': ok('Reply created', CreateAnnotationReplyResponse),
+      '400': error('Invalid request body'),
+      '404': error('Annotation not found on this site, or annotations not on for its page'),
+      '409': error('Reply limit reached for this annotation (`limit_reached`)'),
+      '413': error('Request body too large'),
+      '415': error('Content-Type is not `application/json`'),
+    },
+  });
+
+  registry.registerPath({
+    method: 'post',
+    path: '/api/sites/id/{siteId}/annotations/{annotationId}/status',
+    operationId: 'setAnnotationStatus',
+    summary: 'Resolve or reopen an annotation',
+    description:
+      'Open to anyone who can view the comment\'s page, or the site owner. Resolving sets `resolvedAt` and `resolvedBy` (the given name or null); reopening clears both. Deleting stays owner-only (bulk route).',
+    tags: ['Annotations'],
+    security: [{ bearerToken: [] }, { siteOwnerCookie: [] }, {}],
+    request: { params: annotationParams, body: { content: { 'application/json': { schema: SetAnnotationStatusRequest } } } },
+    responses: {
+      '200': ok('The annotation with its replies', SetAnnotationStatusResponse),
+      '400': error('Invalid request body'),
+      '404': error('Annotation not found on this site, or annotations not on for its page'),
       '413': error('Request body too large'),
       '415': error('Content-Type is not `application/json`'),
     },
