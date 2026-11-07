@@ -23,14 +23,14 @@ export async function applyAnnotationsBulk(
     return (
       await db.annotation.updateMany({
         where: { ...where, status: 'open' },
-        data: { status: 'resolved', resolvedAt: new Date() },
+        data: { status: 'resolved', resolvedAt: new Date(), resolvedBy: null },
       })
     ).count;
   }
   return (
     await db.annotation.updateMany({
       where: { ...where, status: 'resolved' },
-      data: { status: 'open', resolvedAt: null },
+      data: { status: 'open', resolvedAt: null, resolvedBy: null },
     })
   ).count;
 }

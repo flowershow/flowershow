@@ -41,6 +41,8 @@ const annotation = (over: Record<string, unknown> = {}) => ({
   authorName: 'Ada',
   status: 'open',
   pageEdited: false,
+  resolvedBy: null,
+  replies: [],
   createdAt: '2026-10-03T10:00:00.000Z',
   ...over,
 });

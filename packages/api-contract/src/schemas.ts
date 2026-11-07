@@ -568,6 +568,7 @@ export const ANNOTATION_LIMITS = {
   perPage: 500,
   perSite: 2000,
   bodyBytes: 16384,
+  repliesPerAnnotation: 100,
 } as const;
 
 export const AnnotationSelectorSchema = z.object({
@@ -582,6 +583,16 @@ export type AnnotationSelector = z.infer<typeof AnnotationSelectorSchema>;
 export const AnnotationStatusSchema = z.enum(['open', 'resolved']);
 export type AnnotationStatus = z.infer<typeof AnnotationStatusSchema>;
 
+export const AnnotationReplySchema = z.object({
+  id: z.string(),
+  note: z.string(),
+  authorName: z.string().nullable(),
+  /** Posted with owner auth (CLI token or owner cookie); shows an Author badge. */
+  byOwner: z.boolean(),
+  createdAt: z.string(),
+});
+export type AnnotationReply = z.infer<typeof AnnotationReplySchema>;
+
 export const AnnotationSchema = z.object({
   id: z.string(),
   siteId: z.string(),
@@ -592,6 +603,10 @@ export const AnnotationSchema = z.object({
   note: z.string(),
   authorName: z.string().nullable(),
   status: AnnotationStatusSchema,
+  /** Name given when resolving (unverified), or null. */
+  resolvedBy: z.string().nullable(),
+  /** Flat replies, oldest first. */
+  replies: z.array(AnnotationReplySchema),
   /** The page was edited or removed after the note was left. */
   pageEdited: z.boolean(),
   createdAt: z.string(),
@@ -620,6 +635,36 @@ export const CreateAnnotationResponseSchema = z.object({
 });
 export type CreateAnnotationResponse = z.infer<
   typeof CreateAnnotationResponseSchema
+>;
+
+export const CreateAnnotationReplyRequestSchema = z.object({
+  note: z.string().trim().min(1).max(ANNOTATION_LIMITS.note),
+  authorName: z.string().trim().max(ANNOTATION_LIMITS.name).optional(),
+});
+export type CreateAnnotationReplyRequest = z.infer<
+  typeof CreateAnnotationReplyRequestSchema
+>;
+
+export const CreateAnnotationReplyResponseSchema = z.object({
+  reply: AnnotationReplySchema,
+});
+export type CreateAnnotationReplyResponse = z.infer<
+  typeof CreateAnnotationReplyResponseSchema
+>;
+
+export const SetAnnotationStatusRequestSchema = z.object({
+  status: AnnotationStatusSchema,
+  authorName: z.string().trim().max(ANNOTATION_LIMITS.name).optional(),
+});
+export type SetAnnotationStatusRequest = z.infer<
+  typeof SetAnnotationStatusRequestSchema
+>;
+
+export const SetAnnotationStatusResponseSchema = z.object({
+  annotation: AnnotationSchema,
+});
+export type SetAnnotationStatusResponse = z.infer<
+  typeof SetAnnotationStatusResponseSchema
 >;
 
 export const AnnotationsBulkRequestSchema = z.object({

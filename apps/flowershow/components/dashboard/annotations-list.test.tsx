@@ -22,6 +22,8 @@ const ANNOTATION = {
   authorName: null,
   status: 'open' as const,
   pageEdited: true,
+  resolvedBy: null,
+  replies: [],
   createdAt: '2026-10-03T10:00:00.000Z',
 };
 const handlers = () => ({

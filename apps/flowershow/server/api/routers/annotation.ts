@@ -47,6 +47,7 @@ export const annotationRouter = createTRPCRouter({
       const site = await ownedSite(ctx, input.siteId);
       const rows = await ctx.db.annotation.findMany({
         where: { siteId: site.id },
+        include: { replies: { orderBy: { createdAt: 'asc' } } },
         orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
       });
       const pages = await loadCurrentPages(

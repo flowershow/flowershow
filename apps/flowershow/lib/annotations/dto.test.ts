@@ -13,6 +13,7 @@ const ROW = {
   blobSha: 'sha-a',
   status: 'open' as const,
   resolvedAt: null,
+  resolvedBy: null,
   note: 'Make it red',
   authorName: null,
   createdAt: new Date('2026-10-03T10:00:00.000Z'),
@@ -39,9 +40,41 @@ describe('toAnnotationDto', () => {
       note: 'Make it red',
       authorName: null,
       status: 'open',
+      resolvedBy: null,
+      replies: [],
       pageEdited: false,
       createdAt: '2026-10-03T10:00:00.000Z',
     });
+  });
+
+  it('includes replies, oldest first as given, and resolvedBy', () => {
+    const dto = toAnnotationDto(
+      {
+        ...ROW,
+        resolvedBy: 'Maya',
+        replies: [
+          {
+            id: 'r1',
+            annotationId: 'ann-1',
+            note: 'Done',
+            authorName: 'Ada',
+            byOwner: true,
+            createdAt: new Date('2026-11-07T10:00:00.000Z'),
+          },
+        ],
+      },
+      PAGE,
+    );
+    expect(dto.resolvedBy).toBe('Maya');
+    expect(dto.replies).toEqual([
+      {
+        id: 'r1',
+        note: 'Done',
+        authorName: 'Ada',
+        byOwner: true,
+        createdAt: '2026-11-07T10:00:00.000Z',
+      },
+    ]);
   });
 
   it('flags pageEdited when the page changed or no longer exists', () => {

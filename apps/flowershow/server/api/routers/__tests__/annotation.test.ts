@@ -106,6 +106,7 @@ describe('annotation router', () => {
     expect(result[0]?.pageUrl).toMatch(/\/notes\/draft$/);
     expect(db.annotation.findMany).toHaveBeenCalledWith({
       where: { siteId: 'site-1' },
+      include: { replies: { orderBy: { createdAt: 'asc' } } },
       orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
     });
   });
@@ -115,12 +116,16 @@ describe('annotation router', () => {
     await caller(db).annotation.setStatus({ id: 'ann-1', status: 'resolved' });
     expect(db.annotation.updateMany).toHaveBeenCalledWith({
       where: { siteId: 'site-1', id: { in: ['ann-1'] }, status: 'open' },
-      data: { status: 'resolved', resolvedAt: expect.any(Date) },
+      data: {
+        status: 'resolved',
+        resolvedAt: expect.any(Date),
+        resolvedBy: null,
+      },
     });
     await caller(db).annotation.setStatus({ id: 'ann-1', status: 'open' });
     expect(db.annotation.updateMany).toHaveBeenLastCalledWith({
       where: { siteId: 'site-1', id: { in: ['ann-1'] }, status: 'resolved' },
-      data: { status: 'open', resolvedAt: null },
+      data: { status: 'open', resolvedAt: null, resolvedBy: null },
     });
   });
 
