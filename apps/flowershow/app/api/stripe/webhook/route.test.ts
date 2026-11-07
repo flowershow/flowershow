@@ -195,7 +195,9 @@ describe('stripe webhook — cancellation split', () => {
       await fireEvent(canceled());
 
       const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
-      expect(data.storageAllowanceBytes).toBe(BigInt(Math.ceil(total * 1.1)));
+      expect(data.storageAllowanceBytes).toBe(
+        BigInt(Math.ceil((total * 11) / 10)),
+      );
     });
 
     it('never lowers an existing larger allowance', async () => {

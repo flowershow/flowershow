@@ -362,6 +362,29 @@ describe('POST /api/sites/id/[siteId]/files', () => {
       expect(prisma.publish.create).not.toHaveBeenCalled();
     });
 
+    it('counts a path repeated in the request only once', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        ...ownedSite,
+        plan: 'FREE',
+        storageAllowanceBytes: null,
+        projectName: 'dup',
+      } as any);
+      vi.mocked(getSiteStorageBytes).mockResolvedValue(0);
+
+      const res = await POST(
+        makePostRequest({
+          files: [
+            { path: 'a.bin', size: 90 * MBYTES, sha: 'a1' },
+            { path: 'a.bin', size: 90 * MBYTES, sha: 'a2' },
+            { path: 'a.bin', size: 90 * MBYTES, sha: 'a3' },
+          ],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).not.toBe(413);
+    });
+
     it('counts the size of replaced files only once', async () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValue({
         ...ownedSite,

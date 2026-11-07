@@ -84,6 +84,28 @@ describe('checkStorageLimit', () => {
     ).toEqual({ scope: 'pool', limitBytes: GB, projectedBytes: 1050 * MB });
   });
 
+  it('allows a projected size of exactly 200 MB on Free', () => {
+    expect(
+      checkStorageLimit({
+        site: free(),
+        currentSiteBytes: 50 * MB,
+        projectedSiteBytes: 200 * MB,
+        otherFreeSitesBytes: 0,
+      }),
+    ).toBeNull();
+  });
+
+  it('allows a Free pool of exactly 1 GB', () => {
+    expect(
+      checkStorageLimit({
+        site: free(),
+        currentSiteBytes: 100 * MB,
+        projectedSiteBytes: 150 * MB,
+        otherFreeSitesBytes: GB - 150 * MB,
+      }),
+    ).toBeNull();
+  });
+
   it('skips the pool check for grandfathered sites', () => {
     expect(
       checkStorageLimit({

@@ -116,7 +116,7 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
       },
       '429': {
         description:
-          'Too many sites created in the last hour (`rate_limited`); the message says when to retry',
+          'Too many sites created in the last hour (`rate_limited`); try again later',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '500': {

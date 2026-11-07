@@ -121,7 +121,11 @@ export async function POST(
     const projectedSiteBytes =
       currentSiteBytes -
       existingBlobs.reduce((n, b) => n + b.size, 0) +
-      files.reduce((n, f) => n + f.size, 0);
+      // Dedupe by path (last wins) so a repeated path is counted once.
+      [...new Map(files.map((f) => [f.path, f.size])).values()].reduce(
+        (n, size) => n + size,
+        0,
+      );
     const limited = await enforceStorageLimit(
       site,
       currentSiteBytes,

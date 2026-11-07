@@ -9,18 +9,19 @@ export type PlanLimits = {
   freePoolHardBytes: number | null;
 };
 
-export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
-  FREE: {
-    siteSoftBytes: 100 * MB,
-    siteHardBytes: 200 * MB,
-    freePoolHardBytes: 1 * GB,
-  },
-  PREMIUM: {
-    siteSoftBytes: 5 * GB,
-    siteHardBytes: 10 * GB,
-    freePoolHardBytes: null,
-  },
-};
+export const PLAN_LIMITS: Readonly<Record<Plan, Readonly<PlanLimits>>> =
+  Object.freeze({
+    FREE: {
+      siteSoftBytes: 100 * MB,
+      siteHardBytes: 200 * MB,
+      freePoolHardBytes: 1 * GB,
+    },
+    PREMIUM: {
+      siteSoftBytes: 5 * GB,
+      siteHardBytes: 10 * GB,
+      freePoolHardBytes: null,
+    },
+  });
 
 export enum Feature {
   CustomDomain = 'CustomDomain',

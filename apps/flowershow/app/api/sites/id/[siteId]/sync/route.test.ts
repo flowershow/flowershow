@@ -1246,6 +1246,21 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       { path: 'c.bin', size: 84 * MBYTES, sha: 'c' },
     ];
 
+    it('queries the Free pool with the site owner id', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue(freeSite as any);
+
+      await POST(
+        makeRequest({ files: [{ path: 'a.bin', size: 1, sha: 'a' }] }),
+        makeParams(SITE_ID),
+      );
+
+      const poolCall = vi
+        .mocked(prisma.$queryRaw)
+        .mock.calls.find((c) => (c[0] as any).join('').includes('s.user_id'));
+      expect(poolCall).toBeDefined();
+      expect(poolCall!.slice(1)).toContain(USER_ID);
+    });
+
     it('returns 413 on a Free site when a replace totals 250 MB', async () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValue(freeSite as any);
 

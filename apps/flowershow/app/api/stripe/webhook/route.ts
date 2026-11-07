@@ -9,7 +9,7 @@ import { RenewalReminderEmail } from '@/emails/renewal-reminder';
 import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
 import { sendEmail } from '@/lib/email';
 import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
-import { MB } from '@/lib/entitlements';
+import { PLAN_LIMITS } from '@/lib/entitlements';
 import { getSiteStorageBytes } from '@/lib/storage-limits';
 import PostHogClient from '@/lib/server-posthog';
 import {
@@ -376,8 +376,8 @@ export async function POST(req: Request) {
             // so it can keep publishing edits and stays out of the Free pool.
             const totalBytes = await getSiteStorageBytes(dbSubscription.siteId);
             let storageAllowanceBytes: bigint | undefined;
-            if (totalBytes > 200 * MB) {
-              const needed = BigInt(Math.ceil(totalBytes * 1.1));
+            if (totalBytes > PLAN_LIMITS.FREE.siteHardBytes) {
+              const needed = BigInt(Math.ceil((totalBytes * 11) / 10));
               const existing = site.storageAllowanceBytes ?? BigInt(0);
               storageAllowanceBytes = needed > existing ? needed : existing;
             }
