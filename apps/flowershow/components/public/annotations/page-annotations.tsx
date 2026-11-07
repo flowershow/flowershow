@@ -342,6 +342,8 @@ export default function PageAnnotations({
       setAnnotations((previous) =>
         previous.map((a) => (a.id === annotation.id ? data.annotation : a)),
       );
+      // A reply form left open would follow the comment into the Resolved group.
+      setReplyingId((current) => (current === annotation.id ? null : current));
     } catch (err) {
       setOwnerError(
         err instanceof Error ? err.message : 'Could not update the comment.',
@@ -381,6 +383,13 @@ export default function PageAnnotations({
         setRememberedName(authorName);
       }
       setReplyingId(null);
+      // Saved, but not as the owner: the owner sign-in has lapsed, so say so.
+      if (isOwner && !data.reply.byOwner) {
+        setIsOwner(false);
+        setOwnerError(
+          'Your owner sign-in has expired, so the reply was posted without the Author badge. Sign in again.',
+        );
+      }
       return null;
     } catch {
       return 'Could not save the reply.';

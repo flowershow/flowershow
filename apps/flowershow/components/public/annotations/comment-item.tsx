@@ -149,7 +149,8 @@ function ReplyForm({
     }
   };
 
-  const onKeyDown = (event: KeyboardEvent<HTMLTextAreaElement>) => {
+  // On the form, so Escape in the name field cancels the reply too.
+  const onKeyDown = (event: KeyboardEvent<HTMLFormElement>) => {
     if (event.key === 'Escape') {
       // Cancel the reply only: the document-level handler would close the whole panel.
       event.stopPropagation();
@@ -164,6 +165,7 @@ function ReplyForm({
   return (
     <form
       className="fs-annotations-form fs-annotations-reply-form"
+      onKeyDown={onKeyDown}
       onSubmit={(event) => {
         event.preventDefault();
         void submit();
@@ -179,7 +181,6 @@ function ReplyForm({
         autoFocus
         value={note}
         onChange={(e) => setNote(e.target.value)}
-        onKeyDown={onKeyDown}
       />
       {editingName ? (
         <label>

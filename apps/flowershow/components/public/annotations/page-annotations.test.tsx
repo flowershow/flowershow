@@ -453,6 +453,23 @@ describe('PageAnnotations', () => {
       );
     });
 
+    it('cancels the reply on Escape in the name field too', async () => {
+      mountContent();
+      apiFetch.mockReturnValueOnce(
+        jsonResponse({ annotations: [annotation()] }),
+      );
+      renderOverlay();
+      const panel = await openPanel();
+      fireEvent.click(within(panel).getByRole('button', { name: 'Reply' }));
+      fireEvent.keyDown(within(panel).getByLabelText('Your name (optional)'), {
+        key: 'Escape',
+      });
+      expect(within(panel).queryByLabelText('Reply')).toBeNull();
+      expect(document.documentElement.classList.contains(OPEN_CLASS)).toBe(
+        true,
+      );
+    });
+
     it('lets a visitor resolve with their remembered name, then reopen', async () => {
       mountContent();
       window.localStorage.setItem('fs-annotator-name', 'Bo');
