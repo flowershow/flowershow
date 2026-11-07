@@ -713,7 +713,7 @@ export default function PageAnnotations({
                     aria-label="Close comments"
                     onClick={() => setOpen(false)}
                   >
-                    ×
+                    <CloseIcon />
                   </button>
                 </div>
                 <div className="fs-annotations-body">
@@ -866,6 +866,23 @@ export default function PageAnnotations({
           document.body,
         )}
     </>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      width="16"
+      height="16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M18 6 6 18M6 6l12 12" />
+    </svg>
   );
 }
 

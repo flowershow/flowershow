@@ -158,6 +158,13 @@ test('At 1440px the bar sticks under the navbar and the open panel sits beside t
   const panelBox = (await panel.boundingBox())!;
   const textBox = (await page.locator('#page-main').boundingBox())!;
   expect(textBox.x + textBox.width).toBeLessThanOrEqual(panelBox.x);
+  // Full height, above the navbar, which narrows so the panel hides none of it.
+  expect(Math.round(panelBox.y)).toBe(0);
+  const navRight = await page.evaluate(() => {
+    const nav = document.querySelector('.site-navbar');
+    return nav ? nav.getBoundingClientRect().right : 0;
+  });
+  expect(navRight).toBeLessThanOrEqual(panelBox.x + 1);
   // The "Built with Flowershow" badge (free sites) moves left of the panel.
   const badge = page.locator('#built-with-button');
   if (await badge.count()) {
