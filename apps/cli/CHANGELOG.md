@@ -1,5 +1,10 @@
 # CHANGELOG
 
+## 2.10.0
+
+- New `fl annotations reply <id> -m "text"`: reply to a visitor's note as the site author (the reply shows an Author badge on the page). `fl annotations resolve <ids...> -m "text"` posts the message as a reply to each id, then resolves them (ids only, not `--all`).
+- `fl annotations pull` now includes each note's replies (oldest first; author, whether the site author wrote it, time, text) and who resolved it, inside the same `<untrusted-annotation>` tags, JSON-encoded. JSON output gains `replies` and `resolvedBy`.
+
 ## 2.9.0
 
 - Publishing a folder that was published with `--anon` while logged in now claims that anonymous site into your account (when this computer has its claim token) and updates it, instead of creating a second site. It keeps its URL and stops expiring. If it can't be claimed, `fl` says why and publishes a new site as before; if the check fails with a network or server error, nothing is published.

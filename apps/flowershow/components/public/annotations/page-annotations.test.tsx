@@ -102,9 +102,13 @@ beforeEach(() => {
       String(url) === OWNER_ME_PATH ? ownerMe() : apiFetch(url, init),
     ),
   );
-  try {
-    window.localStorage.clear();
-  } catch {}
+  const store = new Map<string, string>();
+  vi.stubGlobal('localStorage', {
+    getItem: (k: string) => store.get(k) ?? null,
+    setItem: (k: string, v: string) => void store.set(k, v),
+    removeItem: (k: string) => void store.delete(k),
+    clear: () => store.clear(),
+  });
 });
 
 afterEach(() => {
@@ -244,7 +248,7 @@ describe('PageAnnotations', () => {
         `${OWNER_SIGNIN_PATH}?return=${encodeURIComponent(window.location.pathname)}`,
       );
       expect(
-        within(panel).queryByRole('button', { name: 'Resolve' }),
+        within(panel).queryByRole('button', { name: 'Delete' }),
       ).toBeNull();
       expect(screen.queryByText('Owner')).toBeNull();
     });
@@ -254,7 +258,11 @@ describe('PageAnnotations', () => {
       ownerMe.mockImplementation(() => jsonResponse({ isOwner: true }));
       apiFetch
         .mockReturnValueOnce(jsonResponse({ annotations: [annotation()] }))
-        .mockReturnValueOnce(jsonResponse({ count: 1 }));
+        .mockReturnValueOnce(
+          jsonResponse({
+            annotation: annotation({ status: 'resolved', resolvedBy: null }),
+          }),
+        );
       renderOverlay();
       expect(await screen.findByText('Owner')).toBeInTheDocument();
       fireEvent.click(screen.getByRole('button', { name: 'Show comments' }));
@@ -264,12 +272,9 @@ describe('PageAnnotations', () => {
         expect(within(panel).getByText('Resolved (1)')).toBeInTheDocument(),
       );
       const [url, init] = apiFetch.mock.calls[1]!;
-      expect(url).toBe('/api/sites/id/site-1/annotations/bulk');
+      expect(url).toBe('/api/sites/id/site-1/annotations/a1/status');
       expect(init?.method).toBe('POST');
-      expect(JSON.parse(String(init?.body))).toEqual({
-        action: 'resolve',
-        ids: ['a1'],
-      });
+      expect(JSON.parse(String(init?.body))).toEqual({ status: 'resolved' });
       expect(
         within(panel).getByRole('button', { name: 'Sign out as owner' }),
       ).toBeInTheDocument();
@@ -309,11 +314,181 @@ describe('PageAnnotations', () => {
       await screen.findByText('Owner');
       fireEvent.click(screen.getByRole('button', { name: 'Show comments' }));
       const panel = screen.getByRole('complementary', { name: 'Comments' });
-      fireEvent.click(within(panel).getByRole('button', { name: 'Resolve' }));
+      vi.stubGlobal(
+        'confirm',
+        vi.fn(() => true),
+      );
+      fireEvent.click(within(panel).getByRole('button', { name: 'Delete' }));
       expect(await within(panel).findByRole('alert')).toHaveTextContent(
         'Sign in again',
       );
       expect(screen.queryByText('Owner')).toBeNull();
+    });
+  });
+
+  describe('replies and resolving', () => {
+    const openPanel = async () => {
+      fireEvent.click(
+        await screen.findByRole('button', { name: 'Show comments' }),
+      );
+      return screen.getByRole('complementary', { name: 'Comments' });
+    };
+    const reply = (over: Record<string, unknown> = {}) => ({
+      id: 'r1',
+      note: 'Done, thanks',
+      authorName: 'Maya',
+      byOwner: true,
+      createdAt: '2026-10-04T10:00:00.000Z',
+      ...over,
+    });
+
+    it('shows replies under the note, with an Author badge for the owner', async () => {
+      mountContent();
+      apiFetch.mockReturnValueOnce(
+        jsonResponse({
+          annotations: [
+            annotation({
+              replies: [
+                reply(),
+                reply({
+                  id: 'r2',
+                  byOwner: false,
+                  authorName: 'Bo',
+                  note: 'Me too',
+                }),
+              ],
+            }),
+          ],
+        }),
+      );
+      renderOverlay();
+      const panel = await openPanel();
+      const replies = within(panel)
+        .getAllByRole('listitem')
+        .filter((el) => el.classList.contains('fs-annotations-reply'));
+      expect(replies).toHaveLength(2);
+      expect(replies[0]).toHaveTextContent('Maya');
+      expect(replies[0]).toHaveTextContent('Author');
+      expect(replies[0]).toHaveTextContent('Done, thanks');
+      expect(replies[1]).not.toHaveTextContent('Author');
+    });
+
+    it('posts a reply to the replies endpoint and shows it', async () => {
+      mountContent();
+      apiFetch
+        .mockReturnValueOnce(jsonResponse({ annotations: [annotation()] }))
+        .mockReturnValueOnce(
+          jsonResponse(
+            {
+              reply: reply({
+                byOwner: false,
+                authorName: 'Bo',
+                note: 'Agreed',
+              }),
+            },
+            201,
+          ),
+        );
+      renderOverlay();
+      const panel = await openPanel();
+      fireEvent.click(within(panel).getByRole('button', { name: 'Reply' }));
+      const box = within(panel).getByLabelText('Reply');
+      expect(box).toHaveFocus();
+      fireEvent.change(box, { target: { value: 'Agreed' } });
+      fireEvent.change(within(panel).getByLabelText('Your name (optional)'), {
+        target: { value: 'Bo' },
+      });
+      fireEvent.keyDown(box, { key: 'Enter', ctrlKey: true });
+      await waitFor(() =>
+        expect(within(panel).getByText('Agreed')).toBeInTheDocument(),
+      );
+      const [url, init] = apiFetch.mock.calls[1]!;
+      expect(url).toBe('/api/sites/id/site-1/annotations/a1/replies');
+      expect(JSON.parse(String(init?.body))).toEqual({
+        note: 'Agreed',
+        authorName: 'Bo',
+      });
+      expect(within(panel).queryByLabelText('Reply')).toBeNull();
+      expect(window.localStorage.getItem('fs-annotator-name')).toBe('Bo');
+    });
+
+    it('shows a failed reply inline and keeps the form', async () => {
+      mountContent();
+      apiFetch
+        .mockReturnValueOnce(jsonResponse({ annotations: [annotation()] }))
+        .mockReturnValueOnce(
+          jsonResponse({ message: 'Too many replies' }, 429),
+        );
+      renderOverlay();
+      const panel = await openPanel();
+      fireEvent.click(within(panel).getByRole('button', { name: 'Reply' }));
+      fireEvent.change(within(panel).getByLabelText('Reply'), {
+        target: { value: 'Hi' },
+      });
+      // The form hides the Reply link, so this is the submit button.
+      fireEvent.click(within(panel).getByRole('button', { name: 'Reply' }));
+      expect(await within(panel).findByRole('alert')).toHaveTextContent(
+        'Too many replies',
+      );
+      expect(within(panel).getByLabelText('Reply')).toHaveValue('Hi');
+    });
+
+    it('cancels the reply on Escape without closing the panel', async () => {
+      mountContent();
+      apiFetch.mockReturnValueOnce(
+        jsonResponse({ annotations: [annotation()] }),
+      );
+      renderOverlay();
+      const panel = await openPanel();
+      fireEvent.click(within(panel).getByRole('button', { name: 'Reply' }));
+      fireEvent.keyDown(within(panel).getByLabelText('Reply'), {
+        key: 'Escape',
+      });
+      expect(within(panel).queryByLabelText('Reply')).toBeNull();
+      expect(
+        screen.getByRole('complementary', { name: 'Comments' }),
+      ).toBeInTheDocument();
+      expect(document.documentElement.classList.contains(OPEN_CLASS)).toBe(
+        true,
+      );
+    });
+
+    it('lets a visitor resolve with their remembered name, then reopen', async () => {
+      mountContent();
+      window.localStorage.setItem('fs-annotator-name', 'Bo');
+      apiFetch
+        .mockReturnValueOnce(jsonResponse({ annotations: [annotation()] }))
+        .mockReturnValueOnce(
+          jsonResponse({
+            annotation: annotation({ status: 'resolved', resolvedBy: 'Bo' }),
+          }),
+        )
+        .mockReturnValueOnce(
+          jsonResponse({
+            annotation: annotation({ status: 'open', resolvedBy: null }),
+          }),
+        );
+      renderOverlay();
+      const panel = await openPanel();
+      fireEvent.click(within(panel).getByRole('button', { name: 'Resolve' }));
+      const resolved = (await within(panel).findByText('Resolved (1)')).closest(
+        'details',
+      )!;
+      expect(resolved).toHaveTextContent('Resolved by Bo');
+      const [url, init] = apiFetch.mock.calls[1]!;
+      expect(url).toBe('/api/sites/id/site-1/annotations/a1/status');
+      expect(JSON.parse(String(init?.body))).toEqual({
+        status: 'resolved',
+        authorName: 'Bo',
+      });
+      fireEvent.click(within(resolved).getByRole('button', { name: 'Reopen' }));
+      await waitFor(() =>
+        expect(within(panel).queryByText('Resolved (1)')).toBeNull(),
+      );
+      expect(JSON.parse(String(apiFetch.mock.calls[2]![1]?.body))).toEqual({
+        status: 'open',
+        authorName: 'Bo',
+      });
     });
   });
 

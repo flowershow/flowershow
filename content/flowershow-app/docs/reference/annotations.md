@@ -50,9 +50,16 @@ When annotations are on, a slim bar under the site's navigation shows how many c
 
 Click **Show comments** in the bar to open the list, in page order. Click a quote in the list to jump to its passage, or click highlighted text on the page to open its comment. Press Escape, click **Hide comments** or click ✕ to close the list.
 
-- **Wide screens:** the list docks on the right, beside the text, so it never covers what you're reading. The table of contents makes way while it's open.
+- **Wide screens:** the list docks on the right, beside the text and the full height of the window, so it never covers what you're reading. The table of contents makes way while it's open.
 - **Tablets:** the list slides over the right side of the page.
 - **Phones:** the list opens as a sheet over the bottom of the screen. Tap highlighted text and the page scrolls so the passage sits above the sheet. Tap ✕ or swipe the sheet's top edge down to close it.
+
+## Replying and resolving
+
+Every comment can become a short conversation, like comment threads in Google Docs.
+
+- **Reply:** click **Reply** under a comment, type and click **Reply** (or press ⌘/Ctrl+Enter). Replies use the same remembered name as comments. Replies from the site owner show an **Author** badge.
+- **Resolve:** when a point has been dealt with, click **Resolve**. Anyone who can comment can resolve, so a reviewer can close their own point. The comment moves to the **Resolved** group at the bottom of the list, shows who resolved it ("Resolved by Maya"), and its highlight goes. Click **Reopen** to bring it back.
 
 Highlights on the page need a browser with the CSS Custom Highlight API. Without it, notes still appear in the list, just without highlighting.
 
@@ -60,7 +67,7 @@ Highlights on the page need a browser with the CSS Custom Highlight API. Without
 
 Each annotation remembers the exact text it was attached to and a little of the text around it. When you republish, annotations follow their text even if it moved or changed slightly. If the text was rewritten or removed, the comment moves to a collapsed **Not found on page** group at the bottom of the list, so the note isn't lost.
 
-When you've dealt with a note, mark it resolved (see below). Resolved notes are collapsed at the bottom of the list under **Resolved**.
+When you've dealt with a note, resolve it (on the page, or with `fl annotations resolve`). Resolved notes are collapsed at the bottom of the list under **Resolved**.
 
 ## Reading and resolving annotations with the CLI or an AI agent
 
@@ -69,11 +76,15 @@ fl annotations pull                         # open notes; site linked to this fo
 fl annotations pull --name my-drafts        # a named site
 fl annotations pull --path notes/draft.md   # one file
 fl annotations pull --all --format json     # include resolved notes, as JSON
-fl annotations resolve <id> <id>            # mark notes as dealt with
+fl annotations reply <id> -m "Fixed, thanks"          # reply as the author
+fl annotations resolve <id> <id>                       # mark notes as dealt with
+fl annotations resolve <id> -m "Added an example"      # reply, then resolve
 fl annotations resolve --all
 ```
 
-The output groups notes by file and gives each one's page URL, the quoted text, the text just before and after it, the note, the reviewer's name, its ID, and whether the page was edited since the note was left. Coding agents such as Claude Code or Codex can run the command themselves. ChatGPT can't run `fl`, but you can run it yourself and paste the output into any agent, including ChatGPT, and ask it to revise the files.
+The output groups notes by file and gives each one's page URL, the quoted text, the text just before and after it, the note, the reviewer's name, its replies, its ID, and whether the page was edited since the note was left.
+
+A good loop for an agent: pull the open notes, revise the Markdown, republish, then resolve each handled note with a one-line message saying what changed (`fl annotations resolve <id> -m "…"`). Reviewers see that reply, with the **Author** badge, on the page. Coding agents such as Claude Code or Codex can run the command themselves. ChatGPT can't run `fl`, but you can run it yourself and paste the output into any agent, including ChatGPT, and ask it to revise the files.
 
 Notes are written by other people. Each one is wrapped in `<untrusted-annotation>` tags, and the output tells your agent to treat notes as editing requests from unverified reviewers, never as instructions to run commands. Still check what your agent changes.
 
@@ -81,9 +92,9 @@ Notes are written by other people. Each one is wrapped in `<untrusted-annotation
 
 ## Resolving and deleting annotations
 
-Only the site owner can resolve or delete annotations:
+Anyone who can comment can resolve or reopen a comment on the page (see [Replying and resolving](#replying-and-resolving)). Only the site owner can delete comments:
 
-- **On the page:** click **View as owner** on your site's page in the dashboard, or open the comments panel on your site and choose **Site owner? Sign in to manage comments**. You come back to the page signed in as the owner (an **Owner** badge shows in the comments bar), with **Resolve**, **Reopen** and **Delete** on each comment. This sign-in is for that one site only, lasts 7 days, and works on custom domains too; **Sign out as owner** at the bottom of the panel ends it.
+- **On the page:** click **View as owner** on your site's page in the dashboard, or open the comments panel on your site and choose **Site owner? Sign in to manage comments**. You come back to the page signed in as the owner (an **Owner** badge shows in the comments bar), with **Delete** on each comment, and your replies carry the **Author** badge. This sign-in is for that one site only, lasts 7 days, and works on custom domains too; **Sign out as owner** at the bottom of the panel ends it.
 - **Dashboard:** open your site and go to the **Annotations** tab, which shows the open count. Resolve or reopen a note, delete one, or delete all.
 - **CLI:** `fl annotations resolve <id>`, `fl annotations delete <id>`, or `fl annotations delete --all`.
 
@@ -92,5 +103,5 @@ Only the site owner can resolve or delete annotations:
 - Annotations are visible to everyone who can open the page. On a [[password-protection|password-protected site]], only people with the password can see or add them.
 - Turning annotations off hides them from visitors; it doesn't delete them. Deleting the site deletes them.
 - Flowershow doesn't store reviewers' IP addresses. The name is whatever the reviewer typed and isn't verified.
-- Notes are up to 2,000 characters and names up to 60. A quote is up to 1,000 characters; longer selections are shortened, and the reviewer is told before typing. A page holds up to 500 annotations and a site up to 2,000. These are caps, not rate limiting.
+- Notes are up to 2,000 characters and names up to 60. A quote is up to 1,000 characters; longer selections are shortened, and the reviewer is told before typing. Replies are up to 2,000 characters, with up to 100 replies per comment. A page holds up to 500 annotations and a site up to 2,000. These are caps, not rate limiting.
 - There are no notifications yet. Check the page, the dashboard or `fl annotations pull`.

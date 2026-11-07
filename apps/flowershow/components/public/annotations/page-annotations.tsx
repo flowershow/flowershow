@@ -25,7 +25,7 @@ import {
   textOffsetAt,
 } from '@/lib/annotations/anchoring';
 import { ANNOTATION_LIMITS } from '@/lib/annotations/limits';
-import { CommentItem, type OwnerAction, truncate } from './comment-item';
+import { CommentItem, truncate } from './comment-item';
 import { CommentsBar, PANEL_ID } from './comments-bar';
 import '@/styles/annotations.css';
 
@@ -191,6 +191,8 @@ export default function PageAnnotations({
   const [unplaced, setUnplaced] = useState<Annotation[]>([]);
   const [open, setOpen] = useState(false);
   const [focusedId, setFocusedId] = useState<string | null>(null);
+  /** The comment whose reply form is open (one at a time). */
+  const [replyingId, setReplyingId] = useState<string | null>(null);
   const [selection, setSelection] = useState<PendingSelection | null>(null);
   const [draft, setDraft] = useState<DescribedSelection | null>(null);
   const [note, setNote] = useState('');
@@ -294,22 +296,15 @@ export default function PageAnnotations({
     };
   }, []);
 
-  const runOwnerAction = async (
-    annotation: Annotation,
-    action: OwnerAction,
-  ) => {
-    if (
-      action === 'delete' &&
-      !window.confirm('Delete this comment? This cannot be undone.')
-    )
-      return;
+  const deleteAnnotation = async (annotation: Annotation) => {
+    if (!window.confirm('Delete this comment? This cannot be undone.')) return;
     setOwnerError(null);
     try {
       const res = await fetch(`${endpoint}/bulk`, {
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action, ids: [annotation.id] }),
+        body: JSON.stringify({ action: 'delete', ids: [annotation.id] }),
       });
       if (res.status === 401 || res.status === 403) {
         setIsOwner(false);
@@ -317,18 +312,78 @@ export default function PageAnnotations({
       }
       if (!res.ok) throw new Error('Could not update the comment.');
       setAnnotations((previous) =>
-        action === 'delete'
-          ? previous.filter((a) => a.id !== annotation.id)
-          : previous.map((a) =>
-              a.id === annotation.id
-                ? { ...a, status: action === 'resolve' ? 'resolved' : 'open' }
-                : a,
-            ),
+        previous.filter((a) => a.id !== annotation.id),
       );
     } catch (err) {
       setOwnerError(
         err instanceof Error ? err.message : 'Could not update the comment.',
       );
+    }
+  };
+
+  /** Resolve or reopen: open to everyone, recorded with the remembered name. */
+  const setStatus = async (
+    annotation: Annotation,
+    status: 'open' | 'resolved',
+  ) => {
+    setOwnerError(null);
+    try {
+      const res = await fetch(`${endpoint}/${annotation.id}/status`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status,
+          ...(rememberedName ? { authorName: rememberedName } : {}),
+        }),
+      });
+      if (!res.ok) throw new Error('Could not update the comment.');
+      const data = (await res.json()) as { annotation: Annotation };
+      setAnnotations((previous) =>
+        previous.map((a) => (a.id === annotation.id ? data.annotation : a)),
+      );
+    } catch (err) {
+      setOwnerError(
+        err instanceof Error ? err.message : 'Could not update the comment.',
+      );
+    }
+  };
+
+  /** Returns an error message, or null once the reply is saved and the form closed. */
+  const postReply = async (
+    annotation: Annotation,
+    note: string,
+    authorName: string,
+  ): Promise<string | null> => {
+    try {
+      const res = await fetch(`${endpoint}/${annotation.id}/replies`, {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note, ...(authorName ? { authorName } : {}) }),
+      });
+      if (!res.ok) {
+        const data = (await res.json().catch(() => ({}))) as {
+          message?: string;
+        };
+        return data.message ?? 'Could not save the reply.';
+      }
+      const data = (await res.json()) as { reply: Annotation['replies'][0] };
+      setAnnotations((previous) =>
+        previous.map((a) =>
+          a.id === annotation.id
+            ? { ...a, replies: [...a.replies, data.reply] }
+            : a,
+        ),
+      );
+      if (authorName) {
+        storeName(authorName);
+        setRememberedName(authorName);
+      }
+      setReplyingId(null);
+      return null;
+    } catch {
+      return 'Could not save the reply.';
     }
   };
 
@@ -340,10 +395,19 @@ export default function PageAnnotations({
     setIsOwner(false);
   };
 
-  const ownerActionFor = (annotation: Annotation) =>
-    isOwner
-      ? (action: OwnerAction) => void runOwnerAction(annotation, action)
-      : undefined;
+  /** Props shared by every CommentItem: replies, resolve/reopen, and the owner's delete. */
+  const itemProps = (annotation: Annotation) => ({
+    annotation,
+    rememberedName,
+    replyOpen: replyingId === annotation.id,
+    onOpenReply: () => setReplyingId(annotation.id),
+    onCloseReply: () => setReplyingId(null),
+    onPostReply: (note: string, authorName: string) =>
+      postReply(annotation, note, authorName),
+    onSetStatus: (status: 'open' | 'resolved') =>
+      void setStatus(annotation, status),
+    onDelete: isOwner ? () => void deleteAnnotation(annotation) : undefined,
+  });
 
   const openAnnotations = annotations.filter((a) => a.status === 'open');
   const resolvedAnnotations = annotations.filter(
@@ -794,10 +858,9 @@ export default function PageAnnotations({
                       {placed.map((item) => (
                         <CommentItem
                           key={item.annotation.id}
-                          annotation={item.annotation}
                           focused={item.annotation.id === focusedId}
                           onSelect={() => scrollTo(item)}
-                          onOwnerAction={ownerActionFor(item.annotation)}
+                          {...itemProps(item.annotation)}
                         />
                       ))}
                     </ol>
@@ -809,9 +872,8 @@ export default function PageAnnotations({
                         {unplaced.map((annotation) => (
                           <CommentItem
                             key={annotation.id}
-                            annotation={annotation}
                             focused={annotation.id === focusedId}
-                            onOwnerAction={ownerActionFor(annotation)}
+                            {...itemProps(annotation)}
                           />
                         ))}
                       </ol>
@@ -824,8 +886,7 @@ export default function PageAnnotations({
                         {resolvedAnnotations.map((annotation) => (
                           <CommentItem
                             key={annotation.id}
-                            annotation={annotation}
-                            onOwnerAction={ownerActionFor(annotation)}
+                            {...itemProps(annotation)}
                           />
                         ))}
                       </ol>

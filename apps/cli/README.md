@@ -282,6 +282,8 @@ fl annotations pull                                   # open notes; site linked 
 fl annotations pull --name my-drafts --path notes/draft.md
 fl annotations pull --all --format json               # include resolved notes
 fl annotations resolve <id> [<id>...]                 # after you've dealt with them
+fl annotations resolve <id> -m "Fixed"                 # reply as the author, then resolve
+fl annotations reply <id> -m "Good catch, fixed"       # reply as the author, leave it open
 fl annotations resolve --all --path notes/draft.md
 fl annotations delete <id> [<id>...]
 fl annotations delete --all --yes                     # --yes is required without a terminal
