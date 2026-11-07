@@ -121,7 +121,11 @@ export function TocRailView({
       onPointerLeave={(e) => {
         if (e.pointerType === 'touch') return;
         cancelClose();
-        closeTimer.current = setTimeout(close, CLOSE_DELAY_MS);
+        closeTimer.current = setTimeout(() => {
+          // Focus inside keeps it open; blur closes it once focus leaves
+          if (navRef.current?.contains(document.activeElement)) return;
+          close();
+        }, CLOSE_DELAY_MS);
       }}
       onFocus={() => {
         if (suppressFocusOpen.current) {

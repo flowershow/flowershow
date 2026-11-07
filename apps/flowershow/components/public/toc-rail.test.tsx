@@ -97,6 +97,16 @@ describe('TocRailView', () => {
     expectClosed(button, outline);
   });
 
+  it('stays open after pointer leave while focus is inside', () => {
+    vi.useFakeTimers();
+    const { nav, button, outline } = renderRail();
+    act(() => (outline.querySelector('a') as HTMLAnchorElement).focus());
+    fireEvent.pointerEnter(nav, { pointerType: 'mouse' });
+    fireEvent.pointerLeave(nav, { pointerType: 'mouse' });
+    act(() => vi.advanceTimersByTime(300));
+    expectOpen(button, outline);
+  });
+
   it('opens on focus; Escape closes and returns focus to the button', () => {
     const { button, outline } = renderRail();
     const link = outline.querySelector('a') as HTMLAnchorElement;
