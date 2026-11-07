@@ -1,6 +1,6 @@
 # Site collaborators (teams phase 1): design
 
-Status: draft for Rufus's OK. Epic `flowershow-dbg`, GitHub #919. Inputs: [[2026-11-07-teams-codebase-recon]] and [[2026-11-07-teams-landscape-research]].
+Status: v2 after critique (Claude builder check and Codex, 2026-11-07), awaiting Rufus's OK. Epic `flowershow-dbg`, GitHub #919. Inputs: [[2026-11-07-teams-codebase-recon]] and [[2026-11-07-teams-landscape-research]].
 
 ## Intent
 
@@ -8,8 +8,8 @@ Let several people manage one Flowershow site. Today a site has exactly one owne
 
 ## Goals
 
-- An owner invites people by email; they get the site in their dashboard and can publish to it from the web, CLI and MCP.
-- The owner stays the single point for money, deletion and access control.
+- An owner invites people by email; they get the site in their dashboard and can publish to it from the web, MCP, API and (with the new CLI) the command line.
+- The owner stays the single point for money, deletion, public address and access control.
 - No change to URLs, billing or existing sites. Every existing site is simply an owner with zero members.
 - Every authorization decision goes through `lib/site-authz.ts`. No new inline checks.
 
@@ -19,13 +19,15 @@ Let several people manage one Flowershow site. Today a site has exactly one owne
 - Deriving access from GitHub org membership or repo permissions.
 - Admin or viewer roles, invite links, domain auto-join, SSO, audit log UI.
 - Restricted readers (#1374) stays a separate track.
-- Editors connecting, changing or disconnecting the GitHub repo.
+- Editors connecting, changing or disconnecting the GitHub repo, or changing `rootDir`.
+- Ownership transfer (phase 1.5).
 
 ## Anti-goals
 
 - A missed owner check that lets an editor delete, re-domain or re-bill a site, or lets a removed editor keep access.
 - Breaking the CLI or Obsidian plugin for existing single-owner users.
 - Per-seat pricing or anything that needs Stripe quantity handling.
+- Granting access on an unverified email.
 
 ## Who it is for
 
@@ -40,28 +42,36 @@ Two roles. **Owner** is `Site.userId`, unchanged, exactly one per site. **Editor
 | Action | Owner | Editor |
 |---|---|---|
 | Publish, sync, upload files (web, CLI, MCP, API) | yes | yes |
-| Change settings: appearance, navigation, content, features, analytics, config | yes | yes |
+| Settings keys: comments, search, RSS, syntax mode, giscus, sidebar, built-with button, raw link, hide branding | yes | yes |
+| Site config (`updateDbConfig`), including custom head, scripts, footer, navbar | yes | yes |
 | Password protection on or off, set the password | yes | yes |
-| Bypass the site password and owner cookie on the published site | yes | yes |
+| Owner-cookie handshake on the published site (annotation moderation) | yes | yes |
 | Moderate annotations | yes | yes |
 | View publish history, status, dashboard | yes | yes |
-| Custom domain | yes | no |
+| Custom domain (`SiteUpdateKey.customDomain`) | yes | no |
+| Root directory (`SiteUpdateKey.rootDir`, wipes and re-syncs the site) | yes | no |
 | Rename site (project name) | yes | no |
 | Connect, reconnect, disconnect GitHub repo | yes | no |
 | Invite, remove members, revoke invites | yes | no |
-| Billing, plan, Stripe portal | yes | no |
+| Billing, plan, Stripe portal, bundle info | yes | no |
 | Delete site | yes | no |
 | Leave the site | n/a | yes |
 
-Why password protection is editor-level: it is a day-to-day publishing choice ("hide this while we draft"), and editors already see the content. Custom domain and rename stay owner-only because they change the public address and interact with billing and the frozen subdomain.
+Why password protection is editor-level: it is a day-to-day publishing choice ("hide this while we draft"), and editors already see the content. Custom domain, root directory and rename stay owner-only because they change the public address or wipe content and use the owner's GitHub installation.
 
-Why editors publish to GitHub-synced sites too: the owner can already CLI-publish to a GitHub-connected site and the next push overwrites it. Editors get the same behaviour, no new restriction. The overwrite risk is pre-existing and documented.
+Note on the published site: nobody bypasses the visitor password today (the edge middleware checks the visitor cookie only). The owner cookie exists for annotation moderation on the site, and that is what editors also get. A real signed-in bypass is a separate feature for owners and editors alike.
+
+Why editors publish to GitHub-synced sites too: the owner can already CLI-publish to a GitHub-connected site and the next push overwrites it. Editors get the same behaviour, no new restriction.
 
 ### Plan gating
 
 - Inviting requires `site.plan === PREMIUM`. Free sites are owner-only. This makes "team collaboration" a true Premium feature.
-- Members are free and uncapped. A constant `MAX_SITE_MEMBERS = 20` guards abuse and is not a product limit. Member counts per site are logged to PostHog as the demand signal for orgs.
-- If Premium lapses, memberships stay but `canManageSite` returns false for editors until the site is Premium again. Resubscribing restores everyone. The dashboard shows the site to editors with a "Premium lapsed" notice.
+- **Limit: 20 editors per site** (constant `MAX_SITE_MEMBERS`), and at most 20 pending invites per site. No seat billing. Raise the constant on request. Member counts per site go to PostHog as the demand signal for orgs.
+- **If Premium lapses**, memberships stay but editors lose management access until the site is Premium again. Spelled out:
+  - `canManageSite` returns false for editors when `plan !== PREMIUM`.
+  - Dashboard: the site still appears under "Shared with me", greyed, with "Premium lapsed, ask the owner", and no link into the site pages (so no 404).
+  - REST, sync and MCP return a distinct `premium_required` error (403), not "site not found".
+  - Owner actions on members (remove, revoke invites) never require Premium, so the owner can always clean up. Inviting and accepting do require it; accept re-checks `plan` at accept time.
 
 ### Data model
 
@@ -100,48 +110,47 @@ model SiteInvite {
 }
 ```
 
-`Publish` gets an optional `userId` so history shows who published. `SiteMemberRole` has one value now so that Admin can be added later without a schema redesign.
+`Publish` gets an optional `userId` (`onDelete: SetNull`) so history shows who published. `SiteMemberRole` has one value now so Admin can be added later as an enum value.
 
-The owner is never a `SiteMember` row. Membership of the anonymous sentinel user is impossible (claiming rewrites `Site.userId`; the claimed site has no members).
+The owner is never a `SiteMember` row. The anonymous sentinel user can never be a member or own members (claiming rewrites `Site.userId`; the claimed site has no members).
 
 ### Authorization
 
-- `lib/site-authz.ts` keeps pure predicates. `canManageSite(userId, site)` takes `site: { userId: string; plan: Plan; members?: Array<{ userId: string }> }` and returns true for the owner, or for a member when `site.plan === PREMIUM`. Missing `members` fails closed (editor denied), so a forgotten include can never widen access.
-- A Prisma helper `siteWithMembersFor(userId)` (select `{ userId, plan, members: { where: { userId }, select: { userId: true } } }`) is the one way call sites load what the predicate needs. One membership row at most is fetched per check.
-- `isSiteOwner` is unchanged and stays the check for every "no" in the table.
-- The two remaining inline checks (`site.getById` where-clause, `/api/sites/[username]/[projectname]` extended data) move to the helper.
+- `lib/site-authz.ts` keeps pure predicates. `canManageSite(userId, site)` takes `site: { userId: string; plan: Plan; members: Array<{ userId: string }> }` with **`plan` and `members` required** in the type, so a call site that forgets to load them is a compile error, not a silent denial. It returns true for the owner, or for a member when `plan === PREMIUM`.
+- A Prisma select fragment `siteAuthzSelect(userId)` (`{ userId, plan, members: { where: { userId }, select: { userId: true } } }`) is the one way call sites load what the predicate needs. One membership row at most per check.
+- `isSiteOwner` is unchanged and stays the check for every "no" in the table. In `site.update`, keys `customDomain` and `rootDir` require `isSiteOwner`; a table test classifies every `SiteUpdateKey` as owner-only or editor so a new key must be classified.
+- The two remaining inline checks (`site.getById` where-clause; `site.user.id === auth.userId` in `/api/sites/[username]/[projectname]`) move to the helper. The unused `withSiteAuth` wrapper in `server/auth.ts` is deleted.
+- Verification is by tests, not a grep gate: the implementation plan lists every `canManageSite` and `isSiteOwner` call site with a router or route test asserting editor allow or deny.
 - List queries (`user.getSites`, `GET /api/sites`, MCP `listSites`) return owned sites plus sites where the user is a member, each with `role: 'owner' | 'editor'`. Bundle counts, rename uniqueness and `connectGitHub` stay owner-scoped by design.
-- Token model is unchanged: a CLI or PAT token acts as its user across every site that user can manage. Removing a member revokes their access at once because every request re-checks membership. No token revocation is needed.
+- Token model is unchanged: a CLI or PAT token acts as its user across every site that user can manage. Removing a member takes effect on their next request because every request re-checks membership. Already-issued presigned upload URLs stay valid until they expire (minutes), but completing a publish re-checks membership, so a removed editor cannot finish one.
 
 ### Invites
 
-1. Owner opens the site's **Members** tab, types an email, clicks Invite. Server: site is Premium, caller is owner, email is not the owner's, not already a member, not already invited, under `MAX_SITE_MEMBERS`, rate limit of 20 invites per site per day and 50 per user per day.
-2. A `SiteInvite` row is created with a random 32-byte token (stored hashed, like `AccessToken`), expiry 14 days. An email goes out via `sendTransactionalEmail` with a new React Email template (`emails/site-invite.tsx`): who invited you, to which site, Accept button linking to `/invite/{token}`.
-3. `/invite/{token}` requires sign-in (any provider; magic link means no GitHub account is needed). On accept, the server checks the token hash, expiry, and that the invite email matches the signed-in user's `email` (case-insensitive). If it does not match, the page says which address the invite was sent to and offers "sign in with that account" or "accept with this account anyway". The second option is allowed because the person holds the secret link, which is how Vercel and Netlify behave; the owner sees the actual account in the member list and can remove it.
-4. Accept creates the `SiteMember` row, deletes the invite, and redirects to the site dashboard. The owner's **Members** tab also lists pending invites with Revoke and Resend (resend reuses the row, new token, new expiry).
-5. On every dashboard load, pending invites whose email matches the signed-in user's email are shown as a banner with one-click Accept, so an invite never depends on the email link alone.
-6. Expired invites are deleted lazily on access and by a daily Inngest sweep.
+1. Owner opens the site's **Members** tab, types an email, clicks Invite. Server checks: caller is owner, site is Premium, email is not the owner's, not already a member or pending, under the limits. Invites are owner-only and the per-site caps bound abuse; no separate daily rate limit in v1.
+2. A `SiteInvite` row is created with a random 32-byte token (stored hashed, like `AccessToken`), expiry 14 days. Email via `sendTransactionalEmail` with a new React Email template `emails/site-invite.tsx`: who invited you, to which site, Accept button linking to `/invite/{token}`.
+3. `/invite/{token}` requires sign-in (any provider; magic link means no GitHub account is needed). Accept succeeds only when the token hash matches, the invite is unexpired, the site is still Premium, the caller is not the owner, the member limit holds, and the invite email equals the signed-in user's email **and that email is trusted** (`isExistingUserEmailTrusted`, the same rule account linking uses). On a mismatch the page says which address the invite was sent to and offers "sign in with that address" (magic link). There is **no** "accept with this account anyway".
+4. Accept runs in one transaction: re-check, create `SiteMember`, delete the invite. Then redirect to the site dashboard. Concurrent accept, revoke or re-invite resolve by the transaction: the row is either consumed or gone.
+5. On dashboard load, pending invites whose email equals the signed-in user's **trusted** email show as a banner with one-click Accept (same server path as step 3, minus the token). Untrusted email: no banner, link only.
+6. Owner's Members tab lists pending invites with Revoke. No resend in v1: revoke and invite again. Expired invites are deleted lazily when the Members tab or accept path touches them; no scheduled sweep.
 
 ### Dashboard
 
-- Site list: owned sites first, then a "Shared with me" section with an "Editor" badge and the owner's username on the card.
+- Site list: owned sites first, then "Shared with me" with an "Editor" badge and the owner's username on the card.
 - Site pages: `site-tabs-layout.tsx` gate uses the widened `canManageSite`. New **Members** tab (owner: full management; editor: read-only list plus "Leave site").
-- Settings page becomes role-aware: editors do not see Billing, Danger, Rename, Custom domain or GitHub sections, and the page stops calling owner-only procedures (`stripe.getSiteSubscription`, `getBundleInfo`) for editors.
-- Account deletion: if the user owns sites that have members, the confirmation lists them with member counts and says those sites will be deleted and the editors will lose access. Cascade behaviour is unchanged; transfer comes in phase 1.5.
+- Settings page becomes role-aware: editors do not see Billing, Danger, Rename, Custom domain, Root directory or GitHub sections, and the page stops calling owner-only procedures (`stripe.getSiteSubscription`, `getBundleInfo`) for editors.
+- Account deletion is unchanged in v1. It is already blocked while any owned site has an active subscription, and sites with members must be Premium, so the shared-site case only arises after a lapse. Revisit with transfer in phase 1.5.
 
 ### CLI, MCP and API
 
 - `GET /api/sites` returns owned plus shared sites, each with `role` and `owner.username`. Contract updated first (`packages/api-contract`).
-- `GET /api/sites/{username}/{project}` keeps working for owners. For a shared site the editor must address it by the owner's username, which this route already supports when `username` is any user; it now returns extended data to anyone who `canManageSite`.
-- CLI (`apps/cli`): `fl list` shows shared sites with the owner prefix. `fl publish` resolves a configured `siteName` first under the caller's own sites, then under shared sites; if both exist it errors and asks for `owner/name`. New `fl` configs store `siteId` for all sites so later publishes do not depend on names. The Obsidian plugin follows the same rule in its own repo (follow-up bead).
-- MCP: `listSites` includes shared sites with `role`; everything else already goes through `assertCanManage`.
-- No REST endpoints for member management in phase 1. Members are managed in the dashboard through tRPC (`siteMember.list`, `invite`, `revokeInvite`, `resendInvite`, `remove`, `leave`). An API can be added when an agent needs it.
+- `GET /api/sites/{username}/{project}` returns extended data to anyone who `canManageSite`, so editors address a shared site as `owner/name`.
+- MCP: `listSites` includes shared sites with `role` and owner; all other tools already go through `assertCanManage`. MCP is in the v1 done-check.
+- CLI (`apps/cli`), its own bead in phase 1 but not blocking the dogfood (Life Itself publishes via GitHub sync and the web): `fl list` shows shared sites as `owner/name`; `fl publish` accepts `owner/name` or a stored `siteId`; a bare `name` resolves only under the caller's own sites, as today. New configs store `siteId` for every site so later publishes do not depend on names. Old CLIs keep today's behaviour (an editor using a bare name creates a site in their own account, as any user can today). The Obsidian plugin follows the same rule in its own repo (follow-up bead).
+- No REST endpoints for member management in phase 1. Members are managed in the dashboard through tRPC (`siteMember.list`, `invite`, `revokeInvite`, `remove`, `leave`). An API can be added when an agent needs it.
 
 ### Emails
 
-- `site-invite`: to the invitee.
-- `site-member-joined`: to the owner when someone accepts (one line, low priority, can be dropped if noisy).
-- `site-member-removed`: to the removed editor. Optional; builder's call.
+- `site-invite`: to the invitee. The only email in v1.
 
 ### Migration and rollout
 
@@ -153,30 +162,37 @@ The owner is never a `SiteMember` row. Membership of the anonymous sentinel user
 
 - Ownership transfer to an existing editor, two-sided (owner initiates, editor accepts). Handles `(userId, projectName)` uniqueness under the new owner, keeps the frozen subdomain, leaves the Stripe subscription to cancel at period end with a prompt for the new owner to subscribe.
 - Account deletion offers transfer before delete.
+- Resend invite; `site-member-joined` email to the owner.
+- Destructive-sync guard: a replace-mode sync that would delete pages last published by someone else requires explicit confirmation (CLI and MCP). Useful for single owners too.
 - Admin role if asked for (enum value plus a few table rows).
 - Member management over REST and MCP for agent use.
 
 ### Phase 2 (organisations), decide later
 
-Trigger to revisit: several Premium customers asking for one bill across sites, or sites with more than about 5 members. Then: `Organization`, `OrgMember`, org as site owner, org billing, optional GitHub-org link. Out of scope here.
+Trigger to revisit: several Premium customers asking for one bill across sites, or sites approaching the 20-editor limit. Then: `Organization`, `OrgMember`, org as site owner, org billing, optional GitHub-org link. Out of scope here.
 
 ## Risks and how this design handles them
 
-- **Missed owner check widens access.** All authz is in one file with a fail-closed predicate; the implementation plan includes a grep gate that fails CI if `site.userId ===` or `userId: ctx.session.user.id` appears in a site-scoped query outside the helper and the known owner-scoped list.
-- **Two editors overwrite each other via CLI sync.** Pre-existing single-user risk made more likely. Mitigation in phase 1: publish history shows who published each run. A "this sync would delete N pages last published by someone else" warning is a follow-up bead.
-- **Invite to the wrong account.** Accept-with-this-account is explicit, the owner sees the real account, and the dashboard banner matches on the account email.
-- **Lapsed Premium confuses editors.** Dashboard notice, and the site stays listed.
-- **Owner deletes account.** Named warning in the deletion flow; transfer in 1.5.
+- **Missed owner check widens access.** All authz is in one file; the predicate type forces call sites to load plan and membership; every call site has an allow/deny test; `site.update` keys are classified by a table test.
+- **Two editors overwrite each other via replace-mode sync.** Pre-existing single-user risk made more likely. Phase 1 records who published each run; the confirmation guard is phase 1.5. Documented in the collaborators docs page.
+- **Invite reaches the wrong person.** Acceptance needs a signed-in account whose trusted email equals the invited address. A forwarded link alone grants nothing.
+- **Lapsed Premium confuses editors.** Greyed card with a clear message, distinct error code on API and MCP, owner can still remove members.
+- **Owner deletes account.** Existing active-subscription block covers Premium sites; lapsed shared sites cascade as today. Transfer in 1.5.
 
 ## Left to the builder
 
 - Exact UI copy and layout of the Members tab and the invite banner.
-- Whether `site-member-removed` email ships.
-- Inngest sweep schedule and rate-limit storage (reuse `OAuthRateLimit` pattern or a simple count query).
 - Test plan per surface: pure predicate table tests, router tests with the mock db, REST route tests, one Playwright flow for invite and accept.
+- Order of PRs (suggested: schema and predicate; lists and dashboard; invites; MCP and API; CLI).
+
+## Decisions taken in critique (for Rufus to check, not re-decide)
+
+- Dropped "accept with this account anyway", resend, the Inngest sweep, the daily rate limit, the account-deletion warning and the grep CI gate from v1.
+- Named the editor limit (20) instead of calling it uncapped.
+- Made `customDomain` and `rootDir` owner-only inside the shared `site.update` mutation.
+- Corrected the password-bypass row: it is the annotation owner-cookie, not a visitor-password bypass.
 
 ## Open questions for Rufus
 
 1. Password protection for editors: yes (this doc) or owner-only (the research note's recommendation)?
-2. Uncapped members with a soft abuse constant, or a visible product cap?
-3. Life Itself dogfood after the 11–17 launch, as planned?
+2. Life Itself dogfood after the 11–17 launch, as planned, with web and MCP first and the CLI following?
