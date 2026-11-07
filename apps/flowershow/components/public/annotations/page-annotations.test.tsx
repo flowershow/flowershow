@@ -373,6 +373,22 @@ describe('PageAnnotations', () => {
       expect(replies[1]).not.toHaveTextContent('Author');
     });
 
+    it('shows a nameless owner reply (from the CLI) as just Author, not Anonymous', async () => {
+      mountContent();
+      apiFetch.mockReturnValueOnce(
+        jsonResponse({
+          annotations: [annotation({ replies: [reply({ authorName: null })] })],
+        }),
+      );
+      renderOverlay();
+      const panel = await openPanel();
+      const [ownerReply] = within(panel)
+        .getAllByRole('listitem')
+        .filter((el) => el.classList.contains('fs-annotations-reply'));
+      expect(ownerReply).toHaveTextContent('Author');
+      expect(ownerReply).not.toHaveTextContent('Anonymous');
+    });
+
     it('posts a reply to the replies endpoint and shows it', async () => {
       mountContent();
       apiFetch

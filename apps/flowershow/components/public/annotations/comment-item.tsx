@@ -108,9 +108,12 @@ function ReplyItem({ reply }: { reply: AnnotationReply }) {
   return (
     <li className="fs-annotations-reply">
       <p className="fs-annotations-meta">
-        <span className="fs-annotations-author">
-          {reply.authorName || 'Anonymous'}
-        </span>
+        {/* An owner reply from the CLI has no name: the badge alone says who. */}
+        {(reply.authorName || !reply.byOwner) && (
+          <span className="fs-annotations-author">
+            {reply.authorName || 'Anonymous'}
+          </span>
+        )}
         {reply.byOwner && <span className="fs-annotations-badge">Author</span>}{' '}
         ·{' '}
         <time dateTime={reply.createdAt} title={formatDate(reply.createdAt)}>
