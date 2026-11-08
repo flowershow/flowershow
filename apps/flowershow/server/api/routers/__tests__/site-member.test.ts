@@ -36,7 +36,7 @@ import { render } from '@react-email/components';
 import { appRouter } from '@/server/api/root';
 import { sendTransactionalEmail } from '@/lib/transactional-email';
 import PostHogClient from '@/lib/server-posthog';
-import { INVITE_TTL_MS } from '@/lib/site-invites';
+import { INVITE_TTL_MS, hashInviteToken } from '@/lib/site-invites';
 import SiteInviteEmail from '@/emails/site-invite';
 
 type Site = {
@@ -60,11 +60,16 @@ function makeDb({
   members = [],
   invites = [],
   users = [],
+  me = null,
+  memberCount,
 }: {
   site: Site | null;
   members?: any[];
   invites?: any[];
   users?: any[];
+  me?: any;
+  memberCount?: number;
+  callerId?: string;
 }) {
   const db: any = {
     site: {
@@ -92,13 +97,39 @@ function makeDb({
           },
         })),
       ),
-      count: vi.fn(async () => members.length),
-      findUnique: vi.fn(),
+      count: vi.fn(async () => memberCount ?? members.length),
+      findUnique: vi.fn(async ({ where }: any) => {
+        const key = where.siteId_userId;
+        return members.find(
+          (m) =>
+            m.userId === key.userId && (m.siteId ?? 'site-1') === key.siteId,
+        )
+          ? { id: 'mem-1' }
+          : null;
+      }),
+      create: vi.fn(async ({ data }: any) => ({ id: 'mem-new', ...data })),
       delete: vi.fn(),
       deleteMany: vi.fn().mockResolvedValue({ count: 1 }),
     },
     siteInvite: {
-      findMany: vi.fn(async () => invites),
+      findMany: vi.fn(async ({ where }: any = {}) =>
+        where?.email
+          ? invites.filter(
+              (i) =>
+                i.email === where.email &&
+                (!where.expiresAt?.gt || i.expiresAt > where.expiresAt.gt),
+            )
+          : invites,
+      ),
+      findUnique: vi.fn(
+        async ({ where }: any) =>
+          invites.find((i) =>
+            where.tokenHash
+              ? i.tokenHash === where.tokenHash
+              : i.id === where.id,
+          ) ?? null,
+      ),
+      delete: vi.fn(async () => ({})),
       count: vi.fn(async () => invites.length),
       create: vi.fn(async ({ data }: any) => ({
         id: 'inv-1',
@@ -112,6 +143,7 @@ function makeDb({
       ),
     },
     user: {
+      findUnique: vi.fn(async () => me),
       findFirst: vi.fn(
         async ({ where }: any) =>
           users.find(
@@ -487,5 +519,283 @@ describe('SiteInviteEmail', () => {
     );
     expect(html).not.toContain('href="http://e"');
     expect(html).toContain('Evil');
+  });
+});
+
+const token = 'fs_inv_abc';
+const invite = (o = {}) => ({
+  id: 'inv-1',
+  siteId: 'site-1',
+  email: 'ada@example.com',
+  tokenHash: hashInviteToken(token),
+  expiresAt: new Date(Date.now() + 86400000),
+  invitedBy: 'owner-1',
+  site: premium,
+  ...o,
+});
+const ada = {
+  email: 'Ada@Example.com',
+  emailVerified: new Date(),
+  accounts: [],
+};
+
+describe('siteMember.accept', () => {
+  it('accept matches emails case-insensitively and creates the member in one transaction', async () => {
+    const db = makeDb({ site: premium, invites: [invite()], me: ada });
+    await expect(
+      createCallerAs(db, 'ada-1').siteMember.accept({ token }),
+    ).resolves.toEqual({ siteId: 'site-1' });
+    expect(db.$transaction).toHaveBeenCalled();
+    expect(db.siteMember.create).toHaveBeenCalledWith({
+      data: {
+        siteId: 'site-1',
+        userId: 'ada-1',
+        role: 'EDITOR',
+        invitedBy: 'owner-1',
+      },
+    });
+    expect(db.siteInvite.delete).toHaveBeenCalledWith({
+      where: { id: 'inv-1' },
+    });
+    // The re-read by id and the writes happen inside the transaction.
+    const txStart = db.$transaction.mock.invocationCallOrder[0];
+    const reRead = db.siteInvite.findUnique.mock.calls.findIndex(
+      ([arg]: any) => arg.where.id === 'inv-1',
+    );
+    expect(reRead).toBeGreaterThanOrEqual(0);
+    expect(
+      db.siteInvite.findUnique.mock.invocationCallOrder[reRead],
+    ).toBeGreaterThan(txStart);
+    const posthog = (PostHogClient as any)();
+    expect(posthog.capture).toHaveBeenCalledWith(
+      expect.objectContaining({
+        distinctId: 'owner-1',
+        event: 'site_members_changed',
+        properties: expect.objectContaining({
+          siteId: 'site-1',
+          change: 'joined',
+        }),
+      }),
+    );
+  });
+
+  it.each([
+    [
+      'an untrusted email',
+      {
+        me: { ...ada, emailVerified: null, accounts: [{ provider: 'github' }] },
+      },
+      'FORBIDDEN',
+    ],
+    [
+      'a different email',
+      { me: { ...ada, email: 'eve@example.com' } },
+      'FORBIDDEN',
+    ],
+    ['a user with no email', { me: { ...ada, email: null } }, 'FORBIDDEN'],
+    [
+      'an expired invite',
+      { invites: [invite({ expiresAt: new Date(Date.now() - 1000) })] },
+      'NOT_FOUND',
+    ],
+    [
+      'a lapsed site',
+      {
+        site: { ...premium, plan: 'FREE' },
+        invites: [invite({ site: { ...premium, plan: 'FREE' } })],
+      },
+      'FORBIDDEN',
+    ],
+    [
+      'the owner',
+      { callerId: 'owner-1', me: { ...ada, email: 'ada@example.com' } },
+      'BAD_REQUEST',
+    ],
+    ['a full site', { memberCount: 20 }, 'FORBIDDEN'],
+  ])('accept refuses %s', async (_l, o, code) => {
+    const db = makeDb({
+      site: premium,
+      invites: [invite()],
+      me: ada,
+      ...(o as any),
+    });
+    await expect(
+      createCallerAs(db, (o as any).callerId ?? 'ada-1').siteMember.accept({
+        token,
+      }),
+    ).rejects.toMatchObject({ code });
+    expect(db.siteMember.create).not.toHaveBeenCalled();
+  });
+
+  it('accept deletes an expired invite and the delete is not rolled back', async () => {
+    const db = makeDb({
+      site: premium,
+      invites: [invite({ expiresAt: new Date(Date.now() - 1000) })],
+      me: ada,
+    });
+    await expect(
+      createCallerAs(db, 'ada-1').siteMember.accept({ token }),
+    ).rejects.toMatchObject({
+      code: 'NOT_FOUND',
+      message: 'This invite has expired',
+    });
+    expect(db.siteInvite.delete).toHaveBeenCalledWith({
+      where: { id: 'inv-1' },
+    });
+  });
+
+  it('accept refuses a token whose invite was revoked and re-sent', async () => {
+    const db = makeDb({
+      site: premium,
+      invites: [invite({ tokenHash: hashInviteToken('fs_inv_new') })],
+      me: ada,
+    });
+    await expect(
+      createCallerAs(db, 'ada-1').siteMember.accept({ token }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND' });
+    expect(db.siteMember.create).not.toHaveBeenCalled();
+  });
+
+  it('accept refuses when the invite is gone by the time the transaction runs', async () => {
+    const db = makeDb({ site: premium, invites: [invite()], me: ada });
+    const original = db.siteInvite.findUnique.getMockImplementation();
+    db.siteInvite.findUnique.mockImplementation(async (arg: any) =>
+      arg.where.id ? null : original(arg),
+    );
+    await expect(
+      createCallerAs(db, 'ada-1').siteMember.accept({ token }),
+    ).rejects.toMatchObject({ code: 'NOT_FOUND', message: 'Invite not found' });
+    expect(db.siteMember.create).not.toHaveBeenCalled();
+  });
+
+  it('accept by an existing member drops the invite and succeeds without a second row', async () => {
+    const db = makeDb({
+      site: premium,
+      members: [{ userId: 'ada-1' }],
+      invites: [invite()],
+      me: ada,
+    });
+    await expect(
+      createCallerAs(db, 'ada-1').siteMember.accept({ token }),
+    ).resolves.toEqual({ siteId: 'site-1' });
+    expect(db.siteMember.create).not.toHaveBeenCalled();
+    expect(db.siteInvite.delete).toHaveBeenCalledWith({
+      where: { id: 'inv-1' },
+    });
+  });
+});
+
+describe('siteMember.getInvite', () => {
+  it('getInvite names the invited address on a mismatch, and nothing for an unknown token', async () => {
+    const mismatch = makeDb({
+      site: premium,
+      invites: [invite()],
+      me: { ...ada, email: 'eve@example.com' },
+    });
+    await expect(
+      createCallerAs(mismatch, 'eve-1').siteMember.getInvite({ token }),
+    ).resolves.toEqual({
+      state: 'email_mismatch',
+      siteId: 'site-1',
+      projectName: 'notes',
+      ownerUsername: 'olu',
+      invitedEmail: 'ada@example.com',
+    });
+
+    const unknown = makeDb({ site: premium, invites: [invite()], me: ada });
+    await expect(
+      createCallerAs(unknown, 'ada-1').siteMember.getInvite({
+        token: 'fs_inv_other',
+      }),
+    ).resolves.toEqual({ state: 'not_found' });
+  });
+
+  it('getInvite maps each check to a state and never writes', async () => {
+    const cases: Array<[any, string, string]> = [
+      [{}, 'ada-1', 'ok'],
+      [
+        { invites: [invite({ expiresAt: new Date(Date.now() - 1) })] },
+        'ada-1',
+        'expired',
+      ],
+      [
+        { invites: [invite({ site: { ...premium, plan: 'FREE' } })] },
+        'ada-1',
+        'lapsed',
+      ],
+      [{}, 'owner-1', 'owner'],
+      [{ me: { ...ada, emailVerified: null } }, 'ada-1', 'email_untrusted'],
+      [{ members: [{ userId: 'ada-1' }] }, 'ada-1', 'already_member'],
+    ];
+    for (const [o, callerId, state] of cases) {
+      const db = makeDb({ site: premium, invites: [invite()], me: ada, ...o });
+      const res = await createCallerAs(db, callerId).siteMember.getInvite({
+        token,
+      });
+      expect(res.state).toBe(state);
+      if (state === 'email_untrusted') {
+        expect(res.invitedEmail).toBe('ada@example.com');
+      } else {
+        expect(res).not.toHaveProperty('invitedEmail');
+      }
+      expect(db.siteMember.create).not.toHaveBeenCalled();
+      expect(db.siteInvite.delete).not.toHaveBeenCalled();
+      expect(db.siteInvite.deleteMany).not.toHaveBeenCalled();
+      expect(db.$transaction).not.toHaveBeenCalled();
+    }
+  });
+});
+
+describe('siteMember.pendingForMe / acceptPending', () => {
+  it('pendingForMe lists invites only for a trusted email', async () => {
+    const untrusted = makeDb({
+      site: premium,
+      invites: [invite()],
+      me: { ...ada, emailVerified: null },
+    });
+    await expect(
+      createCallerAs(untrusted, 'ada-1').siteMember.pendingForMe(),
+    ).resolves.toEqual([]);
+    expect(untrusted.siteInvite.findMany).not.toHaveBeenCalled();
+
+    const trusted = makeDb({ site: premium, invites: [invite()], me: ada });
+    await expect(
+      createCallerAs(trusted, 'ada-1').siteMember.pendingForMe(),
+    ).resolves.toEqual([
+      {
+        id: 'inv-1',
+        siteId: 'site-1',
+        projectName: 'notes',
+        ownerUsername: 'olu',
+      },
+    ]);
+    const where = trusted.siteInvite.findMany.mock.calls[0][0].where;
+    expect(where.email).toBe('ada@example.com');
+    expect(where.expiresAt.gt).toBeInstanceOf(Date);
+  });
+
+  it("acceptPending accepts the caller's own invite through the shared transaction", async () => {
+    const db = makeDb({ site: premium, invites: [invite()], me: ada });
+    await expect(
+      createCallerAs(db, 'ada-1').siteMember.acceptPending({
+        inviteId: 'inv-1',
+      }),
+    ).resolves.toEqual({ siteId: 'site-1' });
+    expect(db.$transaction).toHaveBeenCalled();
+    expect(db.siteMember.create).toHaveBeenCalledTimes(1);
+  });
+
+  it('acceptPending refuses an invite addressed to someone else', async () => {
+    const db = makeDb({
+      site: premium,
+      invites: [invite()],
+      me: { ...ada, email: 'eve@example.com' },
+    });
+    await expect(
+      createCallerAs(db, 'eve-1').siteMember.acceptPending({
+        inviteId: 'inv-1',
+      }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    expect(db.siteMember.create).not.toHaveBeenCalled();
   });
 });
