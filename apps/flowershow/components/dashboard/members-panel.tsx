@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
-export type MemberActionResult = { error?: string };
+import type { MemberActionResult } from '@/lib/member-action-result';
 
 interface Member {
   userId: string;
@@ -71,8 +71,14 @@ export default function MembersPanel({
   ) => {
     setBusy(key);
     setError(null);
-    const result = await action();
-    setBusy(null);
+    let result: MemberActionResult;
+    try {
+      result = await action();
+    } catch {
+      result = { error: 'Something went wrong. Please try again.' };
+    } finally {
+      setBusy(null);
+    }
     if (result.error) {
       setError(result.error);
       return;

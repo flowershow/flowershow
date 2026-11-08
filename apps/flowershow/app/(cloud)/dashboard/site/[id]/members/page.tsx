@@ -1,21 +1,7 @@
-import { TRPCError } from '@trpc/server';
 import { notFound } from 'next/navigation';
-import MembersPanel, {
-  type MemberActionResult,
-} from '@/components/dashboard/members-panel';
+import MembersPanel from '@/components/dashboard/members-panel';
+import { toResult } from '@/lib/member-action-result';
 import { api } from '@/trpc/server';
-
-async function toResult(
-  action: () => Promise<unknown>,
-): Promise<MemberActionResult> {
-  try {
-    await action();
-    return {};
-  } catch (e) {
-    if (e instanceof TRPCError) return { error: e.message };
-    return { error: 'Something went wrong. Please try again.' };
-  }
-}
 
 export default async function SiteMembersPage(props: {
   params: Promise<{ id: string }>;
