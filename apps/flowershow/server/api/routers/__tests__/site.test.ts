@@ -48,6 +48,7 @@ vi.mock('@/lib/github', () => ({
 vi.mock('@/lib/content-store', () => ({
   deleteProject: vi.fn(),
   fetchFile: vi.fn(),
+  generatePresignedUploadUrl: vi.fn(async () => 'https://upload.test/x'),
 }));
 
 // ── Imports ───────────────────────────────────────────────────────
@@ -2243,10 +2244,28 @@ describe('site router: editor allow and deny', () => {
     await expect(c.site.getPublishHistory({ id: 'site-1' })).resolves.toEqual(
       [],
     );
-    await expect(
-      c.site.getDbConfig({ siteId: 'site-1' }),
-    ).resolves.not.toThrow();
+    await expect(c.site.getDbConfig({ siteId: 'site-1' })).resolves.toBeNull();
     expect((await c.site.getById({ id: 'site-1' }))?.id).toBe('site-1');
+  });
+
+  it('editor on a Premium site can set password protection off, update config and get an upload URL', async () => {
+    const db = createMockDb({ site: sharedSite() });
+    (db.site as any).update = vi.fn(async () => sharedSite());
+    const c = createCallerAs(db, 'editor-1');
+    await expect(
+      c.site.setPasswordProtection({ id: 'site-1', enabled: false }),
+    ).resolves.toBeTruthy();
+    await expect(
+      c.site.updateDbConfig({ siteId: 'site-1', config: { siteName: 'X' } }),
+    ).resolves.toBeUndefined();
+    await expect(
+      c.site.getAssetUploadUrl({
+        siteId: 'site-1',
+        field: 'logo',
+        contentType: 'image/png',
+      }),
+    ).resolves.toMatchObject({ uploadUrl: 'https://upload.test/x' });
+    expect((db.site as any).update).toHaveBeenCalledTimes(2);
   });
 
   it('getPublishHistory exposes the publisher username', async () => {

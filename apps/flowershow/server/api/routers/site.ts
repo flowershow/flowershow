@@ -197,7 +197,7 @@ export const siteRouter = createTRPCRouter({
       });
       if (!site || !canManageSite(uid, site)) return null;
       // Strip the authz-only fields so the output matches FullSite.
-      const { members: _members, ...rest } = site;
+      const { members: _members, userId: _userId, ...rest } = site;
       return rest;
     }),
   getMany: publicProcedure
