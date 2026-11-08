@@ -4,6 +4,7 @@ date: 2026-11-07
 description: A quieter table of contents: a column of ticks that opens an outline on hover, plus a Contents block on narrow screens.
 authors:
   - rufuspollock
+image: "[[assets/contents-rail.webp]]"
 showToc: false
 ---
 
