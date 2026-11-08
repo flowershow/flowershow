@@ -16,7 +16,7 @@
 2. **`planSource` is nullable with values `SITE | ACCOUNT | MANUAL`.** Backfill: PREMIUM sites whose `Subscription` row exists with a non-canceled status get `SITE`; every other PREMIUM site gets `MANUAL` (covers the ~70 admin grants and cancel-bonus leftovers); FREE sites stay null. The reconciler never changes a `MANUAL` site, and treats `plan = PREMIUM, planSource = null` (an admin who forgot the column) as `MANUAL`. Downgrade to FREE happens only when the current source is `SITE` or `ACCOUNT` and that source is no longer live. Why not a separate `manualPremium` boolean: one column, one precedence order, and the safe default is built into the reader rather than relying on every writer.
 3. **Precedence:** `MANUAL` > live per-site subscription (`SITE`) > live account plan and covered (`ACCOUNT`) > `FREE`. MANUAL and SITE sites never use a Pro slot.
 4. **Two status rules.** A per-site subscription keeps its site Premium unless it is `canceled` or `incomplete_expired` (`isLiveSiteStatus`), which is today's behaviour (downgrade only on `canceled`), so the per-site path does not change. An account subscription covers sites only when `active`, `trialing` or `past_due` (`isCoveringAccountStatus`), and consolidation runs only when `active` or `trialing`: an `incomplete` plan (3DS pending) must never cancel per-site subscriptions someone is paying for.
-5. **Prices never in the repo.** Account price ids come from four optional server-only env vars (same mechanism as `NEXT_PUBLIC_STRIPE_PREMIUM_*`, but not `NEXT_PUBLIC_` because the client sends `{ plan, interval }`, never a price id). Site allowance is `ACCOUNT_PLAN_SITE_ALLOWANCE = { PRO: 5, UNLIMITED: null }`, keyed by plan; price id maps to plan, never amount to plan. UI amounts are read live from Stripe (`getPriceAmount`).
+5. **Prices never in the repo; price ids are code constants.** (Controller ruling 2026-11-08, overriding the env-var draft: Rufus's standing rule is config in the repo, env vars only for secrets or kill switches; a price id is not a price and not a secret.) `lib/account-plans.ts` exports `ACCOUNT_PRICE_IDS: Readonly<Record<'test' | 'live', Record<AccountPlan, Record<BillingInterval, string | null>>>>`, all `null` until the products are created at launch (phase 3 fills them in a commit). The mode is `'live'` when the Stripe secret key starts with `sk_live_`, else `'test'`. No new env vars. The client sends `{ plan, interval }`, never a price id. Site allowance is `ACCOUNT_PLAN_SITE_ALLOWANCE = { PRO: 5, UNLIMITED: null }`, keyed by plan; price id maps to plan, never amount to plan. UI amounts are read live from Stripe (`getPriceAmount`).
 6. **No new emails in phase 2.** Lapse warning with keep-this-site checkout, account confirmation and account annual renewal reminder are deferred to bead `flowershow-gyj.1`. Phase 2 records `cancel_at_period_end` and emits a PostHog event only. Consolidated per-site cancellations send nothing.
 7. **Webhook idempotency:** account handlers sync from `stripe.subscriptions.retrieve` (not the event payload) and upsert `AccountSubscription` by `userId`; a second, different live account subscription for the same user (two checkout tabs) is logged at ERROR and left for a human to refund, never silently overwritten; consolidation is guarded durably by `Subscription.consolidatedAt` plus a lookup of the account customer's balance transactions by `metadata.siteSubscriptionId` (Stripe idempotency keys expire after 24 hours, webhook retries run for 3 days).
 8. **Consolidation trigger:** whenever an account subscription is synced live (and when a site is newly covered in 2b), not only on `checkout.session.completed`. It only touches live per-site subscriptions of sites the account plan covers. This also makes the phase 3 grandfathering (a Pro subscription created by hand in the Stripe dashboard with `platform`, `kind: account` and `userId` metadata) work, via `customer.subscription.created`. Sync falls back to finding the user by `User.stripeCustomerId = subscription.customer` when `userId` is missing, and sets `User.stripeCustomerId` when it is null.
@@ -82,7 +82,7 @@
 
 **Files:**
 - Create: `apps/flowershow/lib/account-plans.ts`, `apps/flowershow/lib/account-plans.test.ts`
-- Modify: `apps/flowershow/env.mjs` (server: `STRIPE_PRO_MONTHLY_PRICE_ID`, `STRIPE_PRO_YEARLY_PRICE_ID`, `STRIPE_UNLIMITED_MONTHLY_PRICE_ID`, `STRIPE_UNLIMITED_YEARLY_PRICE_ID`, all `z.string().optional()`, comment: price ids only, amounts live in Stripe), `apps/flowershow/vitest.setup.ts` (test ids `price_pro_month_test` etc.)
+- No env changes (Ruling 5). Tests mock `ACCOUNT_PRICE_IDS` (or the mode helper) to supply ids such as `price_pro_month_test`.
 - Modify: `apps/flowershow/lib/stripe.ts` (`KNOWN_PRICE_IDS` includes configured account price ids; add `getSubscriptionKind`)
 - Modify: `apps/flowershow/lib/entitlements.ts`, `entitlements.test.ts`
 
@@ -91,6 +91,7 @@
   - `export const ACCOUNT_PLANS_LIVE = false;` (comment: flipped in phase 3, `flowershow-a7k`)
   - `export const ACCOUNT_PLAN_SITE_ALLOWANCE: Readonly<Record<AccountPlan, number | null>> = { PRO: 5, UNLIMITED: null }`
   - `export type BillingInterval = 'month' | 'year'`
+  - `export const ACCOUNT_PRICE_IDS` (Ruling 5) and `export function stripeMode(): 'test' | 'live'`
   - `export function accountPriceId(plan: AccountPlan, interval: BillingInterval): string | null`
   - `export function accountPlanForPriceId(priceId: string): { plan: AccountPlan; interval: BillingInterval } | null`
   - `export function accountPlansEnabled(): boolean` (`ACCOUNT_PLANS_LIVE` and all four price ids set)
@@ -310,13 +311,13 @@ Copy (exact, numbers from data, never literals): no plan: two cards, "Pro: up to
 ### Task 12: Upgrade link helper
 
 **Files:**
-- Modify: `apps/flowershow/lib/account-plans.ts` (add `accountBillingUrl()`), `apps/flowershow/lib/storage-limits.ts` (Free `upgradeUrl` becomes `accountBillingUrl()` when enabled)
+- Modify: `apps/flowershow/lib/account-plans.ts` (add `accountBillingUrl()`). Storage limits are advisory since PR #1530 and have no `upgradeUrl`; nothing in `storage-limits.ts` changes.
 
 **Interfaces:**
 - Produces: `export function accountBillingUrl(): string` → `https://${NEXT_PUBLIC_CLOUD_DOMAIN}/settings/billing`. The MCP upgrade hint (`flowershow-wup`) consumes it. `fl upgrade` is not in phase 2: a CLI release would ship a link to a page that 404s until the flag flips, so it moves to the phase 3 launch checklist (prints `<config.APIURL()>/settings/billing`, plus the site's billing URL with `--site`).
 
-- [ ] **Step 1: Write failing tests:** `accountBillingUrl()` with `NEXT_PUBLIC_CLOUD_DOMAIN=cloud.test` is `https://cloud.test/settings/billing`; storage `upgradeUrl` for a Free site is the account URL when enabled and the site URL when not; no other link changes.
-- [ ] **Step 2: Run** `pnpm vitest --project=unit lib/account-plans.test.ts lib/storage-limits.test.ts` Expected: FAIL.
+- [ ] **Step 1: Write failing tests:** `accountBillingUrl()` with `NEXT_PUBLIC_CLOUD_DOMAIN=cloud.test` is `https://cloud.test/settings/billing`; no other link changes.
+- [ ] **Step 2: Run** `pnpm vitest --project=unit lib/account-plans.test.ts` Expected: FAIL.
 - [ ] **Step 3: Implement.**
 - [ ] **Step 4: Run.** Expected: PASS.
 - [ ] **Step 5: Commit** `feat(billing): account billing link for upgrade prompts`.
@@ -339,7 +340,7 @@ That branch is docs-only so far; its plan adds `SiteMember`, `SiteInvite`, `Publ
 
 ## Launch checklist (phase 3, `flowershow-a7k`, not this plan)
 
-Create the Pro and Unlimited products and four prices in Stripe (test mode first); set the four env vars; add `customer.subscription.created` to the webhook endpoint's events; configure the billing portal to allow switching between the two account products; grandfather the three multi-site accounts (Pro subscription created on an account customer with `platform`, `kind: account` and `userId` metadata and a forever `amount_off` coupon; consolidation runs on sync); flip `ACCOUNT_PLANS_LIVE`; ship `fl upgrade` (Task 12 note); then delete the ladder, `getBundleInfo`, `BUNDLE_TIERS` and the coupon env vars.
+Create the Pro and Unlimited products and four prices in Stripe (test mode first); fill `ACCOUNT_PRICE_IDS` in a commit; add `customer.subscription.created` to the webhook endpoint's events; configure the billing portal to allow switching between the two account products; grandfather the three multi-site accounts (Pro subscription created on an account customer with `platform`, `kind: account` and `userId` metadata and a forever `amount_off` coupon; consolidation runs on sync); flip `ACCOUNT_PLANS_LIVE`; ship `fl upgrade` (Task 12 note); then delete the ladder, `getBundleInfo`, `BUNDLE_TIERS` and the coupon env vars.
 
 ## Follow-ups (beads)
 
