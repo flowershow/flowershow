@@ -31,6 +31,9 @@ CREATE TABLE "SiteInvite" (
 );
 
 -- CreateIndex
+CREATE INDEX "Publish_user_id_idx" ON "Publish"("user_id");
+
+-- CreateIndex
 CREATE INDEX "SiteMember_user_id_idx" ON "SiteMember"("user_id");
 
 -- CreateIndex

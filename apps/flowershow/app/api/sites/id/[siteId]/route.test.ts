@@ -133,6 +133,8 @@ describe('DELETE /api/sites/id/:siteId', () => {
       id: 'site-1',
       userId: 'owner-1',
       customDomain: null,
+      plan: 'PREMIUM',
+      members: [{ userId: 'ed-1' }],
       _count: { blobs: 0 },
     });
     const res = await DELETE(

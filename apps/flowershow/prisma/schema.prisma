@@ -377,6 +377,7 @@ model Publish {
   files             PublishFile[]
 
   @@index([siteId, startedAt(sort: Desc)])
+  @@index([userId])
 }
 
 model PublishFile {

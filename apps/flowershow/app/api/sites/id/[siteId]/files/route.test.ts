@@ -600,11 +600,17 @@ describe('editor access (files)', () => {
     vi.mocked(prisma.site.findUnique).mockResolvedValue(
       site('PREMIUM', [editor]),
     );
+    vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
+      { path: 'notes.md' },
+    ] as any);
     const res = await DELETE(
       makeDeleteRequest({ paths: ['notes.md'] }),
       makeParams(SITE_ID),
     );
-    expect(res.status).not.toBe(403);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.deleted).toEqual(['notes.md']);
+    expect(body.notFound).toHaveLength(0);
   });
 
   it('DELETE refuses an editor of a FREE site with premium_required', async () => {
