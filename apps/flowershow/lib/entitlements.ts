@@ -1,4 +1,4 @@
-import { Plan } from '@prisma/client';
+import { Plan, type PlanSource } from '@prisma/client';
 
 export const MB = 1_048_576;
 export const GB = 1_073_741_824;
@@ -57,12 +57,16 @@ export type Entitlements = {
   isPaid: boolean;
   features: ReadonlySet<Feature>;
   limits: PlanLimits;
+  planSource: PlanSource | null;
 };
 
 /**
  * Resolve what a site is entitled to. Pure, no DB access.
  */
-export function getEntitlements(site: { plan?: Plan | null }): Entitlements {
+export function getEntitlements(site: {
+  plan?: Plan | null;
+  planSource?: PlanSource | null;
+}): Entitlements {
   const plan: Plan = site.plan === Plan.PREMIUM ? Plan.PREMIUM : Plan.FREE;
   const isPaid = plan === Plan.PREMIUM;
   return {
@@ -70,5 +74,6 @@ export function getEntitlements(site: { plan?: Plan | null }): Entitlements {
     isPaid,
     features: new Set(isPaid ? PREMIUM_FEATURES : []),
     limits: PLAN_LIMITS[plan],
+    planSource: site.planSource ?? null,
   };
 }

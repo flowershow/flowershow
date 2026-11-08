@@ -1,5 +1,6 @@
 import Stripe from 'stripe';
 import { env } from '@/env.mjs';
+import { accountPlanForPriceId, premiumPriceIds } from '@/lib/account-plans';
 
 export const stripe = new Stripe(env.STRIPE_SECRET_KEY, {
   apiVersion: '2024-12-18.acacia' as any,
@@ -17,12 +18,15 @@ export const FLOWERSHOW_PLATFORM = 'flowershow';
 // Fallback ownership signal for subscriptions created before metadata tagging
 // (they won't carry metadata.platform). A Flowershow subscription always bills
 // one of our known prices, so a line-item price match is a reliable "ours".
-const KNOWN_PRICE_IDS = new Set(
-  [
-    env.NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID,
-    env.NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID,
-  ].filter((id): id is string => Boolean(id)),
-);
+function isAccountPrice(priceId: string | undefined): boolean {
+  return !!priceId && accountPlanForPriceId(priceId) !== null;
+}
+
+function isKnownPrice(priceId: string | undefined): boolean {
+  return (
+    !!priceId && (premiumPriceIds().has(priceId) || isAccountPrice(priceId))
+  );
+}
 
 /**
  * Whether a Stripe subscription belongs to Flowershow.
@@ -40,5 +44,18 @@ export function isFlowershowSubscription(subscription: any): boolean {
     return true;
   }
   const items = subscription?.items?.data ?? [];
-  return items.some((item: any) => KNOWN_PRICE_IDS.has(item?.price?.id));
+  return items.some((item: any) => isKnownPrice(item?.price?.id));
+}
+
+/**
+ * Whether a Flowershow subscription is an account plan (Pro/Unlimited) or a
+ * per-site one: `metadata.kind === 'account'`, else any line-item price is an
+ * account price id.
+ */
+export function getSubscriptionKind(sub: any): 'account' | 'site' {
+  if (sub?.metadata?.kind === 'account') return 'account';
+  const items = sub?.items?.data ?? [];
+  return items.some((item: any) => isAccountPrice(item?.price?.id))
+    ? 'account'
+    : 'site';
 }
