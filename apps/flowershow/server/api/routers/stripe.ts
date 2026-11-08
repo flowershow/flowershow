@@ -2,6 +2,13 @@ import { isSiteOwner } from '@/lib/site-authz';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { env } from '@/env.mjs';
+import { getOrCreateStripeCustomer } from '@/lib/account-billing';
+import {
+  accountPlansEnabled,
+  accountPriceId,
+  isLiveSiteStatus,
+  premiumPriceIds,
+} from '@/lib/account-plans';
 import { FLOWERSHOW_PLATFORM, stripe } from '@/lib/stripe';
 import type { BundleTierId } from '@/lib/stripe-plans';
 import { BUNDLE_TIERS, getBundleTierId } from '@/lib/stripe-plans';
@@ -10,7 +17,8 @@ import { createTRPCRouter, protectedProcedure } from '../trpc';
 const protocol =
   process.env.NODE_ENV === 'development' ? 'http://' : 'https://';
 
-const returnURLBase = `${protocol}${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site`;
+const cloudBase = `${protocol}${env.NEXT_PUBLIC_CLOUD_DOMAIN}`;
+const returnURLBase = `${cloudBase}/site`;
 
 // Maps each bundle tier id to its configured Stripe coupon ID. The discount
 // percentage itself lives on the coupon in Stripe — the code only knows which
@@ -118,6 +126,15 @@ export const stripeRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
+      // Only the Premium prices may be bought per site; a client-supplied
+      // account price must never end up attached to a single site.
+      if (!premiumPriceIds().has(input.priceId)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid price',
+        });
+      }
+
       const site = await ctx.db.site.findUnique({
         where: { id: input.siteId },
         include: { user: true },
@@ -134,6 +151,13 @@ export const stripeRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Not authorized',
+        });
+      }
+
+      if (site.planSource === 'ACCOUNT' || site.planSource === 'MANUAL') {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'This site is already Premium through your account plan.',
         });
       }
 
@@ -189,6 +213,79 @@ export const stripeRouter = createTRPCRouter({
         },
         success_url: `${returnURLBase}/${input.siteId}/settings?upgrade_success=true`,
         cancel_url: `${returnURLBase}/${input.siteId}/settings?upgrade_cancelled=true`,
+      });
+
+      return { url: checkoutSession.url };
+    }),
+
+  // Account-level plan (Pro / Unlimited). Dark until accountPlansEnabled().
+  // The client sends { plan, interval }, never a price id.
+  createAccountCheckoutSession: protectedProcedure
+    .input(
+      z.object({
+        plan: z.enum(['PRO', 'UNLIMITED']),
+        interval: z.enum(['month', 'year']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      if (!accountPlansEnabled()) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'Account plans are not available yet',
+        });
+      }
+
+      const priceId = accountPriceId(input.plan, input.interval);
+      if (!priceId) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'This plan is not available',
+        });
+      }
+
+      // Any account subscription that is not over for good (including
+      // `incomplete`, e.g. 3DS pending) blocks a second checkout.
+      const existing = await ctx.db.accountSubscription.findUnique({
+        where: { userId },
+        select: { status: true },
+      });
+      if (existing && isLiveSiteStatus(existing.status)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'You already have an account plan. Change it from Billing.',
+        });
+      }
+
+      const user = await ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { id: true, email: true, stripeCustomerId: true },
+      });
+      if (!user) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'User not found' });
+      }
+
+      const customer = await getOrCreateStripeCustomer(user);
+
+      // Metadata goes on both the session and the subscription: checkout
+      // metadata does not flow to the subscription, and subscription webhooks
+      // only carry the subscription's own metadata.
+      const metadata = {
+        platform: FLOWERSHOW_PLATFORM,
+        kind: 'account',
+        userId,
+      };
+      const checkoutSession = await stripe.checkout.sessions.create({
+        customer,
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        client_reference_id: userId,
+        line_items: [{ price: priceId, quantity: 1 }],
+        metadata,
+        subscription_data: { metadata },
+        success_url: `${cloudBase}/settings/billing?upgrade_success=true`,
+        cancel_url: `${cloudBase}/settings/billing?upgrade_cancelled=true`,
       });
 
       return { url: checkoutSession.url };

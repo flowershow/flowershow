@@ -104,6 +104,27 @@ describe('user.deleteAccount', () => {
     expect(sendTransactionalEmail).not.toHaveBeenCalled();
   });
 
+  it('blocks deletion when a live account plan exists', async () => {
+    const db = makeDb({ ...USER, accountSubscription: { status: 'active' } });
+    const caller = createCaller(db);
+
+    await expect(caller.user.deleteAccount({ confirm: 'ada' })).rejects.toThrow(
+      'Please cancel your account plan before deleting your account.',
+    );
+
+    expect(db.user.delete).not.toHaveBeenCalled();
+    expect(sendTransactionalEmail).not.toHaveBeenCalled();
+  });
+
+  it('allows deletion when the account plan is canceled', async () => {
+    const db = makeDb({ ...USER, accountSubscription: { status: 'canceled' } });
+    const caller = createCaller(db);
+
+    await caller.user.deleteAccount({ confirm: 'ada' });
+
+    expect(db.user.delete).toHaveBeenCalled();
+  });
+
   it('blocks deletion (and sends nothing) when a site has an active subscription', async () => {
     const db = makeDb({
       ...USER,

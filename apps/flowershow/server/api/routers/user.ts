@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AccountDeletedEmail } from '@/emails/account-deleted';
+import { isLiveSiteStatus } from '@/lib/account-plans';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
 import PostHogClient from '@/lib/server-posthog';
@@ -262,6 +263,7 @@ export const userRouter = createTRPCRouter({
           username: true,
           name: true,
           email: true,
+          accountSubscription: { select: { status: true } },
           sites: {
             select: {
               id: true,
@@ -280,6 +282,18 @@ export const userRouter = createTRPCRouter({
 
       if (input.confirm !== user.username) {
         throw new Error('Confirmation does not match username');
+      }
+
+      // A live account plan keeps billing a deleted user, so cancel it first.
+      if (
+        user.accountSubscription &&
+        isLiveSiteStatus(user.accountSubscription.status)
+      ) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'Please cancel your account plan before deleting your account.',
+        });
       }
 
       // Check for sites with active subscriptions
