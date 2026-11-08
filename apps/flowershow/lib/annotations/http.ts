@@ -135,6 +135,7 @@ async function authorizeSiteManagerCookie<
       response: errorResponse(403, 'forbidden', 'Cross-origin request'),
     };
   }
+  // Capture the site the loader returns, so we can hand it back to the caller.
   const loaded: { site: Site | null } = { site: null };
   const userId = await getSiteManagerFromRequest(
     request,

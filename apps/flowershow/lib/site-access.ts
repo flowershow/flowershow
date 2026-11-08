@@ -35,7 +35,7 @@ export async function hasSiteAccess(
 ): Promise<boolean> {
   if (!site || site.privacyMode !== 'PASSWORD') return true;
   // Owner-only. A signed-in bypass for editors is a separate feature: follow-up
-  // bead flowershow-dbg (signed-in bypass of visitor password).
+  // bead flowershow-dbg.12 (signed-in bypass of visitor password).
   if (isSiteOwner(ctx.session?.user?.id, site)) return true;
 
   const cookieHeader = ctx.headers.get('cookie') ?? '';
