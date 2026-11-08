@@ -162,6 +162,8 @@ describe('POST /api/sites/id/[siteId]/files', () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValueOnce({
         id: SITE_ID,
         userId: 'other-user',
+        plan: 'FREE',
+        members: [],
       } as any);
 
       const res = await POST(
@@ -448,6 +450,8 @@ describe('DELETE /api/sites/id/[siteId]/files', () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValueOnce({
         id: SITE_ID,
         userId: 'other-user',
+        plan: 'FREE',
+        members: [],
       } as any);
 
       const res = await DELETE(
@@ -519,5 +523,113 @@ describe('DELETE /api/sites/id/[siteId]/files', () => {
       expect(body.deleted).toContain('exists.md');
       expect(body.notFound).toContain('missing.md');
     });
+  });
+});
+
+describe('editor access (files)', () => {
+  const editor = { userId: 'ed-1' };
+  const site = (plan: string, members: { userId: string }[]) =>
+    ({ id: SITE_ID, userId: 'owner-1', plan, members }) as any;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.blob.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ total: BigInt(0) }]);
+    vi.mocked(prisma.publish.create).mockResolvedValue({
+      id: PUBLISH_ID,
+    } as any);
+    vi.mocked(prisma.publishFile.updateMany).mockResolvedValue({
+      count: 0,
+    } as any);
+    vi.mocked(prisma.publishFile.create).mockResolvedValue({} as any);
+    vi.mocked(validateAccessToken).mockResolvedValue(editor);
+  });
+
+  it('POST lets an editor of a Premium site publish and records who published', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(
+      site('PREMIUM', [editor]),
+    );
+    const res = await POST(
+      makePostRequest({ files: [aFile] }),
+      makeParams(SITE_ID),
+    );
+    expect(res.status).toBe(200);
+    expect(prisma.publish.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ userId: 'ed-1' }),
+      }),
+    );
+  });
+
+  it('POST refuses an editor of a FREE site with premium_required', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(site('FREE', [editor]));
+    const res = await POST(
+      makePostRequest({ files: [aFile] }),
+      makeParams(SITE_ID),
+    );
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('premium_required');
+    expect(prisma.publish.create).not.toHaveBeenCalled();
+  });
+
+  it('POST refuses a removed editor with forbidden', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(site('PREMIUM', []));
+    const res = await POST(
+      makePostRequest({ files: [aFile] }),
+      makeParams(SITE_ID),
+    );
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('forbidden');
+  });
+
+  it('POST loads the member row for the caller only', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(
+      site('PREMIUM', [editor]),
+    );
+    await POST(makePostRequest({ files: [aFile] }), makeParams(SITE_ID));
+    expect(prisma.site.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          members: { where: { userId: 'ed-1' }, select: { userId: true } },
+        }),
+      }),
+    );
+  });
+
+  it('DELETE lets an editor of a Premium site delete files', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(
+      site('PREMIUM', [editor]),
+    );
+    vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
+      { path: 'notes.md' },
+    ] as any);
+    const res = await DELETE(
+      makeDeleteRequest({ paths: ['notes.md'] }),
+      makeParams(SITE_ID),
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.deleted).toEqual(['notes.md']);
+    expect(body.notFound).toHaveLength(0);
+  });
+
+  it('DELETE refuses an editor of a FREE site with premium_required', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(site('FREE', [editor]));
+    const res = await DELETE(
+      makeDeleteRequest({ paths: ['notes.md'] }),
+      makeParams(SITE_ID),
+    );
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('premium_required');
+  });
+
+  it('DELETE refuses a removed editor with forbidden', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(site('PREMIUM', []));
+    const res = await DELETE(
+      makeDeleteRequest({ paths: ['notes.md'] }),
+      makeParams(SITE_ID),
+    );
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('forbidden');
   });
 });

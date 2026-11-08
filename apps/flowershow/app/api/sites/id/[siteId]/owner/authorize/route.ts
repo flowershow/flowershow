@@ -1,4 +1,4 @@
-import { isSiteOwner } from '@/lib/site-authz';
+import { canManageSite, siteAuthzSelect } from '@/lib/site-authz';
 import { type NextRequest } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { env } from '@/env.mjs';
@@ -38,7 +38,7 @@ function text(status: number, body: string) {
  * GET /api/sites/id/:siteId/owner/authorize?return=/path  (cloud host)
  *
  * Step 2 of the owner sign-in handshake. Checks the account session and that
- * the user owns the site, then sends the browser back to the site's own host
+ * the user may manage the site (owner, or editor while Premium), then sends the browser back to the site's own host
  * with a one-time code. The destination is always the site's own origin
  * (never taken from the request), and `return` is reduced to a relative path.
  * Not signed in: go to login, then come back here.
@@ -69,12 +69,17 @@ export async function GET(
 
   const site = await prisma.site.findUnique({
     where: { id: siteId },
-    select: { id: true, userId: true, subdomain: true, customDomain: true },
+    select: {
+      id: true,
+      subdomain: true,
+      customDomain: true,
+      ...siteAuthzSelect(userId),
+    },
   });
   // Same answer for "no such site" and "not yours": don't confirm site ids.
-  // Owner-only (editors do not get the owner cookie); revisit in #919.
-  if (!site || !isSiteOwner(userId, site)) {
-    return text(403, 'You are signed in, but you do not own this site.');
+  // Owners and Premium editors get the site-host cookie (a lapsed editor doesn't).
+  if (!site || !canManageSite(userId, site)) {
+    return text(403, 'You are signed in, but you cannot manage this site.');
   }
   const origin = getSiteOwnOrigin(site);
   if (!origin) return text(404, 'This site has no address to sign in to.');

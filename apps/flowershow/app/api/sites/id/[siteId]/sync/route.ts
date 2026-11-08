@@ -226,6 +226,7 @@ export async function POST(
       const publish = await prisma.publish.create({
         data: {
           siteId,
+          userId: access.kind === 'user' ? access.userId : null,
           source: mcpInternalCaller(request)
             ? 'mcp'
             : clientTypeToPublishSource(getClientInfo(request).client_type),

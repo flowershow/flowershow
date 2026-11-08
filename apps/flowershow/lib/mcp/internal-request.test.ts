@@ -55,7 +55,12 @@ describe('in-process MCP marker', () => {
   });
 
   it('still enforces site ownership', async () => {
-    findSite.mockResolvedValue({ id: 's1', userId: 'someone-else' });
+    findSite.mockResolvedValue({
+      id: 's1',
+      userId: 'someone-else',
+      plan: 'FREE',
+      members: [],
+    });
     const r = await authorizeSiteRequest(
       markMcpInternal(req(), { userId: 'u1' }),
       's1',
@@ -63,7 +68,7 @@ describe('in-process MCP marker', () => {
     expect(r.ok).toBe(false);
     if (!r.ok) expect(r.response.status).toBe(403);
 
-    const own = { id: 's1', userId: 'u1' };
+    const own = { id: 's1', userId: 'u1', plan: 'FREE', members: [] };
     findSite.mockResolvedValue(own);
     expect(
       await authorizeSiteRequest(

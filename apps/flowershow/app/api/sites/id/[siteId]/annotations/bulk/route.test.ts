@@ -47,7 +47,12 @@ const params = () => ({ params: Promise.resolve({ siteId: 'site-1' }) });
 beforeEach(() => {
   vi.clearAllMocks();
   validateToken.mockResolvedValue({ userId: 'owner-1' });
-  siteFind.mockResolvedValue({ id: 'site-1', userId: 'owner-1' });
+  siteFind.mockResolvedValue({
+    id: 'site-1',
+    userId: 'owner-1',
+    plan: 'FREE',
+    members: [],
+  });
   updateMany.mockResolvedValue({ count: 2 });
   deleteMany.mockResolvedValue({ count: 3 });
 });

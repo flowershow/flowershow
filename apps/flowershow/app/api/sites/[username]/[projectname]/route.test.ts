@@ -23,6 +23,7 @@ vi.mock('@/lib/db/internal', () => ({
   internalSiteSelect: {},
 }));
 
+import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
 import { GET } from './route';
 
@@ -221,5 +222,96 @@ describe('GET /api/sites/:username/:projectname — exact name lookup', () => {
       expect(body).not.toHaveProperty(leaked);
     }
     expect(body.user).not.toHaveProperty('id');
+  });
+});
+
+describe('GET /api/sites/:username/:projectname — authenticated lookup', () => {
+  const validate = validateAccessToken as ReturnType<typeof vi.fn>;
+  const findFirst = prisma.site.findFirst as ReturnType<typeof vi.fn>;
+  const findUnique = prisma.site.findUnique as ReturnType<typeof vi.fn>;
+  const BOB_SITE = {
+    id: 'site-1',
+    subdomain: 'notes-bob',
+    customDomain: null,
+    projectName: 'notes',
+    privacyMode: 'PUBLIC',
+    tokenVersion: 0,
+    isTemporary: false,
+    expiresAt: null,
+    userId: 'owner-1',
+    user: { id: 'owner-1', username: 'bob' },
+    plan: 'PREMIUM',
+    members: [{ userId: 'ed-1' }],
+  };
+  const EXTENDED = {
+    id: 'site-1',
+    projectName: 'notes',
+    ghRepository: null,
+    ghBranch: null,
+    customDomain: null,
+    subdomain: 'notes-bob',
+    rootDir: null,
+    plan: 'PREMIUM',
+    privacyMode: 'PUBLIC',
+    createdAt: new Date(0),
+    updatedAt: new Date(0),
+    userId: 'owner-1',
+    user: { username: 'bob' },
+    _count: { blobs: 1 },
+    blobs: [{ size: 5 }],
+  };
+
+  it('returns extended data to a Premium editor', async () => {
+    validate.mockResolvedValue({ userId: 'ed-1' });
+    findFirst.mockResolvedValue(BOB_SITE);
+    findUnique.mockResolvedValue(EXTENDED);
+    const res = await GET(
+      makeRequest('bob', 'notes'),
+      makeParams('bob', 'notes'),
+    );
+    const json = await res.json();
+    expect(json.site.id).toBe('site-1');
+    expect(findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          members: { where: { userId: 'ed-1' }, select: { userId: true } },
+        }),
+      }),
+    );
+  });
+
+  it('returns only public fields to a removed editor', async () => {
+    validate.mockResolvedValue({ userId: 'ed-1' });
+    findFirst.mockResolvedValue({ ...BOB_SITE, members: [] });
+    findUnique.mockResolvedValue(EXTENDED);
+    const res = await GET(
+      makeRequest('bob', 'notes'),
+      makeParams('bob', 'notes'),
+    );
+    const json = await res.json();
+    expect(json).not.toHaveProperty('site');
+    expect(json.id).toBe('site-1');
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns only public fields to an editor of a lapsed site', async () => {
+    validate.mockResolvedValue({ userId: 'ed-1' });
+    findFirst.mockResolvedValue({ ...BOB_SITE, plan: 'FREE' });
+    const res = await GET(
+      makeRequest('bob', 'notes'),
+      makeParams('bob', 'notes'),
+    );
+    expect(await res.json()).not.toHaveProperty('site');
+  });
+
+  it('still returns extended data to the owner', async () => {
+    validate.mockResolvedValue({ userId: 'owner-1' });
+    findFirst.mockResolvedValue({ ...BOB_SITE, plan: 'FREE', members: [] });
+    findUnique.mockResolvedValue(EXTENDED);
+    const res = await GET(
+      makeRequest('bob', 'notes'),
+      makeParams('bob', 'notes'),
+    );
+    expect((await res.json()).site.id).toBe('site-1');
   });
 });

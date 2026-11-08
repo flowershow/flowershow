@@ -34,7 +34,15 @@ const SITE = {
   userId: 'owner-1',
   subdomain: 'notes-alice',
   customDomain: null as string | null,
+  plan: 'FREE' as 'FREE' | 'PREMIUM',
+  members: [] as { userId: string }[],
 };
+const EDITED = {
+  ...SITE,
+  plan: 'PREMIUM' as const,
+  members: [{ userId: 'ed-1' }],
+};
+const CANNOT_MANAGE = 'You are signed in, but you cannot manage this site.';
 const params = (siteId = 'site-1') => ({
   params: Promise.resolve({ siteId }),
 });
@@ -87,6 +95,34 @@ describe('GET owner/authorize (cloud)', () => {
     session.mockResolvedValue({ user: { id: 'mallory' } });
     const res = await authorize(get(CLOUD, path), params());
     expect(res.status).toBe(403);
+    expect(await res.text()).toBe(CANNOT_MANAGE);
+    expect(createCode).not.toHaveBeenCalled();
+  });
+
+  it('authorize sends a Premium editor back to the site host with a one-time code', async () => {
+    session.mockResolvedValue({ user: { id: 'ed-1' } });
+    siteFind.mockResolvedValue(EDITED);
+    const res = await authorize(get(CLOUD, path), params());
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(
+      `http://${SITE_HOST}/_flowershow/owner/callback?code=the-code&return=%2Fnotes%2Fdraft`,
+    );
+    expect(createCode).toHaveBeenCalledWith('site-1', 'ed-1');
+    expect(siteFind).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          members: { where: { userId: 'ed-1' }, select: { userId: true } },
+        }),
+      }),
+    );
+  });
+
+  it('authorize refuses an editor of a FREE site', async () => {
+    session.mockResolvedValue({ user: { id: 'ed-1' } });
+    siteFind.mockResolvedValue({ ...EDITED, plan: 'FREE' });
+    const res = await authorize(get(CLOUD, path), params());
+    expect(res.status).toBe(403);
+    expect(await res.text()).toBe(CANNOT_MANAGE);
     expect(createCode).not.toHaveBeenCalled();
   });
 
@@ -148,6 +184,24 @@ describe('GET owner/callback (site host)', () => {
 
   it('rejects a code for a user who no longer owns the site', async () => {
     consumeCode.mockResolvedValue('former-owner');
+    const res = await callback(get(SITE_HOST, path), params());
+    expect(res.status).toBe(400);
+    expect(res.headers.get('set-cookie')).toBeNull();
+  });
+
+  it('callback sets the cookie for a Premium editor', async () => {
+    consumeCode.mockResolvedValue('ed-1');
+    siteFind.mockResolvedValue(EDITED);
+    const res = await callback(get(SITE_HOST, path), params());
+    expect(res.status).toBe(303);
+    expect(res.headers.get('set-cookie')).toMatch(
+      new RegExp(`^${ownerCookieName()}=`),
+    );
+  });
+
+  it('callback rejects a code whose user was removed as editor', async () => {
+    consumeCode.mockResolvedValue('ed-1');
+    siteFind.mockResolvedValue({ ...EDITED, members: [] });
     const res = await callback(get(SITE_HOST, path), params());
     expect(res.status).toBe(400);
     expect(res.headers.get('set-cookie')).toBeNull();
@@ -227,6 +281,38 @@ describe('GET owner/me', () => {
       params(),
     );
     expect(await res.json()).toEqual({ isOwner: false });
+  });
+});
+
+describe('GET owner/me (editors)', () => {
+  it('me is true for an editor cookie and false after removal', async () => {
+    const token = await signOwnerToken({
+      siteId: 'site-1',
+      userId: 'ed-1',
+      host: SITE_HOST,
+    });
+    const cookie = `${ownerCookieName()}=${token}`;
+    siteFind.mockResolvedValue(EDITED);
+    const before = await me(
+      get(SITE_HOST, '/_flowershow/owner/me', cookie),
+      params(),
+    );
+    expect(await before.json()).toEqual({ isOwner: true });
+    expect(siteFind).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { id: 'site-1' },
+        select: expect.objectContaining({
+          members: { where: { userId: 'ed-1' }, select: { userId: true } },
+        }),
+      }),
+    );
+
+    siteFind.mockResolvedValue({ ...EDITED, members: [] });
+    const after = await me(
+      get(SITE_HOST, '/_flowershow/owner/me', cookie),
+      params(),
+    );
+    expect(await after.json()).toEqual({ isOwner: false });
   });
 });
 

@@ -1,5 +1,6 @@
 import type { OpenAPIRegistry } from '@asteasolutions/zod-to-openapi';
 import { z } from 'zod';
+import { FORBIDDEN_OR_PREMIUM_REQUIRED } from './sites.js';
 import {
   AnnotationSettingsSchema,
   AnnotationsBulkRequestSchema,
@@ -39,7 +40,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
     operationId: 'listAnnotations',
     summary: 'List annotations',
     description:
-      "Without a token: one page's annotations (`path` required), only when annotations are on for that page and the caller passes the site's password gate. With the site owner's CLI/PAT token: all of the site's annotations (optionally filtered by `path` and `status`), whatever the setting. `pageEdited` is true when the page was edited or removed after the note was left.",
+      "Without a token: one page's annotations (`path` required), only when annotations are on for that page and the caller passes the site's password gate. With the CLI/PAT token of the site owner, or of an editor on a Premium site: all of the site's annotations (optionally filtered by `path` and `status`), whatever the setting. `pageEdited` is true when the page was edited or removed after the note was left.",
     tags: ['Annotations'],
     security: [{ bearerToken: [] }, {}],
     request: {
@@ -53,7 +54,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
       '200': ok('Annotations, ordered by path then position', ListAnnotationsResponse),
       '400': error('`path` missing on an unauthenticated request'),
       '401': error('Invalid token'),
-      '403': error('Token does not own this site'),
+      '403': error(FORBIDDEN_OR_PREMIUM_REQUIRED),
       '404': error('Site not found, or annotations not on for this page'),
     },
   });
@@ -86,7 +87,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
     operationId: 'createAnnotationReply',
     summary: 'Reply to an annotation',
     description:
-      'Open to anyone who can view the comment\'s page (annotations on, password gate passed), or the site owner (bearer token or owner cookie), whose reply is stored with `byOwner: true`. Limits: note 2000, name 60 characters; body 16 KB; 100 replies per annotation.',
+      'Open to anyone who can view the comment\'s page (annotations on, password gate passed), or the site owner or an editor on a Premium site (bearer token or owner cookie), whose reply is stored with `byOwner: true`. Limits: note 2000, name 60 characters; body 16 KB; 100 replies per annotation.',
     tags: ['Annotations'],
     security: [{ bearerToken: [] }, { siteOwnerCookie: [] }, {}],
     request: { params: annotationParams, body: { content: { 'application/json': { schema: CreateAnnotationReplyRequest } } } },
@@ -106,7 +107,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
     operationId: 'setAnnotationStatus',
     summary: 'Resolve or reopen an annotation',
     description:
-      'Open to anyone who can view the comment\'s page, or the site owner. Resolving sets `resolvedAt` and `resolvedBy` (the given name or null); reopening clears both. Deleting stays owner-only (bulk route).',
+      'Open to anyone who can view the comment\'s page, or the site owner or an editor on a Premium site. Resolving sets `resolvedAt` and `resolvedBy` (the given name or null); reopening clears both. Deleting goes through the bulk route (owner or Premium editor).',
     tags: ['Annotations'],
     security: [{ bearerToken: [] }, { siteOwnerCookie: [] }, {}],
     request: { params: annotationParams, body: { content: { 'application/json': { schema: SetAnnotationStatusRequest } } } },
@@ -124,7 +125,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
     path: '/api/sites/id/{siteId}/annotations/bulk',
     operationId: 'bulkAnnotations',
     summary: 'Resolve, reopen or delete annotations',
-    description: 'Site owner only: a bearer token, or the site owner cookie on the site’s own host (same-origin requests only). Pass either `ids` or `all: true`; `path` narrows to one page.',
+    description: 'Site owner, or an editor on a Premium site: a bearer token, or the owner cookie on the site’s own host (same-origin requests only). Pass either `ids` or `all: true`; `path` narrows to one page.',
     tags: ['Annotations'],
     security: [{ bearerToken: [] }, { siteOwnerCookie: [] }],
     request: { params: siteParams, body: { content: { 'application/json': { schema: AnnotationsBulkRequest } } } },
@@ -132,7 +133,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
       '200': ok('Number of annotations changed', AnnotationsBulkResponse),
       '400': error('Invalid request body'),
       '401': error('Not authenticated'),
-      '403': error('Token does not own this site'),
+      '403': error(FORBIDDEN_OR_PREMIUM_REQUIRED),
       '404': error('Site not found'),
     },
   });
@@ -148,7 +149,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
     responses: {
       '200': ok('Setting and open count', AnnotationSettings),
       '401': error('Not authenticated'),
-      '403': error('Token does not own this site'),
+      '403': error(FORBIDDEN_OR_PREMIUM_REQUIRED),
       '404': error('Site not found'),
     },
   });
@@ -167,7 +168,7 @@ export function registerAnnotationsRoutes(registry: OpenAPIRegistry) {
       '200': ok('Setting and open count after the change', AnnotationSettings),
       '400': error('Invalid body, or an unclaimed anonymous site'),
       '401': error('Not authenticated'),
-      '403': error('Token does not own this site'),
+      '403': error(FORBIDDEN_OR_PREMIUM_REQUIRED),
       '404': error('Site not found'),
     },
   });

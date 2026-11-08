@@ -120,6 +120,22 @@ export enum SiteUpdateKey {
   // Site Name (projectName) is intentionally NOT here
   // Renaming goes through the dedicated `renameSite` mutation
 }
+
+/** Who may change each setting via `site.update`. Every key must be classified. */
+export const SITE_UPDATE_KEY_ROLE: Record<SiteUpdateKey, 'owner' | 'editor'> = {
+  [SiteUpdateKey.customDomain]: 'owner',
+  [SiteUpdateKey.rootDir]: 'owner',
+  [SiteUpdateKey.enableComments]: 'editor',
+  [SiteUpdateKey.enableSearch]: 'editor',
+  [SiteUpdateKey.enableRss]: 'editor',
+  [SiteUpdateKey.syntaxMode]: 'editor',
+  [SiteUpdateKey.giscusRepoId]: 'editor',
+  [SiteUpdateKey.giscusCategoryId]: 'editor',
+  [SiteUpdateKey.showSidebar]: 'editor',
+  [SiteUpdateKey.showBuiltWithButton]: 'editor',
+  [SiteUpdateKey.showRawLink]: 'editor',
+  [SiteUpdateKey.hideBranding]: 'editor',
+};
 export interface PageMetadata {
   title: string;
   description?: string;

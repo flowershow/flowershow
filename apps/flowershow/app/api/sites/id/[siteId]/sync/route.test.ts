@@ -148,6 +148,8 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValueOnce({
         id: SITE_ID,
         userId: 'other-user',
+        plan: 'FREE',
+        members: [],
       } as any);
 
       const res = await POST(makeRequest({ files: [] }), makeParams(SITE_ID));
@@ -979,7 +981,12 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       );
 
       expect(prisma.publish.create).toHaveBeenCalledWith({
-        data: { siteId: SITE_ID, source: 'cli', legacy: false },
+        data: {
+          siteId: SITE_ID,
+          userId: USER_ID,
+          source: 'cli',
+          legacy: false,
+        },
       });
     });
 
@@ -995,7 +1002,12 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       );
 
       expect(prisma.publish.create).toHaveBeenCalledWith({
-        data: { siteId: SITE_ID, source: 'mcp', legacy: false },
+        data: {
+          siteId: SITE_ID,
+          userId: USER_ID,
+          source: 'mcp',
+          legacy: false,
+        },
       });
       expect(posthogCapture).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -1384,5 +1396,85 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
 
       expect(res.status).toBe(200);
     });
+  });
+});
+
+describe('POST /api/sites/id/[siteId]/sync editor access', () => {
+  const editor = { userId: 'ed-1' };
+  const site = (plan: string, members: { userId: string }[]) =>
+    ({ id: SITE_ID, userId: 'owner-1', plan, members }) as any;
+  const newFile = { files: [{ path: 'new.md', size: 100, sha: 'abc' }] };
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.blob.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ total: BigInt(0) }]);
+    vi.mocked(prisma.publish.create).mockResolvedValue({
+      id: PUBLISH_ID,
+    } as any);
+    vi.mocked(prisma.publish.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.publishFile.updateMany).mockResolvedValue({
+      count: 0,
+    } as any);
+    vi.mocked(prisma.publishFile.createMany).mockResolvedValue({
+      count: 0,
+    } as any);
+    vi.mocked(prisma.publishFile.findMany).mockResolvedValue([]);
+    vi.mocked(validateAccessToken).mockResolvedValue(editor);
+  });
+
+  it('lets an editor of a Premium site sync and records who published', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(
+      site('PREMIUM', [editor]),
+    );
+    const res = await POST(makeRequest(newFile), makeParams(SITE_ID));
+    expect(res.status).toBe(200);
+    expect(prisma.publish.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ userId: 'ed-1' }),
+      }),
+    );
+  });
+
+  it('refuses an editor of a FREE site with premium_required', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(site('FREE', [editor]));
+    const res = await POST(makeRequest(newFile), makeParams(SITE_ID));
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('premium_required');
+    expect(prisma.publish.create).not.toHaveBeenCalled();
+  });
+
+  it('refuses a removed editor with forbidden', async () => {
+    vi.mocked(prisma.site.findUnique).mockResolvedValue(site('PREMIUM', []));
+    const res = await POST(makeRequest(newFile), makeParams(SITE_ID));
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('forbidden');
+  });
+
+  it('records a null publisher for a claim-token (anonymous) publish', async () => {
+    const ANON_OWNER = '3f1c2b7a-1d2e-4f3a-9b4c-5d6e7f8a9b0c';
+    vi.mocked(prisma.site.findUnique).mockResolvedValue({
+      id: SITE_ID,
+      userId: ANONYMOUS_USER_ID,
+      anonymousOwnerId: ANON_OWNER,
+      expiresAt: new Date(Date.now() + 86400000),
+    } as any);
+    const res = await POST(
+      makeRequest(
+        { files: [{ path: 'index.html', size: 10, sha: 'abc' }] },
+        {
+          headers: {
+            Authorization: `Bearer ${generateSiteClaimToken(SITE_ID, ANON_OWNER)}`,
+          },
+        },
+      ),
+      makeParams(SITE_ID),
+    );
+    expect(res.status).toBe(200);
+    expect(prisma.publish.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ userId: null }),
+      }),
+    );
   });
 });

@@ -309,7 +309,7 @@ describe('realMcpDeps', () => {
     };
 
     beforeEach(() => {
-      findSite.mockResolvedValue({ userId: 'u1' });
+      findSite.mockResolvedValue({ userId: 'u1', plan: 'FREE', members: [] });
       findBlobs.mockResolvedValue([blob('index.md'), blob('about.md')]);
       findPublishFiles.mockResolvedValue([]);
     });
@@ -342,8 +342,15 @@ describe('realMcpDeps', () => {
     });
 
     it.each([
-      ["another user's site", { userId: 'u2' }],
-      ['an anonymous site', { userId: ANONYMOUS_USER_ID }],
+      ["another user's site", { userId: 'u2', plan: 'FREE', members: [] }],
+      [
+        'an anonymous site',
+        { userId: ANONYMOUS_USER_ID, plan: 'FREE', members: [] },
+      ],
+      [
+        'a site the user was removed from as editor',
+        { userId: 'u2', plan: 'PREMIUM', members: [] },
+      ],
       ['a missing site', null],
     ])('refuses %s with the same 404, reading nothing', async (_l, site) => {
       findSite.mockResolvedValue(site);
@@ -355,6 +362,29 @@ describe('realMcpDeps', () => {
       ).rejects.toMatchObject(NOT_FOUND);
       expect(findBlobs).not.toHaveBeenCalled();
       expect(fetch).not.toHaveBeenCalled();
+    });
+
+    it('lets a Premium editor list files', async () => {
+      findSite.mockResolvedValue({
+        userId: 'owner',
+        plan: 'PREMIUM',
+        members: [{ userId: 'u1' }],
+      });
+      await expect(
+        realMcpDeps().listFiles('u1', 'site-1'),
+      ).resolves.toHaveLength(2);
+    });
+
+    it('tells a lapsed editor the plan lapsed, not "not found"', async () => {
+      findSite.mockResolvedValue({
+        userId: 'owner',
+        plan: 'FREE',
+        members: [{ userId: 'u1' }],
+      });
+      await expect(
+        realMcpDeps().readFile('u1', 'site-1', 'index.md'),
+      ).rejects.toMatchObject({ status: 403, code: 'premium_required' });
+      expect(findBlobs).not.toHaveBeenCalled();
     });
 
     it("reads a text file from the site's storage", async () => {

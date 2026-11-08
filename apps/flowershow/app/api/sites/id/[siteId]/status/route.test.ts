@@ -153,3 +153,38 @@ describe('GET /api/sites/id/:siteId/status — claim token', () => {
     expect(body.status).toBe('error');
   });
 });
+
+describe('GET /api/sites/id/:siteId/status — editors', () => {
+  const siteFor = (plan: string, members: { userId: string }[]) => ({
+    id: 'site-1',
+    userId: 'owner-1',
+    plan,
+    members,
+    privacyMode: 'PUBLIC',
+  });
+
+  beforeEach(() => {
+    vi.mocked(validateAccessToken).mockResolvedValue({ userId: 'ed-1' });
+  });
+
+  it('gives an editor of a Premium site the detailed status', async () => {
+    findUnique.mockResolvedValue(siteFor('PREMIUM', [{ userId: 'ed-1' }]));
+    const res = await GET(makeReq('fs_pat_x'), makeParams());
+    expect(res.status).toBe(200);
+    expect((await res.json()).siteId).toBe('site-1');
+  });
+
+  it('refuses an editor of a FREE site with premium_required', async () => {
+    findUnique.mockResolvedValue(siteFor('FREE', [{ userId: 'ed-1' }]));
+    const res = await GET(makeReq('fs_pat_x'), makeParams());
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('premium_required');
+  });
+
+  it('refuses a removed editor with forbidden', async () => {
+    findUnique.mockResolvedValue(siteFor('PREMIUM', []));
+    const res = await GET(makeReq('fs_pat_x'), makeParams());
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('forbidden');
+  });
+});

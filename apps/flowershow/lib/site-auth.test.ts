@@ -175,4 +175,54 @@ describe('authorizeSiteRequest', () => {
     );
     expect(!r.ok && r.response.status).toBe(404);
   });
+
+  it('accepts an editor of a Premium site', async () => {
+    validate.mockResolvedValue({ userId: 'ed-1' });
+    findUnique.mockResolvedValue({
+      id: 'site-1',
+      userId: 'u1',
+      plan: 'PREMIUM',
+      members: [{ userId: 'ed-1' }],
+    });
+    expect(await authorizeSiteRequest(req('fs_pat_x'), 'site-1')).toEqual(
+      expect.objectContaining({ ok: true, kind: 'user', userId: 'ed-1' }),
+    );
+    expect(findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          members: { where: { userId: 'ed-1' }, select: { userId: true } },
+        }),
+      }),
+    );
+  });
+
+  it('refuses an editor of a FREE site with premium_required', async () => {
+    validate.mockResolvedValue({ userId: 'ed-1' });
+    findUnique.mockResolvedValue({
+      id: 'site-1',
+      userId: 'u1',
+      plan: 'FREE',
+      members: [{ userId: 'ed-1' }],
+    });
+    const r = await authorizeSiteRequest(req('fs_pat_x'), 'site-1');
+    expect(r.ok).toBe(false);
+    if (!r.ok) {
+      expect(r.response.status).toBe(403);
+      expect(await r.response.json()).toMatchObject({
+        error: 'premium_required',
+      });
+    }
+  });
+
+  it('refuses a removed editor with forbidden', async () => {
+    validate.mockResolvedValue({ userId: 'ed-1' });
+    findUnique.mockResolvedValue({
+      id: 'site-1',
+      userId: 'u1',
+      plan: 'PREMIUM',
+      members: [],
+    });
+    const r = await authorizeSiteRequest(req('fs_pat_x'), 'site-1');
+    expect(!r.ok && (await r.response.json()).error).toBe('forbidden');
+  });
 });

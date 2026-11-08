@@ -11,7 +11,12 @@ import { claimAnonSite } from '@/lib/claim-anon-site';
 import { fetchFile, getContentType } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
 import PostHogClient from '@/lib/server-posthog';
-import { canManageSite } from '@/lib/site-authz';
+import {
+  PREMIUM_REQUIRED,
+  PREMIUM_REQUIRED_MESSAGE,
+  siteAuthzSelect,
+  siteRole,
+} from '@/lib/site-authz';
 import { loadServerFileState } from '@/lib/site-file-state';
 import prisma from '@/server/db';
 import { markMcpInternal } from './internal-request';
@@ -81,13 +86,19 @@ async function json<T>(res: Response): Promise<T> {
 /**
  * Throw unless the user may manage the site. Missing and someone else's site
  * get the same 404, so the tools can't be used to probe which sites exist.
+ * An editor of a lapsed site is told so (403 premium_required): they already
+ * know the site exists.
  */
 async function assertCanManage(userId: string, siteId: string) {
   const site = await prisma.site.findUnique({
     where: { id: siteId },
-    select: { userId: true },
+    select: siteAuthzSelect(userId),
   });
-  if (!canManageSite(userId, site)) {
+  const role = siteRole(userId, site);
+  if (role === 'lapsed_editor') {
+    throw new ApiError(403, PREMIUM_REQUIRED, PREMIUM_REQUIRED_MESSAGE);
+  }
+  if (role !== 'owner' && role !== 'editor') {
     throw new ApiError(
       404,
       'not_found',

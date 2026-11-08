@@ -32,6 +32,8 @@ const fetchFileMock = fetchFile as ReturnType<typeof vi.fn>;
 const SITE = {
   id: 'site-1',
   userId: 'owner-1',
+  plan: 'FREE',
+  members: [],
   configJson: { showComments: false },
   isTemporary: false,
   anonymousOwnerId: null,

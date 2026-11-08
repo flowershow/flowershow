@@ -41,6 +41,8 @@ vi.mock('@/server/db', () => {
     return s
       ? {
           ...s,
+          plan: 'FREE',
+          members: [],
           customDomain: null,
           subdomain: s.projectName,
           user: { username: s.userId },
@@ -94,7 +96,11 @@ vi.mock('@/app/api/sites/route', () => ({
   POST: vi.fn(async (req: Request) => {
     const { projectName } = await req.json();
     const id = `site-${world.sites.size + 1}`;
-    world.sites.set(id, { id, userId: 'u1', projectName });
+    world.sites.set(id, {
+      id,
+      userId: 'u1',
+      projectName,
+    });
     return NextResponse.json({
       site: { id, url: `https://${projectName}.flowershow.me` },
     });

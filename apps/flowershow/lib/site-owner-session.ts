@@ -1,4 +1,4 @@
-import { isSiteOwner } from '@/lib/site-authz';
+import { canManageSite, type SiteAuthzFields } from '@/lib/site-authz';
 import { jwtVerify, SignJWT } from 'jose';
 import { env } from '@/env.mjs';
 import { normalizeHost } from '@/lib/site-host';
@@ -10,9 +10,10 @@ import { normalizeHost } from '@/lib/site-host';
  * `*.flowershow.me` or custom domains. Instead the owner goes through a
  * redirect handshake (site host -> cloud host -> site host, see
  * `lib/site-owner-code.ts`) and the site host sets its own cookie: a JWT that
- * says "user U owns site S on host H". It is host-only, HttpOnly, signed with
- * a per-site key that is domain-separated from the password-gate cookie key,
- * and grants owner actions on that one site only.
+ * says "user U may manage site S on host H". It is host-only, HttpOnly, signed
+ * with a per-site key that is domain-separated from the password-gate cookie
+ * key, and grants manager actions (owner or Premium editor) on that one site
+ * only. The role is re-checked on every request, never trusted from the token.
  *
  * Edge-safe (used by middleware): no Prisma here.
  */
@@ -118,22 +119,27 @@ export function readOwnerCookie(headers: Headers): string | null {
 }
 
 /**
- * The user id of the site's current owner if the request carries a valid
- * owner cookie for this site and host. Ownership is re-checked against
- * `site.userId`, so transferring a site revokes old cookies.
+ * The user id in the request's owner cookie if it is valid for this site and
+ * host and that user may manage the site right now (owner, or editor while the
+ * site is Premium). The cookie is verified first; only then is `loadSite`
+ * called with the cookie's user id, so it can filter `members` to that user
+ * (`siteAuthzSelect`). Transferring the site, removing an editor or a lapsed
+ * plan therefore revokes old cookies on the next request.
  */
-export async function getSiteOwnerFromRequest(
+export async function getSiteManagerFromRequest(
   request: Request,
-  site: { id: string; userId: string },
+  siteId: string,
+  loadSite: (userId: string) => Promise<SiteAuthzFields | null>,
 ): Promise<string | null> {
   const token = readOwnerCookie(request.headers);
   if (!token) return null;
   const userId = await verifyOwnerToken(token, {
-    siteId: site.id,
+    siteId,
     host: request.headers.get('host') ?? '',
   });
-  // Owner-only for now; widen deliberately to canManageSite in #919 if editors get the owner cookie.
-  return isSiteOwner(userId, site) ? userId : null;
+  if (!userId) return null;
+  const site = await loadSite(userId);
+  return canManageSite(userId, site) ? userId : null;
 }
 
 /**

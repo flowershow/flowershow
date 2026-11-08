@@ -1,4 +1,10 @@
-import { canManageSite } from '@/lib/site-authz';
+import {
+  PREMIUM_REQUIRED,
+  PREMIUM_REQUIRED_MESSAGE,
+  siteAuthzSelect,
+  siteRole,
+  type SiteRole,
+} from '@/lib/site-authz';
 import type { Plan } from '@prisma/client';
 import { type NextRequest, NextResponse } from 'next/server';
 import {
@@ -33,7 +39,26 @@ const deny = (
 });
 
 /**
- * Authorize a request against one site. Accepts the site owner's CLI/PAT token,
+ * The 403 for a caller whose role does not let them manage the site, or null
+ * when they may. A lapsed editor gets `premium_required` so clients can say
+ * why, rather than a bare "forbidden" or "not found".
+ */
+export function siteAccessDenied(role: SiteRole | null): NextResponse | null {
+  if (role === 'owner' || role === 'editor') return null;
+  if (role === 'lapsed_editor') {
+    return NextResponse.json(
+      { error: PREMIUM_REQUIRED, message: PREMIUM_REQUIRED_MESSAGE },
+      { status: 403 },
+    );
+  }
+  return NextResponse.json(
+    { error: 'forbidden', message: 'You do not have access to this site' },
+    { status: 403 },
+  );
+}
+
+/**
+ * Authorize a request against one site. Accepts the CLI/PAT token of the site owner or of an editor on a Premium site,
  * or a site-scoped claim token (fs_claim_…) for that same anonymous, unexpired site.
  */
 export async function authorizeSiteRequest(
@@ -99,14 +124,13 @@ export async function authorizeSiteRequest(
     where: { id: siteId },
     select: {
       id: true,
-      userId: true,
-      plan: true,
+      ...siteAuthzSelect(auth.userId),
       storageAllowanceBytes: true,
       projectName: true,
     },
   });
   if (!site) return deny(404, 'not_found', 'Site not found');
-  if (!canManageSite(auth.userId, site))
-    return deny(403, 'forbidden', 'You do not have access to this site');
+  const denied = siteAccessDenied(siteRole(auth.userId, site));
+  if (denied) return { ok: false, response: denied };
   return { ok: true, kind: 'user', userId: auth.userId, site };
 }

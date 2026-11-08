@@ -48,6 +48,8 @@ const posthog = PostHogClient();
 const SITE = {
   id: 'site-1',
   userId: 'owner-1',
+  plan: 'FREE',
+  members: [],
   privacyMode: 'PUBLIC',
   tokenVersion: 0,
   configJson: { annotations: true },

@@ -1,4 +1,4 @@
-import { canManageSite } from '@/lib/site-authz';
+import { canManageSite, siteAuthzSelect } from '@/lib/site-authz';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { applyAnnotationsBulk } from '@/lib/annotations/bulk';
@@ -11,12 +11,12 @@ type Ctx = Parameters<Parameters<typeof protectedProcedure.query>[0]>[0]['ctx'];
 const notFound = (what: 'Site' | 'Annotation') =>
   new TRPCError({ code: 'NOT_FOUND', message: `${what} not found` });
 
-/** The site, if the session user owns it; otherwise NOT_FOUND. */
-async function ownedSite(ctx: Ctx, siteId: string) {
+/** The site, if the session user can manage it (owner, or editor on Premium); otherwise NOT_FOUND. */
+async function managedSite(ctx: Ctx, siteId: string) {
   const site = await ctx.db.site.findUnique({
     where: { id: siteId },
     select: {
-      userId: true,
+      ...siteAuthzSelect(ctx.session.user.id),
       projectName: true,
       customDomain: true,
       subdomain: true,
@@ -28,11 +28,15 @@ async function ownedSite(ctx: Ctx, siteId: string) {
   return { ...site, id: siteId };
 }
 
-/** The annotation's id and site, if the session user owns the site; otherwise NOT_FOUND. */
-async function ownedAnnotation(ctx: Ctx, id: string) {
+/** The annotation's id and site, if the session user can manage the site; otherwise NOT_FOUND. */
+async function managedAnnotation(ctx: Ctx, id: string) {
   const annotation = await ctx.db.annotation.findUnique({
     where: { id },
-    select: { id: true, siteId: true, site: { select: { userId: true } } },
+    select: {
+      id: true,
+      siteId: true,
+      site: { select: siteAuthzSelect(ctx.session.user.id) },
+    },
   });
   if (!annotation || !canManageSite(ctx.session.user.id, annotation.site)) {
     throw notFound('Annotation');
@@ -44,7 +48,7 @@ export const annotationRouter = createTRPCRouter({
   listForSite: protectedProcedure
     .input(z.object({ siteId: z.string().min(1) }))
     .query(async ({ ctx, input }) => {
-      const site = await ownedSite(ctx, input.siteId);
+      const site = await managedSite(ctx, input.siteId);
       const rows = await ctx.db.annotation.findMany({
         where: { siteId: site.id },
         include: { replies: { orderBy: { createdAt: 'asc' } } },
@@ -66,7 +70,7 @@ export const annotationRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const annotation = await ownedAnnotation(ctx, input.id);
+      const annotation = await managedAnnotation(ctx, input.id);
       const count = await applyAnnotationsBulk(ctx.db, annotation.siteId, {
         action: input.status === 'resolved' ? 'resolve' : 'reopen',
         ids: [annotation.id],
@@ -77,7 +81,7 @@ export const annotationRouter = createTRPCRouter({
   delete: protectedProcedure
     .input(z.object({ id: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const annotation = await ownedAnnotation(ctx, input.id);
+      const annotation = await managedAnnotation(ctx, input.id);
       await ctx.db.annotation.delete({ where: { id: annotation.id } });
       return { success: true as const };
     }),
@@ -85,7 +89,7 @@ export const annotationRouter = createTRPCRouter({
   deleteAll: protectedProcedure
     .input(z.object({ siteId: z.string().min(1) }))
     .mutation(async ({ ctx, input }) => {
-      const site = await ownedSite(ctx, input.siteId);
+      const site = await managedSite(ctx, input.siteId);
       return {
         count: await applyAnnotationsBulk(ctx.db, site.id, {
           action: 'delete',

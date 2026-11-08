@@ -704,7 +704,7 @@ export type UpdateAnnotationSettingsRequest = z.infer<
 // Site owner sign-in (site-scoped owner cookie, flowershow-1pr.15)
 
 export const SiteOwnerStatusSchema = z.object({
-  /** True when the viewer holds a valid owner cookie for this site on this host. */
+  /** True when the viewer holds a valid owner cookie for this site on this host, i.e. can manage the site (owner or editor). */
   isOwner: z.boolean(),
 });
 export type SiteOwnerStatus = z.infer<typeof SiteOwnerStatusSchema>;

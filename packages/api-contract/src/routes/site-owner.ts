@@ -30,13 +30,13 @@ export function registerSiteOwnerRoutes(registry: OpenAPIRegistry) {
     operationId: 'authorizeSiteOwner',
     summary: 'Start owner sign-in on a site (cloud host)',
     description:
-      'Checks the account session and that the user owns the site, then redirects to `<site origin>/_flowershow/owner/callback` with a one-time code (single use, 60 seconds). Not signed in: redirects to login and back. `return` is reduced to a relative path.',
+      'Checks the account session and that the user can manage the site (the owner, or an editor on a Premium site), then redirects to `<site origin>/_flowershow/owner/callback` with a one-time code (single use, 60 seconds). Not signed in: redirects to login and back. `return` is reduced to a relative path.',
     tags: ['Site Access'],
     security: [{ sessionCookie: [] }],
     request: { params: siteParams, query: returnQuery },
     responses: {
       '302': { description: 'Redirect to the site callback, or to login' },
-      '403': { description: 'Signed in but not the site owner' },
+      '403': { description: 'Signed in but cannot manage this site (not the owner, or an editor on a site whose Premium has lapsed)' },
     },
   });
 
@@ -65,9 +65,9 @@ export function registerSiteOwnerRoutes(registry: OpenAPIRegistry) {
     method: 'get',
     path: '/api/sites/id/{siteId}/owner/me',
     operationId: 'getSiteOwnerStatus',
-    summary: 'Is the viewer signed in as this site’s owner?',
+    summary: 'Can the viewer manage this site (owner or editor)?',
     description:
-      'Reads the site owner cookie. Never cached (`Cache-Control: private, no-store`).',
+      'Reads the site owner cookie, which owners and editors on a Premium site both hold; `isOwner` means the viewer can manage the site. Never cached (`Cache-Control: private, no-store`).',
     tags: ['Site Access'],
     security: [{ siteOwnerCookie: [] }, {}],
     request: { params: siteParams },

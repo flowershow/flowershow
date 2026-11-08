@@ -17,6 +17,11 @@ import {
   SyncResponseSchema,
 } from '../schemas.js';
 
+/** Shared 403 description for routes an owner or a Premium editor may call. */
+export const FORBIDDEN_OR_PREMIUM_REQUIRED =
+  'Forbidden, or `premium_required` when the caller is an editor and the site\'s Premium plan has lapsed';
+
+
 export function registerSitesRoutes(registry: OpenAPIRegistry) {
   const ListSitesResponse = registry.register(
     'ListSitesResponse',
@@ -171,7 +176,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          FORBIDDEN_OR_PREMIUM_REQUIRED,
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
@@ -254,7 +260,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          FORBIDDEN_OR_PREMIUM_REQUIRED,
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
@@ -319,7 +326,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          FORBIDDEN_OR_PREMIUM_REQUIRED,
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
@@ -371,7 +379,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          FORBIDDEN_OR_PREMIUM_REQUIRED,
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
@@ -415,7 +424,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          FORBIDDEN_OR_PREMIUM_REQUIRED,
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {

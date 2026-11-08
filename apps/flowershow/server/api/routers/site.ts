@@ -1,4 +1,4 @@
-import { canManageSite, isSiteOwner } from '@/lib/site-authz';
+import { canManageSite, isSiteOwner, siteAuthzSelect } from '@/lib/site-authz';
 import {
   isSiteChromeFile,
   matchLinkTarget,
@@ -87,6 +87,7 @@ import type {
 import {
   fullSiteSchema,
   fullSiteSelect,
+  SITE_UPDATE_KEY_ROLE,
   SiteUpdateKey,
   siteLookupResultSchema,
 } from '@/server/api/types';
@@ -189,11 +190,15 @@ export const siteRouter = createTRPCRouter({
     .input(z.object({ id: z.string().min(1) }))
     .output(fullSiteSchema.nullable())
     .query(async ({ ctx, input }): Promise<FullSite | null> => {
-      return await ctx.db.site.findFirst({
-        // TODO(#919): site-ownership scope in the query; editors need canManageSite here.
-        where: { id: input.id, userId: ctx.session.user.id },
-        select: fullSiteSelect,
+      const uid = ctx.session.user.id;
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.id },
+        select: { ...fullSiteSelect, ...siteAuthzSelect(uid) },
       });
+      if (!site || !canManageSite(uid, site)) return null;
+      // Strip the authz-only fields so the output matches FullSite.
+      const { members: _members, userId: _userId, ...rest } = site;
+      return rest;
     }),
   getMany: publicProcedure
     .input(z.object({ ids: z.array(z.string()) }))
@@ -316,6 +321,7 @@ export const siteRouter = createTRPCRouter({
         where: { id },
         include: {
           user: true,
+          members: siteAuthzSelect(ctx.session.user.id).members,
           installationRepository: {
             select: {
               repositoryFullName: true,
@@ -329,6 +335,16 @@ export const siteRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'NOT_FOUND',
           message: 'Site not found',
+        });
+      }
+
+      if (
+        SITE_UPDATE_KEY_ROLE[key] === 'owner' &&
+        !isSiteOwner(ctx.session.user.id, site)
+      ) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Only the site owner can change this setting',
         });
       }
 
@@ -536,6 +552,7 @@ export const siteRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }): Promise<FullSite> => {
       const site = await ctx.db.site.findUnique({
         where: { id: input.id },
+        include: { members: siteAuthzSelect(ctx.session.user.id).members },
       });
 
       if (!site || !canManageSite(ctx.session.user.id, site)) {
@@ -607,10 +624,9 @@ export const siteRouter = createTRPCRouter({
         where: { id: input.siteId },
         select: {
           id: true,
-          userId: true,
           configJson: true,
-          plan: true,
           customDomain: true,
+          ...siteAuthzSelect(ctx.session.user.id),
         },
       });
 
@@ -662,7 +678,11 @@ export const siteRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const site = await ctx.db.site.findUnique({
         where: { id: input.siteId },
-        select: { id: true, userId: true, configJson: true },
+        select: {
+          id: true,
+          configJson: true,
+          ...siteAuthzSelect(ctx.session.user.id),
+        },
       });
 
       if (!site || !canManageSite(ctx.session.user.id, site)) {
@@ -692,7 +712,7 @@ export const siteRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const site = await ctx.db.site.findUnique({
         where: { id: input.siteId },
-        select: { id: true, userId: true },
+        select: { id: true, ...siteAuthzSelect(ctx.session.user.id) },
       });
 
       if (!site || !canManageSite(ctx.session.user.id, site)) {
@@ -766,7 +786,7 @@ export const siteRouter = createTRPCRouter({
       }> => {
         const site = await ctx.db.site.findUnique({
           where: { id: input.id },
-          select: { id: true, userId: true },
+          select: { id: true, ...siteAuthzSelect(ctx.session.user.id) },
         });
 
         if (!site || !canManageSite(ctx.session.user.id, site)) {
@@ -847,7 +867,7 @@ export const siteRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const site = await ctx.db.site.findUnique({
         where: { id: input.id },
-        select: { id: true, userId: true },
+        select: { id: true, ...siteAuthzSelect(ctx.session.user.id) },
       });
 
       if (!site || !canManageSite(ctx.session.user.id, site)) {
@@ -866,6 +886,7 @@ export const siteRouter = createTRPCRouter({
           gitCommitSha: true,
           gitCommitMessage: true,
           legacy: true,
+          user: { select: { username: true } },
           files: {
             select: {
               id: true,
@@ -886,6 +907,7 @@ export const siteRouter = createTRPCRouter({
             source: p.source,
             gitCommitSha: p.gitCommitSha,
             gitCommitMessage: p.gitCommitMessage,
+            publishedBy: p.user?.username ?? null,
             isInProgress: false,
             legacy: true,
             counts: {
@@ -906,6 +928,7 @@ export const siteRouter = createTRPCRouter({
           source: p.source,
           gitCommitSha: p.gitCommitSha,
           gitCommitMessage: p.gitCommitMessage,
+          publishedBy: p.user?.username ?? null,
           isInProgress: !p.completedAt,
           legacy: false,
           counts: {

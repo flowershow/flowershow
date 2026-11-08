@@ -62,7 +62,12 @@ function req(
 
 beforeEach(() => {
   vi.clearAllMocks();
-  siteFind.mockResolvedValue({ id: 'site-1', userId: 'owner-1' });
+  siteFind.mockResolvedValue({
+    id: 'site-1',
+    userId: 'owner-1',
+    plan: 'FREE',
+    members: [],
+  });
   updateMany.mockResolvedValue({ count: 1 });
   deleteMany.mockResolvedValue({ count: 1 });
 });

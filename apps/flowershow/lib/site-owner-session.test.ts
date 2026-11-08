@@ -1,9 +1,9 @@
 // @vitest-environment node
 import { SignJWT } from 'jose';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { siteKeyBytes } from '@/lib/site-hmac-key';
 import {
-  getSiteOwnerFromRequest,
+  getSiteManagerFromRequest,
   isSameOriginRequest,
   ownerCookieName,
   safeReturnPath,
@@ -168,29 +168,105 @@ describe('owner token', () => {
   });
 });
 
-describe('getSiteOwnerFromRequest', () => {
+describe('getSiteManagerFromRequest', () => {
+  const OWNER_SITE = { userId: 'owner-1', plan: 'FREE' as const, members: [] };
+  const cookieFor = (userId: string) =>
+    signOwnerToken({ siteId: SITE.id, userId, host: HOST });
+
   it('accepts the current owner with a valid cookie on the site host', async () => {
-    const token = await signOwnerToken({
-      siteId: SITE.id,
-      userId: SITE.userId,
-      host: HOST,
-    });
-    expect(await getSiteOwnerFromRequest(requestWith(token), SITE)).toBe(
-      'owner-1',
-    );
+    const loader = vi.fn().mockResolvedValue(OWNER_SITE);
+    expect(
+      await getSiteManagerFromRequest(
+        requestWith(await cookieFor('owner-1')),
+        SITE.id,
+        loader,
+      ),
+    ).toBe('owner-1');
+    expect(loader).toHaveBeenCalledWith('owner-1');
   });
 
   it('rejects a cookie whose user no longer owns the site (non-owner)', async () => {
-    const token = await signOwnerToken({
-      siteId: SITE.id,
-      userId: 'former-owner',
-      host: HOST,
-    });
-    expect(await getSiteOwnerFromRequest(requestWith(token), SITE)).toBeNull();
+    const loader = vi.fn().mockResolvedValue(OWNER_SITE);
+    expect(
+      await getSiteManagerFromRequest(
+        requestWith(await cookieFor('former-owner')),
+        SITE.id,
+        loader,
+      ),
+    ).toBeNull();
   });
 
-  it('is null without a cookie', async () => {
-    expect(await getSiteOwnerFromRequest(requestWith(null), SITE)).toBeNull();
+  it('accepts an editor of a Premium site with a valid cookie', async () => {
+    const loader = vi.fn().mockResolvedValue({
+      userId: 'owner-1',
+      plan: 'PREMIUM',
+      members: [{ userId: 'ed-1' }],
+    });
+    expect(
+      await getSiteManagerFromRequest(
+        requestWith(await cookieFor('ed-1')),
+        SITE.id,
+        loader,
+      ),
+    ).toBe('ed-1');
+    expect(loader).toHaveBeenCalledWith('ed-1');
+  });
+
+  it('rejects a cookie for a user who is no longer a member', async () => {
+    const loader = vi
+      .fn()
+      .mockResolvedValue({ userId: 'owner-1', plan: 'PREMIUM', members: [] });
+    expect(
+      await getSiteManagerFromRequest(
+        requestWith(await cookieFor('ed-1')),
+        SITE.id,
+        loader,
+      ),
+    ).toBeNull();
+  });
+
+  it('rejects an editor once the site is FREE', async () => {
+    const loader = vi.fn().mockResolvedValue({
+      userId: 'owner-1',
+      plan: 'FREE',
+      members: [{ userId: 'ed-1' }],
+    });
+    expect(
+      await getSiteManagerFromRequest(
+        requestWith(await cookieFor('ed-1')),
+        SITE.id,
+        loader,
+      ),
+    ).toBeNull();
+  });
+
+  it('is null for a missing site', async () => {
+    const loader = vi.fn().mockResolvedValue(null);
+    expect(
+      await getSiteManagerFromRequest(
+        requestWith(await cookieFor('owner-1')),
+        SITE.id,
+        loader,
+      ),
+    ).toBeNull();
+  });
+
+  it('does not call the loader without a valid cookie', async () => {
+    const loader = vi.fn().mockResolvedValue(OWNER_SITE);
+    expect(
+      await getSiteManagerFromRequest(requestWith(null), SITE.id, loader),
+    ).toBeNull();
+    expect(
+      await getSiteManagerFromRequest(
+        requestWith(await cookieFor('owner-1'), 'evil-bob.test.localhost'),
+        SITE.id,
+        loader,
+      ),
+    ).toBeNull();
+    expect(
+      await getSiteManagerFromRequest(requestWith('forged'), SITE.id, loader),
+    ).toBeNull();
+    expect(loader).not.toHaveBeenCalled();
   });
 });
 

@@ -5,15 +5,16 @@ import {
 import { type NextRequest, NextResponse } from 'next/server';
 import { applyAnnotationsBulk } from '@/lib/annotations/bulk';
 import {
-  authorizeOwner,
+  authorizeSiteManager,
   errorResponse,
   invalidBodyResponse,
   track,
 } from '@/lib/annotations/http';
 import { checkCliVersion } from '@/lib/cli-auth';
+import { siteAuthzSelect } from '@/lib/site-authz';
 import prisma from '@/server/db';
 
-/** POST /api/sites/id/:siteId/annotations/bulk: site owner resolves, reopens or deletes. */
+/** POST /api/sites/id/:siteId/annotations/bulk: a site manager (owner or Premium editor) resolves, reopens or deletes. */
 export async function POST(
   request: NextRequest,
   props: { params: Promise<{ siteId: string }> },
@@ -22,10 +23,10 @@ export async function POST(
   if (versionError) return versionError;
 
   const { siteId } = await props.params;
-  const owner = await authorizeOwner(request, () =>
+  const owner = await authorizeSiteManager(request, siteId, (uid) =>
     prisma.site.findUnique({
       where: { id: siteId },
-      select: { id: true, userId: true },
+      select: { id: true, ...siteAuthzSelect(uid) },
     }),
   );
   if ('response' in owner) return owner.response;

@@ -1,4 +1,3 @@
-import { canManageSite } from '@/lib/site-authz';
 import { PrismaAdapter } from '@next-auth/prisma-adapter';
 import axios from 'axios';
 import { getServerSession, type NextAuthOptions } from 'next-auth';
@@ -435,31 +434,4 @@ export const authOptions: NextAuthOptions = {
 
 export function getSession() {
   return getServerSession(authOptions);
-}
-
-export function withSiteAuth(action: any) {
-  return async (
-    formData: FormData | null,
-    siteId: string,
-    key: string | null,
-  ) => {
-    const session = await getSession();
-    if (!session) {
-      return {
-        error: 'Not authenticated',
-      };
-    }
-    const site = await prisma.site.findUnique({
-      where: {
-        id: siteId,
-      },
-    });
-    if (!site || !canManageSite(session.user.id, site)) {
-      return {
-        error: 'Not authorized',
-      };
-    }
-
-    return action(formData, site, key);
-  };
 }
