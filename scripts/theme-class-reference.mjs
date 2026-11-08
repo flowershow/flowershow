@@ -8,7 +8,7 @@ const GROUPS = [
     id: 'layout',
     title: 'Site layout and page shell',
     description: 'Top-level site grid, responsive rails, and shell variants.',
-    dom: `.site-layout[.no-nav]\n├─ .site-navbar (optional)\n├─ .site-body (structural wrapper)\n│  ├─ .site-subnav (optional)\n│  ├─ .page-hero-container (optional)\n│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc]\n│     ├─ .layout-inner-left\n│     ├─ .layout-inner-center (structural wrapper)\n│     │  └─ main.page-main (structural wrapper)\n│     └─ .layout-inner-right\n└─ .site-footer`,
+    dom: `.site-layout[.no-nav]\n├─ .site-navbar (optional)\n├─ .site-body (structural wrapper)\n│  ├─ .site-subnav (optional)\n│  ├─ .page-hero-container (optional)\n│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc][.is-toc-rail]\n│     ├─ .layout-inner-left\n│     ├─ .layout-inner-center (structural wrapper)\n│     │  └─ main.page-main (structural wrapper)\n│     └─ .layout-inner-right\n└─ .site-footer`,
   },
   {
     id: 'navigation',
@@ -41,8 +41,9 @@ const GROUPS = [
   {
     id: 'toc',
     title: 'Table of contents',
-    description: 'The page ToC rail and recursively nested ToC items.',
-    dom: `.page-toc-container\n└─ .toc\n   ├─ .toc-title\n   └─ .toc-item\n      ├─ .toc-item-self\n      └─ .toc-item-children`,
+    description:
+      'The page ToC panel or tick rail, its nested items, and the inline Contents block.',
+    dom: `.page-toc-container\n└─ .toc\n   ├─ .toc-title\n   └─ .toc-item\n      ├─ .toc-item-self\n      └─ .toc-item-children\n.page-toc-container.is-rail (toc.style: rail)\n└─ nav.toc-rail[data-open]\n   ├─ button.toc-rail-button > .toc-rail-ticks > .toc-rail-tick[data-depth][data-current][data-read]\n   └─ .toc-rail-outline > ol > li[data-depth][data-current] > a\ndetails.toc-inline[data-toc-style] (narrow screens, before .rendered-mdx#mdxpage)\n├─ summary\n└─ ol > li[data-depth] > a`,
   },
   {
     id: 'listings',
@@ -122,6 +123,8 @@ const STATE_OWNERS = {
   'has-sidebar': '.layout-inner',
   'has-sidebar-and-toc': '.layout-inner',
   'has-toc': '.layout-inner',
+  'is-toc-rail': '.layout-inner',
+  'is-rail': '.page-toc-container',
   'is-disabled': '.list-component-pagination-button',
   'is-collapsible': '.site-tree-item-self / .mobile-nav-tree-item-self',
   'is-current': '.site-tree-item-self / .mobile-nav-tree-item-self',

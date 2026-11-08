@@ -513,3 +513,21 @@ describe('sanitizeSiteConfig — does not change how valid stored configs render
     expect(() => validateConfigPatch({ social: config.social })).not.toThrow();
   });
 });
+
+describe('sanitizeSiteConfig — toc', () => {
+  it('keeps a valid toc.style', () => {
+    expect(sanitizeSiteConfig({ toc: { style: 'rail' } })).toEqual({
+      toc: { style: 'rail' },
+    });
+  });
+
+  it('keeps an unknown style string (the resolver falls back to panel)', () => {
+    expect(sanitizeSiteConfig({ toc: { style: 'nope' } })).toEqual({
+      toc: { style: 'nope' },
+    });
+  });
+
+  it('drops a wrong-typed style', () => {
+    expect(sanitizeSiteConfig({ toc: { style: 5 } })).toEqual({});
+  });
+});

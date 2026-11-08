@@ -241,6 +241,21 @@
      so page-annotations.tsx moves it left of the panel in script. */
 }
 
+/* >=1024px: the ToC rail column (which shows from 1024px) makes way too. */
+@media (min-width: 1024px) {
+  html.fs-comments-open .layout-inner.is-toc-rail .layout-inner-right {
+    display: none;
+  }
+  html.fs-comments-open .layout-inner.is-toc-rail.has-sidebar-and-toc {
+    grid-template-columns: var(--width-sidebar, 16rem) minmax(0, 1fr);
+  }
+  /* Back to the base gutter: below 1280px the panel overlays, not docks */
+  html.fs-comments-open .layout-inner.is-toc-rail.has-toc {
+    grid-template-columns: minmax(0, 1fr);
+    padding-left: 3rem;
+  }
+}
+
 .fs-annotations-header {
   display: flex;
   align-items: center;

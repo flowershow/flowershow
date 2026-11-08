@@ -23,6 +23,8 @@ import { PostLayout } from '@/components/public/layouts/post';
 import { PostFooterSection } from '@/components/public/layouts/post-footer';
 import { SidebarDesktop, SidebarMobileNav } from '@/components/public/sidebar';
 import TableOfContents from '@/components/public/table-of-contents';
+import TocInline from '@/components/public/toc-inline';
+import TocRail from '@/components/public/toc-rail';
 import { env } from '@/env.mjs';
 import { isAnnotationsEnabled } from '@/lib/annotations/enabled';
 import { getConfig } from '@/lib/app-config';
@@ -77,6 +79,7 @@ import {
 } from '@/lib/listing/page-listing';
 import { listingCanonical, pageFromSearchParam } from '@/lib/listing/paginate';
 import {
+  countTocHeadings,
   hasIntroText,
   hasPaginatingBlock,
   hasTocHeadings,
@@ -100,6 +103,7 @@ import { resolveConfigRedirect } from '@/lib/config-redirect';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
 import { ensureLeadingSlash, frontmatterText } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
+import { resolveTocStyle, type TocStyle } from '@/lib/toc-style';
 import { api } from '@/trpc/server';
 import BacklinksPanel from './_components/backlinks-panel';
 import GraphMiniPanel from './_components/graph-view';
@@ -813,7 +817,20 @@ export default async function SitePage(props: {
     (metadata?.showToc ?? siteConfig?.showToc);
   const showKnowledgeGraph =
     metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false;
-  const showRightColumn = showToc || showKnowledgeGraph;
+  const tocStyle = resolveTocStyle(metadata?.toc, siteConfig?.toc);
+  // Decided on the server: a rail with too few headings would be empty, so
+  // there's no rail column at all then (nothing jumps once headings are read)
+  const useRail =
+    !!showToc &&
+    tocStyle === 'rail' &&
+    countTocHeadings(pageContent ?? '') >= 3;
+  // With the graph on, the rail sits under it in the usual 240px column
+  const railColumn = useRail && !showKnowledgeGraph;
+  // The inline block shows below the right column's breakpoint
+  const inlineStyle: TocStyle = railColumn ? 'rail' : 'panel';
+  const showPanel = !!showToc && tocStyle === 'panel';
+  // A rail style without enough headings gets no ToC column (nor a panel)
+  const showRightColumn = showPanel || useRail || showKnowledgeGraph;
   const heroConfig = resolveHeroConfig(
     metadata && {
       ...metadata,
@@ -932,6 +949,7 @@ export default async function SitePage(props: {
           showSidebar && showRightColumn && 'has-sidebar-and-toc',
           !showSidebar && showRightColumn && 'has-toc',
           showSidebar && !showRightColumn && 'has-sidebar',
+          railColumn && 'is-toc-rail',
         )}
       >
         {showSidebar && (
@@ -1037,6 +1055,7 @@ export default async function SitePage(props: {
                   )
                 }
               >
+                {showToc && <TocInline tocStyle={inlineStyle} />}
                 <div className="rendered-mdx" id="mdxpage">
                   {compiledContent}
                 </div>
@@ -1055,6 +1074,7 @@ export default async function SitePage(props: {
               </ListingPage>
             ) : (
               <BlogLayout {...pageHeaderProps} actions={pageActions}>
+                {showToc && <TocInline tocStyle={inlineStyle} />}
                 <div className="rendered-mdx" id="mdxpage">
                   {compiledContent}
                 </div>
@@ -1110,7 +1130,12 @@ export default async function SitePage(props: {
             {showKnowledgeGraph && (
               <GraphMiniPanel siteId={site.id} currentBlobId={blob.id} />
             )}
-            {showToc && (
+            {useRail && (
+              <aside className="page-toc-container is-rail">
+                <TocRail />
+              </aside>
+            )}
+            {showPanel && (
               <aside className="page-toc-container">
                 <TableOfContents />
               </aside>

@@ -98,6 +98,10 @@ function buildConfigShape(mode: Mode) {
     paths: z.array(z.string()).optional(),
   });
 
+  const tocSchema = obj({
+    style: enumOrString(['panel', 'rail']).optional(),
+  });
+
   return {
     siteName: z.string(),
     /** @deprecated — kept for existing configs */
@@ -119,6 +123,7 @@ function buildConfigShape(mode: Mode) {
     showSidebar: z.boolean(),
     sidebar: sidebarSchema,
     showToc: z.boolean(),
+    toc: tocSchema,
     showKnowledgeGraph: z.boolean(),
     showEditLink: z.boolean(),
     showReadingTime: z.boolean(),

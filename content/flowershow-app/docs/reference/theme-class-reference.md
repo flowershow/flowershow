@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **358 styled class selectors**:
-**356 stable semantic hooks** and **2 non-contract
+and currently documents **366 styled class selectors**:
+**364 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -63,7 +63,7 @@ Top-level site grid, responsive rails, and shell variants.
 ├─ .site-body (structural wrapper)
 │  ├─ .site-subnav (optional)
 │  ├─ .page-hero-container (optional)
-│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc]
+│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc][.is-toc-rail]
 │     ├─ .layout-inner-left
 │     ├─ .layout-inner-center (structural wrapper)
 │     │  └─ main.page-main (structural wrapper)
@@ -307,7 +307,7 @@ Individual posts: dated pages in a `blog/` or `posts/` folder, pages of a folder
 
 ## Table of contents
 
-The page ToC rail and recursively nested ToC items.
+The page ToC panel or tick rail, its nested items, and the inline Contents block.
 
 **DOM shape**
 
@@ -318,15 +318,28 @@ The page ToC rail and recursively nested ToC items.
    └─ .toc-item
       ├─ .toc-item-self
       └─ .toc-item-children
+.page-toc-container.is-rail (toc.style: rail)
+└─ nav.toc-rail[data-open]
+   ├─ button.toc-rail-button > .toc-rail-ticks > .toc-rail-tick[data-depth][data-current][data-read]
+   └─ .toc-rail-outline > ol > li[data-depth][data-current] > a
+details.toc-inline[data-toc-style] (narrow screens, before .rendered-mdx#mdxpage)
+├─ summary
+└─ ol > li[data-depth] > a
 ```
 
 | Class | Kind |
 | --- | --- |
 | <code>.page-toc-container</code> | Hook |
 | <code>.toc</code> | Hook |
+| <code>.toc-inline</code> | Hook |
 | <code>.toc-item</code> | Hook |
 | <code>.toc-item-children</code> | Hook |
 | <code>.toc-item-self</code> | Hook |
+| <code>.toc-rail</code> | Hook |
+| <code>.toc-rail-button</code> | Hook |
+| <code>.toc-rail-outline</code> | Hook |
+| <code>.toc-rail-tick</code> | Hook |
+| <code>.toc-rail-ticks</code> | Hook |
 | <code>.toc-title</code> | Hook |
 
 ## Lists, cards, skeletons, and pagination
@@ -753,7 +766,9 @@ Owning semantic hook
 | <code>.is-disabled</code> | State | .list-component-pagination-button |
 | <code>.is-open</code> | State | navigation dropdowns and collapsible tree items |
 | <code>.is-plain</code> | State | .rendered-mdx |
+| <code>.is-rail</code> | State | .page-toc-container |
 | <code>.is-scrolled</code> | State | .site-navbar |
+| <code>.is-toc-rail</code> | State | .layout-inner |
 | <code>.is-unreleased</code> | State | .changelog-entry |
 | <code>.no-nav</code> | State | .site-layout |
 

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   hasIntroText,
   hasTocHeadings,
+  countTocHeadings,
   autoListingFor,
   hasExplicitListing,
   isAutoListingDirName,
@@ -457,5 +458,19 @@ describe('hasIntroText (the intro slot of a listing page header)', () => {
     expect(hasIntroText('---\ntitle: Blog\n---\nNotes, weekly.')).toBe(true);
     expect(hasIntroText('## About')).toBe(true);
     expect(hasIntroText('![[cover.png]]')).toBe(true);
+  });
+});
+
+describe('countTocHeadings (the headings the ToC rail draws ticks for)', () => {
+  it('counts h2 and h3 only', () => {
+    expect(countTocHeadings('## A\n\n### B\n\n#### C\n\n## D')).toBe(3);
+  });
+
+  it('ignores headings inside a fenced code block', () => {
+    expect(countTocHeadings('## A\n\n```md\n## B\n### C\n```\n')).toBe(1);
+  });
+
+  it('does not count the h1 title', () => {
+    expect(countTocHeadings('# Title\n\nText')).toBe(0);
   });
 });
