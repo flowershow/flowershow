@@ -18,6 +18,7 @@ vi.mock('@/server/auth', () => ({
 
 vi.mock('@/server/db', () => ({
   default: {
+    $queryRaw: vi.fn(),
     site: { findUnique: vi.fn() },
     blob: { findMany: vi.fn() },
     publish: { create: vi.fn() },
@@ -31,6 +32,11 @@ vi.mock('@/lib/content-store', async (importOriginal) => ({
   generatePresignedUploadUrl: vi
     .fn()
     .mockResolvedValue('https://s3.example.com/presigned'),
+}));
+
+vi.mock('@/lib/storage-limits', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/storage-limits')>()),
+  getSiteStorageBytes: vi.fn().mockResolvedValue(0),
 }));
 
 vi.mock('@/lib/cloudflare-worker', () => ({
@@ -56,6 +62,7 @@ import { validateAccessToken } from '@/lib/cli-auth';
 import { getServerSession } from 'next-auth';
 import { deleteFile } from '@/lib/content-store';
 import { startPublishFinalizerWorkflow } from '@/lib/cloudflare-worker';
+import { getSiteStorageBytes } from '@/lib/storage-limits';
 import prisma from '@/server/db';
 
 const SITE_ID = 'site-1';
@@ -98,6 +105,7 @@ describe('POST /api/sites/id/[siteId]/files', () => {
     vi.clearAllMocks();
     vi.mocked(prisma.site.findUnique).mockResolvedValue(ownedSite as any);
     vi.mocked(prisma.blob.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.$queryRaw).mockResolvedValue([{ total: BigInt(0) }]);
     vi.mocked(prisma.publish.create).mockResolvedValue({
       id: PUBLISH_ID,
     } as any);
@@ -322,6 +330,82 @@ describe('POST /api/sites/id/[siteId]/files', () => {
       await POST(legacyReq, makeParams(SITE_ID));
 
       expect(prisma.publishFile.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('storage limits', () => {
+    const GBYTES = 1_073_741_824;
+    const MBYTES = 1_048_576;
+
+    it('still publishes (advisory limit, warns) when a Premium site would reach 10.5 GB', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        ...ownedSite,
+        plan: 'PREMIUM',
+        storageAllowanceBytes: null,
+        projectName: 'big',
+      } as any);
+      vi.mocked(getSiteStorageBytes).mockResolvedValue(10 * GBYTES);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      const res = await POST(
+        makePostRequest({
+          files: [0, 1, 2, 3, 4].map((i) => ({
+            path: `f${i}.bin`,
+            size: 100 * MBYTES,
+            sha: `s${i}`,
+          })),
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      expect(warn).toHaveBeenCalled();
+      expect(prisma.publish.create).toHaveBeenCalled();
+    });
+
+    it('counts a path repeated in the request only once', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        ...ownedSite,
+        plan: 'FREE',
+        storageAllowanceBytes: null,
+        projectName: 'dup',
+      } as any);
+      vi.mocked(getSiteStorageBytes).mockResolvedValue(0);
+
+      const res = await POST(
+        makePostRequest({
+          files: [
+            { path: 'a.bin', size: 90 * MBYTES, sha: 'a1' },
+            { path: 'a.bin', size: 90 * MBYTES, sha: 'a2' },
+            { path: 'a.bin', size: 90 * MBYTES, sha: 'a3' },
+          ],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).not.toBe(413);
+    });
+
+    it('counts the size of replaced files only once', async () => {
+      vi.mocked(prisma.site.findUnique).mockResolvedValue({
+        ...ownedSite,
+        plan: 'FREE',
+        storageAllowanceBytes: null,
+        projectName: 'notes',
+      } as any);
+      vi.mocked(getSiteStorageBytes).mockResolvedValue(190 * MBYTES);
+      vi.mocked(prisma.blob.findMany).mockResolvedValue([
+        { path: 'a.bin', sha: 'o', size: 20 * MBYTES },
+      ] as any);
+
+      const res = await POST(
+        makePostRequest({
+          files: [{ path: 'a.bin', size: 25 * MBYTES, sha: 'n' }],
+        }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
     });
   });
 });

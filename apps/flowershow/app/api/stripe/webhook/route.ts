@@ -9,6 +9,8 @@ import { RenewalReminderEmail } from '@/emails/renewal-reminder';
 import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
 import { sendEmail } from '@/lib/email';
 import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
+import { PLAN_LIMITS } from '@/lib/entitlements';
+import { getSiteStorageBytes } from '@/lib/storage-limits';
 import PostHogClient from '@/lib/server-posthog';
 import {
   FLOWERSHOW_PLATFORM,
@@ -369,16 +371,24 @@ export async function POST(req: Request) {
               await removeDomainAndVariantFromVercelProject(site.customDomain);
             }
 
+            // Password protection is kept on lapse (the access gate is
+            // plan-independent). A site over the Free cap gets an allowance
+            // so it can keep publishing edits and stays out of the Free pool.
+            const totalBytes = await getSiteStorageBytes(dbSubscription.siteId);
+            let storageAllowanceBytes: bigint | undefined;
+            if (totalBytes > PLAN_LIMITS.FREE.siteHardBytes) {
+              const needed = BigInt(Math.ceil((totalBytes * 11) / 10));
+              const existing = site.storageAllowanceBytes ?? BigInt(0);
+              storageAllowanceBytes = needed > existing ? needed : existing;
+            }
+
             await prisma.site.update({
               where: { id: dbSubscription.siteId },
               data: {
                 plan: 'FREE',
                 ...(site.customDomain && { customDomain: null }),
-                ...(site.privacyMode === 'PASSWORD' && {
-                  privacyMode: 'PUBLIC',
-                  accessPasswordHash: null,
-                  accessPasswordUpdatedAt: new Date(),
-                  tokenVersion: { increment: 1 },
+                ...(storageAllowanceBytes !== undefined && {
+                  storageAllowanceBytes,
                 }),
               },
             });

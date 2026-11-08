@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Modal from '@/providers/modal';
 import { api } from '@/trpc/react';
+import { readApiError } from '@/lib/api-error';
 
 const calculateSHA256 = async (content: string): Promise<string> => {
   const encoder = new TextEncoder();
@@ -77,7 +78,8 @@ export default function PasteMarkdownModal({
           files: [{ path: 'README.md', size: bytes.length, sha }],
         }),
       });
-      if (!res.ok) throw new Error('Failed to get upload URLs');
+      if (!res.ok)
+        throw new Error(await readApiError(res, 'Failed to get upload URLs'));
       const { files: uploadTargets, publishId } = await res.json();
 
       await Promise.all(

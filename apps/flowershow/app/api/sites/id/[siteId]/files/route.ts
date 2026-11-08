@@ -26,6 +26,10 @@ import {
   validatePublishFiles,
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
+import {
+  noteStorageOverLimit,
+  getSiteStorageBytes,
+} from '@/lib/storage-limits';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
 
@@ -61,7 +65,13 @@ export async function POST(
 
     const site = await prisma.site.findUnique({
       where: { id: siteId },
-      select: { id: true, userId: true },
+      select: {
+        id: true,
+        userId: true,
+        plan: true,
+        storageAllowanceBytes: true,
+        projectName: true,
+      },
     });
 
     if (!site) {
@@ -103,10 +113,23 @@ export async function POST(
     // Fetch existing blobs to determine changeType (added vs updated)
     const existingBlobs = await prisma.blob.findMany({
       where: { siteId, path: { in: files.map((f) => f.path) } },
-      select: { path: true, sha: true },
+      select: { path: true, sha: true, size: true },
     });
 
     const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
+
+    // Storage limits are advisory: an over-limit publish is logged, never
+    // blocked. The Free pool is summed over the site owner's sites.
+    const currentSiteBytes = await getSiteStorageBytes(siteId);
+    const projectedSiteBytes =
+      currentSiteBytes -
+      existingBlobs.reduce((n, b) => n + b.size, 0) +
+      // Dedupe by path (last wins) so a repeated path is counted once.
+      [...new Map(files.map((f) => [f.path, f.size])).values()].reduce(
+        (n, size) => n + size,
+        0,
+      );
+    await noteStorageOverLimit(site, currentSiteBytes, projectedSiteBytes);
 
     // Create Publish record
     const publish = await prisma.publish.create({

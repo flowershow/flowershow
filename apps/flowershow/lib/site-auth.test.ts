@@ -31,9 +31,16 @@ beforeEach(() => {
 describe('authorizeSiteRequest', () => {
   it('accepts the owner user token', async () => {
     validate.mockResolvedValue({ userId: 'u1' });
-    findUnique.mockResolvedValue({ id: 'site-1', userId: 'u1' });
+    const site = {
+      id: 'site-1',
+      userId: 'u1',
+      plan: 'FREE',
+      storageAllowanceBytes: null,
+      projectName: 'notes',
+    };
+    findUnique.mockResolvedValue(site);
     const r = await authorizeSiteRequest(req('fs_pat_x'), 'site-1');
-    expect(r).toEqual({ ok: true, kind: 'user', userId: 'u1' });
+    expect(r).toEqual({ ok: true, kind: 'user', userId: 'u1', site });
   });
 
   it('accepts a claim token for its own anonymous, unexpired site', async () => {

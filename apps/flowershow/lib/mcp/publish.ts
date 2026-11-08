@@ -216,6 +216,8 @@ function explain(
     case 410:
       return 'This anonymous site has expired. Publish again without siteId to create a new one.';
     case 429:
+      // A signed-in 429 carries its own explanation (e.g. the site limit).
+      if (mode.kind === 'user' && err.message) return err.message;
       return 'Too many anonymous sites have been published recently. Please try again later, or publish from a Flowershow account.';
     default:
       return err.message;

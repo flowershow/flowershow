@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 import Modal from '@/providers/modal';
 import { api } from '@/trpc/react';
+import { readApiError } from '@/lib/api-error';
 
 const MAX_FILES = 1000;
 
@@ -186,7 +187,8 @@ export default function ImportFilesOnboardingModal({
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ files: filesInfo }),
       });
-      if (!res.ok) throw new Error('Failed to get upload URLs');
+      if (!res.ok)
+        throw new Error(await readApiError(res, 'Failed to get upload URLs'));
       const { files: uploadTargets, publishId } = await res.json();
 
       await Promise.all(

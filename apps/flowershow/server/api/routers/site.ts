@@ -14,6 +14,10 @@ import type { SiteConfig } from '@/components/types';
 import { SiteCreatedEmail } from '@/emails/site-created';
 import { env } from '@/env.mjs';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
+import {
+  SITE_CREATE_LIMIT_MESSAGE,
+  siteCreateAllowed,
+} from '@/lib/site-create-limit';
 import { buildSiteTree } from '@/lib/build-site-tree';
 import { triggerGitHubSyncWorkflow } from '@/lib/cloudflare-worker';
 import {
@@ -250,6 +254,13 @@ export const siteRouter = createTRPCRouter({
             })
             .then(Boolean),
       );
+
+      if (!(await siteCreateAllowed(ctx.session.user.id))) {
+        throw new TRPCError({
+          code: 'TOO_MANY_REQUESTS',
+          message: SITE_CREATE_LIMIT_MESSAGE,
+        });
+      }
 
       const created = await ctx.db.site.create({
         data: {
