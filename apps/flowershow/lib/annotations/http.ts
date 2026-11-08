@@ -1,10 +1,11 @@
 import { ANNOTATION_LIMITS } from '@flowershow/api-contract';
-import { canManageSite } from '@/lib/site-authz';
+import { siteRole, type SiteAuthzFields } from '@/lib/site-authz';
 import { after, type NextRequest, NextResponse } from 'next/server';
 import { validateAccessToken } from '@/lib/cli-auth';
+import { siteAccessDenied } from '@/lib/site-auth';
 import PostHogClient from '@/lib/server-posthog';
 import {
-  getSiteOwnerFromRequest,
+  getSiteManagerFromRequest,
   isSameOriginRequest,
   readOwnerCookie,
 } from '@/lib/site-owner-session';
@@ -60,40 +61,47 @@ export async function readJsonBody(
 }
 
 /**
- * Site-owner check for routes that are also open to visitors. True only when
- * the caller presented owner credentials (bearer token or owner cookie) that
- * pass; an anonymous caller, or bad credentials, is simply "not the owner".
+ * Site-manager check for routes that are also open to visitors. True only when
+ * the caller presented credentials (bearer token or owner cookie) of someone
+ * who may manage the site (owner, or editor while Premium); an anonymous
+ * caller, or bad credentials, is simply "not a manager".
  */
-export async function isSiteOwner<Site extends { id: string; userId: string }>(
+export async function isSiteManager(
   request: NextRequest,
-  site: Site,
+  siteId: string,
+  loadSite: (
+    userId: string,
+  ) => Promise<({ id: string } & SiteAuthzFields) | null>,
 ): Promise<boolean> {
   if (
     !request.headers.has('authorization') &&
     !readOwnerCookie(request.headers)
   )
     return false;
-  const owner = await authorizeOwner(request, async () => site);
-  return !('response' in owner);
+  const manager = await authorizeSiteManager(request, siteId, loadSite);
+  return !('response' in manager);
 }
 
 /**
- * Authenticate the site owner: a CLI/PAT bearer token, or (in the browser, on
- * the site's own host) the site-scoped owner cookie from the owner sign-in
- * handshake. Order is credential, site, owner: a bad token never learns
- * whether a site exists. `loadSite` is only called once a credential is present.
+ * Authenticate someone who may manage the site (owner, or editor while the
+ * site is Premium): a CLI/PAT bearer token, or (in the browser, on the site's
+ * own host) the site-scoped owner cookie from the owner sign-in handshake.
+ * Order is credential, site, role: a bad token never learns whether a site
+ * exists. `loadSite` is only called once a credential is valid, with that
+ * user's id, so it can filter `members` to them (`siteAuthzSelect(userId)`).
  */
-export async function authorizeOwner<
-  Site extends { id: string; userId: string },
+export async function authorizeSiteManager<
+  Site extends { id: string } & SiteAuthzFields,
 >(
   request: NextRequest,
-  loadSite: () => Promise<Site | null>,
+  siteId: string,
+  loadSite: (userId: string) => Promise<Site | null>,
 ): Promise<{ site: Site; userId: string } | { response: NextResponse }> {
   if (
     !request.headers.has('authorization') &&
     readOwnerCookie(request.headers)
   ) {
-    return authorizeOwnerCookie(request, loadSite);
+    return authorizeSiteManagerCookie(request, siteId, loadSite);
   }
   const auth = await validateAccessToken(request);
   if (!auth?.userId) {
@@ -101,26 +109,20 @@ export async function authorizeOwner<
       response: errorResponse(401, 'unauthorized', 'Not authenticated'),
     };
   }
-  const site = await loadSite();
+  const site = await loadSite(auth.userId);
   if (!site)
     return { response: errorResponse(404, 'not_found', 'Site not found') };
-  if (!canManageSite(auth.userId, site)) {
-    return {
-      response: errorResponse(
-        403,
-        'forbidden',
-        'You do not have access to this site',
-      ),
-    };
-  }
+  const denied = siteAccessDenied(siteRole(auth.userId, site));
+  if (denied) return { response: denied };
   return { site, userId: auth.userId };
 }
 
-async function authorizeOwnerCookie<
-  Site extends { id: string; userId: string },
+async function authorizeSiteManagerCookie<
+  Site extends { id: string } & SiteAuthzFields,
 >(
   request: NextRequest,
-  loadSite: () => Promise<Site | null>,
+  siteId: string,
+  loadSite: (userId: string) => Promise<Site | null>,
 ): Promise<{ site: Site; userId: string } | { response: NextResponse }> {
   // Cookies ride along on requests from sibling *.flowershow.me sites (same
   // site, so SameSite=Lax doesn't help): writes must come from this origin.
@@ -133,14 +135,18 @@ async function authorizeOwnerCookie<
       response: errorResponse(403, 'forbidden', 'Cross-origin request'),
     };
   }
-  const site = await loadSite();
-  const userId = site ? await getSiteOwnerFromRequest(request, site) : null;
-  if (!site || !userId) {
+  const loaded: { site: Site | null } = { site: null };
+  const userId = await getSiteManagerFromRequest(
+    request,
+    siteId,
+    async (uid) => (loaded.site = await loadSite(uid)),
+  );
+  if (!loaded.site || !userId) {
     return {
       response: errorResponse(401, 'unauthorized', 'Not authenticated'),
     };
   }
-  return { site, userId };
+  return { site: loaded.site, userId };
 }
 
 /**

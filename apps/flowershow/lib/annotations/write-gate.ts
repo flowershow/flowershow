@@ -1,14 +1,16 @@
 import type { NextRequest, NextResponse } from 'next/server';
+import { siteAuthzSelect } from '@/lib/site-authz';
 import prisma from '@/server/db';
 import type { PageInfo } from './dto';
-import { errorResponse, isSiteOwner } from './http';
+import { errorResponse, isSiteManager } from './http';
 import { annotationSiteSelect, loadCurrentPages, openPage } from './server';
 
 /**
  * Gate for writes on one existing annotation (reply, resolve/reopen). The
  * annotation must belong to `siteId` (an id from another site is a 404), and
- * the caller must be the site owner (bearer token or owner cookie) or a visitor
- * who may comment on the annotation's page right now. Never trust the id alone.
+ * the caller must manage the site (owner or Premium editor; bearer token or
+ * owner cookie) or be a visitor who may comment on the annotation's page right
+ * now. Never trust the id alone.
  */
 export async function authorizeAnnotationWrite(
   request: NextRequest,
@@ -19,6 +21,7 @@ export async function authorizeAnnotationWrite(
       annotation: { id: string; path: string };
       /** The page as it is now (undefined if it no longer exists). */
       page: PageInfo | undefined;
+      /** The caller manages the site (owner or Premium editor). */
       isOwner: boolean;
     }
   | { response: NextResponse }
@@ -37,7 +40,12 @@ export async function authorizeAnnotationWrite(
   ]);
   if (!site || !annotation) return { response: notFound() };
 
-  const isOwner = await isSiteOwner(request, site);
+  const isOwner = await isSiteManager(request, siteId, (uid) =>
+    prisma.site.findUnique({
+      where: { id: siteId },
+      select: { id: true, ...siteAuthzSelect(uid) },
+    }),
+  );
   let page = (await openPage(site, annotation.path, request)) ?? undefined;
   if (!isOwner && !page) return { response: notFound() };
   if (!page) {

@@ -1,4 +1,4 @@
-import { isSiteOwner } from '@/lib/site-authz';
+import { canManageSite, siteAuthzSelect } from '@/lib/site-authz';
 import { type NextRequest } from 'next/server';
 import { consumeOwnerCode } from '@/lib/site-owner-code';
 import {
@@ -58,17 +58,22 @@ export async function GET(
   const returnPath = safeReturnPath(params.get('return'));
   const host = request.headers.get('host') ?? '';
 
-  const site = await prisma.site.findUnique({
+  const hostSite = await prisma.site.findUnique({
     where: { id: siteId },
-    select: { id: true, userId: true, subdomain: true, customDomain: true },
+    select: { id: true, subdomain: true, customDomain: true },
   });
   // Only ever set the cookie on the site's own host.
-  if (!site || !isSiteOwnHost(host, site)) return failed(returnPath);
+  if (!hostSite || !isSiteOwnHost(host, hostSite)) return failed(returnPath);
 
-  const userId = await consumeOwnerCode(params.get('code'), site.id);
-  // The code proves who signed in; they must still own the site now.
-  // Owner-only (editors do not get the owner cookie); revisit in #919.
-  if (!userId || !isSiteOwner(userId, site)) return failed(returnPath);
+  const userId = await consumeOwnerCode(params.get('code'), hostSite.id);
+  if (!userId) return failed(returnPath);
+  // The code proves who signed in; they must still manage the site now
+  // (owner, or editor while Premium): removal or a lapse since authorize fails.
+  const site = await prisma.site.findUnique({
+    where: { id: siteId },
+    select: { id: true, ...siteAuthzSelect(userId) },
+  });
+  if (!site || !canManageSite(userId, site)) return failed(returnPath);
 
   const token = await signOwnerToken({ siteId: site.id, userId, host });
   return new Response(null, {

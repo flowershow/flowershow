@@ -7,11 +7,12 @@ import { revalidateTag } from 'next/cache';
 import { type NextRequest, NextResponse } from 'next/server';
 import { annotationSettingsFor } from '@/lib/annotations/server';
 import {
-  authorizeOwner,
+  authorizeSiteManager,
   errorResponse,
   invalidBodyResponse,
 } from '@/lib/annotations/http';
 import { checkCliVersion } from '@/lib/cli-auth';
+import { siteAuthzSelect } from '@/lib/site-authz';
 import prisma from '@/server/db';
 
 type Props = { params: Promise<{ siteId: string }> };
@@ -20,15 +21,15 @@ async function ownedSite(request: NextRequest, props: Props) {
   const versionError = checkCliVersion(request);
   if (versionError) return { site: undefined, response: versionError };
   const { siteId } = await props.params;
-  const owner = await authorizeOwner(request, () =>
+  const owner = await authorizeSiteManager(request, siteId, (uid) =>
     prisma.site.findUnique({
       where: { id: siteId },
       select: {
         id: true,
-        userId: true,
         configJson: true,
         isTemporary: true,
         anonymousOwnerId: true,
+        ...siteAuthzSelect(uid),
       },
     }),
   );

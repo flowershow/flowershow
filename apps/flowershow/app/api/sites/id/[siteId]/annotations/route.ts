@@ -12,7 +12,7 @@ import {
   toAnnotationDto,
 } from '@/lib/annotations/dto';
 import {
-  authorizeOwner,
+  authorizeSiteManager,
   errorResponse,
   invalidBodyResponse,
   readJsonBody,
@@ -25,6 +25,7 @@ import {
   openPage,
 } from '@/lib/annotations/server';
 import { checkCliVersion } from '@/lib/cli-auth';
+import { siteAuthzSelect } from '@/lib/site-authz';
 import prisma from '@/server/db';
 
 type Props = { params: Promise<{ siteId: string }> };
@@ -42,18 +43,27 @@ export async function GET(request: NextRequest, props: Props) {
   );
   const status = statusParam.success ? statusParam.data : undefined;
 
-  const site = await prisma.site.findUnique({
+  let site = await prisma.site.findUnique({
     where: { id: siteId },
     select: annotationSiteSelect,
   });
   if (!site) return errorResponse(404, 'not_found', 'Site not found');
 
   let pages = new Map<string, PageInfo>();
+  let managerId: string | null = null;
   const isOwnerRequest =
     request.headers.get('authorization')?.startsWith('Bearer ') ?? false;
   if (isOwnerRequest) {
-    const owner = await authorizeOwner(request, async () => site);
-    if ('response' in owner) return owner.response;
+    // Re-load with the caller's membership, filtered to them.
+    const manager = await authorizeSiteManager(request, siteId, (uid) =>
+      prisma.site.findUnique({
+        where: { id: siteId },
+        select: { ...annotationSiteSelect, ...siteAuthzSelect(uid) },
+      }),
+    );
+    if ('response' in manager) return manager.response;
+    site = manager.site;
+    managerId = manager.userId;
   } else {
     if (!path) return errorResponse(400, 'bad_request', 'path is required');
     const page = await openPage(site, path, request);
@@ -76,13 +86,13 @@ export async function GET(request: NextRequest, props: Props) {
     include: { replies: { orderBy: { createdAt: 'asc' } } },
     orderBy: [{ path: 'asc' }, { startOffset: 'asc' }, { createdAt: 'asc' }],
   });
-  if (isOwnerRequest) {
+  if (managerId) {
     pages = await loadCurrentPages(
       prisma,
       site,
       rows.map((row) => row.path),
     );
-    track(site.userId, 'annotations_pulled', { siteId, count: rows.length });
+    track(managerId, 'annotations_pulled', { siteId, count: rows.length });
   }
 
   return NextResponse.json({

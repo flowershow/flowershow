@@ -1,4 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import {
+  canManageSite,
+  siteAuthzSelect,
+  type SiteAuthzFields,
+} from '@/lib/site-authz';
 import { InternalSite, internalSiteSelect } from '@/lib/db/internal';
 import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
@@ -19,21 +24,28 @@ export async function GET(
   // Check for optional authentication
   const auth = await validateAccessToken(req).catch(() => null);
 
-  let site: InternalSite | null = null;
+  // Signed-in callers also load their own membership (filtered to them), so
+  // owners and Premium editors get the extended data below.
+  const select = auth?.userId
+    ? { ...internalSiteSelect, ...siteAuthzSelect(auth.userId) }
+    : internalSiteSelect;
+
+  // `userId` and `members` are only loaded for a signed-in caller.
+  let site: (InternalSite & Partial<SiteAuthzFields>) | null = null;
 
   if (username === '_domain') {
     site = await prisma.site.findUnique({
       where: {
         customDomain: projectname,
       },
-      select: internalSiteSelect,
+      select,
     });
   } else if (username === '_subdomain') {
     site = await prisma.site.findUnique({
       where: {
         subdomain: projectname,
       },
-      select: internalSiteSelect,
+      select,
     });
   } else if (username === 'anon') {
     site = await prisma.site.findFirst({
@@ -41,7 +53,7 @@ export async function GET(
         projectName: projectname,
         userId: ANONYMOUS_USER_ID,
       },
-      select: internalSiteSelect,
+      select,
     });
   } else {
     site = await prisma.site.findFirst({
@@ -51,7 +63,7 @@ export async function GET(
         },
         projectName: projectname,
       },
-      select: internalSiteSelect,
+      select,
     });
   }
 
@@ -65,9 +77,18 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
-  // If authenticated and user owns the site, return extended data for CLI usage
-  // TODO(#919): inline owner check; switch to canManageSite once editors exist.
-  if (auth?.userId && site.user.id === auth.userId) {
+  // If the caller may manage the site (owner or Premium editor), return
+  // extended data for CLI usage.
+  if (
+    auth?.userId &&
+    site.userId &&
+    site.members &&
+    canManageSite(auth.userId, {
+      userId: site.userId,
+      plan: site.plan,
+      members: site.members,
+    })
+  ) {
     const extendedSite = await prisma.site.findUnique({
       where: { id: site.id },
       select: {
