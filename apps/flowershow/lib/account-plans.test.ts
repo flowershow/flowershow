@@ -55,6 +55,20 @@ describe('account plans', () => {
     expect(accountPlansEnabled()).toBe(false);
   });
 
+  it('is enabled when live and all four ids are set', () => {
+    expect(accountPlansEnabled(true)).toBe(true);
+  });
+
+  it('is disabled when live but one id is missing', () => {
+    table.PRO = { month: 'price_pro_month_test', year: null };
+    expect(accountPlansEnabled(true)).toBe(false);
+  });
+
+  it('is disabled when live and all ids are null', () => {
+    clearIds();
+    expect(accountPlansEnabled(true)).toBe(false);
+  });
+
   it('premiumPriceIds returns the two Premium ids', () => {
     expect([...premiumPriceIds()].sort()).toEqual([
       'price_monthly',

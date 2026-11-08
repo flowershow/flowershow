@@ -57,9 +57,12 @@ export function accountPlanForPriceId(
   return null;
 }
 
-export function accountPlansEnabled(): boolean {
+// `live` is a test seam; production callers use the default.
+export function accountPlansEnabled(
+  live: boolean = ACCOUNT_PLANS_LIVE,
+): boolean {
   return (
-    ACCOUNT_PLANS_LIVE &&
+    live &&
     PLANS.every((plan) =>
       INTERVALS.every((interval) => accountPriceId(plan, interval) !== null),
     )
