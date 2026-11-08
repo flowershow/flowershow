@@ -6,12 +6,10 @@ import { PremiumDowngradeEmail } from '@/emails/premium-downgrade';
 import { PremiumExpiredEmail } from '@/emails/premium-expired';
 import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
 import { RenewalReminderEmail } from '@/emails/renewal-reminder';
-import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
 import { sendEmail } from '@/lib/email';
 import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
-import { PLAN_LIMITS } from '@/lib/entitlements';
-import { getSiteStorageBytes } from '@/lib/storage-limits';
 import PostHogClient from '@/lib/server-posthog';
+import { reconcileUserSitePlans } from '@/lib/site-plans';
 import {
   FLOWERSHOW_PLATFORM,
   isFlowershowSubscription,
@@ -171,18 +169,17 @@ export async function POST(req: Request) {
             },
           });
 
-          // Update site's features to PREMIUM
-          const updatedSite = await prisma.site.update({
-            where: {
-              id: checkoutSession.metadata.siteId,
-            },
-            data: {
-              plan: 'PREMIUM',
-            },
-            include: {
-              user: true,
-            },
+          const updatedSite = await prisma.site.findUnique({
+            where: { id: checkoutSession.metadata.siteId },
+            include: { user: true },
           });
+          if (!updatedSite) {
+            throw new Error('Site not found for checkout session');
+          }
+
+          // The live Subscription row written above makes the site PREMIUM
+          // (source SITE) through the reconciler.
+          await reconcileUserSitePlans(updatedSite.userId);
 
           const posthog = PostHogClient();
           posthog.capture({
@@ -360,38 +357,11 @@ export async function POST(req: Request) {
             }
           }
 
-          // When Stripe confirms the subscription is fully cancelled, downgrade to FREE
+          // When Stripe confirms the subscription is fully cancelled, the
+          // reconciler downgrades the site to FREE unless something else
+          // (a manual grant, the account plan) keeps it Premium.
           if (subscription.status === 'canceled') {
-            const site = dbSubscription.site;
-
-            if (
-              site.customDomain &&
-              env.NEXT_PUBLIC_VERCEL_ENV === 'production'
-            ) {
-              await removeDomainAndVariantFromVercelProject(site.customDomain);
-            }
-
-            // Password protection is kept on lapse (the access gate is
-            // plan-independent). A site over the Free cap gets an allowance
-            // so it can keep publishing edits and stays out of the Free pool.
-            const totalBytes = await getSiteStorageBytes(dbSubscription.siteId);
-            let storageAllowanceBytes: bigint | undefined;
-            if (totalBytes > PLAN_LIMITS.FREE.siteHardBytes) {
-              const needed = BigInt(Math.ceil((totalBytes * 11) / 10));
-              const existing = site.storageAllowanceBytes ?? BigInt(0);
-              storageAllowanceBytes = needed > existing ? needed : existing;
-            }
-
-            await prisma.site.update({
-              where: { id: dbSubscription.siteId },
-              data: {
-                plan: 'FREE',
-                ...(site.customDomain && { customDomain: null }),
-                ...(storageAllowanceBytes !== undefined && {
-                  storageAllowanceBytes,
-                }),
-              },
-            });
+            await reconcileUserSitePlans(dbSubscription.site.userId);
 
             // Involuntary expiry: the subscription was cancelled because payment
             // failed (not a voluntary cancellation). Send a distinct "expired,

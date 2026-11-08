@@ -1,4 +1,10 @@
 import type { Plan, PlanSource, SubscriptionStatus } from '@prisma/client';
+import { env } from '@/env.mjs';
+import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
+import { PLAN_LIMITS } from '@/lib/entitlements';
+import { log, SeverityNumber } from '@/lib/otel-logger';
+import { getSiteStorageBytes } from '@/lib/storage-limits';
+import prisma from '@/server/db';
 import { isCoveringAccountStatus, isLiveSiteStatus } from './account-plans';
 
 export type SitePlanInput = {
@@ -125,4 +131,141 @@ export function computeSitePlans(
       coveredByAccountPlan,
     };
   });
+}
+
+/**
+ * Lapse teardown for one site: custom domain removed (from Vercel only in
+ * production), storage allowance so a site over the Free cap can keep
+ * publishing edits, then FREE. Password protection is kept (the access gate is
+ * plan-independent): never touches privacyMode, accessPasswordHash or
+ * tokenVersion.
+ */
+export async function downgradeSiteToFree(site: {
+  id: string;
+  customDomain: string | null;
+  storageAllowanceBytes: bigint | null;
+}): Promise<void> {
+  if (site.customDomain && env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
+    await removeDomainAndVariantFromVercelProject(site.customDomain);
+  }
+
+  const totalBytes = await getSiteStorageBytes(site.id);
+  let storageAllowanceBytes: bigint | undefined;
+  if (totalBytes > PLAN_LIMITS.FREE.siteHardBytes) {
+    const needed = BigInt(Math.ceil((totalBytes * 11) / 10));
+    const existing = site.storageAllowanceBytes ?? BigInt(0);
+    storageAllowanceBytes = needed > existing ? needed : existing;
+  }
+
+  await prisma.site.update({
+    where: { id: site.id },
+    data: {
+      plan: 'FREE',
+      planSource: null,
+      ...(site.customDomain && { customDomain: null }),
+      ...(storageAllowanceBytes !== undefined && { storageAllowanceBytes }),
+    },
+  });
+}
+
+/**
+ * The one writer of Site.plan in billing code. Loads the user's sites and
+ * account plan, computes each site's plan and writes the rows that differ.
+ *
+ * Each write is conditional on the plan and source we read, so a concurrent
+ * admin grant or a second webhook wins the race; a lost race is skipped (the
+ * winner's reconcile, or the admin, decides that site).
+ */
+export async function reconcileUserSitePlans(
+  userId: string,
+  opts: { autoFill?: 'all' | 'none' | { siteId: string } } = {},
+): Promise<{ changed: SitePlanTarget[] }> {
+  const [sites, account] = await Promise.all([
+    prisma.site.findMany({
+      where: { userId, isTemporary: false },
+      select: {
+        id: true,
+        plan: true,
+        planSource: true,
+        coveredByAccountPlan: true,
+        createdAt: true,
+        customDomain: true,
+        storageAllowanceBytes: true,
+        subscription: { select: { status: true } },
+        publishes: {
+          select: { startedAt: true },
+          orderBy: { startedAt: 'desc' },
+          take: 1,
+        },
+      },
+    }),
+    prisma.accountSubscription.findUnique({
+      where: { userId },
+      select: { status: true, siteAllowance: true },
+    }),
+  ]);
+
+  const targets = computeSitePlans(
+    sites.map((s) => ({
+      id: s.id,
+      plan: s.plan,
+      planSource: s.planSource,
+      coveredByAccountPlan: s.coveredByAccountPlan,
+      siteSubscriptionStatus: s.subscription?.status ?? null,
+      lastPublishedAt: s.publishes[0]?.startedAt ?? null,
+      createdAt: s.createdAt,
+    })),
+    account,
+    { autoFill: opts.autoFill ?? 'none' },
+  );
+
+  const changed: SitePlanTarget[] = [];
+  for (const [i, target] of targets.entries()) {
+    const site = sites[i]!;
+    if (
+      site.plan === target.plan &&
+      site.planSource === target.planSource &&
+      site.coveredByAccountPlan === target.coveredByAccountPlan
+    ) {
+      continue;
+    }
+    const { count } = await prisma.site.updateMany({
+      where: { id: site.id, plan: site.plan, planSource: site.planSource },
+      data: {
+        plan: target.plan,
+        planSource: target.planSource,
+        coveredByAccountPlan: target.coveredByAccountPlan,
+      },
+    });
+    if (count !== 1) continue;
+    changed.push(target);
+    if (site.plan === 'PREMIUM' && target.plan === 'FREE') {
+      await downgradeSiteToFree(site);
+    }
+  }
+  return { changed };
+}
+
+/**
+ * After a site is created or claimed: give it a free account plan slot if
+ * there is one. Never throws, so site creation never fails because of billing.
+ */
+export async function reconcileAfterSiteChange(
+  userId: string,
+  siteId: string,
+): Promise<void> {
+  try {
+    const account = await prisma.accountSubscription.findUnique({
+      where: { userId },
+      select: { id: true },
+    });
+    if (!account) return;
+    await reconcileUserSitePlans(userId, { autoFill: { siteId } });
+  } catch (error) {
+    log('Site plan reconcile after site change failed', SeverityNumber.ERROR, {
+      userId,
+      siteId,
+      error: error instanceof Error ? error.message : String(error),
+    });
+  }
 }

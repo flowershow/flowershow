@@ -35,7 +35,13 @@ vi.mock('@/server/db', () => ({
       create: vi.fn(),
       delete: vi.fn(),
     },
-    site: { update: vi.fn() },
+    site: {
+      update: vi.fn(),
+      findMany: vi.fn(),
+      findUnique: vi.fn(),
+      updateMany: vi.fn(),
+    },
+    accountSubscription: { findUnique: vi.fn() },
     user: { findUnique: vi.fn(), update: vi.fn() },
   },
 }));
@@ -68,6 +74,7 @@ vi.mock('@/lib/otel-logger', () => ({
   SeverityNumber: { INFO: 9, WARN: 13, ERROR: 17 },
 }));
 
+import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
 import { sendEmail } from '@/lib/email';
 import { log } from '@/lib/otel-logger';
 import { stripe } from '@/lib/stripe';
@@ -101,6 +108,35 @@ function makeDbSubscription(overrides: Record<string, unknown> = {}) {
   };
 }
 
+// Mock the DB for a per-site subscription event. The reconciler reads the
+// user's sites back after the webhook has written the Subscription row, so the
+// site's subscription status is whatever the handler last wrote.
+function mockDbSubscription(dbSub: any, site: Record<string, unknown> = {}) {
+  vi.mocked(prisma.subscription.findUnique).mockResolvedValue(dbSub);
+  vi.mocked(prisma.site.findMany).mockImplementation((async () => {
+    const written =
+      (vi.mocked(prisma.subscription.update).mock.lastCall?.[0] as any)?.data
+        ?.status ??
+      (vi.mocked(prisma.subscription.create).mock.lastCall?.[0] as any)?.data
+        ?.status ??
+      'active';
+    return [
+      {
+        id: dbSub.site.id,
+        plan: 'PREMIUM',
+        planSource: 'SITE',
+        coveredByAccountPlan: false,
+        createdAt: new Date('2026-01-01T00:00:00Z'),
+        customDomain: dbSub.site.customDomain ?? null,
+        storageAllowanceBytes: dbSub.site.storageAllowanceBytes ?? null,
+        subscription: { status: written },
+        publishes: [],
+        ...site,
+      },
+    ];
+  }) as any);
+}
+
 // Serialize the react body of the most recent sendEmail call so we can assert
 // on its text content (e.g. that it names the specific site). We inspect the
 // element tree rather than rendering it — react-email's layout suspends under
@@ -123,6 +159,9 @@ beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(prisma.subscription.update).mockResolvedValue({} as any);
   vi.mocked(prisma.site.update).mockResolvedValue({} as any);
+  vi.mocked(prisma.site.updateMany).mockResolvedValue({ count: 1 } as any);
+  vi.mocked(prisma.site.findMany).mockResolvedValue([]);
+  vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue(null);
   vi.mocked(prisma.user.update).mockResolvedValue({} as any);
   vi.mocked(prisma.user.findUnique).mockResolvedValue({ ...USER } as any);
   vi.mocked(getSiteStorageBytes).mockResolvedValue(0);
@@ -167,7 +206,7 @@ describe('stripe webhook — cancellation split', () => {
     }
 
     it('keeps password protection when the subscription lapses and removes the custom domain', async () => {
-      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
+      mockDbSubscription(
         dbSubWithSite({
           privacyMode: 'PASSWORD',
           customDomain: 'example.com',
@@ -186,9 +225,7 @@ describe('stripe webhook — cancellation split', () => {
     });
 
     it('sets a storage allowance of ceil(total * 1.1) when over the Free cap', async () => {
-      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-        dbSubWithSite({ storageAllowanceBytes: null }),
-      );
+      mockDbSubscription(dbSubWithSite({ storageAllowanceBytes: null }));
       const total = 300 * 1024 * 1024 + 1;
       vi.mocked(getSiteStorageBytes).mockResolvedValue(total);
 
@@ -202,9 +239,7 @@ describe('stripe webhook — cancellation split', () => {
 
     it('never lowers an existing larger allowance', async () => {
       const existing = BigInt(900 * 1024 * 1024);
-      vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-        dbSubWithSite({ storageAllowanceBytes: existing }),
-      );
+      mockDbSubscription(dbSubWithSite({ storageAllowanceBytes: existing }));
       vi.mocked(getSiteStorageBytes).mockResolvedValue(300 * 1024 * 1024);
 
       await fireEvent(canceled());
@@ -214,10 +249,30 @@ describe('stripe webhook — cancellation split', () => {
     });
   });
 
-  it('voluntary cancellation sends the downgrade email, not the expiry email', async () => {
-    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-      makeDbSubscription({ cancelAtPeriodEnd: false }) as any,
+  it('per-site cancellation keeps MANUAL', async () => {
+    const base = makeDbSubscription();
+    mockDbSubscription(
+      makeDbSubscription({
+        site: { ...base.site, customDomain: 'example.com' },
+      }),
+      { planSource: 'MANUAL' },
     );
+
+    const res = await fireEvent(
+      subscriptionEvent({ status: 'canceled', cancel_at_period_end: false }),
+    );
+
+    expect(res.status).toBe(200);
+    const planWrites = [
+      ...vi.mocked(prisma.site.update).mock.calls,
+      ...vi.mocked(prisma.site.updateMany).mock.calls,
+    ].filter((c) => (c[0] as any).data?.plan === 'FREE');
+    expect(planWrites).toEqual([]);
+    expect(removeDomainAndVariantFromVercelProject).not.toHaveBeenCalled();
+  });
+
+  it('voluntary cancellation sends the downgrade email, not the expiry email', async () => {
+    mockDbSubscription(makeDbSubscription({ cancelAtPeriodEnd: false }) as any);
 
     await fireEvent(
       subscriptionEvent({ status: 'active', cancel_at_period_end: true }),
@@ -232,9 +287,7 @@ describe('stripe webhook — cancellation split', () => {
   });
 
   it('involuntary (payment_failure) expiry sends the expired email, not the downgrade email', async () => {
-    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-      makeDbSubscription({ cancelAtPeriodEnd: false }) as any,
-    );
+    mockDbSubscription(makeDbSubscription({ cancelAtPeriodEnd: false }) as any);
 
     const res = await fireEvent(
       subscriptionEvent({
@@ -262,9 +315,7 @@ describe('stripe webhook — cancellation split', () => {
   });
 
   it('voluntary immediate cancellation does NOT send the involuntary expiry email', async () => {
-    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-      makeDbSubscription({ cancelAtPeriodEnd: false }) as any,
-    );
+    mockDbSubscription(makeDbSubscription({ cancelAtPeriodEnd: false }) as any);
 
     await fireEvent(
       subscriptionEvent({
@@ -281,9 +332,7 @@ describe('stripe webhook — cancellation split', () => {
   });
 
   it('passes a stable idempotency key so Resend dedupes redelivered expiry events', async () => {
-    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(
-      makeDbSubscription({ cancelAtPeriodEnd: false }) as any,
-    );
+    mockDbSubscription(makeDbSubscription({ cancelAtPeriodEnd: false }) as any);
 
     await fireEvent(
       subscriptionEvent({
@@ -464,6 +513,59 @@ describe('stripe webhook — checkout.session.completed guards', () => {
       'Ignoring non-Flowershow checkout.session.completed',
       expect.anything(),
       expect.objectContaining({ reason: 'not_flowershow' }),
+    );
+  });
+
+  it('per-site checkout sets SITE', async () => {
+    vi.mocked(stripe.subscriptions.retrieve).mockResolvedValue({
+      id: 'sub_new',
+      status: 'active',
+      current_period_start: 1893369600,
+      current_period_end: 1893456000,
+      cancel_at_period_end: false,
+      items: {
+        data: [{ price: { id: 'price_1', recurring: { interval: 'month' } } }],
+      },
+    } as any);
+    vi.mocked(prisma.subscription.create).mockResolvedValue({} as any);
+    mockDbSubscription(makeDbSubscription(), {
+      plan: 'FREE',
+      planSource: null,
+    });
+    // The handler looks up the Subscription row for this site before writing.
+    vi.mocked(prisma.subscription.findUnique).mockResolvedValue(null);
+    vi.mocked(prisma.site.findUnique).mockResolvedValue({
+      id: 'site-1',
+      userId: USER.id,
+      user: { ...USER },
+    } as any);
+
+    const res = await fireEvent(
+      checkoutEvent({
+        subscription: 'sub_new',
+        metadata: { siteId: 'site-1', platform: 'flowershow' },
+      }),
+    );
+
+    expect(res.status).toBe(200);
+    expect(prisma.site.updateMany).toHaveBeenCalledWith({
+      where: { id: 'site-1', plan: 'FREE', planSource: null },
+      data: {
+        plan: 'PREMIUM',
+        planSource: 'SITE',
+        coveredByAccountPlan: false,
+      },
+    });
+    // The Subscription row is written before the reconciler reads it.
+    expect(
+      vi.mocked(prisma.subscription.create).mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      vi.mocked(prisma.site.updateMany).mock.invocationCallOrder[0]!,
+    );
+    // No direct plan write.
+    expect(prisma.site.update).not.toHaveBeenCalled();
+    expect(sendEmail).toHaveBeenCalledWith(
+      expect.objectContaining({ subject: "You're now on Flowershow Premium" }),
     );
   });
 

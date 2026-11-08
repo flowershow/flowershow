@@ -1,11 +1,40 @@
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('@/env.mjs', () => ({ env: { STRIPE_SECRET_KEY: 'sk_test_x' } }));
+vi.mock('@/env.mjs', () => ({
+  env: { STRIPE_SECRET_KEY: 'sk_test_x', NEXT_PUBLIC_VERCEL_ENV: 'production' },
+}));
 
+vi.mock('@/server/db', () => ({
+  default: {
+    site: { findMany: vi.fn(), updateMany: vi.fn(), update: vi.fn() },
+    accountSubscription: { findUnique: vi.fn() },
+  },
+}));
+
+vi.mock('@/lib/storage-limits', () => ({
+  getSiteStorageBytes: vi.fn(),
+}));
+
+vi.mock('@/lib/domains', () => ({
+  removeDomainAndVariantFromVercelProject: vi.fn().mockResolvedValue(undefined),
+}));
+
+vi.mock('@/lib/otel-logger', () => ({
+  log: vi.fn(),
+  SeverityNumber: { INFO: 9, WARN: 13, ERROR: 17 },
+}));
+
+import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
+import { log } from '@/lib/otel-logger';
+import { getSiteStorageBytes } from '@/lib/storage-limits';
+import prisma from '@/server/db';
 import { ACCOUNT_PLAN_SITE_ALLOWANCE } from './account-plans';
 import {
   type AccountPlanInput,
   computeSitePlans,
+  downgradeSiteToFree,
+  reconcileAfterSiteChange,
+  reconcileUserSitePlans,
   type SitePlanInput,
   type SitePlanTarget,
 } from './site-plans';
@@ -295,5 +324,253 @@ describe('computeSitePlans', () => {
       { autoFill: 'none' },
     );
     expect(t).toEqual(premiumAccount('s', true));
+  });
+});
+
+// A site row as reconcileUserSitePlans selects it.
+function dbSite(id: string, overrides: Record<string, unknown> = {}) {
+  return {
+    id,
+    plan: 'FREE',
+    planSource: null,
+    coveredByAccountPlan: false,
+    createdAt: day(1),
+    customDomain: null,
+    storageAllowanceBytes: null,
+    subscription: null,
+    publishes: [],
+    ...overrides,
+  };
+}
+
+describe('reconcileUserSitePlans', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.site.updateMany).mockResolvedValue({ count: 1 } as any);
+    vi.mocked(prisma.site.update).mockResolvedValue({} as any);
+    vi.mocked(getSiteStorageBytes).mockResolvedValue(0);
+  });
+
+  it('downgrades lapsed SITE and ACCOUNT sites and never touches MANUAL', async () => {
+    vi.mocked(prisma.site.findMany).mockResolvedValue([
+      dbSite('man', { plan: 'PREMIUM', planSource: 'MANUAL' }),
+      dbSite('sub', {
+        plan: 'PREMIUM',
+        planSource: 'SITE',
+        subscription: { status: 'canceled' },
+      }),
+      dbSite('acc', {
+        plan: 'PREMIUM',
+        planSource: 'ACCOUNT',
+        coveredByAccountPlan: true,
+      }),
+    ] as any);
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue({
+      status: 'canceled',
+      siteAllowance: 5,
+    } as any);
+
+    const { changed } = await reconcileUserSitePlans('user-1');
+
+    expect(prisma.site.updateMany).toHaveBeenCalledTimes(2);
+    expect(prisma.site.updateMany).toHaveBeenCalledWith({
+      where: { id: 'sub', plan: 'PREMIUM', planSource: 'SITE' },
+      data: expect.objectContaining({ plan: 'FREE', planSource: null }),
+    });
+    expect(prisma.site.updateMany).toHaveBeenCalledWith({
+      where: { id: 'acc', plan: 'PREMIUM', planSource: 'ACCOUNT' },
+      data: expect.objectContaining({ plan: 'FREE', planSource: null }),
+    });
+    const touched = [
+      ...vi.mocked(prisma.site.updateMany).mock.calls,
+      ...vi.mocked(prisma.site.update).mock.calls,
+    ].map((c) => (c[0] as any).where.id);
+    expect(touched).not.toContain('man');
+    expect(changed.map((t) => t.id).sort()).toEqual(['acc', 'sub']);
+  });
+
+  it("only loads the user's non-temporary sites", async () => {
+    vi.mocked(prisma.site.findMany).mockResolvedValue([]);
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue(null);
+
+    await reconcileUserSitePlans('user-1');
+
+    expect(prisma.site.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { userId: 'user-1', isTemporary: false },
+      }),
+    );
+  });
+
+  it('reconcile loses the race safely', async () => {
+    vi.mocked(prisma.site.findMany).mockResolvedValue([
+      dbSite('sub', {
+        plan: 'PREMIUM',
+        planSource: 'SITE',
+        customDomain: 'example.com',
+        subscription: { status: 'canceled' },
+      }),
+    ] as any);
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue(null);
+    // An admin set MANUAL between our read and our write.
+    vi.mocked(prisma.site.updateMany).mockResolvedValue({ count: 0 } as any);
+
+    const { changed } = await reconcileUserSitePlans('user-1');
+
+    expect(removeDomainAndVariantFromVercelProject).not.toHaveBeenCalled();
+    expect(prisma.site.update).not.toHaveBeenCalled();
+    expect(changed).toEqual([]);
+  });
+
+  it('writes nothing when every site already matches', async () => {
+    vi.mocked(prisma.site.findMany).mockResolvedValue([
+      dbSite('free'),
+      dbSite('sub', {
+        plan: 'PREMIUM',
+        planSource: 'SITE',
+        subscription: { status: 'active' },
+      }),
+    ] as any);
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue(null);
+
+    const { changed } = await reconcileUserSitePlans('user-1');
+
+    expect(prisma.site.updateMany).not.toHaveBeenCalled();
+    expect(changed).toEqual([]);
+  });
+
+  it('uses the latest publish for recency', async () => {
+    // Pro with one free slot and autoFill 'all': the more recently published
+    // site wins, even though the other was created later.
+    vi.mocked(prisma.site.findMany).mockResolvedValue([
+      dbSite('old', { createdAt: day(5), publishes: [{ startedAt: day(6) }] }),
+      dbSite('new', { createdAt: day(1), publishes: [{ startedAt: day(9) }] }),
+    ] as any);
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue({
+      status: 'active',
+      siteAllowance: 1,
+    } as any);
+
+    await reconcileUserSitePlans('user-1', { autoFill: 'all' });
+
+    expect(prisma.site.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.site.updateMany).toHaveBeenCalledWith({
+      where: { id: 'new', plan: 'FREE', planSource: null },
+      data: {
+        plan: 'PREMIUM',
+        planSource: 'ACCOUNT',
+        coveredByAccountPlan: true,
+      },
+    });
+  });
+});
+
+describe('downgradeSiteToFree', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.site.update).mockResolvedValue({} as any);
+    vi.mocked(getSiteStorageBytes).mockResolvedValue(0);
+  });
+
+  it('removes the custom domain and keeps password protection', async () => {
+    await downgradeSiteToFree({
+      id: 'site-1',
+      customDomain: 'example.com',
+      storageAllowanceBytes: null,
+    });
+
+    expect(removeDomainAndVariantFromVercelProject).toHaveBeenCalledWith(
+      'example.com',
+    );
+    const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
+    expect(data).toMatchObject({
+      plan: 'FREE',
+      planSource: null,
+      customDomain: null,
+    });
+    expect(data).not.toHaveProperty('privacyMode');
+    expect(data).not.toHaveProperty('accessPasswordHash');
+    expect(data).not.toHaveProperty('tokenVersion');
+    expect(data).not.toHaveProperty('storageAllowanceBytes');
+  });
+
+  it('sets a storage allowance of ceil(total * 1.1) when over the Free cap', async () => {
+    const total = 300 * 1024 * 1024 + 1;
+    vi.mocked(getSiteStorageBytes).mockResolvedValue(total);
+
+    await downgradeSiteToFree({
+      id: 'site-1',
+      customDomain: null,
+      storageAllowanceBytes: null,
+    });
+
+    const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
+    expect(data.storageAllowanceBytes).toBe(
+      BigInt(Math.ceil((total * 11) / 10)),
+    );
+    expect(data).not.toHaveProperty('customDomain');
+  });
+});
+
+describe('reconcileAfterSiteChange', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(prisma.site.updateMany).mockResolvedValue({ count: 1 } as any);
+  });
+
+  it('puts a new site on a live Pro with 4 covered sites on the account plan', async () => {
+    const covered = ['a', 'b', 'c', 'd'].map((id) =>
+      dbSite(id, {
+        plan: 'PREMIUM',
+        planSource: 'ACCOUNT',
+        coveredByAccountPlan: true,
+      }),
+    );
+    vi.mocked(prisma.site.findMany).mockResolvedValue([
+      ...covered,
+      dbSite('new'),
+    ] as any);
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue({
+      status: 'active',
+      siteAllowance: 5,
+    } as any);
+
+    await reconcileAfterSiteChange('user-1', 'new');
+
+    expect(prisma.site.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.site.updateMany).toHaveBeenCalledWith({
+      where: { id: 'new', plan: 'FREE', planSource: null },
+      data: {
+        plan: 'PREMIUM',
+        planSource: 'ACCOUNT',
+        coveredByAccountPlan: true,
+      },
+    });
+  });
+
+  it('does not reconcile without an account subscription', async () => {
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue(null);
+
+    await reconcileAfterSiteChange('user-1', 'new');
+
+    expect(prisma.site.findMany).not.toHaveBeenCalled();
+    expect(prisma.site.updateMany).not.toHaveBeenCalled();
+  });
+
+  it('logs and swallows reconciler errors', async () => {
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue({
+      status: 'active',
+      siteAllowance: 5,
+    } as any);
+    vi.mocked(prisma.site.findMany).mockRejectedValue(new Error('db down'));
+
+    await expect(
+      reconcileAfterSiteChange('user-1', 'new'),
+    ).resolves.toBeUndefined();
+    expect(log).toHaveBeenCalledWith(
+      expect.any(String),
+      17,
+      expect.objectContaining({ userId: 'user-1', siteId: 'new' }),
+    );
   });
 });
