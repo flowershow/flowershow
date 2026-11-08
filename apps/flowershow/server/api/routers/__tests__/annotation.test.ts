@@ -50,11 +50,16 @@ const ROW = {
   createdAt: new Date('2026-10-03T10:00:00.000Z'),
 };
 
-function makeDb(owner = 'user-1') {
+function makeDb(
+  owner = 'user-1',
+  { plan = 'FREE', members = [] as { userId: string }[] } = {},
+) {
   return {
     site: {
       findUnique: vi.fn().mockResolvedValue({
         userId: owner,
+        plan,
+        members,
         projectName: 'notes',
         customDomain: null,
         subdomain: 'notes-ada',
@@ -73,7 +78,7 @@ function makeDb(owner = 'user-1') {
       findUnique: vi.fn().mockResolvedValue({
         id: 'ann-1',
         siteId: 'site-1',
-        site: { userId: owner },
+        site: { userId: owner, plan, members },
       }),
       updateMany: vi.fn().mockResolvedValue({ count: 1 }),
       delete: vi.fn().mockResolvedValue(ROW),
@@ -92,6 +97,34 @@ const caller = (db: unknown) =>
 beforeEach(() => vi.clearAllMocks());
 
 describe('annotation router', () => {
+  it('lets an editor of a Premium site list annotations', async () => {
+    const db = makeDb('owner-1', {
+      plan: 'PREMIUM',
+      members: [{ userId: 'user-1' }],
+    });
+    await expect(
+      caller(db).annotation.listForSite({ siteId: 'site-1' }),
+    ).resolves.toBeDefined();
+    expect(db.site.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({
+        select: expect.objectContaining({
+          plan: true,
+          members: { where: { userId: 'user-1' }, select: { userId: true } },
+        }),
+      }),
+    );
+  });
+
+  it('denies an editor once the site is no longer Premium', async () => {
+    const db = makeDb('owner-1', {
+      plan: 'FREE',
+      members: [{ userId: 'user-1' }],
+    });
+    await expect(
+      caller(db).annotation.listForSite({ siteId: 'site-1' }),
+    ).rejects.toThrow('Site not found');
+  });
+
   it("lists a site owner's annotations as DTOs, open first", async () => {
     const db = makeDb();
     const result = await caller(db).annotation.listForSite({
