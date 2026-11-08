@@ -170,7 +170,7 @@ describe('noteStorageOverLimit', () => {
       noteStorageOverLimit(site(), 50 * MB, 250 * MB),
     ).resolves.toBeUndefined();
     expect(warn).toHaveBeenCalledTimes(1);
-    const line = String(warn.mock.calls[0][0]);
+    const line = String(warn.mock.calls[0]?.[0]);
     expect(line).toContain('s1');
     expect(line).toContain('site');
     warn.mockRestore();
@@ -181,7 +181,7 @@ describe('noteStorageOverLimit', () => {
     queryRaw.mockResolvedValue([{ total: BigInt(950 * MB) }]);
     await noteStorageOverLimit(site(), 10 * MB, 100 * MB);
     expect(warn).toHaveBeenCalledTimes(1);
-    expect(String(warn.mock.calls[0][0])).toContain('pool');
+    expect(String(warn.mock.calls[0]?.[0])).toContain('pool');
     warn.mockRestore();
   });
 
