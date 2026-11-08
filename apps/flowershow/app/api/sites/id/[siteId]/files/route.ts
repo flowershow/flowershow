@@ -1,4 +1,5 @@
-import { canManageSite } from '@/lib/site-authz';
+import { siteAuthzSelect, siteRole } from '@/lib/site-authz';
+import { siteAccessDenied } from '@/lib/site-auth';
 import {
   DeleteFilesRequestSchema,
   type DeleteFilesResponse,
@@ -67,8 +68,7 @@ export async function POST(
       where: { id: siteId },
       select: {
         id: true,
-        userId: true,
-        plan: true,
+        ...siteAuthzSelect(userId),
         storageAllowanceBytes: true,
         projectName: true,
       },
@@ -81,12 +81,8 @@ export async function POST(
       );
     }
 
-    if (!canManageSite(userId, site)) {
-      return NextResponse.json(
-        { error: 'forbidden', message: 'You do not have access to this site' },
-        { status: 403 },
-      );
-    }
+    const denied = siteAccessDenied(siteRole(userId, site));
+    if (denied) return denied;
 
     const parsedBody = PublishFilesRequestSchema.safeParse(
       await request.json(),
@@ -135,6 +131,7 @@ export async function POST(
     const publish = await prisma.publish.create({
       data: {
         siteId,
+        userId,
         source: clientTypeToPublishSource(getClientInfo(request).client_type),
         legacy: isLegacy,
       },
@@ -274,7 +271,7 @@ export async function DELETE(
 
     const site = await prisma.site.findUnique({
       where: { id: siteId },
-      select: { id: true, userId: true },
+      select: { id: true, ...siteAuthzSelect(auth.userId) },
     });
 
     if (!site) {
@@ -284,12 +281,8 @@ export async function DELETE(
       );
     }
 
-    if (!canManageSite(auth.userId, site)) {
-      return NextResponse.json(
-        { error: 'forbidden', message: 'You do not have access to this site' },
-        { status: 403 },
-      );
-    }
+    const deniedDelete = siteAccessDenied(siteRole(auth.userId, site));
+    if (deniedDelete) return deniedDelete;
 
     const parsedBody = DeleteFilesRequestSchema.safeParse(await request.json());
     if (!parsedBody.success) {

@@ -1,4 +1,4 @@
-import { canManageSite } from '@/lib/site-authz';
+import { siteAuthzSelect, siteRole } from '@/lib/site-authz';
 import type {
   PublishFileStatus,
   PublicStatusResponse,
@@ -8,7 +8,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { CLAIM_TOKEN_PREFIX } from '@/lib/anonymous-user';
 import { checkCliVersion, validateAccessToken } from '@/lib/cli-auth';
 import PostHogClient from '@/lib/server-posthog';
-import { authorizeSiteRequest } from '@/lib/site-auth';
+import { authorizeSiteRequest, siteAccessDenied } from '@/lib/site-auth';
 import prisma from '@/server/db';
 
 /**
@@ -50,7 +50,12 @@ export async function GET(
       // paths / error detail to anonymous callers.
       const site = await prisma.site.findUnique({
         where: { id: siteId },
-        select: { id: true, userId: true, privacyMode: true },
+        select: {
+          id: true,
+          // Unauthenticated callers match no member row.
+          ...siteAuthzSelect(auth?.userId ?? ''),
+          privacyMode: true,
+        },
       });
 
       // If authenticated, verify ownership
@@ -62,15 +67,8 @@ export async function GET(
           );
         }
 
-        if (!canManageSite(auth?.userId, site)) {
-          return NextResponse.json(
-            {
-              error: 'forbidden',
-              message: 'You do not have access to this site',
-            },
-            { status: 403 },
-          );
-        }
+        const denied = siteAccessDenied(siteRole(auth?.userId, site));
+        if (denied) return denied;
       }
 
       sitePrivacyMode = site?.privacyMode;

@@ -1,4 +1,5 @@
-import { canManageSite, isSiteOwner } from '@/lib/site-authz';
+import { isSiteOwner, siteAuthzSelect, siteRole } from '@/lib/site-authz';
+import { siteAccessDenied } from '@/lib/site-auth';
 import type {
   DeleteSiteResponse,
   GetSiteResponse,
@@ -54,12 +55,11 @@ export async function GET(
         customDomain: true,
         subdomain: true,
         rootDir: true,
-        plan: true,
         privacyMode: true,
         configJson: true,
         createdAt: true,
         updatedAt: true,
-        userId: true,
+        ...siteAuthzSelect(auth.userId),
         user: {
           select: {
             username: true,
@@ -83,13 +83,9 @@ export async function GET(
       );
     }
 
-    // Check ownership
-    if (!canManageSite(auth.userId, site)) {
-      return NextResponse.json(
-        { error: 'forbidden', message: 'You do not have access to this site' },
-        { status: 403 },
-      );
-    }
+    // Check access (owner, or editor on a Premium site)
+    const denied = siteAccessDenied(siteRole(auth.userId, site));
+    if (denied) return denied;
 
     const annotationSettings = await annotationSettingsFor(prisma, site);
 

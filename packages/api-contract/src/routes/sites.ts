@@ -171,7 +171,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          'Forbidden, or `premium_required` when the caller is an editor and the site\'s Premium plan has lapsed',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
@@ -254,7 +255,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          'Forbidden, or `premium_required` when the caller is an editor and the site\'s Premium plan has lapsed',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
@@ -319,7 +321,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          'Forbidden, or `premium_required` when the caller is an editor and the site\'s Premium plan has lapsed',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
@@ -371,7 +374,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          'Forbidden, or `premium_required` when the caller is an editor and the site\'s Premium plan has lapsed',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
@@ -415,7 +419,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '403': {
-        description: 'Access denied',
+        description:
+          'Forbidden, or `premium_required` when the caller is an editor and the site\'s Premium plan has lapsed',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '404': {
