@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import CreateSiteButton from '@/components/dashboard/create-site-button';
 import DashboardEmptyState from '@/components/dashboard/dashboard-empty-state';
+import InviteBanner from '@/components/dashboard/invite-banner';
 import SiteCard from '@/components/dashboard/site-card';
 import { getSession } from '@/server/auth';
 import { api } from '@/trpc/server';
@@ -17,6 +18,7 @@ export default async function AllSites() {
 
   return (
     <div className="h-full flex flex-col space-y-6">
+      <InviteBanner />
       {sites.length === 0 ? (
         <DashboardEmptyState />
       ) : (
