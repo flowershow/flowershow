@@ -34,6 +34,7 @@ vi.mock('@/lib/server-posthog', () => {
 });
 vi.mock('@/lib/domains', () => ({
   addDomainToVercel: vi.fn(),
+  isReservedDomain: vi.fn(() => false),
   getDomainVariant: vi.fn((domain: string) =>
     domain.startsWith('www.') ? domain.slice(4) : `www.${domain}`,
   ),
@@ -57,6 +58,7 @@ import { fetchFile } from '@/lib/content-store';
 import { siteCreateAllowed } from '@/lib/site-create-limit';
 import { customCssVersion } from '@/lib/custom-css';
 import { appRouter } from '@/server/api/root';
+import { SITE_UPDATE_KEY_ROLE, SiteUpdateKey } from '@/server/api/types';
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -109,6 +111,8 @@ function makeSite(overrides: Partial<Record<string, unknown>> = {}) {
     isTemporary: false,
     expiresAt: null,
     anonymousOwnerId: null,
+    installationRepository: null,
+    members: [] as Array<{ userId: string }>,
     user: { id: 'user-1', username: 'testuser' },
     ...overrides,
   };
@@ -442,6 +446,20 @@ function createCaller(mockDb: ReturnType<typeof createMockDb>) {
     headers: new Headers(),
   });
 }
+
+function createCallerAs(
+  mockDb: ReturnType<typeof createMockDb>,
+  userId: string,
+) {
+  return appRouter.createCaller({
+    session: { user: { id: userId }, expires: '' } as any,
+    db: mockDb as any,
+    headers: new Headers(),
+  });
+}
+
+const sharedSite = (plan: 'FREE' | 'PREMIUM' = 'PREMIUM') =>
+  makeSite({ plan, members: [{ userId: 'editor-1' }] });
 
 function createAuthenticatedCaller(mockDb: ReturnType<typeof createMockDb>) {
   return appRouter.createCaller({
@@ -1403,21 +1421,25 @@ describe('site.getById authorization', () => {
     expect(db.site.findFirst).not.toHaveBeenCalled();
   });
 
-  it('scopes the query to the authenticated caller as owner', async () => {
+  it('getById loads siteAuthzSelect for the caller and returns null for a stranger', async () => {
     const db = createMockDb();
-    // A site not owned by the caller (or an unknown id) yields null, matching
-    // the not-found contract every caller already handles.
-    db.site.findFirst = vi.fn(async () => null);
-    const caller = createAuthenticatedCaller(db);
+    const result = await createAuthenticatedCaller(db).site.getById({
+      id: 'site-1',
+    });
 
-    const result = await caller.site.getById({ id: 'site-1' });
-
-    expect(result).toBeNull();
-    expect(db.site.findFirst).toHaveBeenCalledWith(
+    expect(result?.id).toBe('site-1');
+    expect(result).not.toHaveProperty('members');
+    expect(result).not.toHaveProperty('userId');
+    expect(db.site.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({
-        where: expect.objectContaining({ id: 'site-1', userId: 'user-1' }),
+        select: expect.objectContaining({
+          members: { where: { userId: 'user-1' }, select: { userId: true } },
+        }),
       }),
     );
+    expect(
+      await createCallerAs(db, 'stranger').site.getById({ id: 'site-1' }),
+    ).toBeNull();
   });
 });
 
@@ -2131,5 +2153,165 @@ describe('site.create rate limit', () => {
       createAuthenticatedCaller(db as any).site.create({ projectName: '///' }),
     ).rejects.toMatchObject({ code: 'BAD_REQUEST' });
     expect(siteCreateAllowed).not.toHaveBeenCalled();
+  });
+});
+
+describe('site.update key classification', () => {
+  it('classifies every SiteUpdateKey', () => {
+    expect(SITE_UPDATE_KEY_ROLE).toEqual({
+      customDomain: 'owner',
+      rootDir: 'owner',
+      enableComments: 'editor',
+      enableSearch: 'editor',
+      enableRss: 'editor',
+      syntaxMode: 'editor',
+      giscusRepoId: 'editor',
+      giscusCategoryId: 'editor',
+      showSidebar: 'editor',
+      showBuiltWithButton: 'editor',
+      showRawLink: 'editor',
+      hideBranding: 'editor',
+    });
+  });
+
+  it.each(Object.values(SiteUpdateKey))(
+    'editor on a Premium site and key %s',
+    async (key) => {
+      const db = createMockDb({ site: sharedSite() });
+      (db.site as any).update = vi.fn(async () => sharedSite());
+      const call = createCallerAs(db, 'editor-1').site.update({
+        id: 'site-1',
+        key,
+        value: 'true',
+      });
+      if (SITE_UPDATE_KEY_ROLE[key] === 'owner') {
+        await expect(call).rejects.toMatchObject({ code: 'FORBIDDEN' });
+        expect((db.site as any).update).not.toHaveBeenCalled();
+      } else {
+        await call;
+        expect((db.site as any).update).toHaveBeenCalled();
+      }
+    },
+  );
+
+  it('owner may still change customDomain', async () => {
+    const db = createMockDb({ site: makeSite({ plan: 'PREMIUM' }) });
+    (db.site as any).update = vi.fn(async () => makeSite());
+    await createAuthenticatedCaller(db).site.update({
+      id: 'site-1',
+      key: SiteUpdateKey.customDomain,
+      value: 'example.com',
+    });
+    expect((db.site as any).update).toHaveBeenCalled();
+  });
+});
+
+describe('site router: editor allow and deny', () => {
+  it('editor on a FREE site is denied every manage procedure', async () => {
+    const db = createMockDb({ site: sharedSite('FREE') });
+    const c = createCallerAs(db, 'editor-1');
+    await expect(
+      c.site.update({
+        id: 'site-1',
+        key: SiteUpdateKey.enableRss,
+        value: 'true',
+      }),
+    ).rejects.toThrow('Site not found');
+    await expect(c.site.getDbConfig({ siteId: 'site-1' })).rejects.toThrow(
+      'Site not found',
+    );
+    await expect(
+      c.site.getLatestPublishState({ id: 'site-1' }),
+    ).rejects.toThrow('Site not found');
+    expect(await c.site.getById({ id: 'site-1' })).toBeNull();
+  });
+
+  it('removed editor (no member row) is denied', async () => {
+    const db = createMockDb({ site: makeSite({ plan: 'PREMIUM' }) });
+    await expect(
+      createCallerAs(db, 'editor-1').site.getPublishHistory({ id: 'site-1' }),
+    ).rejects.toThrow('Site not found');
+  });
+
+  it('editor on a Premium site can read state, history, config and getById', async () => {
+    const db = createMockDb({ site: sharedSite() });
+    (db.publish as any).findMany = vi.fn(async () => []);
+    const c = createCallerAs(db, 'editor-1');
+    await expect(
+      c.site.getLatestPublishState({ id: 'site-1' }),
+    ).resolves.toBeTruthy();
+    await expect(c.site.getPublishHistory({ id: 'site-1' })).resolves.toEqual(
+      [],
+    );
+    await expect(
+      c.site.getDbConfig({ siteId: 'site-1' }),
+    ).resolves.not.toThrow();
+    expect((await c.site.getById({ id: 'site-1' }))?.id).toBe('site-1');
+  });
+
+  it('getPublishHistory exposes the publisher username', async () => {
+    const db = createMockDb({ site: sharedSite() });
+    (db.publish as any).findMany = vi.fn(async () => [
+      {
+        id: 'p1',
+        startedAt: new Date(),
+        completedAt: new Date(),
+        source: 'CLI',
+        gitCommitSha: null,
+        gitCommitMessage: null,
+        legacy: false,
+        user: { username: 'ada' },
+        files: [],
+      },
+      {
+        id: 'p2',
+        startedAt: new Date(),
+        completedAt: null,
+        source: 'CLI',
+        gitCommitSha: null,
+        gitCommitMessage: null,
+        legacy: true,
+        user: null,
+        files: [],
+      },
+    ]);
+    const rows = await createCallerAs(db, 'editor-1').site.getPublishHistory({
+      id: 'site-1',
+    });
+    expect(rows.map((r) => r.publishedBy)).toEqual(['ada', null]);
+  });
+
+  it.each([
+    [
+      'renameSite',
+      (c: any) => c.site.renameSite({ id: 'site-1', name: 'new' }),
+    ],
+    ['delete', (c: any) => c.site.delete({ id: 'site-1' })],
+    [
+      'connectGitHub',
+      (c: any) =>
+        c.site.connectGitHub({
+          siteId: 'site-1',
+          ghRepository: 'a/b',
+          ghBranch: 'main',
+        }),
+    ],
+    [
+      'disconnectGitHub',
+      (c: any) => c.site.disconnectGitHub({ siteId: 'site-1' }),
+    ],
+    [
+      'reconnectSiteToGitHubApp',
+      (c: any) => c.site.reconnectSiteToGitHubApp({ siteId: 'site-1' }),
+    ],
+  ])('editor on a Premium site is denied %s', async (_name, run) => {
+    const db = createMockDb({ site: sharedSite() });
+    (db.site as any).update = vi.fn();
+    (db.site as any).delete = vi.fn();
+    await expect(run(createCallerAs(db, 'editor-1'))).rejects.toThrow(
+      'Site not found',
+    );
+    expect((db.site as any).update).not.toHaveBeenCalled();
+    expect((db.site as any).delete).not.toHaveBeenCalled();
   });
 });
