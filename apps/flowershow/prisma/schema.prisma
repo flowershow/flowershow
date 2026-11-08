@@ -37,6 +37,8 @@ model User {
   accessTokens        AccessToken[]
   githubInstallations GitHubInstallation[]
   oauthGrants         OAuthGrant[]
+  siteMemberships     SiteMember[]
+  publishes           Publish[]
 }
 
 model Subscription {
@@ -131,6 +133,8 @@ model Site {
   tags                    Tag[]
   annotations             Annotation[]
   ownerCodes              SiteOwnerCode[]
+  members                 SiteMember[]
+  invites                 SiteInvite[]
   tree                    Json?         @db.JsonB // GitHub tree data
   privacyMode             PrivacyMode   @default(PUBLIC) @map("privacy_mode")
   accessPasswordHash      String?       @map("access_password_hash")
@@ -299,6 +303,41 @@ model SiteOwnerCode {
   @@index([expiresAt])
 }
 
+enum SiteMemberRole {
+  EDITOR
+}
+
+/// An editor on a site. The owner is Site.userId and is never a row here.
+model SiteMember {
+  id        String         @id @default(cuid())
+  site      Site           @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  siteId    String         @map("site_id")
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String         @map("user_id")
+  role      SiteMemberRole @default(EDITOR)
+  invitedBy String?        @map("invited_by")
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@unique([siteId, userId])
+  @@index([userId])
+}
+
+/// A pending invite to edit a site. Only a SHA-256 hash of the token is stored.
+model SiteInvite {
+  id        String         @id @default(cuid())
+  site      Site           @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  siteId    String         @map("site_id")
+  email     String // lower-cased, trimmed
+  role      SiteMemberRole @default(EDITOR)
+  tokenHash String         @unique @map("token_hash")
+  invitedBy String         @map("invited_by")
+  expiresAt DateTime       @map("expires_at")
+  createdAt DateTime       @default(now()) @map("created_at")
+
+  @@unique([siteId, email])
+  @@index([email])
+}
+
 enum PublishSource {
   github_webhook
   cli
@@ -333,6 +372,8 @@ model Publish {
   gitCommitSha      String?       @map("git_commit_sha")
   gitCommitMessage  String?       @map("git_commit_message")
   legacy            Boolean       @default(false)
+  user              User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  userId            String?       @map("user_id")
   files             PublishFile[]
 
   @@index([siteId, startedAt(sort: Desc)])
