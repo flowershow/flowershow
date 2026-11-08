@@ -1,3 +1,4 @@
+import { Prisma, type PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { SiteInviteEmail } from '@/emails/site-invite';
@@ -32,7 +33,15 @@ const ownerOnly = () =>
     message: 'Only the site owner can manage members',
   });
 
-type Ctx = { db: any };
+const pendingInviteConflict = () =>
+  new TRPCError({
+    code: 'CONFLICT',
+    message: 'That address already has a pending invite',
+  });
+
+type Ctx = { db: PrismaClient };
+
+const MAX_INVITER_NAME = 80;
 
 /** Load the site with what authz needs. Missing or not visible -> NOT_FOUND. */
 async function loadManagedSite(ctx: Ctx, siteId: string, userId: string) {
@@ -88,31 +97,26 @@ export const siteMemberRouter = createTRPCRouter({
         },
         orderBy: { createdAt: 'asc' },
       });
-      const members = rows.map((m: any) => ({
-        userId: m.userId as string,
-        username: m.user.username as string,
-        name: (m.user.name ?? null) as string | null,
-        ...(isOwner ? { email: m.user.email as string } : {}),
-        createdAt: m.createdAt as Date,
+      const members = rows.map((m) => ({
+        userId: m.userId,
+        username: m.user.username,
+        name: m.user.name ?? null,
+        ...(isOwner ? { email: m.user.email } : {}),
+        createdAt: m.createdAt,
       }));
 
       const base = {
         role: isOwner ? ('owner' as const) : ('editor' as const),
-        owner: { username: site.user.username as string },
+        owner: { username: site.user.username },
         members,
       };
       if (!isOwner) return base;
 
-      const invites = (await ctx.db.siteInvite.findMany({
+      const invites = await ctx.db.siteInvite.findMany({
         where: { siteId: input.siteId },
         select: { id: true, email: true, expiresAt: true, createdAt: true },
         orderBy: { createdAt: 'asc' },
-      })) as Array<{
-        id: string;
-        email: string;
-        expiresAt: Date;
-        createdAt: Date;
-      }>;
+      });
       return { ...base, invites };
     }),
 
@@ -157,10 +161,7 @@ export const siteMemberRouter = createTRPCRouter({
         select: { id: true },
       });
       if (existingInvite) {
-        throw new TRPCError({
-          code: 'CONFLICT',
-          message: 'That address already has a pending invite',
-        });
+        throw pendingInviteConflict();
       }
 
       const memberCount = await ctx.db.siteMember.count({
@@ -184,18 +185,34 @@ export const siteMemberRouter = createTRPCRouter({
 
       const token = generateInviteToken();
       const expiresAt = new Date(Date.now() + INVITE_TTL_MS);
-      const invite = await ctx.db.siteInvite.create({
-        data: {
-          siteId: input.siteId,
-          email,
-          tokenHash: hashInviteToken(token),
-          invitedBy: userId,
-          expiresAt,
-        },
-        select: { id: true, email: true, expiresAt: true },
-      });
+      let invite;
+      try {
+        invite = await ctx.db.siteInvite.create({
+          data: {
+            siteId: input.siteId,
+            email,
+            tokenHash: hashInviteToken(token),
+            invitedBy: userId,
+            expiresAt,
+          },
+          select: { id: true, email: true, expiresAt: true },
+        });
+      } catch (err) {
+        // A simultaneous invite to the same address hit @@unique([siteId, email]).
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2002'
+        ) {
+          throw pendingInviteConflict();
+        }
+        throw err;
+      }
 
-      const inviterName = site.user.name || site.user.username || 'Someone';
+      const inviterName = (
+        site.user.name ||
+        site.user.username ||
+        'Someone'
+      ).slice(0, MAX_INVITER_NAME);
       await sendTransactionalEmail({
         to: email,
         subject: `${inviterName} invited you to edit ${site.projectName} on Flowershow`,
@@ -212,9 +229,9 @@ export const siteMemberRouter = createTRPCRouter({
       });
 
       return {
-        id: invite.id as string,
-        email: invite.email as string,
-        expiresAt: invite.expiresAt as Date,
+        id: invite.id,
+        email: invite.email,
+        expiresAt: invite.expiresAt,
       };
     }),
 

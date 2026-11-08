@@ -31,6 +31,7 @@ vi.mock('@/lib/transactional-email', () => ({
   sendTransactionalEmail: vi.fn().mockResolvedValue({ sent: true }),
 }));
 
+import { Prisma } from '@prisma/client';
 import { render } from '@react-email/components';
 import { appRouter } from '@/server/api/root';
 import { sendTransactionalEmail } from '@/lib/transactional-email';
@@ -114,7 +115,9 @@ function makeDb({
       findFirst: vi.fn(
         async ({ where }: any) =>
           users.find(
-            (u) => u.email.toLowerCase() === where.email.equals.toLowerCase(),
+            (u) =>
+              u.email.toLowerCase() === where.email.equals.toLowerCase() &&
+              (u.memberOf ?? []).includes(where.siteMemberships.some.siteId),
           ) ?? null,
       ),
     },
@@ -209,7 +212,7 @@ describe('siteMember.invite', () => {
   it('refuses an address that is already a member or already invited', async () => {
     const withMember = makeDb({
       site: premium,
-      users: [{ email: 'ada@example.com' }],
+      users: [{ email: 'ada@example.com', memberOf: ['site-1'] }],
     });
     await expect(
       createCallerAs(withMember, 'owner-1').siteMember.invite({
@@ -229,6 +232,53 @@ describe('siteMember.invite', () => {
       }),
     ).rejects.toMatchObject({ code: 'CONFLICT' });
     expect(withInvite.siteInvite.create).not.toHaveBeenCalled();
+  });
+
+  it('invites an existing user who is not a member of this site', async () => {
+    const db = makeDb({
+      site: premium,
+      users: [{ email: 'ada@example.com', memberOf: ['other-site'] }],
+    });
+    await expect(
+      createCallerAs(db, 'owner-1').siteMember.invite({
+        siteId: 'site-1',
+        email: 'ada@example.com',
+      }),
+    ).resolves.toMatchObject({ email: 'ada@example.com' });
+  });
+
+  it('maps a simultaneous duplicate (P2002) to the pending-invite conflict', async () => {
+    const db = makeDb({ site: premium });
+    db.siteInvite.create.mockRejectedValueOnce(
+      new Prisma.PrismaClientKnownRequestError('dup', {
+        code: 'P2002',
+        clientVersion: 'x',
+      }),
+    );
+    await expect(
+      createCallerAs(db, 'owner-1').siteMember.invite({
+        siteId: 'site-1',
+        email: 'ada@example.com',
+      }),
+    ).rejects.toMatchObject({
+      code: 'CONFLICT',
+      message: 'That address already has a pending invite',
+    });
+    expect(sendTransactionalEmail).not.toHaveBeenCalled();
+  });
+
+  it('caps the inviter name at 80 characters in the subject and email', async () => {
+    const db = makeDb({
+      site: { ...premium, user: { ...premium.user, name: 'N'.repeat(200) } },
+    });
+    await createCallerAs(db, 'owner-1').siteMember.invite({
+      siteId: 'site-1',
+      email: 'ada@example.com',
+    });
+    const arg = (sendTransactionalEmail as any).mock.calls[0][0];
+    expect(arg.subject).toBe(
+      `${'N'.repeat(80)} invited you to edit notes on Flowershow`,
+    );
   });
 
   it('refuses a 21st member and a 21st pending invite', async () => {
@@ -425,5 +475,17 @@ describe('SiteInviteEmail', () => {
     expect(html).toContain('https://cloud.example.com/invite/fs_inv_abc');
     expect(html).toContain('Accept invite');
     expect(html).toContain('14 days');
+  });
+
+  it('does not turn markdown in user-controlled names into links', async () => {
+    const html = await render(
+      SiteInviteEmail({
+        inviterName: 'Evil [x](http://e)',
+        projectName: 'p [y](http://e)',
+        acceptUrl: 'https://cloud.example.com/invite/fs_inv_abc',
+      }),
+    );
+    expect(html).not.toContain('href="http://e"');
+    expect(html).toContain('Evil');
   });
 });

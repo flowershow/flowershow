@@ -1,4 +1,4 @@
-import { Button, Markdown } from '@react-email/components';
+import { Button, Heading, Markdown, Text } from '@react-email/components';
 import { EmailLayout } from './components/email-layout';
 
 interface SiteInviteEmailProps {
@@ -16,22 +16,14 @@ export function SiteInviteEmail({
     <EmailLayout
       previewText={`${inviterName} invited you to edit ${projectName} on Flowershow`}
     >
-      <Markdown
-        markdownCustomStyles={{
-          h1: {
-            fontSize: '24px',
-            fontWeight: 'bold',
-            color: '#1a1a1a',
-            margin: '0 0 16px',
-          },
-          p: { fontSize: '16px', lineHeight: '26px', color: '#484848' },
-          link: { color: '#000000', textDecoration: 'underline' },
-        }}
-      >
-        {`# You're invited to edit a site
-
-**${inviterName}** invited you to edit **${projectName}** on Flowershow.`}
-      </Markdown>
+      <Heading className="text-2xl font-bold text-[#1a1a1a] m-0 mb-4">
+        You&apos;re invited to edit a site
+      </Heading>
+      {/* User-controlled values are JSX text (escaped), never Markdown. */}
+      <Text className="text-base leading-[26px] text-[#484848]">
+        <strong>{inviterName}</strong> invited you to edit{' '}
+        <strong>{projectName}</strong> on Flowershow.
+      </Text>
       <Button
         className="bg-black rounded-md text-white text-base text-center block py-3 px-6 my-6"
         href={acceptUrl}
