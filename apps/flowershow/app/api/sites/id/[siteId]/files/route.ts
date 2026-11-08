@@ -26,7 +26,10 @@ import {
   validatePublishFiles,
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
-import { enforceStorageLimit, getSiteStorageBytes } from '@/lib/storage-limits';
+import {
+  noteStorageOverLimit,
+  getSiteStorageBytes,
+} from '@/lib/storage-limits';
 import { authOptions } from '@/server/auth';
 import prisma from '@/server/db';
 
@@ -115,8 +118,8 @@ export async function POST(
 
     const existingBlobMap = new Map(existingBlobs.map((b) => [b.path, b]));
 
-    // Storage limits. Only sizes and limits are reported back, never other
-    // sites' contents; the Free pool is summed over the site owner's sites.
+    // Storage limits are advisory: an over-limit publish is logged, never
+    // blocked. The Free pool is summed over the site owner's sites.
     const currentSiteBytes = await getSiteStorageBytes(siteId);
     const projectedSiteBytes =
       currentSiteBytes -
@@ -126,12 +129,7 @@ export async function POST(
         (n, size) => n + size,
         0,
       );
-    const limited = await enforceStorageLimit(
-      site,
-      currentSiteBytes,
-      projectedSiteBytes,
-    );
-    if (limited) return limited;
+    await noteStorageOverLimit(site, currentSiteBytes, projectedSiteBytes);
 
     // Create Publish record
     const publish = await prisma.publish.create({

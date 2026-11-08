@@ -1,10 +1,6 @@
-import { Plan as PlanEnum, type Plan } from '@prisma/client';
-import { NextResponse } from 'next/server';
-import { env } from '@/env.mjs';
+import type { Plan } from '@prisma/client';
 import prisma from '@/server/db';
-import { GB, MB, getEntitlements } from './entitlements';
-
-const SUPPORT_EMAIL = 'support@flowershow.app';
+import { getEntitlements } from './entitlements';
 
 /** Total stored bytes of a site (sum of its blobs). */
 export async function getSiteStorageBytes(siteId: string): Promise<number> {
@@ -93,69 +89,40 @@ export function checkStorageLimit(
   return null;
 }
 
-function formatBytes(bytes: number): string {
-  if (bytes < GB) return `${Math.round(bytes / MB)} MB`;
-  return `${(bytes / GB).toFixed(1).replace(/\.0$/, '')} GB`;
-}
-
-export function storageLimitResponse(
-  v: StorageViolation,
-  site: { id: string; plan: Plan | null; name?: string },
-): NextResponse {
-  const isPremium = site.plan === PlanEnum.PREMIUM;
-  const upgradeUrl = isPremium
-    ? `mailto:${SUPPORT_EMAIL}`
-    : `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/site/${site.id}/settings#billing`;
-
-  let message: string;
-  if (v.scope === 'pool') {
-    message = `Your free sites would use ${formatBytes(v.projectedBytes)} together, over the ${formatBytes(v.limitBytes)} limit for free sites on one account. Remove some large files, or upgrade this site to Premium: ${upgradeUrl}`;
-  } else {
-    const name = site.name ?? 'this site';
-    const base = `This publish would take ${name} to ${formatBytes(v.projectedBytes)} of storage, over the ${formatBytes(v.limitBytes)} limit`;
-    message = isPremium
-      ? `${base}. Get in touch for more: ${upgradeUrl}`
-      : `${base} for Free sites. Remove some large files, or upgrade to Premium for 5 GB per site: ${upgradeUrl}`;
-  }
-
-  return NextResponse.json(
-    { error: 'storage_limit_exceeded', message, upgradeUrl },
-    { status: 413 },
-  );
-}
-
 /**
- * Check a publish against the site's storage limits. Returns the 413 response
- * when it would break a limit, otherwise null. The shared Free pool (summed
- * over the site owner's other Free sites) is only queried for Free sites
- * without a grandfathered allowance.
+ * Advisory storage check: logs one line when a publish would break a limit,
+ * never blocks and never throws into the publish path. The shared Free pool
+ * (summed over the site owner's other Free sites) is only queried for Free
+ * sites without a grandfathered allowance.
  */
-export async function enforceStorageLimit(
+export async function noteStorageOverLimit(
   site: {
     id: string;
     userId: string;
     plan: Plan | null;
     storageAllowanceBytes: bigint | null;
-    projectName?: string;
   },
   currentSiteBytes: number,
   projectedSiteBytes: number,
-): Promise<NextResponse | null> {
-  const usesFreePool =
-    getEntitlements(site).limits.freePoolHardBytes !== null &&
-    site.storageAllowanceBytes === null;
-  const violation = checkStorageLimit({
-    site,
-    currentSiteBytes,
-    projectedSiteBytes,
-    otherFreeSitesBytes: usesFreePool
-      ? await getFreePoolBytes(site.userId, site.id)
-      : 0,
-  });
-  if (!violation) return null;
-  return storageLimitResponse(violation, {
-    id: site.id,
-    plan: site.plan,
-    name: site.projectName,
-  });
+): Promise<void> {
+  try {
+    const usesFreePool =
+      getEntitlements(site).limits.freePoolHardBytes !== null &&
+      site.storageAllowanceBytes === null;
+    const violation = checkStorageLimit({
+      site,
+      currentSiteBytes,
+      projectedSiteBytes,
+      otherFreeSitesBytes: usesFreePool
+        ? await getFreePoolBytes(site.userId, site.id)
+        : 0,
+    });
+    if (violation) {
+      console.warn(
+        `[storage-limit] over limit (advisory): site=${site.id} scope=${violation.scope} limitBytes=${violation.limitBytes} projectedBytes=${violation.projectedBytes}`,
+      );
+    }
+  } catch (error) {
+    console.error('[storage-limit] check failed', error);
+  }
 }

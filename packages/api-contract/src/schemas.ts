@@ -147,8 +147,6 @@ export const ErrorSchema = z.object({
   error: z.string(),
   error_description: z.string().optional(),
   message: z.string().optional(),
-  /** Where to go to resolve the error, when there is one (e.g. `storage_limit_exceeded`) */
-  upgradeUrl: z.string().optional(),
 });
 export type Error = z.infer<typeof ErrorSchema>;
 

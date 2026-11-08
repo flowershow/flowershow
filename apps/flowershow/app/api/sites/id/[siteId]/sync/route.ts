@@ -27,7 +27,7 @@ import {
 import PostHogClient from '@/lib/server-posthog';
 import { authorizeSiteRequest } from '@/lib/site-auth';
 import { loadServerFileState } from '@/lib/site-file-state';
-import { enforceStorageLimit } from '@/lib/storage-limits';
+import { noteStorageOverLimit } from '@/lib/storage-limits';
 import prisma from '@/server/db';
 
 /**
@@ -194,9 +194,9 @@ export async function POST(
       }
     }
 
-    // Storage limits (signed-in publishes only; anonymous sites have their own
-    // caps above). Runs for dry runs too, and before any Publish row or
-    // presigned URL exists. Merges that don't grow the site always pass.
+    // Storage limits are advisory (signed-in publishes only; anonymous sites
+    // have their own caps above): an over-limit publish is logged, never
+    // blocked. Runs for dry runs too.
     if (access.kind === 'user') {
       const { site } = access;
       const deleting = new Set(toDelete);
@@ -206,12 +206,7 @@ export async function POST(
         .reduce((n, b) => n + b.size, 0);
       const projectedSiteBytes =
         keptBytes + files.reduce((n, f) => n + f.size, 0);
-      const limited = await enforceStorageLimit(
-        site,
-        currentSiteBytes,
-        projectedSiteBytes,
-      );
-      if (limited) return limited;
+      await noteStorageOverLimit(site, currentSiteBytes, projectedSiteBytes);
     }
 
     let uploadUrls: PresignedUrl[] = [];

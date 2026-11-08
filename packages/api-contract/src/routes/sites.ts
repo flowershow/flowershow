@@ -272,7 +272,7 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
       },
       '413': {
         description:
-          'Payload too large (claim-token publishes: max 200 files, 50 MB total), or the publish would take the site over its storage limit (error `storage_limit_exceeded`, with `message` and `upgradeUrl`)',
+          'Payload too large (claim-token publishes: max 200 files, 50 MB total)',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '500': {
@@ -328,7 +328,7 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
       },
       '413': {
         description:
-          'Payload too large, or the publish would take the site over its storage limit (error `storage_limit_exceeded`, with `message` and `upgradeUrl`)',
+          'Payload too large',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '500': {

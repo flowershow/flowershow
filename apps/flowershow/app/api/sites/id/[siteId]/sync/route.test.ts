@@ -1261,8 +1261,9 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       expect(poolCall!.slice(1)).toContain(USER_ID);
     });
 
-    it('returns 413 on a Free site when a replace totals 250 MB', async () => {
+    it('still publishes (and warns) on a Free site when a replace totals 250 MB', async () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValue(freeSite as any);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const res = await POST(
         makeRequest({
@@ -1275,20 +1276,21 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
         makeParams(SITE_ID),
       );
 
-      expect(res.status).toBe(413);
-      expect((await res.json()).error).toBe('storage_limit_exceeded');
-      expect(prisma.publish.create).not.toHaveBeenCalled();
+      expect(res.status).toBe(200);
+      expect(warn).toHaveBeenCalled();
+      expect(prisma.publish.create).toHaveBeenCalled();
     });
 
-    it('also rejects dry runs', async () => {
+    it('does not reject dry runs over the limit', async () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValue(freeSite as any);
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const res = await POST(
         makeRequest({ files: THREE }, { searchParams: 'dryRun=true' }),
         makeParams(SITE_ID),
       );
 
-      expect(res.status).toBe(413);
+      expect(res.status).toBe(200);
     });
 
     it('allows a merge that shrinks a Free site near the limit overall', async () => {
@@ -1347,13 +1349,14 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       expect(prisma.$queryRaw).not.toHaveBeenCalled();
     });
 
-    it('keys the free pool on the site owner', async () => {
+    it('keys the free pool on the site owner (warns, does not block)', async () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValue({
         ...freeSite,
       } as any);
       vi.mocked(prisma.$queryRaw).mockResolvedValue([
         { total: BigInt(900 * MBYTES) },
       ]);
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const res = await POST(
         makeRequest({
@@ -1367,21 +1370,19 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       );
 
       expect(prisma.$queryRaw).toHaveBeenCalledTimes(1);
-      expect(res.status).toBe(413);
+      expect(res.status).toBe(200);
     });
 
-    it('returns 413 with the limit and upgrade URL for an MCP caller', async () => {
+    it('does not block an MCP caller over the limit', async () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValue(freeSite as any);
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const res = await POST(
         markMcpInternal(makeRequest({ files: THREE }), { userId: USER_ID }),
         makeParams(SITE_ID),
       );
 
-      expect(res.status).toBe(413);
-      const body = await res.json();
-      expect(body.message).toContain('limit');
-      expect(body.message).toContain(body.upgradeUrl);
+      expect(res.status).toBe(200);
     });
   });
 });

@@ -337,7 +337,7 @@ describe('POST /api/sites/id/[siteId]/files', () => {
     const GBYTES = 1_073_741_824;
     const MBYTES = 1_048_576;
 
-    it('returns 413 when a Premium site would reach 10.5 GB', async () => {
+    it('still publishes (advisory limit, warns) when a Premium site would reach 10.5 GB', async () => {
       vi.mocked(prisma.site.findUnique).mockResolvedValue({
         ...ownedSite,
         plan: 'PREMIUM',
@@ -345,6 +345,7 @@ describe('POST /api/sites/id/[siteId]/files', () => {
         projectName: 'big',
       } as any);
       vi.mocked(getSiteStorageBytes).mockResolvedValue(10 * GBYTES);
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       const res = await POST(
         makePostRequest({
@@ -357,9 +358,9 @@ describe('POST /api/sites/id/[siteId]/files', () => {
         makeParams(SITE_ID),
       );
 
-      expect(res.status).toBe(413);
-      expect((await res.json()).error).toBe('storage_limit_exceeded');
-      expect(prisma.publish.create).not.toHaveBeenCalled();
+      expect(res.status).toBe(200);
+      expect(warn).toHaveBeenCalled();
+      expect(prisma.publish.create).toHaveBeenCalled();
     });
 
     it('counts a path repeated in the request only once', async () => {
