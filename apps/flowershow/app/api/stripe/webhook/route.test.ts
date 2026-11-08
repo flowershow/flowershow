@@ -215,7 +215,8 @@ describe('stripe webhook — cancellation split', () => {
 
       await fireEvent(canceled());
 
-      const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
+      const data = (vi.mocked(prisma.site.updateMany).mock.lastCall![0] as any)
+        .data;
       expect(data.plan).toBe('FREE');
       expect(data.customDomain).toBeNull();
       expect(data).not.toHaveProperty('privacyMode');
@@ -231,7 +232,8 @@ describe('stripe webhook — cancellation split', () => {
 
       await fireEvent(canceled());
 
-      const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
+      const data = (vi.mocked(prisma.site.updateMany).mock.lastCall![0] as any)
+        .data;
       expect(data.storageAllowanceBytes).toBe(
         BigInt(Math.ceil((total * 11) / 10)),
       );
@@ -244,7 +246,8 @@ describe('stripe webhook — cancellation split', () => {
 
       await fireEvent(canceled());
 
-      const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
+      const data = (vi.mocked(prisma.site.updateMany).mock.lastCall![0] as any)
+        .data;
       expect(data.storageAllowanceBytes).toBe(existing);
     });
   });
@@ -307,7 +310,7 @@ describe('stripe webhook — cancellation split', () => {
     // The email names the specific site the subscription belonged to.
     expect(lastEmailText()).toContain('My Blog');
     // Site is reverted to FREE.
-    expect(prisma.site.update).toHaveBeenCalledWith(
+    expect(prisma.site.updateMany).toHaveBeenCalledWith(
       expect.objectContaining({
         data: expect.objectContaining({ plan: 'FREE' }),
       }),

@@ -417,6 +417,7 @@ describe('reconcileUserSitePlans', () => {
 
     const { changed } = await reconcileUserSitePlans('user-1');
 
+    expect(prisma.site.updateMany).toHaveBeenCalledTimes(1);
     expect(removeDomainAndVariantFromVercelProject).not.toHaveBeenCalled();
     expect(prisma.site.update).not.toHaveBeenCalled();
     expect(changed).toEqual([]);
@@ -466,49 +467,108 @@ describe('reconcileUserSitePlans', () => {
 });
 
 describe('downgradeSiteToFree', () => {
+  const expected = { plan: 'PREMIUM', planSource: 'SITE' } as const;
+
   beforeEach(() => {
     vi.clearAllMocks();
-    vi.mocked(prisma.site.update).mockResolvedValue({} as any);
+    vi.mocked(prisma.site.updateMany).mockResolvedValue({ count: 1 } as any);
     vi.mocked(getSiteStorageBytes).mockResolvedValue(0);
   });
 
   it('removes the custom domain and keeps password protection', async () => {
-    await downgradeSiteToFree({
-      id: 'site-1',
-      customDomain: 'example.com',
-      storageAllowanceBytes: null,
-    });
-
-    expect(removeDomainAndVariantFromVercelProject).toHaveBeenCalledWith(
-      'example.com',
+    const changed = await downgradeSiteToFree(
+      {
+        id: 'site-1',
+        customDomain: 'example.com',
+        storageAllowanceBytes: null,
+      },
+      expected,
     );
-    const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
-    expect(data).toMatchObject({
+
+    expect(changed).toBe(true);
+    expect(prisma.site.updateMany).toHaveBeenCalledTimes(1);
+    const args = vi.mocked(prisma.site.updateMany).mock.lastCall![0] as any;
+    expect(args.where).toEqual({
+      id: 'site-1',
+      plan: 'PREMIUM',
+      planSource: 'SITE',
+    });
+    expect(args.data).toMatchObject({
       plan: 'FREE',
       planSource: null,
       customDomain: null,
     });
-    expect(data).not.toHaveProperty('privacyMode');
-    expect(data).not.toHaveProperty('accessPasswordHash');
-    expect(data).not.toHaveProperty('tokenVersion');
-    expect(data).not.toHaveProperty('storageAllowanceBytes');
+    expect(args.data).not.toHaveProperty('privacyMode');
+    expect(args.data).not.toHaveProperty('accessPasswordHash');
+    expect(args.data).not.toHaveProperty('tokenVersion');
+    expect(args.data).not.toHaveProperty('storageAllowanceBytes');
+    expect(removeDomainAndVariantFromVercelProject).toHaveBeenCalledWith(
+      'example.com',
+    );
+    // The domain leaves Vercel only after the DB write.
+    expect(
+      vi.mocked(prisma.site.updateMany).mock.invocationCallOrder[0],
+    ).toBeLessThan(
+      vi.mocked(removeDomainAndVariantFromVercelProject).mock
+        .invocationCallOrder[0]!,
+    );
   });
 
   it('sets a storage allowance of ceil(total * 1.1) when over the Free cap', async () => {
     const total = 300 * 1024 * 1024 + 1;
     vi.mocked(getSiteStorageBytes).mockResolvedValue(total);
 
-    await downgradeSiteToFree({
-      id: 'site-1',
-      customDomain: null,
-      storageAllowanceBytes: null,
-    });
+    await downgradeSiteToFree(
+      { id: 'site-1', customDomain: null, storageAllowanceBytes: null },
+      expected,
+    );
 
-    const data = vi.mocked(prisma.site.update).mock.lastCall![0].data as any;
+    const data = (vi.mocked(prisma.site.updateMany).mock.lastCall![0] as any)
+      .data;
     expect(data.storageAllowanceBytes).toBe(
       BigInt(Math.ceil((total * 11) / 10)),
     );
     expect(data).not.toHaveProperty('customDomain');
+  });
+
+  it('race lost: no Vercel call', async () => {
+    vi.mocked(prisma.site.updateMany).mockResolvedValue({ count: 0 } as any);
+
+    const changed = await downgradeSiteToFree(
+      {
+        id: 'site-1',
+        customDomain: 'example.com',
+        storageAllowanceBytes: null,
+      },
+      expected,
+    );
+
+    expect(changed).toBe(false);
+    expect(removeDomainAndVariantFromVercelProject).not.toHaveBeenCalled();
+  });
+
+  it('Vercel failure is logged at ERROR, not rethrown; the DB write stands', async () => {
+    vi.mocked(removeDomainAndVariantFromVercelProject).mockRejectedValueOnce(
+      new Error('vercel down'),
+    );
+
+    await expect(
+      downgradeSiteToFree(
+        {
+          id: 'site-1',
+          customDomain: 'example.com',
+          storageAllowanceBytes: null,
+        },
+        expected,
+      ),
+    ).resolves.toBe(true);
+
+    expect(prisma.site.updateMany).toHaveBeenCalledTimes(1);
+    expect(log).toHaveBeenCalledWith(
+      expect.any(String),
+      17,
+      expect.objectContaining({ siteId: 'site-1', domain: 'example.com' }),
+    );
   });
 });
 

@@ -134,21 +134,26 @@ export function computeSitePlans(
 }
 
 /**
- * Lapse teardown for one site: custom domain removed (from Vercel only in
- * production), storage allowance so a site over the Free cap can keep
- * publishing edits, then FREE. Password protection is kept (the access gate is
+ * Lapse teardown for one site, as one write conditional on the plan and source
+ * the caller read (so a concurrent admin grant wins): FREE, custom domain
+ * cleared, and a storage allowance so a site over the Free cap can keep
+ * publishing edits. Password protection is kept (the access gate is
  * plan-independent): never touches privacyMode, accessPasswordHash or
- * tokenVersion.
+ * tokenVersion. Returns whether the write happened.
+ *
+ * Only after the write does the domain leave Vercel (production only). A
+ * Vercel failure is logged, not thrown: the DB is already consistent and an
+ * orphaned Vercel domain is the lesser harm.
  */
-export async function downgradeSiteToFree(site: {
-  id: string;
-  customDomain: string | null;
-  storageAllowanceBytes: bigint | null;
-}): Promise<void> {
-  if (site.customDomain && env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
-    await removeDomainAndVariantFromVercelProject(site.customDomain);
-  }
-
+export async function downgradeSiteToFree(
+  site: {
+    id: string;
+    customDomain: string | null;
+    storageAllowanceBytes: bigint | null;
+  },
+  expected: { plan: Plan; planSource: PlanSource | null },
+  opts: { coveredByAccountPlan?: boolean } = {},
+): Promise<boolean> {
   const totalBytes = await getSiteStorageBytes(site.id);
   let storageAllowanceBytes: bigint | undefined;
   if (totalBytes > PLAN_LIMITS.FREE.siteHardBytes) {
@@ -157,15 +162,36 @@ export async function downgradeSiteToFree(site: {
     storageAllowanceBytes = needed > existing ? needed : existing;
   }
 
-  await prisma.site.update({
-    where: { id: site.id },
+  const { count } = await prisma.site.updateMany({
+    where: {
+      id: site.id,
+      plan: expected.plan,
+      planSource: expected.planSource,
+    },
     data: {
       plan: 'FREE',
       planSource: null,
+      ...(opts.coveredByAccountPlan !== undefined && {
+        coveredByAccountPlan: opts.coveredByAccountPlan,
+      }),
       ...(site.customDomain && { customDomain: null }),
       ...(storageAllowanceBytes !== undefined && { storageAllowanceBytes }),
     },
   });
+  if (count !== 1) return false;
+
+  if (site.customDomain && env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
+    try {
+      await removeDomainAndVariantFromVercelProject(site.customDomain);
+    } catch (error) {
+      log('Vercel domain removal on downgrade failed', SeverityNumber.ERROR, {
+        siteId: site.id,
+        domain: site.customDomain,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+  return true;
 }
 
 /**
@@ -174,7 +200,8 @@ export async function downgradeSiteToFree(site: {
  *
  * Each write is conditional on the plan and source we read, so a concurrent
  * admin grant or a second webhook wins the race; a lost race is skipped (the
- * winner's reconcile, or the admin, decides that site).
+ * winner's reconcile, or the admin, decides that site). PREMIUM to FREE goes
+ * through downgradeSiteToFree, which makes the same conditional write.
  */
 export async function reconcileUserSitePlans(
   userId: string,
@@ -229,19 +256,24 @@ export async function reconcileUserSitePlans(
     ) {
       continue;
     }
-    const { count } = await prisma.site.updateMany({
-      where: { id: site.id, plan: site.plan, planSource: site.planSource },
-      data: {
-        plan: target.plan,
-        planSource: target.planSource,
-        coveredByAccountPlan: target.coveredByAccountPlan,
-      },
-    });
-    if (count !== 1) continue;
-    changed.push(target);
+    const expected = { plan: site.plan, planSource: site.planSource };
+    let written: boolean;
     if (site.plan === 'PREMIUM' && target.plan === 'FREE') {
-      await downgradeSiteToFree(site);
+      written = await downgradeSiteToFree(site, expected, {
+        coveredByAccountPlan: target.coveredByAccountPlan,
+      });
+    } else {
+      const { count } = await prisma.site.updateMany({
+        where: { id: site.id, ...expected },
+        data: {
+          plan: target.plan,
+          planSource: target.planSource,
+          coveredByAccountPlan: target.coveredByAccountPlan,
+        },
+      });
+      written = count === 1;
     }
+    if (written) changed.push(target);
   }
   return { changed };
 }
