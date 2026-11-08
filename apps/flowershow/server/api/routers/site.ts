@@ -451,7 +451,7 @@ export const siteRouter = createTRPCRouter({
       // Analytics (best-effort)
       const posthog = PostHogClient();
       posthog.capture({
-        distinctId: site.userId,
+        distinctId: ctx.session.user.id,
         event: 'site_settings_changed',
         properties: {
           siteId: site.id,
