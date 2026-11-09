@@ -169,9 +169,13 @@ Most routes validate inputs with `.safeParse()` and type responses with `satisfi
 | Route | Gap |
 |-------|-----|
 | `/api/sites/id/[siteId]/sync` | Defines local interfaces instead of importing from the contract. No runtime validation. |
-| `/api/sites/[username]/[projectname]` | No contract imports at all. |
+| `/api/sites/[username]/[projectname]` | Extended response typed with `SiteLookupResponse`; the public-fields response is not in the contract. |
 | `/api/webhook` (legacy, deprecated) | No contract imports. Low priority. |
 | Error responses (all routes) | Ad-hoc `{ error, message }` objects — not validated against `ErrorSchema`. |
+
+## Shared sites: `role`, `owner` and `premium_required`
+
+Sites can be shared with editors (Premium sites only). `GET /api/sites` returns only the sites the caller owns by default (older CLIs resolve site names from it). Pass `?includeShared=true` to also get Premium sites they can edit; each entry, in both modes, has `role` (`owner` or `editor`) and `owner: { username }`. The lookup route `GET /api/sites/{username}/{projectname}` returns the same two fields in its extended response (`SiteLookupResponse`). When a site's Premium plan has lapsed, its editors keep the membership but lose access: the lookup route and the other site routes answer them with HTTP 403 `{ error: 'premium_required' }`, and `GET /api/sites?includeShared=true` leaves those sites out.
 
 ## Exports
 

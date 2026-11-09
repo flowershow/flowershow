@@ -291,7 +291,9 @@ describe('MCP publish to an existing site (partial publish)', () => {
     ] as const) {
       const res = await call(other, name, args);
       expect(res.isError).toBe(true);
-      expect(res.text).toMatch(/not (found )?in your account/i);
+      expect(res.text).toMatch(
+        /not (found )?(in your account|among the sites you can edit|one you can edit)/i,
+      );
       expect(res.text).not.toMatch(/Mine/);
     }
     expect(sitePaths(siteId)).toEqual(['index.md']);

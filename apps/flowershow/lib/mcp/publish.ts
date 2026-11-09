@@ -4,6 +4,7 @@ import type {
   SyncMode,
   SyncResponse,
 } from '@flowershow/api-contract';
+import { PREMIUM_REQUIRED } from '@/lib/site-authz';
 import { validateSiteName } from '@/lib/validate-site-name';
 import { gitBlobSha } from './git-sha';
 
@@ -199,12 +200,13 @@ function explain(
 ): string {
   if (err instanceof PublishError) return err.message;
   if (!(err instanceof ApiError)) throw err;
+  if (mode.kind === 'user' && err.code === PREMIUM_REQUIRED) return err.message;
   if (mode.kind === 'user' && (err.status === 403 || err.status === 404)) {
     // Same answer for "not yours" and "doesn't exist": don't reveal other
     // accounts' site ids.
     return input.claimToken
-      ? 'This site is not in your account. If it is an anonymous site published earlier in this conversation, call claim-site with its siteId and claimToken to move it into your account, then publish with siteId.'
-      : 'Site not found in your account. Use list-sites to see your sites, or publish without siteId to create a new site.';
+      ? 'This site is not one you can edit. If it is an anonymous site published earlier in this conversation, call claim-site with its siteId and claimToken to move it into your account, then publish with siteId.'
+      : 'Site not found among the sites you can edit. Use list-sites to see them, or publish without siteId to create a new site.';
   }
   switch (err.status) {
     case 403:
@@ -530,7 +532,7 @@ function summarise(
     );
   } else {
     parts.push(
-      `The site is in the user's Flowershow account (siteId ${target.siteId}). To change it later, call publish with this siteId and only the files that changed (other files are kept). ${UPDATE_HINT}`,
+      `The site is on Flowershow (siteId ${target.siteId}). To change it later, call publish with this siteId and only the files that changed (other files are kept). ${UPDATE_HINT}`,
     );
   }
   return parts.join('\n\n');
