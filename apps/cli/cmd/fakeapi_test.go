@@ -31,14 +31,20 @@ const (
 // siteStatus.
 const fakeGoneServerMsg = "fake server: site unavailable"
 
+// fakePremiumLapsedMsg is what the fake returns for a forced 403 on a shared
+// site's ID (the server's premium_required message).
+const fakePremiumLapsedMsg = "This site is shared with you, but its Premium plan has lapsed. Ask the site owner to renew it."
+
 // fakeAPI is an in-memory stand-in for the Flowershow API, so publish tests
 // never talk to production. It records every mutating call.
 type fakeAPI struct {
-	mu        sync.Mutex
-	sites     map[string]api.Site // by project name
-	syncCalls []string            // site IDs that received a sync request
-	created   []string            // project names created via POST /api/sites
-	server    *httptest.Server
+	mu          sync.Mutex
+	sites       map[string]api.Site // by project name
+	shared      map[string]api.Site // sites shared with the user, by "owner/name"
+	listQueries []string            // raw query of each GET /api/sites
+	syncCalls   []string            // site IDs that received a sync request
+	created     []string            // project names created via POST /api/sites
+	server      *httptest.Server
 
 	anonCreates     int               // calls to POST /api/sites/anon
 	anonCreateAuth  []string          // Authorization header of each anon create
@@ -60,6 +66,25 @@ type fakeAPI struct {
 	syncAllUnchanged bool            // POST sync reports every file unchanged ("Already in sync")
 
 	statusBlobs []map[string]interface{} // files returned by GET /api/sites/id/:id/status
+}
+
+// share adds a site owned by owner that the test user can edit.
+func (f *fakeAPI) share(owner, name string) {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	f.shared[owner+"/"+name] = api.Site{ID: "id-" + owner + "-" + name, ProjectName: name, Role: "editor", Owner: &api.SiteOwner{Username: owner}}
+}
+
+// isSharedID reports whether id is a shared site's ID.
+func (f *fakeAPI) isSharedID(id string) bool {
+	f.mu.Lock()
+	defer f.mu.Unlock()
+	for _, s := range f.shared {
+		if s.ID == id {
+			return true
+		}
+	}
+	return false
 }
 
 func (f *fakeAPI) anonCreateCount() int {
@@ -117,6 +142,10 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		status, forced := f.siteStatus[id]
 		f.mu.Unlock()
 		if forced {
+			if status == 403 && f.isSharedID(id) {
+				writeJSON(w, 403, map[string]string{"error": "premium_required", "message": fakePremiumLapsedMsg})
+				return
+			}
 			writeJSON(w, status, map[string]string{"message": fakeGoneServerMsg})
 			return
 		}
@@ -210,9 +239,17 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, 200, map[string]string{"username": testUser})
 	case path == "/api/sites" && r.Method == "GET":
 		f.mu.Lock()
+		f.listQueries = append(f.listQueries, r.URL.RawQuery)
 		list := []api.Site{}
 		for _, site := range f.sites {
+			site.Role = "owner"
+			site.Owner = &api.SiteOwner{Username: testUser}
 			list = append(list, site)
+		}
+		if r.URL.Query().Get("includeShared") == "true" {
+			for _, site := range f.shared {
+				list = append(list, site)
+			}
 		}
 		f.mu.Unlock()
 		writeJSON(w, 200, map[string]interface{}{"sites": list, "total": len(list)})
@@ -237,6 +274,17 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		writeJSON(w, 200, map[string]interface{}{"site": site})
+	case strings.HasPrefix(path, "/api/sites/") && !strings.HasPrefix(path, "/api/sites/id/") && strings.Count(strings.TrimPrefix(path, "/api/sites/"), "/") == 1 && r.Method == "GET":
+		// GET /api/sites/{owner}/{name} for someone else's site: extended data
+		// (with role and owner) if it is shared with the user, else 404.
+		f.mu.Lock()
+		site, ok := f.shared[strings.TrimPrefix(path, "/api/sites/")]
+		f.mu.Unlock()
+		if !ok {
+			writeJSON(w, 404, map[string]string{"message": "not found"})
+			return
+		}
+		writeJSON(w, 200, map[string]interface{}{"site": site})
 	case strings.HasPrefix(path, "/api/sites/id/") && !strings.Contains(strings.TrimPrefix(path, "/api/sites/id/"), "/") && r.Method == "GET":
 		// Mirrors GET /api/sites/id/:id: 200 for the user's own site, 403 for
 		// someone else's (an anonymous site is owned by the anonymous user),
@@ -245,6 +293,12 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		f.mu.Lock()
 		var found *api.Site
 		for _, site := range f.sites {
+			if site.ID == id {
+				site := site
+				found = &site
+			}
+		}
+		for _, site := range f.shared {
 			if site.ID == id {
 				site := site
 				found = &site
@@ -360,6 +414,7 @@ func setupFakeAPI(t *testing.T, loggedIn bool, existing ...string) *fakeAPI {
 	t.Helper()
 	f := &fakeAPI{
 		sites:         map[string]api.Site{},
+		shared:        map[string]api.Site{},
 		siteStatus:    map[string]int{},
 		claimTokens:   map[string]string{anonClaimToken: anonSiteID},
 		annotationsOn: map[string]bool{}, openAnnotations: map[string]int{},

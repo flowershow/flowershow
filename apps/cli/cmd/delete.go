@@ -56,9 +56,22 @@ func runDelete(projectName string, skipConfirm bool) error {
 	}
 
 	var siteToDelete *api.Site
+	// A bare name only matches sites you own. Deleting is owner-only, so a
+	// site shared with you is never a candidate.
+	owner, name := parseSiteRef(projectName)
 	for i := range sitesData.Sites {
-		if sitesData.Sites[i].ProjectName == projectName {
-			siteToDelete = &sitesData.Sites[i]
+		s := &sitesData.Sites[i]
+		if owner == "" {
+			if !s.IsShared() && s.ProjectName == name {
+				siteToDelete = s
+				break
+			}
+		} else if s.DisplayName() == projectName || (s.Owner != nil && s.Owner.Username == owner && s.ProjectName == name) {
+			if s.IsShared() {
+				sp.Fail(fmt.Sprintf("Can't delete '%s'", projectName))
+				return fail(fmt.Sprintf("Only the owner can delete '%s'. It is shared with you as an editor.", projectName))
+			}
+			siteToDelete = s
 			break
 		}
 	}

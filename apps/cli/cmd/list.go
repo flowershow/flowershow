@@ -69,18 +69,22 @@ func runList() error {
 
 	fmt.Printf("\n%s\n\n", ui.Bold(fmt.Sprintf("Found %d site(s):", len(sites))))
 
+	var owned, shared []api.Site
 	for _, site := range sites {
-		dashboardURL := fmt.Sprintf("%s/site/%s/settings", config.APIURL(), site.ID)
-		updatedAt := site.CreatedAt
-		if site.UpdatedAt != nil {
-			updatedAt = *site.UpdatedAt
+		if site.IsShared() {
+			shared = append(shared, site)
+		} else {
+			owned = append(owned, site)
 		}
-		fmt.Printf("  %s\n", ui.Cyan(site.ProjectName))
-		fmt.Printf("    %s\n", ui.Gray("URL: "+site.URL))
-		fmt.Printf("    %s\n", ui.Gray("Dashboard URL: "+dashboardURL))
-		fmt.Printf("    %s\n", ui.Gray("Created: "+formatDisplayDate(site.CreatedAt)))
-		fmt.Printf("    %s\n", ui.Gray("Updated: "+formatDisplayDate(updatedAt)))
-		fmt.Println()
+	}
+	for _, site := range owned {
+		printSite(site)
+	}
+	if len(shared) > 0 {
+		fmt.Printf("%s\n\n", ui.Bold("Shared with you:"))
+		for _, site := range shared {
+			printSite(site)
+		}
 	}
 
 	telemetry.Capture("command_succeeded", map[string]interface{}{
@@ -89,6 +93,25 @@ func runList() error {
 		"duration_ms": time.Since(startTime).Milliseconds(),
 	})
 	return nil
+}
+
+// printSite prints one site of the list: owner/name and Role: editor for a
+// shared site, the bare name for your own.
+func printSite(site api.Site) {
+	dashboardURL := fmt.Sprintf("%s/site/%s/settings", config.APIURL(), site.ID)
+	updatedAt := site.CreatedAt
+	if site.UpdatedAt != nil {
+		updatedAt = *site.UpdatedAt
+	}
+	fmt.Printf("  %s\n", ui.Cyan(site.DisplayName()))
+	if site.IsShared() {
+		fmt.Printf("    %s\n", ui.Gray("Role: editor"))
+	}
+	fmt.Printf("    %s\n", ui.Gray("URL: "+site.URL))
+	fmt.Printf("    %s\n", ui.Gray("Dashboard URL: "+dashboardURL))
+	fmt.Printf("    %s\n", ui.Gray("Created: "+formatDisplayDate(site.CreatedAt)))
+	fmt.Printf("    %s\n", ui.Gray("Updated: "+formatDisplayDate(updatedAt)))
+	fmt.Println()
 }
 
 func formatDisplayDate(dateStr string) string {

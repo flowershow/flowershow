@@ -26,6 +26,27 @@ type Site struct {
 	FileCount   *int    `json:"fileCount,omitempty"`
 	TotalSize   *int64  `json:"totalSize,omitempty"`
 	Plan        string  `json:"plan,omitempty"`
+	// Role is "owner" or "editor" (a site shared with you); Owner is the
+	// site's owner. Both are set by servers that support site collaborators.
+	Role  string     `json:"role,omitempty"`
+	Owner *SiteOwner `json:"owner,omitempty"`
+}
+
+// SiteOwner is the account that owns a site.
+type SiteOwner struct {
+	Username string `json:"username"`
+}
+
+// IsShared reports whether the site belongs to someone else and was shared
+// with the current user as an editor.
+func (s Site) IsShared() bool { return s.Role == "editor" }
+
+// DisplayName is "owner/name" for a shared site, else the bare project name.
+func (s Site) DisplayName() string {
+	if s.IsShared() && s.Owner != nil && s.Owner.Username != "" {
+		return s.Owner.Username + "/" + s.ProjectName
+	}
+	return s.ProjectName
 }
 
 type CreateSiteResponse struct {
@@ -42,26 +63,28 @@ type GetSiteResponse struct {
 }
 
 type SiteDetail struct {
-	ID                 string  `json:"id"`
-	ProjectName        string  `json:"projectName"`
-	GhRepository       *string `json:"ghRepository"`
-	GhBranch           *string `json:"ghBranch"`
-	CustomDomain       *string `json:"customDomain"`
-	Subdomain          string  `json:"subdomain"`
-	RootDir            *string `json:"rootDir"`
-	Plan               string  `json:"plan"`
-	PrivacyMode        string  `json:"privacyMode"`
-	ShowComments       bool    `json:"showComments"`
-	EnableSearch       bool    `json:"enableSearch"`
-	ShowSidebar        bool    `json:"showSidebar"`
-	SyntaxMode         string  `json:"syntaxMode"`
-	AnnotationsEnabled bool    `json:"annotationsEnabled"`
-	OpenAnnotations    int     `json:"openAnnotations"`
-	URL                string  `json:"url"`
-	FileCount          int     `json:"fileCount"`
-	TotalSize          int64   `json:"totalSize"`
-	UpdatedAt          string  `json:"updatedAt"`
-	CreatedAt          string  `json:"createdAt"`
+	ID                 string     `json:"id"`
+	ProjectName        string     `json:"projectName"`
+	GhRepository       *string    `json:"ghRepository"`
+	GhBranch           *string    `json:"ghBranch"`
+	CustomDomain       *string    `json:"customDomain"`
+	Subdomain          string     `json:"subdomain"`
+	RootDir            *string    `json:"rootDir"`
+	Plan               string     `json:"plan"`
+	PrivacyMode        string     `json:"privacyMode"`
+	ShowComments       bool       `json:"showComments"`
+	EnableSearch       bool       `json:"enableSearch"`
+	ShowSidebar        bool       `json:"showSidebar"`
+	SyntaxMode         string     `json:"syntaxMode"`
+	AnnotationsEnabled bool       `json:"annotationsEnabled"`
+	OpenAnnotations    int        `json:"openAnnotations"`
+	URL                string     `json:"url"`
+	FileCount          int        `json:"fileCount"`
+	TotalSize          int64      `json:"totalSize"`
+	UpdatedAt          string     `json:"updatedAt"`
+	CreatedAt          string     `json:"createdAt"`
+	Role               string     `json:"role,omitempty"`
+	Owner              *SiteOwner `json:"owner,omitempty"`
 }
 
 type GetSiteDetailResponse struct {
@@ -355,7 +378,7 @@ func CreateSite(projectName string, overwrite bool) (*CreateSiteResponse, error)
 }
 
 func GetSites() (*GetSitesResponse, error) {
-	resp, err := Request("GET", "/api/sites", nil)
+	resp, err := Request("GET", "/api/sites?includeShared=true", nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch sites: %w", err)
 	}
@@ -371,7 +394,7 @@ func GetSites() (*GetSitesResponse, error) {
 }
 
 func GetSiteByName(username, siteName string) (*GetSiteResponse, error) {
-	resp, err := Request("GET", fmt.Sprintf("/api/sites/%s/%s", username, siteName), nil)
+	resp, err := Request("GET", fmt.Sprintf("/api/sites/%s/%s", url.PathEscape(username), url.PathEscape(siteName)), nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch site: %w", err)
 	}
