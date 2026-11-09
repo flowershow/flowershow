@@ -24,6 +24,8 @@ vi.mock('@/lib/stripe', () => {
       const items = subscription?.items?.data ?? [];
       return items.some((item: any) => KNOWN_PRICE_IDS.has(item?.price?.id));
     },
+    getSubscriptionKind: (subscription: any) =>
+      subscription?.metadata?.kind === 'account' ? 'account' : 'site',
   };
 });
 
@@ -444,6 +446,37 @@ describe('stripe webhook — shared-account ownership filtering', () => {
       expect.anything(),
       expect.objectContaining({ reason: 'not_flowershow' }),
     );
+  });
+
+  it('ignores a foreign customer.subscription.created too', async () => {
+    const res = await fireEvent({
+      ...subscriptionEvent({}),
+      type: 'customer.subscription.created',
+    });
+
+    expect(res.status).toBe(200);
+    expect(prisma.subscription.findUnique).not.toHaveBeenCalled();
+    expect(stripe.subscriptions.retrieve).not.toHaveBeenCalled();
+    expect(log).toHaveBeenCalledWith(
+      'Ignoring non-Flowershow subscription event',
+      expect.anything(),
+      expect.objectContaining({ reason: 'not_flowershow' }),
+    );
+  });
+
+  it('ignores customer.subscription.created for a per-site subscription', async () => {
+    const res = await fireEvent({
+      ...subscriptionEvent({
+        id: 'sub_site',
+        metadata: { platform: 'flowershow', siteId: 'site-1' },
+      }),
+      type: 'customer.subscription.created',
+    });
+
+    expect(res.status).toBe(200);
+    expect(prisma.subscription.findUnique).not.toHaveBeenCalled();
+    expect(prisma.subscription.update).not.toHaveBeenCalled();
+    expect(stripe.subscriptions.retrieve).not.toHaveBeenCalled();
   });
 
   it('treats a subscription tagged metadata.platform=flowershow as ours', async () => {

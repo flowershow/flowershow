@@ -1,0 +1,16 @@
+{
+  "id": "evt_acct_checkout",
+  "object": "event",
+  "type": "checkout.session.completed",
+  "api_version": "2024-12-18.acacia",
+  "data": {
+    "object": {
+      "id": "cs_acct_1",
+      "object": "checkout.session",
+      "mode": "subscription",
+      "customer": "cus_acct_1",
+      "subscription": "sub_acct_1",
+      "metadata": { "platform": "flowershow", "kind": "account", "userId": "user-1" }
+    }
+  }
+}

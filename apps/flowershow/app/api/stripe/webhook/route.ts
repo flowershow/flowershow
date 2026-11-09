@@ -12,11 +12,13 @@ import PostHogClient from '@/lib/server-posthog';
 import { reconcileUserSitePlans } from '@/lib/site-plans';
 import {
   FLOWERSHOW_PLATFORM,
+  getSubscriptionKind,
   isFlowershowSubscription,
   stripe,
 } from '@/lib/stripe';
 import { sendTransactionalEmail } from '@/lib/transactional-email';
 import prisma from '@/server/db';
+import { handleAccountEvent } from './account';
 
 // Email ownership: payment-failure emails are sent by Stripe itself.
 // We therefore do NOT handle `invoice.payment_failed` here.
@@ -25,6 +27,7 @@ import prisma from '@/server/db';
 // payment_failure, handled in the subscription case below).
 const relevantEvents = new Set([
   'checkout.session.completed',
+  'customer.subscription.created',
   'customer.subscription.updated',
   'customer.subscription.deleted',
   'invoice.upcoming',
@@ -123,6 +126,11 @@ export async function POST(req: Request) {
             break;
           }
 
+          if (checkoutSession.metadata?.kind === 'account') {
+            await handleAccountEvent(event);
+            break;
+          }
+
           const subscription = await stripe.subscriptions.retrieve(
             checkoutSession.subscription,
           );
@@ -208,6 +216,7 @@ export async function POST(req: Request) {
 
           break;
         }
+        case 'customer.subscription.created':
         case 'customer.subscription.updated':
         case 'customer.subscription.deleted': {
           const subscription = event.data.object as any;
@@ -228,6 +237,16 @@ export async function POST(req: Request) {
                 reason: 'not_flowershow',
               },
             );
+            break;
+          }
+
+          if (getSubscriptionKind(subscription) === 'account') {
+            await handleAccountEvent(event);
+            break;
+          }
+
+          // Per-site subscriptions are provisioned by checkout.session.completed.
+          if (event.type === 'customer.subscription.created') {
             break;
           }
 

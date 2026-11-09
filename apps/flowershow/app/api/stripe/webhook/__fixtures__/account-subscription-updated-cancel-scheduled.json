@@ -1,0 +1,23 @@
+{
+  "id": "evt_acct_cancel_scheduled",
+  "object": "event",
+  "type": "customer.subscription.updated",
+  "api_version": "2024-12-18.acacia",
+  "data": {
+    "object": {
+      "id": "sub_acct_1",
+      "object": "subscription",
+      "customer": "cus_acct_1",
+      "status": "active",
+      "cancel_at_period_end": true,
+      "current_period_start": 1893456000,
+      "current_period_end": 1896134400,
+      "metadata": { "platform": "flowershow", "kind": "account", "userId": "user-1" },
+      "items": {
+        "data": [
+          { "price": { "id": "price_unlimited_month_test", "recurring": { "interval": "month" } } }
+        ]
+      }
+    }
+  }
+}

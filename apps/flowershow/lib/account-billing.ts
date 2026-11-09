@@ -33,3 +33,12 @@ export async function getOrCreateStripeCustomer(
   });
   return stored?.stripeCustomerId ?? customer.id;
 }
+
+// Stub: Task 7 fills in consolidation of per-site subscriptions.
+export async function consolidateSiteSubscriptions(_account: {
+  userId: string;
+  stripeCustomerId: string;
+  stripeSubscriptionId: string;
+}): Promise<{ consolidated: string[]; creditedCents: number }> {
+  return { consolidated: [], creditedCents: 0 };
+}
