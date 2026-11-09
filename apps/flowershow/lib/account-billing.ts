@@ -39,8 +39,7 @@ export async function getOrCreateStripeCustomer(
 
 /**
  * The unused share of a paid period, in cents, floored. `now` before the period
- * is treated as the period start, so a credit never exceeds what was paid (a
- * stamp can predate the period if the subscription renews before a retry).
+ * is treated as the period start, so a credit never exceeds what was paid.
  */
 export function computeUnusedCreditCents(input: {
   amountPaidCents: number;
@@ -96,12 +95,14 @@ async function hasConsolidationCredit(
 }
 
 // When consolidation of this subscription began, stored on the subscription so
-// a retry computes the same credit however much later it runs.
+// a retry computes the same credit however much later it runs. A stamp from
+// before the current period (it renewed before a retry) says nothing about this
+// period's unused time, so it is replaced.
 async function consolidationStamp(
   subscription: Stripe.Subscription,
 ): Promise<number> {
   const stored = Number(subscription.metadata?.consolidationStartedAt);
-  if (stored > 0) return stored;
+  if (stored >= subscription.current_period_start) return stored;
 
   const consolidationStartedAt = Math.floor(Date.now() / 1000);
   await stripe.subscriptions.update(subscription.id, {
@@ -119,7 +120,18 @@ async function creditUnusedTime(
   now: number,
 ): Promise<number> {
   const invoice = await findCurrentPeriodInvoice(siteSubscription);
-  if (!invoice) return 0;
+  if (!invoice) {
+    log(
+      'Consolidation credit is 0: no paid invoice for the current period',
+      SeverityNumber.WARN,
+      {
+        siteSubscriptionId: siteSubscription.id,
+        accountSubscriptionId: accountSubscription.id,
+        reason: 'no_paid_invoice',
+      },
+    );
+    return 0;
+  }
 
   if (invoice.currency !== accountSubscription.currency) {
     log(
@@ -216,10 +228,12 @@ export async function consolidateSiteSubscriptions(account: {
   const accountSubscription = await stripe.subscriptions.retrieve(
     account.stripeSubscriptionId,
   );
-  // Never cancel subscriptions someone is paying for on an unpaid plan (Ruling 4).
+  // Never cancel subscriptions someone is paying for on an unpaid plan (Ruling
+  // 4), nor fold them into a plan that is about to end.
   if (
-    accountSubscription.status !== 'active' &&
-    accountSubscription.status !== 'trialing'
+    (accountSubscription.status !== 'active' &&
+      accountSubscription.status !== 'trialing') ||
+    accountSubscription.cancel_at_period_end
   ) {
     return result;
   }

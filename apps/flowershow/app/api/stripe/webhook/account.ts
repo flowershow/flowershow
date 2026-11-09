@@ -16,15 +16,18 @@ const ROUTE = 'POST /api/stripe/webhook';
 type SyncContext = { eventId: string; eventType: string };
 
 // metadata.userId first; a Pro subscription made by hand in the dashboard may
-// only have a customer we already know.
+// only have a customer we already know. customerMismatch: the metadata names a
+// user the customer does not belong to, so neither can be trusted.
 async function resolveUser(userId: string | undefined, customerId: string) {
-  const byId = userId
-    ? await prisma.user.findUnique({ where: { id: userId } })
-    : null;
-  return (
-    byId ??
-    (await prisma.user.findUnique({ where: { stripeCustomerId: customerId } }))
-  );
+  const [byId, byCustomer] = await Promise.all([
+    userId ? prisma.user.findUnique({ where: { id: userId } }) : null,
+    prisma.user.findUnique({ where: { stripeCustomerId: customerId } }),
+  ]);
+  const customerMismatch =
+    byId !== null &&
+    ((byId.stripeCustomerId !== null && byId.stripeCustomerId !== customerId) ||
+      (byCustomer !== null && byCustomer.id !== byId.id));
+  return { user: byId ?? byCustomer, customerMismatch };
 }
 
 /**
@@ -49,7 +52,22 @@ export async function syncAccountSubscription(
     stripeCustomerId: customerId,
   };
 
-  const user = await resolveUser(subscription.metadata?.userId, customerId);
+  const { user, customerMismatch } = await resolveUser(
+    subscription.metadata?.userId,
+    customerId,
+  );
+  if (customerMismatch) {
+    log(
+      'Account subscription userId does not match its customer; left for a human',
+      SeverityNumber.ERROR,
+      {
+        ...logContext,
+        userId: user?.id,
+        reason: 'customer_mismatch',
+      },
+    );
+    return;
+  }
   if (!user) {
     log('No user found for account subscription', SeverityNumber.WARN, {
       ...logContext,
@@ -135,14 +153,23 @@ export async function syncAccountSubscription(
   }
 
   // Also on activation: Stripe often creates the subscription incomplete, so
-  // the row exists before the first moment there are slots to fill.
+  // the row exists before the first moment there are slots to fill. The stamp
+  // on the live subscription repairs a first fill that failed partway: until a
+  // reconcile has succeeded, every retry fills.
+  const autoFilled = Boolean(subscription.metadata?.sitesAutoFilledAt);
   const fillSlots =
     !existing ||
     existing.plan !== mapped.plan ||
-    (nowCovering && !isCoveringAccountStatus(existing.status));
+    (nowCovering && (!isCoveringAccountStatus(existing.status) || !autoFilled));
   await reconcileUserSitePlans(user.id, {
     autoFill: fillSlots ? 'all' : 'none',
   });
+
+  if (nowCovering && !autoFilled) {
+    await stripe.subscriptions.update(subscription.id, {
+      metadata: { sitesAutoFilledAt: String(Math.floor(Date.now() / 1000)) },
+    });
+  }
 
   // Not on past_due: covering, but consolidation needs a paid plan (Ruling 4).
   if (subscription.status === 'active' || subscription.status === 'trialing') {

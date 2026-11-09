@@ -121,6 +121,20 @@ describe('computeSitePlans', () => {
     });
   });
 
+  describe('FREE site left with a MANUAL source', () => {
+    const stuck = site('m', 1, { planSource: 'MANUAL' });
+
+    it('is plain FREE with no account plan', () => {
+      const [t] = computeSitePlans([stuck], null, { autoFill: 'none' });
+      expect(t).toEqual(free('m', false));
+    });
+
+    it('can take a Pro slot', () => {
+      const [t] = computeSitePlans([stuck], pro, { autoFill: 'all' });
+      expect(t).toEqual(premiumAccount('m', true));
+    });
+  });
+
   it('site subscription wins over account', () => {
     const [t] = computeSitePlans(
       [
@@ -181,6 +195,20 @@ describe('computeSitePlans', () => {
     expect(flaggedIds(targets)).toEqual(['s0', 's1', 's2', 'new']);
     expect(byId(targets).new).toEqual(premiumAccount('new', true));
     expect(byId(targets).s5).toEqual(free('s5', false));
+  });
+
+  it('create autoFill leaves the new site FREE when Pro is full', () => {
+    const sites = [
+      ...Array.from({ length: 5 }, (_, i) =>
+        site(`s${i}`, i + 1, { coveredByAccountPlan: true }),
+      ),
+      site('new', 20),
+    ];
+    const targets = computeSitePlans(sites, pro, {
+      autoFill: { siteId: 'new' },
+    });
+    expect(byId(targets).new).toEqual(free('new', false));
+    expect(flaggedIds(targets)).toEqual(['s0', 's1', 's2', 's3', 's4']);
   });
 
   it('Pro autoFill picks site-subscription sites then most recent', () => {

@@ -9,6 +9,7 @@ vi.mock('@/env.mjs', () => ({
 }));
 vi.mock('stripe', () => ({ default: class {} }));
 
+import { env } from '@/env.mjs';
 import {
   ACCOUNT_PLAN_SITE_ALLOWANCE,
   ACCOUNT_PRICE_IDS,
@@ -16,7 +17,9 @@ import {
   accountPlansEnabled,
   isCoveringAccountStatus,
   isLiveSiteStatus,
+  isManualSite,
   premiumPriceIds,
+  stripeMode,
 } from './account-plans';
 import { getSubscriptionKind } from './stripe';
 
@@ -119,6 +122,55 @@ describe('account plans', () => {
         items: { data: [{ price: { id: 'price_monthly' } }] },
       }),
     ).toBe('site');
+  });
+});
+
+describe('getSubscriptionKind with siteId metadata', () => {
+  beforeEach(setIds);
+  afterEach(clearIds);
+  const accountPriced = {
+    items: { data: [{ price: { id: 'price_pro_month_test' } }] },
+  };
+
+  it('siteId means per-site, whatever the price', () => {
+    expect(
+      getSubscriptionKind({ metadata: { siteId: 's1' }, ...accountPriced }),
+    ).toBe('site');
+  });
+
+  it("kind: 'account' still wins over siteId", () => {
+    expect(
+      getSubscriptionKind({
+        metadata: { kind: 'account', siteId: 's1' },
+        ...accountPriced,
+      }),
+    ).toBe('account');
+  });
+});
+
+describe('isManualSite', () => {
+  it('requires PREMIUM', () => {
+    expect(isManualSite({ plan: 'PREMIUM', planSource: 'MANUAL' })).toBe(true);
+    expect(isManualSite({ plan: 'PREMIUM', planSource: null })).toBe(true);
+    expect(isManualSite({ plan: 'FREE', planSource: 'MANUAL' })).toBe(false);
+    expect(isManualSite({ plan: 'FREE', planSource: null })).toBe(false);
+    expect(isManualSite({ plan: 'PREMIUM', planSource: 'SITE' })).toBe(false);
+  });
+});
+
+describe('stripeMode', () => {
+  afterEach(() => {
+    (env as any).STRIPE_SECRET_KEY = 'sk_test_x';
+  });
+
+  it.each([
+    ['sk_live_x', 'live'],
+    ['rk_live_x', 'live'],
+    ['sk_test_x', 'test'],
+    ['rk_test_x', 'test'],
+  ])('%s is %s', (key, mode) => {
+    (env as any).STRIPE_SECRET_KEY = key;
+    expect(stripeMode()).toBe(mode);
   });
 });
 

@@ -34,9 +34,6 @@ export type SitePlanTarget = {
   coveredByAccountPlan: boolean;
 };
 
-// MANUAL > live site subscription (SITE) > covered by a live account plan
-// (ACCOUNT) > FREE.
-
 function hasLiveSiteSubscription(site: SitePlanInput): boolean {
   return (
     site.siteSubscriptionStatus !== null &&
@@ -55,7 +52,8 @@ function byRecency(a: SitePlanInput, b: SitePlanInput): number {
 
 /**
  * Decide each site's plan from the account's state. Pure: returns a target for
- * every input site, in input order.
+ * every input site, in input order. Precedence: MANUAL > live site subscription
+ * (SITE) > covered by a live account plan (ACCOUNT) > FREE.
  *
  * autoFill says which unflagged sites may take a free Pro slot: 'all' at first
  * activation and plan change, { siteId } on create or claim (so slots the

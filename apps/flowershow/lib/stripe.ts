@@ -49,11 +49,12 @@ export function isFlowershowSubscription(subscription: any): boolean {
 
 /**
  * Whether a Flowershow subscription is an account plan (Pro/Unlimited) or a
- * per-site one: `metadata.kind === 'account'`, else any line-item price is an
- * account price id.
+ * per-site one: `metadata.kind === 'account'`, else `metadata.siteId` means
+ * per-site, else any line-item price is an account price id.
  */
 export function getSubscriptionKind(sub: any): 'account' | 'site' {
   if (sub?.metadata?.kind === 'account') return 'account';
+  if (sub?.metadata?.siteId) return 'site';
   const items = sub?.items?.data ?? [];
   return items.some((item: any) => isAccountPrice(item?.price?.id))
     ? 'account'

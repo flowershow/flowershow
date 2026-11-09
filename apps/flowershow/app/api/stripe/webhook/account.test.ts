@@ -20,7 +20,7 @@ vi.mock('@/lib/stripe', async () => {
     FLOWERSHOW_PLATFORM: 'flowershow',
     stripe: {
       webhooks: { constructEvent: vi.fn() },
-      subscriptions: { retrieve: vi.fn() },
+      subscriptions: { retrieve: vi.fn(), update: vi.fn() },
     },
     isFlowershowSubscription: (sub: any) =>
       sub?.metadata?.platform === 'flowershow' ||
@@ -167,6 +167,14 @@ function accountRow(overrides: Record<string, unknown> = {}) {
     ...overrides,
   };
 }
+
+// A subscription whose slots were already filled once.
+const STAMPED_METADATA = {
+  platform: 'flowershow',
+  kind: 'account',
+  userId: USER.id,
+  sitesAutoFilledAt: '1893456000',
+};
 
 const sitesOf = (): Record<string, any> =>
   Object.fromEntries(db.snapshot().sites.map((s) => [s.id, s]));
@@ -468,13 +476,94 @@ describe('account subscription webhooks', () => {
       ],
       sites: [accountSite('a', { coveredByAccountPlan: true }), site('b')],
     });
-    mockRetrieve(withPrice(PRO_PRICE));
+    mockRetrieve({ ...withPrice(PRO_PRICE), metadata: STAMPED_METADATA });
 
     await fire(fixture('account-subscription-updated-plan-change'));
 
     expect(sitesOf().b).toMatchObject({
       plan: 'FREE',
       coveredByAccountPlan: false,
+    });
+    expect(stripe.subscriptions.update).not.toHaveBeenCalled();
+  });
+
+  it('a first activation that failed to reconcile fills the slots on retry', async () => {
+    db.seed({
+      users: [{ ...USER }],
+      sites: Array.from({ length: 7 }, (_, i) =>
+        site(`site-${i}`, {
+          publishes: [{ startedAt: new Date(Date.UTC(2026, 0, i + 1)) }],
+        }),
+      ),
+    });
+    mockRetrieve(withPrice(PRO_PRICE));
+    const event = fixture('account-checkout-completed');
+    db.site.updateMany.mockImplementationOnce(async () => {
+      throw new Error('db blip');
+    });
+
+    const failed = await fire(event);
+
+    expect(failed.status).toBe(500);
+    expect(accountOf()).toMatchObject({ plan: 'PRO', status: 'active' });
+    expect(stripe.subscriptions.update).not.toHaveBeenCalled();
+
+    const retried = await fire(event);
+
+    expect(retried.status).toBe(200);
+    const covered = Object.values(sitesOf()).filter(
+      (s) => s.coveredByAccountPlan,
+    );
+    expect(covered).toHaveLength(5);
+    expect(stripe.subscriptions.update).toHaveBeenCalledTimes(1);
+    expect(stripe.subscriptions.update).toHaveBeenCalledWith('sub_acct_1', {
+      metadata: { sitesAutoFilledAt: expect.stringMatching(/^\d+$/) },
+    });
+  });
+
+  it('does not stamp a subscription that is not covering', async () => {
+    db.seed({ users: [{ ...USER }], sites: [site('a')] });
+    mockRetrieve({ status: 'incomplete', ...withPrice(PRO_PRICE) });
+
+    await fire(fixture('account-subscription-created'));
+
+    expect(stripe.subscriptions.update).not.toHaveBeenCalled();
+  });
+
+  describe('metadata.userId that does not match the customer', () => {
+    const expectRefused = (res: Response) => {
+      expect(res.status).toBe(200);
+      expect(db.snapshot().accountSubscriptions).toEqual([]);
+      expect(db.site.updateMany).not.toHaveBeenCalled();
+      expect(db.user.updateMany).not.toHaveBeenCalled();
+      expect(stripe.subscriptions.update).not.toHaveBeenCalled();
+      expect(consolidateSiteSubscriptions).not.toHaveBeenCalled();
+      expect(log).toHaveBeenCalledWith(
+        expect.any(String),
+        SeverityNumber.ERROR,
+        expect.objectContaining({ reason: 'customer_mismatch' }),
+      );
+    };
+
+    it("refuses when the user's stored customer differs", async () => {
+      db.seed({
+        users: [{ ...USER, stripeCustomerId: 'cus_other' }],
+        sites: [site('a')],
+      });
+
+      expectRefused(await fire(fixture('account-subscription-created')));
+    });
+
+    it('refuses when the customer belongs to another user', async () => {
+      db.seed({
+        users: [
+          { ...USER, stripeCustomerId: null },
+          { ...USER, id: 'user-2', email: 'b@example.com' },
+        ],
+        sites: [site('a')],
+      });
+
+      expectRefused(await fire(fixture('account-subscription-created')));
     });
   });
 

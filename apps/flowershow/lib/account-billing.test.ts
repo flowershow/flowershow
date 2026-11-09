@@ -515,6 +515,48 @@ describe('consolidateSiteSubscriptions', () => {
     expect(mockCreateCredit.mock.calls[0]![1].amount).toBe(-AMOUNT_PAID * 0.25);
   });
 
+  it('re-stamps a stamp older than the current period', async () => {
+    seed(['a']);
+    siteMetadata.sub_a = { consolidationStartedAt: String(PERIOD_START - 1) };
+
+    const result = await consolidateSiteSubscriptions(ACCOUNT);
+
+    expect(result.creditedCents).toBe(EXPECTED_CREDIT);
+    expect(mockUpdate).toHaveBeenCalledWith('sub_a', {
+      metadata: { consolidationStartedAt: String(CONSOLIDATION_NOW) },
+    });
+  });
+
+  it('skips consolidation while the account plan is set to cancel', async () => {
+    seed(['a']);
+    accountSubscription.cancel_at_period_end = true;
+
+    const result = await consolidateSiteSubscriptions(ACCOUNT);
+
+    expect(result).toEqual({ consolidated: [], creditedCents: 0 });
+    expect(mockCreateCredit).not.toHaveBeenCalled();
+    expect(mockUpdate).not.toHaveBeenCalled();
+    expect(mockCancel).not.toHaveBeenCalled();
+    expect(consolidatedRows()).toEqual([]);
+  });
+
+  it('warns when no paid invoice matches a live subscription', async () => {
+    seed(['a']);
+    invoices.sub_a = [];
+
+    await consolidateSiteSubscriptions(ACCOUNT);
+
+    expect(log).toHaveBeenCalledWith(
+      expect.any(String),
+      SeverityNumber.WARN,
+      expect.objectContaining({
+        siteSubscriptionId: 'sub_a',
+        reason: 'no_paid_invoice',
+      }),
+    );
+    expect(mockCancel).toHaveBeenCalledWith('sub_a', { prorate: false });
+  });
+
   it('does not re-stamp when the stamp exists', async () => {
     seed(['a']);
     siteMetadata.sub_a = {

@@ -213,18 +213,20 @@ describe('stripe.createCheckoutSession (per site)', () => {
     expect(mockCreateSession).toHaveBeenCalledTimes(1);
   });
 
+  const siteWith = (plan: string, planSource: string | null) => ({
+    id: 'site-1',
+    userId: 'user-1',
+    plan,
+    planSource,
+    user: { email: 'ada@example.com' },
+  });
+
   it.each(['ACCOUNT', 'MANUAL'])(
     'is BAD_REQUEST when the site is already Premium via %s',
     async (planSource) => {
+      vi.mocked(accountPlansEnabled).mockReturnValue(true);
       const caller = createCaller(
-        makeDb({
-          site: {
-            id: 'site-1',
-            userId: 'user-1',
-            planSource,
-            user: { email: 'ada@example.com' },
-          },
-        }),
+        makeDb({ site: siteWith('PREMIUM', planSource) }),
       );
       await expect(
         caller.stripe.createCheckoutSession({
@@ -238,4 +240,29 @@ describe('stripe.createCheckoutSession (per site)', () => {
       expect(mockCreateSession).not.toHaveBeenCalled();
     },
   );
+
+  it.each(['ACCOUNT', 'MANUAL'])(
+    'reaches checkout for a %s site while account plans are dark',
+    async (planSource) => {
+      const caller = createCaller(
+        makeDb({ site: siteWith('PREMIUM', planSource) }),
+      );
+      const result = await caller.stripe.createCheckoutSession({
+        siteId: 'site-1',
+        priceId: 'price_monthly',
+      });
+      expect(result.url).toBe('https://checkout.test/x');
+      expect(mockCreateSession).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('reaches checkout for a FREE site left with a MANUAL source', async () => {
+    vi.mocked(accountPlansEnabled).mockReturnValue(true);
+    const caller = createCaller(makeDb({ site: siteWith('FREE', 'MANUAL') }));
+    const result = await caller.stripe.createCheckoutSession({
+      siteId: 'site-1',
+      priceId: 'price_monthly',
+    });
+    expect(result.url).toBe('https://checkout.test/x');
+  });
 });

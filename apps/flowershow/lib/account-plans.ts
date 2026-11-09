@@ -36,7 +36,7 @@ export const ACCOUNT_PRICE_IDS: Readonly<
 };
 
 export function stripeMode(): 'test' | 'live' {
-  return env.STRIPE_SECRET_KEY?.startsWith('sk_live_') ? 'live' : 'test';
+  return /^(sk|rk)_live_/.test(env.STRIPE_SECRET_KEY ?? '') ? 'live' : 'test';
 }
 
 const PLANS: AccountPlan[] = ['PRO', 'UNLIMITED'];
@@ -80,13 +80,14 @@ export function isLiveSiteStatus(status: SubscriptionStatus | string): boolean {
 }
 
 // PREMIUM with a null source is an admin grant (an admin who forgot the column).
+// A FREE site is never manual, whatever its source says.
 export function isManualSite(site: {
   plan: Plan;
   planSource: PlanSource | null;
 }): boolean {
   return (
-    site.planSource === 'MANUAL' ||
-    (site.plan === 'PREMIUM' && site.planSource === null)
+    site.plan === 'PREMIUM' &&
+    (site.planSource === 'MANUAL' || site.planSource === null)
   );
 }
 

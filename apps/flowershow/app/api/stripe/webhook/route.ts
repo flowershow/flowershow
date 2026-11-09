@@ -126,6 +126,8 @@ export async function POST(req: Request) {
             break;
           }
 
+          // Deliberately not behind accountPlansEnabled(): inert while the
+          // price ids are null, and phase 3 grandfathering relies on it.
           if (checkoutSession.metadata?.kind === 'account') {
             await handleAccountEvent(event);
             break;
@@ -177,21 +179,21 @@ export async function POST(req: Request) {
             },
           });
 
-          const updatedSite = await prisma.site.findUnique({
+          const site = await prisma.site.findUnique({
             where: { id: checkoutSession.metadata.siteId },
             include: { user: true },
           });
-          if (!updatedSite) {
+          if (!site) {
             throw new Error('Site not found for checkout session');
           }
 
           // The live Subscription row written above makes the site PREMIUM
           // (source SITE) through the reconciler.
-          await reconcileUserSitePlans(updatedSite.userId);
+          await reconcileUserSitePlans(site.userId);
 
           const posthog = PostHogClient();
           posthog.capture({
-            distinctId: updatedSite.userId,
+            distinctId: site.userId,
             event: 'site_upgraded',
             properties: {
               siteId: checkoutSession.metadata.siteId,
@@ -202,10 +204,9 @@ export async function POST(req: Request) {
           await posthog.shutdown();
 
           // Send premium upgrade email
-          const upgradeUserName =
-            updatedSite.user.name?.split(' ')[0] || 'there';
+          const upgradeUserName = site.user.name?.split(' ')[0] || 'there';
           await sendEmail({
-            to: updatedSite.user.email!,
+            to: site.user.email!,
             subject: "You're now on Flowershow Premium",
             react: PremiumUpgradeEmail({
               userName: upgradeUserName,

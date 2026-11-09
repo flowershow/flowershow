@@ -154,7 +154,13 @@ export const stripeRouter = createTRPCRouter({
         });
       }
 
-      if (site.planSource === 'ACCOUNT' || site.planSource === 'MANUAL') {
+      // Dark until account plans launch: today's MANUAL sites keep their
+      // upgrade button, as before.
+      if (
+        accountPlansEnabled() &&
+        site.plan === 'PREMIUM' &&
+        (site.planSource === 'ACCOUNT' || site.planSource === 'MANUAL')
+      ) {
         throw new TRPCError({
           code: 'BAD_REQUEST',
           message: 'This site is already Premium through your account plan.',
