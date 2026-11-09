@@ -25,6 +25,7 @@ vi.mock('@/lib/db/internal', () => ({
 
 import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
+import { SiteLookupResponseSchema } from '@flowershow/api-contract';
 import { GET } from './route';
 
 function makeRequest(username: string, projectname: string): NextRequest {
@@ -294,14 +295,28 @@ describe('GET /api/sites/:username/:projectname — authenticated lookup', () =>
     expect(findUnique).not.toHaveBeenCalled();
   });
 
-  it('returns only public fields to an editor of a lapsed site', async () => {
+  it('a lapsed editor gets 403 premium_required', async () => {
     validate.mockResolvedValue({ userId: 'ed-1' });
     findFirst.mockResolvedValue({ ...BOB_SITE, plan: 'FREE' });
     const res = await GET(
       makeRequest('bob', 'notes'),
       makeParams('bob', 'notes'),
     );
-    expect(await res.json()).not.toHaveProperty('site');
+    expect(res.status).toBe(403);
+    expect((await res.json()).error).toBe('premium_required');
+    expect(findUnique).not.toHaveBeenCalled();
+  });
+
+  it('extended response includes role and owner and parses with SiteLookupResponseSchema', async () => {
+    validate.mockResolvedValue({ userId: 'ed-1' });
+    findFirst.mockResolvedValue(BOB_SITE);
+    findUnique.mockResolvedValue(EXTENDED);
+    const json = await (
+      await GET(makeRequest('bob', 'notes'), makeParams('bob', 'notes'))
+    ).json();
+    expect(json.site.role).toBe('editor');
+    expect(json.site.owner).toEqual({ username: 'bob' });
+    expect(SiteLookupResponseSchema.safeParse(json).success).toBe(true);
   });
 
   it('still returns extended data to the owner', async () => {
@@ -312,6 +327,8 @@ describe('GET /api/sites/:username/:projectname — authenticated lookup', () =>
       makeRequest('bob', 'notes'),
       makeParams('bob', 'notes'),
     );
-    expect((await res.json()).site.id).toBe('site-1');
+    const json = await res.json();
+    expect(json.site.id).toBe('site-1');
+    expect(json.site.role).toBe('owner');
   });
 });

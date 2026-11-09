@@ -16,6 +16,7 @@ import {
   SITE_CREATE_LIMIT_MESSAGE,
   siteCreateAllowed,
 } from '@/lib/site-create-limit';
+import { siteAuthzSelect, siteRole } from '@/lib/site-authz';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
 import { buildSubdomain, ensureUniqueSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
@@ -259,9 +260,15 @@ export async function GET(request: NextRequest) {
     // Fetch all sites for the user
     const sites = await prisma.site.findMany({
       where: {
-        userId: auth.userId,
+        OR: [
+          { userId: auth.userId },
+          // Lapsed shared sites are left out; only the dashboard shows them.
+          { members: { some: { userId: auth.userId } }, plan: 'PREMIUM' },
+        ],
       },
       select: {
+        ...siteAuthzSelect(auth.userId),
+        user: { select: { username: true } },
         id: true,
         projectName: true,
         subdomain: true,
@@ -286,6 +293,12 @@ export async function GET(request: NextRequest) {
       fileCount: site._count.blobs,
       updatedAt: site.updatedAt.toISOString(),
       createdAt: site.createdAt.toISOString(),
+      // Never null here: the query only returns sites the caller owns or edits.
+      role:
+        siteRole(auth.userId, site) === 'owner'
+          ? ('owner' as const)
+          : ('editor' as const),
+      owner: { username: site.user.username },
     }));
 
     const response: ListSitesResponse = {

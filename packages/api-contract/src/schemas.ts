@@ -12,6 +12,8 @@ export const SiteSummarySchema = z.object({
   fileCount: z.number(),
   updatedAt: z.string(),
   createdAt: z.string(),
+  role: z.enum(['owner', 'editor']),
+  owner: z.object({ username: z.string() }),
 });
 export type SiteSummary = z.infer<typeof SiteSummarySchema>;
 
@@ -53,6 +55,31 @@ export const GetSiteResponseSchema = z.object({
   site: SiteDetailSchema,
 });
 export type GetSiteResponse = z.infer<typeof GetSiteResponseSchema>;
+
+// ---------------------------------------------------------------------------
+// SiteLookupResponse
+// GET /api/sites/:username/:projectname (extended form, for owners and editors)
+// ---------------------------------------------------------------------------
+export const SiteLookupResponseSchema = z.object({
+  site: z.object({
+    id: z.string(),
+    projectName: z.string(),
+    ghRepository: z.string().nullable(),
+    ghBranch: z.string().nullable(),
+    customDomain: z.string().nullable(),
+    subdomain: z.string(),
+    rootDir: z.string().nullable(),
+    plan: z.enum(['FREE', 'PREMIUM']),
+    url: z.string(),
+    fileCount: z.number(),
+    totalSize: z.number(),
+    updatedAt: z.string(),
+    createdAt: z.string(),
+    role: z.enum(['owner', 'editor']),
+    owner: z.object({ username: z.string() }),
+  }),
+});
+export type SiteLookupResponse = z.infer<typeof SiteLookupResponseSchema>;
 
 // ---------------------------------------------------------------------------
 // User

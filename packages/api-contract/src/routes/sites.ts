@@ -136,6 +136,8 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
     path: '/api/sites',
     operationId: 'listSites',
     summary: "List user's sites",
+    description:
+      "Lists sites the caller owns and sites shared with them as an editor. Each site has a `role` (`owner` or `editor`) and an `owner.username`. Shared sites whose Premium plan has lapsed are left out.",
     tags: ['Sites'],
     security: [{ bearerToken: [] }],
     responses: {
