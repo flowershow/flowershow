@@ -40,6 +40,7 @@ const base = {
   planSource: null,
   accountPlansEnabled: false,
   accountPlan: null,
+  isOwner: true,
 } as const;
 
 afterEach(() => {
@@ -130,5 +131,48 @@ describe('Billing (site settings)', () => {
     expect(
       screen.getByRole('button', { name: 'Manage Subscription' }),
     ).toBeTruthy();
+  });
+
+  describe('as an editor', () => {
+    it('ACCOUNT site says the owner pays, with no link and no buttons', () => {
+      render(
+        <Billing
+          {...base}
+          accountPlansEnabled
+          isOwner={false}
+          planSource="ACCOUNT"
+          accountPlan="PRO"
+        />,
+      );
+      expect(
+        screen.getByText("Premium through the site owner's plan"),
+      ).toBeTruthy();
+      expect(screen.queryByRole('link')).toBeNull();
+      expect(screen.queryByRole('button')).toBeNull();
+    });
+
+    it('MANUAL site has no buttons and no link', () => {
+      render(
+        <Billing
+          {...base}
+          accountPlansEnabled
+          isOwner={false}
+          planSource="MANUAL"
+        />,
+      );
+      expect(screen.getByText('Premium (granted by Flowershow)')).toBeTruthy();
+      expect(screen.queryByRole('link')).toBeNull();
+      expect(screen.queryByRole('button')).toBeNull();
+    });
+
+    it('FREE site has no Pro line or account billing link', () => {
+      render(<Billing {...base} accountPlansEnabled isOwner={false} />);
+      expect(screen.queryByText(/Have several sites/)).toBeNull();
+      expect(
+        screen
+          .queryAllByRole('link')
+          .some((l) => l.getAttribute('href') === '/settings/billing'),
+      ).toBe(false);
+    });
   });
 });

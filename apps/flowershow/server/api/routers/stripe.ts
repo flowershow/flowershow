@@ -1,4 +1,4 @@
-import { isSiteOwner } from '@/lib/site-authz';
+import { canManageSite, isSiteOwner, siteAuthzSelect } from '@/lib/site-authz';
 import type { AccountPlan } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
@@ -567,6 +567,38 @@ export const stripeRouter = createTRPCRouter({
       });
 
       return { url: portalSession.url };
+    }),
+
+  // What the site settings billing panel needs, for anyone who can manage the
+  // site (owner or Premium editor). No Stripe calls. `accountPlan` is the
+  // OWNER's plan, never the caller's.
+  getSiteBillingStatus: protectedProcedure
+    .input(z.object({ siteId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: { planSource: true, ...siteAuthzSelect(userId) },
+      });
+      if (!site) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
+      }
+      if (!canManageSite(userId, site)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized' });
+      }
+
+      const account = await ctx.db.accountSubscription.findUnique({
+        where: { userId: site.userId },
+        select: { plan: true, status: true },
+      });
+      return {
+        planSource: site.planSource,
+        isOwner: isSiteOwner(userId, site),
+        accountPlan:
+          account && isCoveringAccountStatus(account.status)
+            ? account.plan
+            : null,
+      };
     }),
 
   getSiteSubscription: protectedProcedure

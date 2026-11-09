@@ -1,12 +1,12 @@
 'use client';
 
 import { Radio, RadioGroup } from '@headlessui/react';
+import type { AccountPlan, PlanSource } from '@prisma/client';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 
-import type { AccountPlan, PlanSource } from '@prisma/client';
-import Link from 'next/link';
 import { ACCOUNT_PLAN_SITE_ALLOWANCE } from '@/lib/account-plans';
 import type { Plan, PlanType } from '@/lib/stripe-plans';
 import { applyDiscount } from '@/lib/stripe-plans';
@@ -44,6 +44,8 @@ interface BillingProps {
   planSource: PlanSource | null;
   accountPlansEnabled: boolean;
   accountPlan: AccountPlan | null;
+  // False for editors: they never see account billing links.
+  isOwner: boolean;
 }
 
 const ordinal = (n: number) => {
@@ -60,6 +62,7 @@ export default function Billing({
   planSource,
   accountPlansEnabled,
   accountPlan,
+  isOwner,
 }: BillingProps) {
   const [loading, setLoading] = useState(false);
   const [frequency, setFrequency] = useState(frequencies[0]);
@@ -178,17 +181,20 @@ export default function Billing({
           {planSource === 'ACCOUNT' ? (
             <>
               <p className="font-semibold">
-                Premium through your{' '}
-                {accountPlan === 'UNLIMITED' ? 'Unlimited' : 'Pro'} plan
+                {isOwner
+                  ? `Premium through your ${accountPlan === 'UNLIMITED' ? 'Unlimited' : 'Pro'} plan`
+                  : "Premium through the site owner's plan"}
               </p>
-              <p className="text-sm text-stone-500 dark:text-zinc-400">
-                <Link
-                  href="/settings/billing"
-                  className="underline hover:text-stone-700 dark:hover:text-zinc-200"
-                >
-                  Manage account billing
-                </Link>
-              </p>
+              {isOwner && (
+                <p className="text-sm text-stone-500 dark:text-zinc-400">
+                  <Link
+                    href="/settings/billing"
+                    className="underline hover:text-stone-700 dark:hover:text-zinc-200"
+                  >
+                    Manage account billing
+                  </Link>
+                </p>
+              )}
             </>
           ) : (
             <p className="font-semibold">Premium (granted by Flowershow)</p>
@@ -280,15 +286,17 @@ export default function Billing({
 
             {/* Multi-site bundle discount ladder (retired by account plans) */}
             {accountPlansEnabled ? (
-              <p className="text-sm text-stone-600 dark:text-zinc-300">
-                <Link
-                  href="/settings/billing"
-                  className="underline hover:text-stone-900 dark:hover:text-zinc-100"
-                >
-                  Have several sites? Pro covers up to{' '}
-                  {ACCOUNT_PLAN_SITE_ALLOWANCE.PRO}.
-                </Link>
-              </p>
+              isOwner && (
+                <p className="text-sm text-stone-600 dark:text-zinc-300">
+                  <Link
+                    href="/settings/billing"
+                    className="underline hover:text-stone-900 dark:hover:text-zinc-100"
+                  >
+                    Have several sites? Pro covers up to{' '}
+                    {ACCOUNT_PLAN_SITE_ALLOWANCE.PRO}.
+                  </Link>
+                </p>
+              )
             ) : (
               <div className="rounded-md bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200 dark:bg-zinc-950 dark:ring-zinc-700">
                 <p className="mb-2 font-medium text-stone-700 dark:text-zinc-200">

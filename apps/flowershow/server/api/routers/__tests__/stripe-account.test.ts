@@ -509,6 +509,61 @@ describe('stripe.setSiteCovered', () => {
   });
 });
 
+describe('stripe.getSiteBillingStatus', () => {
+  const siteRow = (over: Record<string, unknown> = {}) => ({
+    userId: 'owner-1',
+    plan: 'PREMIUM',
+    planSource: 'ACCOUNT',
+    members: [{ userId: 'editor-1' }],
+    ...over,
+  });
+  const dbFor = (site: unknown, account: unknown = null) => {
+    const db = makeDb({ site, accountSubscription: account });
+    return db;
+  };
+
+  it('gives an editor isOwner false, the planSource and the OWNER plan, without calling Stripe', async () => {
+    const db = dbFor(siteRow(), { plan: 'UNLIMITED', status: 'active' });
+    const result = await createCaller(
+      db,
+      'editor-1',
+    ).stripe.getSiteBillingStatus({
+      siteId: 'site-1',
+    });
+    expect(result).toEqual({
+      planSource: 'ACCOUNT',
+      isOwner: false,
+      accountPlan: 'UNLIMITED',
+    });
+    expect(db.accountSubscription.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 'owner-1' } }),
+    );
+    expect(stripe.customers.retrieve).not.toHaveBeenCalled();
+    expect(stripe.prices.retrieve).not.toHaveBeenCalled();
+    expect(stripe.checkout.sessions.create).not.toHaveBeenCalled();
+  });
+
+  it('gives the owner isOwner true and no plan when the account plan does not cover sites', async () => {
+    const result = await createCaller(
+      dbFor(siteRow(), { plan: 'PRO', status: 'canceled' }),
+      'owner-1',
+    ).stripe.getSiteBillingStatus({ siteId: 'site-1' });
+    expect(result).toEqual({
+      planSource: 'ACCOUNT',
+      isOwner: true,
+      accountPlan: null,
+    });
+  });
+
+  it('denies a stranger', async () => {
+    await expect(
+      createCaller(dbFor(siteRow()), 'stranger').stripe.getSiteBillingStatus({
+        siteId: 'site-1',
+      }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+  });
+});
+
 describe('stripe.getAccountPlan', () => {
   it('returns plan null and every site for a user without a plan', async () => {
     const db = makeCoverDb({
