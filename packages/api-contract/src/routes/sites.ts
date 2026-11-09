@@ -147,6 +147,10 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
         description: 'List of sites',
         content: { 'application/json': { schema: ListSitesResponse } },
       },
+      '400': {
+        description: 'Invalid query parameter',
+        content: { 'application/json': { schema: ErrorResponse } },
+      },
       '401': {
         description: 'Not authenticated',
         content: { 'application/json': { schema: ErrorResponse } },

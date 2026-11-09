@@ -161,6 +161,38 @@ describe('GET /api/sites', () => {
     expect(ListSitesResponseSchema.safeParse(json).success).toBe(true);
   });
 
+  it.each(['1', 'yes'])('rejects includeShared=%s with 400', async (v) => {
+    (validateAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: 'ada-1',
+    });
+    const res = await GET(
+      new NextRequest(`http://localhost/api/sites?includeShared=${v}`, {
+        method: 'GET',
+      }),
+    );
+    expect(res.status).toBe(400);
+    expect((await res.json()).error).toBe('bad_request');
+  });
+
+  it('treats includeShared=false like the default', async () => {
+    (validateAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: 'ada-1',
+    });
+    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      username: 'ada',
+    });
+    (prisma.site.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([]);
+    const res = await GET(
+      new NextRequest('http://localhost/api/sites?includeShared=false', {
+        method: 'GET',
+      }),
+    );
+    expect(res.status).toBe(200);
+    expect(prisma.site.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 'ada-1' } }),
+    );
+  });
+
   it('with includeShared=true lists owned sites and sites the caller can edit, with role and owner', async () => {
     const d = new Date(0);
     (validateAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue({

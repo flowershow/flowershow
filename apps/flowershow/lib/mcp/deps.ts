@@ -103,7 +103,7 @@ async function assertCanManage(userId: string, siteId: string) {
     throw new ApiError(
       404,
       'not_found',
-      'Site not found in your account. Use list-sites to see your sites.',
+      'Site not found among the sites you can edit. Use list-sites to see them.',
     );
   }
 }

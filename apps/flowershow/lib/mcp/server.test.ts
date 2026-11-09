@@ -268,7 +268,7 @@ describe('Flowershow MCP server', () => {
     const notFound = new ApiError(
       404,
       'not_found',
-      'Site not found in your account. Use list-sites to see your sites.',
+      'Site not found among the sites you can edit. Use list-sites to see them.',
     );
     const client = await connect(
       USER,

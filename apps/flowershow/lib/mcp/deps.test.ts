@@ -305,7 +305,7 @@ describe('realMcpDeps', () => {
     const NOT_FOUND = {
       status: 404,
       message:
-        'Site not found in your account. Use list-sites to see your sites.',
+        'Site not found among the sites you can edit. Use list-sites to see them.',
     };
 
     beforeEach(() => {

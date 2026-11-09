@@ -932,7 +932,7 @@ git commit -m "feat(mcp): list-sites includes sites shared with you" -m "Claude-
   - `api.Site` gains `Role string \`json:"role,omitempty"\`` and `Owner *api.SiteOwner \`json:"owner,omitempty"\``; `type SiteOwner struct { Username string \`json:"username"\` }`.
   - `func (s Site) IsShared() bool` (`s.Role == "editor"`); `func (s Site) DisplayName() string` (`owner/name` when shared, else `ProjectName`).
   - `func parseSiteRef(ref string) (owner, name string)` in `cmd/site_ref.go`: splits on the first `/` (site names cannot contain `/`, `validate-site-name.ts`); no slash → `owner == ""`.
-  - Fake API: `fakeAPI.shared map[string]api.Site` keyed `"owner/name"`; `GET /api/sites` appends them with `Role: "editor"`; `GET /api/sites/{owner}/{name}` serves them for `owner != testUser`; `fakeAPI` gains a helper `f.share(owner, name string)` that adds `api.Site{ID: "id-" + owner + "-" + name, ProjectName: name, Role: "editor", Owner: &api.SiteOwner{Username: owner}}`.
+  - Fake API: `fakeAPI.shared map[string]api.Site` keyed `"owner/name"`; `GET /api/sites?includeShared=true` appends them with `Role: "editor"` (without the query it returns owned sites only); the CLI client's list call passes `?includeShared=true` (client method and a test asserting the query is sent); `GET /api/sites/{owner}/{name}` serves them for `owner != testUser`; `fakeAPI` gains a helper `f.share(owner, name string)` that adds `api.Site{ID: "id-" + owner + "-" + name, ProjectName: name, Role: "editor", Owner: &api.SiteOwner{Username: owner}}`.
 
 - [ ] **Step 1: Write the failing tests.**
 
