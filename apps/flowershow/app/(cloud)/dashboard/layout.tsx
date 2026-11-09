@@ -2,11 +2,12 @@ import { ReactNode, Suspense } from 'react';
 import Footer from '@/components/dashboard/footer';
 import Nav from '@/components/dashboard/nav';
 import Profile from '@/components/dashboard/profile';
+import { accountPlansEnabled } from '@/lib/account-plans';
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   return (
     <div className="grid min-h-[100dvh] grid-rows-[auto_1fr_auto] font-dashboard-body">
-      <Nav>
+      <Nav showBilling={accountPlansEnabled()}>
         <Suspense fallback={<div>Loading...</div>}>
           <Profile />
         </Suspense>

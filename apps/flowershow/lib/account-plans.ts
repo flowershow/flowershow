@@ -106,3 +106,8 @@ export function premiumPriceIds(): ReadonlySet<string> {
     ].filter((id): id is string => Boolean(id)),
   );
 }
+
+// Account billing page; the MCP upgrade hint links here.
+export function accountBillingUrl(): string {
+  return `https://${env.NEXT_PUBLIC_CLOUD_DOMAIN}/settings/billing`;
+}

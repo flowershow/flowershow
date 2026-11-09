@@ -24,7 +24,13 @@ const config = getConfig();
 // Only expose the feedback button when a PostHog survey id is configured.
 const feedbackEnabled = !!env.NEXT_PUBLIC_POSTHOG_FEEDBACK_SURVEY_ID;
 
-export default function Nav({ children }: { children: ReactNode }) {
+export default function Nav({
+  children,
+  showBilling = false,
+}: {
+  children: ReactNode;
+  showBilling?: boolean;
+}) {
   const modal = useModal();
   const segments = useSelectedLayoutSegments();
   const { id } = useParams() as { id: string };
@@ -178,6 +184,16 @@ export default function Nav({ children }: { children: ReactNode }) {
                     Settings
                   </Link>
                 </MenuItem>
+                {showBilling && (
+                  <MenuItem>
+                    <Link
+                      href="/settings/billing"
+                      className="block w-full px-4 py-2 text-left text-sm text-gray-700 data-[focus]:bg-gray-100 dark:text-zinc-200 dark:data-[focus]:bg-zinc-700 data-[focus]:outline-none"
+                    >
+                      Billing
+                    </Link>
+                  </MenuItem>
+                )}
                 <MenuItem>
                   <button
                     onClick={() => {

@@ -1,5 +1,7 @@
+import Link from 'next/link';
 import ChangeUsernameForm from '@/components/dashboard/form/change-username-form';
 import DeleteAccountForm from '@/components/dashboard/form/delete-account-form';
+import { accountPlansEnabled } from '@/lib/account-plans';
 import { api } from '@/trpc/server';
 
 export default async function SettingsPage() {
@@ -9,6 +11,11 @@ export default async function SettingsPage() {
     <div className="flex max-w-screen-xl flex-col space-y-12 p-8">
       <div className="flex flex-col space-y-6">
         <h1 className="font-dashboard-heading text-3xl">Account Settings</h1>
+        {accountPlansEnabled() && (
+          <Link href="/settings/billing" className="text-sm underline">
+            Billing
+          </Link>
+        )}
         <ChangeUsernameForm currentUsername={user!.username} />
         <DeleteAccountForm username={user!.username} />
       </div>
