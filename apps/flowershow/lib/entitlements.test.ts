@@ -28,3 +28,12 @@ describe('getEntitlements', () => {
     expect(getEntitlements({}).isPaid).toBe(false);
   });
 });
+
+describe('getEntitlements planSource', () => {
+  it('passes planSource through', () => {
+    const e = getEntitlements({ plan: 'PREMIUM', planSource: 'ACCOUNT' });
+    expect(e.planSource).toBe('ACCOUNT');
+    expect(e.isPaid).toBe(true);
+    expect(getEntitlements({ plan: 'FREE' }).planSource).toBeNull();
+  });
+});

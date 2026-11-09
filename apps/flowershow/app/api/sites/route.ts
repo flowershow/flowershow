@@ -19,6 +19,7 @@ import {
 } from '@/lib/site-create-limit';
 import { siteAuthzSelect, siteRole } from '@/lib/site-authz';
 import { SITE_CONFIG_DEFAULTS } from '@/lib/site-config';
+import { reconcileAfterSiteChange } from '@/lib/site-plans';
 import { buildSubdomain, ensureUniqueSubdomain } from '@/lib/site-subdomain';
 import { createSiteCollection, deleteSiteCollection } from '@/lib/typesense';
 import { validateSiteName } from '@/lib/validate-site-name';
@@ -170,6 +171,10 @@ export async function POST(request: NextRequest) {
       : `https://${site.subdomain}.${process.env.NEXT_PUBLIC_SITE_DOMAIN}`;
 
     await createSiteCollection(site.id);
+
+    if (isNewSite) {
+      await reconcileAfterSiteChange(auth.userId, site.id);
+    }
 
     // Send site-created email for new sites
     if (isNewSite && user.email) {

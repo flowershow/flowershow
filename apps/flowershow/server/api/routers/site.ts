@@ -18,6 +18,7 @@ import {
   SITE_CREATE_LIMIT_MESSAGE,
   siteCreateAllowed,
 } from '@/lib/site-create-limit';
+import { reconcileAfterSiteChange } from '@/lib/site-plans';
 import { buildSiteTree } from '@/lib/build-site-tree';
 import { triggerGitHubSyncWorkflow } from '@/lib/cloudflare-worker';
 import {
@@ -295,6 +296,8 @@ export const siteRouter = createTRPCRouter({
         properties: { siteId: created.id, client_type: 'web', empty: true },
       });
       await posthog.shutdown();
+
+      await reconcileAfterSiteChange(ctx.session.user.id, created.id);
 
       const fresh = await ctx.db.site.findUnique({
         where: { id: created.id },

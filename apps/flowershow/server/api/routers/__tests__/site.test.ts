@@ -11,8 +11,14 @@ vi.mock('@/server/auth', () => ({
   getSession: vi.fn().mockResolvedValue(null),
 }));
 
+// `default` is the client lib/site-plans uses (the same client as ctx.db in
+// production).
 vi.mock('@/server/db', () => ({
   db: {},
+  default: {
+    site: { findMany: vi.fn(), updateMany: vi.fn(), update: vi.fn() },
+    accountSubscription: { findUnique: vi.fn() },
+  },
 }));
 
 vi.mock('@/lib/stripe', () => ({ stripe: {} }));
@@ -60,6 +66,7 @@ import { siteCreateAllowed } from '@/lib/site-create-limit';
 import { customCssVersion } from '@/lib/custom-css';
 import { appRouter } from '@/server/api/root';
 import { SITE_UPDATE_KEY_ROLE, SiteUpdateKey } from '@/server/api/types';
+import prisma from '@/server/db';
 
 // ── Helpers ───────────────────────────────────────────────────────
 
@@ -2332,5 +2339,109 @@ describe('site router: editor allow and deny', () => {
     );
     expect((db.site as any).update).not.toHaveBeenCalled();
     expect((db.site as any).delete).not.toHaveBeenCalled();
+  });
+});
+
+describe('site.create account plan', () => {
+  function createDb() {
+    const created = makeSite({
+      id: 'new-site',
+      projectName: 'docs',
+      installationRepository: null,
+    });
+    return {
+      site: {
+        findFirst: vi.fn(async () => null),
+        create: vi.fn(async () => created),
+        findUnique: vi.fn(async () => created),
+      },
+      user: {
+        findUnique: vi.fn(async () => ({
+          email: null,
+          name: 'R',
+          username: 'testuser',
+        })),
+      },
+    };
+  }
+
+  const dbSite = (id: string, overrides: Record<string, unknown> = {}) => ({
+    id,
+    plan: 'FREE',
+    planSource: null,
+    coveredByAccountPlan: false,
+    createdAt: new Date('2026-01-01T00:00:00Z'),
+    customDomain: null,
+    storageAllowanceBytes: null,
+    subscription: null,
+    publishes: [],
+    ...overrides,
+  });
+
+  beforeEach(() => {
+    vi.mocked(siteCreateAllowed).mockReset().mockResolvedValue(true);
+    vi.mocked(prisma.site.findMany).mockReset();
+    vi.mocked(prisma.site.updateMany)
+      .mockReset()
+      .mockResolvedValue({ count: 1 } as any);
+    vi.mocked(prisma.accountSubscription.findUnique).mockReset();
+  });
+
+  it('puts the new site on a live Pro with 4 covered sites', async () => {
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue({
+      status: 'active',
+      siteAllowance: 5,
+    } as any);
+    vi.mocked(prisma.site.findMany).mockResolvedValue([
+      ...['a', 'b', 'c', 'd'].map((id) =>
+        dbSite(id, {
+          plan: 'PREMIUM',
+          planSource: 'ACCOUNT',
+          coveredByAccountPlan: true,
+        }),
+      ),
+      dbSite('new-site'),
+    ] as any);
+
+    await createAuthenticatedCaller(createDb() as any).site.create({
+      projectName: 'docs',
+    });
+
+    expect(prisma.site.updateMany).toHaveBeenCalledTimes(1);
+    expect(prisma.site.updateMany).toHaveBeenCalledWith({
+      where: { id: 'new-site', plan: 'FREE', planSource: null },
+      data: {
+        plan: 'PREMIUM',
+        planSource: 'ACCOUNT',
+        coveredByAccountPlan: true,
+      },
+    });
+  });
+
+  it('does not reconcile without an account subscription', async () => {
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue(null);
+
+    await createAuthenticatedCaller(createDb() as any).site.create({
+      projectName: 'docs',
+    });
+
+    expect(prisma.accountSubscription.findUnique).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 'user-1' } }),
+    );
+    expect(prisma.site.findMany).not.toHaveBeenCalled();
+  });
+
+  it('creates the site even when the reconciler throws', async () => {
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue({
+      status: 'active',
+      siteAllowance: 5,
+    } as any);
+    vi.mocked(prisma.site.findMany).mockRejectedValue(new Error('db down'));
+    const db = createDb();
+
+    await expect(
+      createAuthenticatedCaller(db as any).site.create({ projectName: 'docs' }),
+    ).resolves.toMatchObject({ id: 'new-site' });
+    expect(db.site.create).toHaveBeenCalled();
   });
 });

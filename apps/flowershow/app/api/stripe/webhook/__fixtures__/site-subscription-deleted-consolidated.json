@@ -1,0 +1,28 @@
+{
+  "id": "evt_site_consolidated",
+  "object": "event",
+  "type": "customer.subscription.deleted",
+  "api_version": "2024-12-18.acacia",
+  "data": {
+    "object": {
+      "id": "sub_site_1",
+      "object": "subscription",
+      "customer": "cus_site_1",
+      "status": "canceled",
+      "cancel_at_period_end": false,
+      "current_period_start": 1893456000,
+      "current_period_end": 1896134400,
+      "metadata": {
+        "platform": "flowershow",
+        "siteId": "site-1",
+        "reason": "consolidated",
+        "consolidatedInto": "sub_acct_1"
+      },
+      "items": {
+        "data": [
+          { "price": { "id": "price_premium_month_test", "recurring": { "interval": "month" } } }
+        ]
+      }
+    }
+  }
+}
