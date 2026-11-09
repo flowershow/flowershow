@@ -12,6 +12,7 @@ import SettingsNav from '@/components/dashboard/settings-nav';
 import { validDomainRegex } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
+import { ownerSectionVisibility } from '@/lib/settings-sections';
 import { PLANS } from '@/lib/stripe-plans';
 import { OFFICIAL_THEMES } from '@/lib/themes';
 import { SITE_NAME_MAX_LENGTH } from '@/lib/validate-site-name';
@@ -30,6 +31,7 @@ export default async function SiteSettingsPage(props: {
   // Rendering only; the server enforces ownership on every owner-only call.
   const membership = await api.siteMember.list.query({ siteId: site.id });
   const isOwner = membership.role === 'owner';
+  const showOwnerSections = ownerSectionVisibility(membership.role);
 
   const [siteConfig, subscription, bundleInfo] = await Promise.all([
     api.site.getDbConfig.query({ siteId: site.id }).catch(() => null),
@@ -1201,7 +1203,7 @@ export default async function SiteSettingsPage(props: {
           />
         </section>
 
-        {isOwner && subscription && bundleInfo && (
+        {showOwnerSections.billing && (
           <>
             <hr className="border-stone-200 dark:border-zinc-700" />
 
@@ -1219,7 +1221,7 @@ export default async function SiteSettingsPage(props: {
                 siteId={site.id}
                 subscription={subscription}
                 plans={PLANS}
-                bundleInfo={bundleInfo}
+                bundleInfo={bundleInfo ?? undefined}
               />
             </section>
 

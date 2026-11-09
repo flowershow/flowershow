@@ -26,7 +26,7 @@ export default async function AllSites() {
           <div className="flex justify-end pt-6">
             <CreateSiteButton />
           </div>
-          {shared.length > 0 && (
+          {shared.length > 0 && owned.length > 0 && (
             <h2 className="my-0 text-lg font-semibold">Your sites</h2>
           )}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">

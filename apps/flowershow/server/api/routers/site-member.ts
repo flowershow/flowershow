@@ -2,7 +2,6 @@ import { Prisma, type PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { SiteInviteEmail } from '@/emails/site-invite';
-import { isExistingUserEmailTrusted } from '@/lib/account-linking';
 import {
   INVITE_TTL_MS,
   MAX_PENDING_INVITES,
@@ -88,7 +87,6 @@ type InviteRow = Prisma.SiteInviteGetPayload<{ select: typeof inviteSelect }>;
 const callerSelect = {
   email: true,
   emailVerified: true,
-  accounts: { select: { provider: true } },
 } as const satisfies Prisma.UserSelect;
 type Caller = Prisma.UserGetPayload<{ select: typeof callerSelect }>;
 
@@ -137,7 +135,9 @@ async function checkInvite(
   ) {
     return 'email_mismatch';
   }
-  if (!isExistingUserEmailTrusted(caller)) return 'email_untrusted';
+  // Only a verified email counts. A linked Google account is not enough: Google
+  // may not have verified the address on it.
+  if (!caller.emailVerified) return 'email_untrusted';
   const member = await db.siteMember.findUnique({
     where: { siteId_userId: { siteId: invite.siteId, userId } },
     select: { id: true },
@@ -307,11 +307,12 @@ export const siteMemberRouter = createTRPCRouter({
   // Invites addressed to the caller's email, shown only when that email is trusted.
   pendingForMe: protectedProcedure.query(async ({ ctx }) => {
     const caller = await loadCaller(ctx.db, ctx.session.user.id);
-    if (!caller?.email || !isExistingUserEmailTrusted(caller)) return [];
+    if (!caller?.email || !caller.emailVerified) return [];
     const rows = await ctx.db.siteInvite.findMany({
       where: {
         email: normalizeInviteEmail(caller.email),
         expiresAt: { gt: new Date() },
+        site: { plan: 'PREMIUM' },
       },
       select: {
         id: true,
@@ -470,7 +471,7 @@ export const siteMemberRouter = createTRPCRouter({
         site.user.username ||
         'Someone'
       ).slice(0, MAX_INVITER_NAME);
-      await sendTransactionalEmail({
+      const { sent } = await sendTransactionalEmail({
         to: email,
         subject: `${inviterName} invited you to edit ${site.projectName} on Flowershow`,
         react: SiteInviteEmail({
@@ -484,6 +485,15 @@ export const siteMemberRouter = createTRPCRouter({
         distinctId: userId,
         properties: { site_id: input.siteId },
       });
+      if (!sent) {
+        // The raw token is unrecoverable and there is no resend, so drop the
+        // row; otherwise the address would be stuck on "already invited".
+        await ctx.db.siteInvite.delete({ where: { id: invite.id } });
+        throw new TRPCError({
+          code: 'TIMEOUT',
+          message: "We couldn't send the invite email. Please try again.",
+        });
+      }
 
       return {
         id: invite.id,

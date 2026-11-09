@@ -216,6 +216,23 @@ describe('siteMember.invite', () => {
     expect(await render(arg.react)).toContain('/invite/fs_inv_');
   });
 
+  it('deletes the invite and throws when the email could not be sent', async () => {
+    const db = makeDb({ site: premium });
+    (sendTransactionalEmail as any).mockResolvedValueOnce({ sent: false });
+    await expect(
+      createCallerAs(db, 'owner-1').siteMember.invite({
+        siteId: 'site-1',
+        email: 'ada@example.com',
+      }),
+    ).rejects.toMatchObject({
+      code: 'TIMEOUT',
+      message: "We couldn't send the invite email. Please try again.",
+    });
+    expect(db.siteInvite.delete).toHaveBeenCalledWith({
+      where: { id: 'inv-1' },
+    });
+  });
+
   it('editor cannot invite', async () => {
     const db = makeDb({ site: premium, members: [{ userId: 'editor-1' }] });
     await expect(
@@ -588,6 +605,13 @@ describe('siteMember.accept', () => {
       'FORBIDDEN',
     ],
     [
+      'a linked Google account with no verified email',
+      {
+        me: { ...ada, emailVerified: null, accounts: [{ provider: 'google' }] },
+      },
+      'FORBIDDEN',
+    ],
+    [
       'a different email',
       { me: { ...ada, email: 'eve@example.com' } },
       'FORBIDDEN',
@@ -772,6 +796,19 @@ describe('siteMember.pendingForMe / acceptPending', () => {
     const where = trusted.siteInvite.findMany.mock.calls[0][0].where;
     expect(where.email).toBe('ada@example.com');
     expect(where.expiresAt.gt).toBeInstanceOf(Date);
+    expect(where.site).toEqual({ plan: 'PREMIUM' });
+  });
+
+  it('pendingForMe returns [] for a linked Google account with no verified email', async () => {
+    const db = makeDb({
+      site: premium,
+      invites: [invite()],
+      me: { ...ada, emailVerified: null, accounts: [{ provider: 'google' }] },
+    });
+    await expect(
+      createCallerAs(db, 'ada-1').siteMember.pendingForMe(),
+    ).resolves.toEqual([]);
+    expect(db.siteInvite.findMany).not.toHaveBeenCalled();
   });
 
   it("acceptPending accepts the caller's own invite through the shared transaction", async () => {
