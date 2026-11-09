@@ -1,6 +1,6 @@
 ---
 title: Built-in analytics in the dashboard (v1) — design
-date: 2026-11-07
+date: 2026-11-09
 status: draft (awaiting Rufus's OK)
 bead: flowershow-9bu
 github: "#1202"
@@ -8,126 +8,137 @@ github: "#1202"
 
 # Built-in analytics in the dashboard (v1)
 
-## Intent
+## The job
 
-Site owners (Rufus included) want to see, without setting up Google Analytics or Umami, whether people read their site and what they read. Rufus asked for this in 2026-03 and again on 2026-11-07: "even very simple" analytics in the dashboard. Success: an owner opens their site in the dashboard, clicks **Analytics**, and in a second or two sees visits over the last 7 or 30 days, their top pages, where readers came from and which countries they are in.
+> When I've published something, I want to know whether anyone is reading it, and which pages, so I know it's worth carrying on.
 
-Comparable hosts: [2026-11-07-analytics-comparables.md](2026-11-07-analytics-comparables.md). Every one of them shows visitors, page views, top pages, referrers and countries. Most count without cookies, using a daily salted hash. Vercel splits tiers by how long data is kept.
+The owner has no interest in analytics as such. They want a quick answer, from time to time, with no setup. The bar is Substack's stats: a total you see without looking for it, and a list of your posts with a number next to each one. Rufus's brief: "we want simple. how many people and how many per page."
 
-## Goals
+Other hosts for comparison: [2026-11-07-analytics-comparables.md](2026-11-07-analytics-comparables.md).
 
-- An **Analytics** tab for each site in the dashboard (next to Settings, History, Annotations).
-- Metrics: page views and visitors as a daily chart plus totals; top pages; top referrers; top countries. Ranges: last 7 days (default) and last 30 days.
-- Works for every site we serve: `*.flowershow.me` subdomains and custom domains.
-- No setup for the owner. Existing sites get it, with history going back as far as our data does.
-- Readers of user sites get no cookies or local storage from Flowershow's analytics.
+## What the owner sees
 
-## Non-goals (v1)
+**1. My sites.** Each site card gains one line. No clicks needed to find out whether anyone came.
 
-- Custom ranges, comparison with the previous period, real-time view, events/goals, UTM, device/browser breakdowns, CSV export.
-- A public REST/MCP endpoint for analytics (follow-up).
-- Excluding the owner's own visits.
-- Raw `.html` files: middleware serves them through `/api/raw`, outside the React layout, so they load no PostHog and are not counted. The page says so in one line.
-- Changing the existing `analytics` (GA) and `umami` config options.
+```
+┌───────────────────────────────────┐
+│ Rufus's notes                     │
+│ 412 people in the last 30 days    │
+│                                   │
+│ rufus.flowershow.me ↗             │
+└───────────────────────────────────┘
+```
 
-## Anti-goals
+**2. Site → Analytics** (a new tab beside Settings, History, Annotations). One page, no sub-tabs, no filters.
 
-- Anything that makes owners add a script, a key or a config line.
-- Cookies, local storage or cross-site identifiers on user sites to power this.
-- Showing one owner traffic that belongs to another site, for example one that previously used the same domain.
-- A slow dashboard page (more than ~3 s uncached), or analytics errors breaking anything else.
-- Building and running our own event pipeline while one already exists.
-- Claiming legal compliance we haven't checked. We say what we do ("no cookies, no cross-site tracking, IPs not stored"), not "GDPR-compliant, no banner needed".
+```
+Analytics                    [ 7 days | 30 days ]
 
-## What exists today (recon)
+412 people       1,380 views
 
-- All sites are served by the Next.js app on Vercel; custom domains are added to the Vercel project (`lib/domains.ts`). The Cloudflare worker only processes markdown and does not see reader traffic.
-- **Every published page already loads PostHog** (`app/(public)/site/[user]/[project]/_components/providers.tsx` → `providers/posthog-provider.tsx`) and sends `$pageview` and autocapture events to Flowershow's PostHog EU project through our relay (`/relay-qYYb`, `proxyPostHog` in `middleware.ts`). Events carry `$host`, `$pathname`, `$referring_domain` and GeoIP `$geoip_country_code`.
-- Readers of user sites currently get **two cookies**. One is the PostHog client cookie (`persistence: 'cookie'`, `cross_subdomain_cookie: true`). The other is `ph_bootstrap`, which `middleware.ts` (`buildPHBootstrapCookie`) sets on every HTML page, after a PostHog flag lookup (`getAllFlagsAndPayloads`) on every request. No public-site code reads PostHog flags. The `isFeatureEnabled` calls in the site layout are our own plan flags, not PostHog.
-- flowershow.app is served as an ordinary custom-domain site.
-- No PostHog personal API key exists in the app or the secrets repo, so nothing reads PostHog data back yet.
-- `product/reports/analytics.csv` is business metrics, not traffic.
+▁▂▃▅▃▂▆▅▃▂▃▄▂▁▂▅▇▅▃▂▃▄▂▃▂▁▃▄▅▃     (views per day)
 
-## Decision: read from PostHog, don't build a collector
+Page                               People   Views
+Why I use markdown                    180     260
+Home                                  150     410
+Notes on publishing                    64      91
+…
+                                     Show all pages
 
-1. **Query PostHog (chosen).** Data already flows for every site, with history; reads are free. We add one server-side query module and a page.
-2. Own beacon → Postgres daily rollups: new ingestion, bot filtering, geo and storage, and no history. Only if PostHog limits or cost bite.
-3. Vercel Web Analytics: per project, not per tenant, and no usable query API. Not viable.
-4. Counting in middleware or on the server: sees bots and prefetches, and adds a write on the hot path. No.
+Readers came from
+google.com 96 · x.com 41 · news.ycombinator.com 18
 
-If option 1 hits limits later, a nightly job rolls PostHog data into a Postgres `SiteDailyStats` table behind the same `getSiteAnalytics` interface.
+Counted without cookies since 12 Nov. Includes your own visits.
+Updated 6 minutes ago.
+```
 
-## Design
+- **People** and **Views** are the only two numbers, and those words are used everywhere. A tooltip on People says "An estimate based on device and browser, not a head count."
+- **30 days is the default**, as on Substack's home. Small sites look empty over 7.
+- **Pages show their title**, not their URL, because that's how the owner thinks of them. Each row opens the page. A path we can't match to a current page (deleted, renamed, a 404) shows as plain text with no link. Sorted by people, top 20, then "Show all pages". On a phone the table keeps all three columns and the title truncates.
+- **"Came from" is one line**, top 5 linking sites only. Direct visits aren't shown, because Umami doesn't report them as a referrer. Hidden if there are none.
+- **The card's number links straight to Analytics.** The rest of the card still goes to Settings.
+- **Nothing else on the page.** No bounce rate, sessions, devices or countries.
 
-### 1. Tracking changes on user sites
+**Moments that need their own wording:**
 
-These apply to published sites only. The cloud dashboard and Flowershow's own sites keep today's behaviour (see the exemption below).
+| When | The owner sees |
+|---|---|
+| New site, or no visits yet | "No readers yet. Counting started on 12 Nov. Numbers update every 10 minutes." and the site link with a copy button. On the card: "No readers yet". |
+| Some history, partial range | Chart starts at the first counted day: the later of the launch date (a constant) and the site's creation date. "Counting since" in the footer uses the same date. We never show a run of zeros that looks like nobody came. |
+| Every page on the site is raw HTML | "This site's pages are raw HTML, which we can't count yet." and no numbers. On the card, nothing. |
+| Some pages are raw HTML | One line: "Pages published as raw HTML aren't counted." |
+| Password-protected site | "Password-protected sites aren't counted." We don't send private page titles to a third party. On the card, nothing. |
+| Numbers unavailable | "Numbers aren't available right now." on the tab; the card line simply disappears. Nothing else on the page or card breaks. |
 
-- `posthog.init` with `cookieless_mode: 'always'`, `autocapture: false`, `capture_pageview: 'history_change'` (SPA navigations count) and `capture_pageleave: false`. Skip `posthog.identify()`. We collect pageviews only, with no click autocapture, which also cuts event volume.
-- Register two super properties on every event: `fs_site_id` (the site's DB id, a stable tenant key) and `fs_country`, an ISO country code worked out in the browser from `Intl.DateTimeFormat().resolvedOptions().timeZone` with a static timezone→country map. The reason: in cookieless mode PostHog strips the IP before GeoIP, so `$geoip_country_code` disappears. The timezone is an approximation, stored nowhere, and the UI says "approximate".
-- Middleware: skip `buildPHBootstrapCookie` (cookie and flag lookup) for user-site hosts. That removes the second cookie and a PostHog round-trip from every page request.
-- **Exemption:** a constant list of Flowershow's own site IDs (flowershow.app etc.) keeps cookie mode, bootstrap and autocapture, because product analytics and web experiments rely on stable IDs there. It is a constant in code, not an env var.
-- Ships behind a constant `COOKIELESS_USER_SITES` flag, flipped in a follow-up commit after "Enable cookieless tracking" is turned on in the PostHog project settings. With the setting off, cookieless events lose their IDs.
+A temporary site that gets claimed keeps its numbers, because the site ID doesn't change.
 
-### 2. Query module
+**No setup and no off switch in v1.** It's on for every site, for free. An owner who already runs GA or Umami keeps counting in their own account.
 
-- `apps/flowershow/lib/site-analytics.ts` exports `getSiteAnalytics(site, range: 7 | 30)` and returns `{ series, totals, topPages, topReferrers, topCountries, fetchedAt }`:
-  - `series: { date, pageviews, visitors }[]`, one row per UTC day, zero-filled
-  - `totals: { pageviews, visitors }`
-  - each top list: `{ key, pageviews }[]`, top 10
-- HogQL to the private API `https://eu.posthog.com/api/projects/{PROJECT_ID}/query/` (not the ingestion relay), with a personal API key scoped to that project with `query:read` only. The project ID is a constant in code.
-- **Tenant filter:** `event = '$pageview' AND timestamp >= {from} AND (properties.fs_site_id = {siteId} OR (properties.fs_site_id IS NULL AND properties.$host IN {hosts} AND timestamp >= {site.createdAt}))`. `hosts` is the current `{subdomain}.{NEXT_PUBLIC_SITE_DOMAIN}` plus `customDomain`. The `createdAt` guard stops a recreated subdomain or reused domain from showing a previous site's history. Older hosts from before a rename are not recovered (accepted). All values go in as HogQL `values` placeholders, never interpolated.
-- Ranges are the last 7 or 30 UTC calendar days including today. The UI labels days in UTC.
-- Queries: one for the series and totals, one `UNION ALL` (or three) for the top lists, run in parallel. Fewer is better because of PostHog's hourly query and read budgets.
-- Referrers: `$referring_domain`. `$direct` shows as "Direct / none"; self-referrals (the site's own hosts) are dropped. These are per-pageview referrers.
-- Countries: `coalesce(fs_country, $geoip_country_code)`. Older events use PostHog's GeoIP, newer ones the timezone. Shown with name and flag.
-- **Visitors** = distinct `distinct_id` per day, summed. Cookieless IDs rotate daily, so this is the honest number. Label "Visitors" with the tooltip "Counted once per day". Expect a step up in visitors on the switch date (accepted; noted in the changelog).
+## What's cut from v1
 
-### 3. Caching and limits
+Countries; a small trend line on the card; comparison with the previous period; custom ranges; real-time; a page drill-down; devices; CSV export; an API or MCP tool; excluding the owner's own visits (the footer says they're included); counting raw `.html` pages (the main use of temporary sites, so a likely follow-up); password-protected sites.
 
-- Authorize first (`canManageSite`), then call the cached function. `unstable_cache` keyed by `(siteId, range, hosts)` with `revalidate: 3600` and tag `site-analytics-{siteId}`, following `lib/post/hosts.ts`. Changing the domain revalidates the tag.
-- The page shows "Updated {fetchedAt, relative}" from the cached payload, so stale data looks stale.
-- 5 s timeout. On 429, timeout or error, show "Analytics are temporarily unavailable" inline, send the exception to PostHog error tracking, and leave the rest of the page working.
+Separately beaded: showing "123 views" publicly on each page, opt-in (`flowershow-9bu.2`). Likes are a different feature and aren't in this work.
 
-### 4. Dashboard UI
+**Anti-goals:** anything that makes an owner add a script, key or config line; analytics cookies on readers' browsers; showing an owner another site's traffic; claiming legal compliance we haven't checked. We say what we do ("no cookies"), not "GDPR-compliant, no banner needed".
 
-- Route `app/(cloud)/dashboard/site/[id]/analytics/page.tsx` under the shared `SiteTabsLayout`. Add an **Analytics** tab in `components/dashboard/site-tabs.tsx`.
-- Top to bottom: range toggle (7 days | 30 days, in `?range=`); stat tiles (Page views, Visitors); daily bar chart of page views; three ranked lists (Top pages linking to each page, Top referrers, Countries), side by side on desktop and stacked on mobile, each with inline proportional bars in the style of Plausible.
-- Chart: small hand-rolled SVG, or a chart dependency the app already has. Follow the `dataviz` skill for colours and dark mode.
-- Empty state: "No visits recorded yet. Visits show up here within an hour." One line under the lists says raw `.html` pages aren't counted. If the site has GA/Umami configured, one line says those keep working.
-- Server component; no new API route, so no api-contract change.
+## How it works
 
-### 5. Access and security
+### One Flowershow-wide Umami
 
-- Only `canManageSite` users see a site's analytics. This is checked in the layout and again in the page before any query.
-- `POSTHOG_PERSONAL_API_KEY` is server-only in `env.mjs`, a Vercel secret, never sent to the client or logged. Tenant values come from our DB and go in as placeholders.
+Rufus's decision: readers' traffic comes from Umami, and PostHog is only for Flowershow's own product analytics. Neither a Flowershow-wide Umami nor a shared GA key exists in the code today (only the per-site `umami` and `analytics` config options), so this is new setup.
 
-### 6. Plans (free vs Premium)
+- **Consequence: no history.** Numbers start the day this goes live, which is why "Counting since" matters in the UI.
+- **Account:** one Umami Cloud account, EU region, **Pro plan or above**. The free Hobby plan has no API access. Pro is $20/month for 1M events, 2-year retention and up to 20 websites; each extra million costs $30. Business is $200/month for 10M, so it becomes the cheaper option from about 7M events a month. A pageview is one event, and collection doesn't stop at the limit: overage is billed. We don't yet know our monthly pageviews, so Ola checks that first (`flowershow-9bu.1`). If the bill gets silly, self-hosting Umami uses the same script and API.
+- **One Umami website for all sites**, because per-site websites are capped at 20 on Pro. Each page's script carries `data-tag="{site.id}"`, and every query filters by that tag. The site ID is stable across renames, custom-domain changes and claiming, so an owner can't inherit another site's numbers through a reused domain.
+- **Script on every published site except password-protected ones**, including temporary sites and flowershow.app, added in the site layout after today's per-site Umami tag: `data-website-id`, `data-tag`, `data-exclude-search="true"`, `data-exclude-hash="true"`. Umami receives the path and the page title, no query strings. Our script comes after an owner's own Umami so that `window.umami` stays theirs and their custom events keep going to their account. Only rendered in production, so previews don't count.
+- **Shared website, stated plainly:** Umami hashes the session from website, IP, user agent and a monthly salt, so within our one account a reader on two Flowershow sites has the same hashed ID for that month. Owners can't see it, and per-site counts aren't affected. Setting `data-distinct-id` per site would separate them, but it adds an extra tracked request on each page load with unknown billing, so v1 leaves it out. Don't claim readers can't be linked across sites.
+- **Accuracy (accepted):** the script loads from `cloud.umami.is`, which ad blockers often block, so counts run low. Visitor hashes reset monthly, so a range crossing a month boundary can count one person twice. That's why the UI says "estimate". Proxying through our own domain is a follow-up if the undercount turns out to matter.
 
-Recommendation for fs-plans (bead `flwrprd-ox8`) to settle: v1 on for **all plans**. It costs us almost nothing, and it gives owners a reason to keep publishing with us. Later Premium extras could be longer ranges (90 days / 12 months, as Vercel does), CSV export and an API/MCP "how's my site doing" tool. Allowed ranges sit in one constant, so a plan gate is a one-line change.
+### PostHog off published sites
+
+- **Claimed sites:** `PostHogProvider` and `SessionProvider` come out of the site layout's providers. `SessionProvider` is there only for PostHog's `identify`, and it causes next-auth cookies on readers' browsers.
+- **Temporary (unclaimed) sites:** PostHog stays, because the banner's `anon_banner_*` events are Flowershow's own claim funnel, but with `persistence: 'memory'` and no `identify`. That sets no cookie, so nothing lands on `.flowershow.me` for claimed sites to receive. Both events happen within one page load, so the funnel still works.
+- **flowershow.app and the dashboard:** unchanged.
+- `buildPHBootstrapCookie` in `middleware.ts` runs only for the cloud, root and flowershow.app hosts. That removes `ph_bootstrap` and a PostHog round trip from every published page load.
+- **Effect:** readers of published sites get no analytics cookies from Flowershow. The cost is that Flowershow no longer sees claimed sites' traffic or browser errors in PostHog. The privacy policy draft (`~/src/flowershow/product/legal/2026-10-22-privacy-policy-draft.md`) describes PostHog on published sites and needs updating before this ships.
+
+### Reading the numbers
+
+- `apps/flowershow/lib/site-analytics.ts`, calling `https://api.umami.is/v1/eu` with `UMAMI_API_KEY` (a server-only secret). The website ID and base URL are constants in code.
+- Per site: `/stats` (people, views), `/pageviews` with `unit=day` (chart), `/metrics/expanded?type=path` (pages, which Umami returns sorted by people), `/metrics/expanded?type=referrer` (came from, which already leaves out direct visits and self-referrals), all with `tag={site.id}`. Page titles come from our `Blob` table by `appPath`, falling back to the path.
+- Site cards: one `/metrics/expanded?type=tag` across all sites, paged with `limit` and `offset` (the default stops at 500 rows), mapped to site IDs, so a long site list doesn't need one call per card. Umami's source allows `type=tag`; Ola's curl confirms it on Cloud.
+- Check `canManageSite` first, then read through `unstable_cache` for 10 minutes (following `lib/post/hosts.ts`), keyed by site and range. Ten minutes rather than an hour because an owner's first move is to open their link and come back to look. The API allows 50 calls per 15 seconds per key. Timeout 5 s; failures show the "unavailable" state and are logged.
+- Server components only: no new API route, so no api-contract change.
+- The chart is a small hand-rolled SVG.
+
+### Security notes
+
+- Only `canManageSite` users can see a site's numbers, checked in the shared layout and again before querying.
+- The key is server-only and never logged. The site ID is the only thing added to public pages, and it isn't a secret.
+- As with any browser-based analytics, the website ID is public, so someone could send fake events. That can skew a site's numbers and add to our bill. Accepted for v1; watch the Umami bill.
+
+### Plans
+
+On for all plans in v1. Recommendation to fs-plans (`flwrprd-ox8`): Premium extras later could be longer ranges, export and API access. Allowed ranges are one constant.
+
+## Build and rollout
+
+Nothing here starts until Rufus approves this design.
+
+1. **Build against sample data:** the Analytics tab, the card line and all the states above. Needs nothing from Ola.
+2. **Ola (`flowershow-9bu.1`):** check monthly pageviews, choose the plan, create the account and website, add the API key.
+3. **Connect:** commit the website ID, turn on the script, remove PostHog from published sites, update the privacy policy. Docs page and changelog entry.
+4. **Check on a throwaway `fl` preview site:** no analytics cookies in devtools; visits appear with the right tag; two test sites stay separate; a site with its own Umami counts in both accounts and keeps its custom events.
+
+Step 2 blocks real numbers and step 3, not step 1.
 
 ## Testing
 
-- Unit: query building (tenant filter, placeholders, ranges), mapping (zero-fill, self-referral removal, `$direct`, country coalesce), timezone→country map, and the error/429/timeout paths with `fetch` mocked.
-- Middleware: no `ph_bootstrap` on user-site hosts; unchanged on exempt and cloud hosts.
-- Component: tiles, chart, lists and empty state from fixtures. Authz: a non-owner gets 404.
-- Real check: a throwaway `fl` preview site. Visit pages, confirm no cookies in devtools, and see the visits in the Analytics tab.
-
-## Rollout
-
-0. **Pre-check (needs the API key):** sample recent user-site `$pageview` events in PostHog and confirm `$host`, `$referring_domain` and `$geoip_country_code` look right. That also confirms the relay passes readers' real IPs, which today's countries and history depend on.
-1. Rufus: create the project-scoped `query:read` personal API key (secrets repo plus Vercel) and turn on cookieless tracking in the PostHog project settings.
-2. PR 1: query module, Analytics tab, tracking changes behind `COOKIELESS_USER_SITES = false`, docs page `content/flowershow-app/docs/analytics.md`, changelog entry.
-3. After step 1 is done: flip the flag (one-line commit), then verify on a preview site and one of Rufus's sites.
-
-## Follow-ups (beads, not v1)
-
-- API/MCP endpoint for site analytics (contract-first).
-- Nightly rollup to Postgres if PostHog limits or latency bite.
-- Plan-gated longer ranges and export (after fs-plans).
-- Counting raw `.html` pages.
-- Excluding the owner's own visits.
+- Unit: mapping Umami responses to the page (titles, unmatched paths, zero-fill from the first counted day, paging) and the failure paths.
+- Middleware: no `ph_bootstrap` on published-site hosts; unchanged on cloud and flowershow.app.
+- Component: every state in the table above, from fixtures. Authz: a non-owner gets 404.
 
 ## Left to the builder
 
-- Exact HogQL, query merging, chart implementation, copy, the timezone→country map source, test layout.
+Exact copy beyond the mock, chart details, test layout, how titles are matched for edge-case paths.
