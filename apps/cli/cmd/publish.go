@@ -341,7 +341,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 			return fail(fmt.Sprintf(
 				"Re-point this folder by re-running with the current name:\n"+
 					"  fl --name \"<current site name>\" %s",
-				folderPath,
+				shellQuoteAll([]string{folderPath}),
 			))
 		}
 
@@ -626,7 +626,7 @@ func publishToSharedSite(owner, name string, localCfg *localconfig.Config, overw
 		return fail(fmt.Sprintf(
 			"%q is shared with you. Publishing replaces its content and deletes files that aren't in this path.\n"+
 				"To do that, run:\n  fl --name %s --overwrite %s",
-			ref, ref, target,
+			ref, shellQuoteAll([]string{ref}), target,
 		))
 	}
 	warnRepoint()
