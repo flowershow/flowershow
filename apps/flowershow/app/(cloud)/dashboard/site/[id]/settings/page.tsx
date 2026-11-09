@@ -9,7 +9,9 @@ import RepoAccessLostForm from '@/components/dashboard/form/repo-access-lost-for
 import SitePasswordProtectionForm from '@/components/dashboard/form/site-password-form';
 import JsonForm from '@/components/dashboard/json-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
+import { accountPlansEnabled } from '@/lib/account-plans';
 import { validDomainRegex } from '@/lib/domains';
+import { getEntitlements } from '@/lib/entitlements';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { ownerSectionVisibility } from '@/lib/settings-sections';
@@ -33,11 +35,18 @@ export default async function SiteSettingsPage(props: {
   const isOwner = membership.role === 'owner';
   const showOwnerSections = ownerSectionVisibility(membership.role);
 
-  const [siteConfig, subscription, bundleInfo] = await Promise.all([
-    api.site.getDbConfig.query({ siteId: site.id }).catch(() => null),
-    isOwner ? api.stripe.getSiteSubscription.query({ siteId: site.id }) : null,
-    isOwner ? api.stripe.getBundleInfo.query() : null,
-  ]);
+  const plansEnabled = accountPlansEnabled();
+  const [siteConfig, subscription, bundleInfo, billingStatus] =
+    await Promise.all([
+      api.site.getDbConfig.query({ siteId: site.id }).catch(() => null),
+      isOwner
+        ? api.stripe.getSiteSubscription.query({ siteId: site.id })
+        : null,
+      isOwner ? api.stripe.getBundleInfo.query() : null,
+      plansEnabled && isOwner
+        ? api.stripe.getSiteBillingStatus.query({ siteId: site.id })
+        : null,
+    ]);
 
   const repoFullName = getRepoFullName(site);
   const isRepoAccessLost =
@@ -1222,6 +1231,10 @@ export default async function SiteSettingsPage(props: {
                 subscription={subscription}
                 plans={PLANS}
                 bundleInfo={bundleInfo ?? undefined}
+                sitePlan={site.plan}
+                planSource={billingStatus?.planSource ?? null}
+                accountPlansEnabled={plansEnabled}
+                accountPlan={billingStatus?.accountPlan ?? null}
               />
             </section>
 

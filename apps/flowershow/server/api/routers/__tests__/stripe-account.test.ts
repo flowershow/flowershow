@@ -2,6 +2,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // ── Mocks (must come before imports that depend on them) ──────────
 
+// The router reads the bundle coupon ids at module load.
+await vi.hoisted(async () => {
+  const { env } = await import('@/env.mjs');
+  (env as any).STRIPE_BUNDLE_COUPON_A = 'coupon_a';
+  (env as any).STRIPE_BUNDLE_COUPON_B = 'coupon_b';
+});
+
 vi.mock('next/cache', () => ({
   unstable_cache: (fn: (...args: unknown[]) => unknown) => fn,
   revalidateTag: vi.fn(),
@@ -266,6 +273,34 @@ describe('stripe.createCheckoutSession (per site)', () => {
       expect(mockCreateSession).toHaveBeenCalledTimes(1);
     },
   );
+
+  describe('bundle coupon', () => {
+    // A user with existing subscriptions would get a bundle tier coupon.
+    const withTier = () => {
+      const db = makeDb();
+      db.subscription.count.mockResolvedValue(3);
+      return db;
+    };
+
+    it('sends no discounts when account plans are enabled', async () => {
+      vi.mocked(accountPlansEnabled).mockReturnValue(true);
+      await createCaller(withTier()).stripe.createCheckoutSession({
+        siteId: 'site-1',
+        priceId: 'price_monthly',
+      });
+      const args = mockCreateSession.mock.calls[0]![0] as any;
+      expect(args.discounts).toBeUndefined();
+    });
+
+    it('still applies the bundle coupon when account plans are dark', async () => {
+      await createCaller(withTier()).stripe.createCheckoutSession({
+        siteId: 'site-1',
+        priceId: 'price_monthly',
+      });
+      const args = mockCreateSession.mock.calls[0]![0] as any;
+      expect(args.discounts).toEqual([{ coupon: 'coupon_b' }]);
+    });
+  });
 
   it('reaches checkout for a FREE site left with a MANUAL source', async () => {
     vi.mocked(accountPlansEnabled).mockReturnValue(true);

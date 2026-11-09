@@ -196,7 +196,10 @@ export const stripeRouter = createTRPCRouter({
         where: { status: 'active', site: { userId: ctx.session.user.id } },
       });
       const tierId = getBundleTierId(existingActiveSites);
-      const couponId = tierId ? TIER_COUPON_IDS[tierId] : undefined;
+      // Account plans replace the bundle ladder; only retired when enabled so
+      // turning the flag off is a true rollback.
+      const couponId =
+        tierId && !accountPlansEnabled() ? TIER_COUPON_IDS[tierId] : undefined;
 
       const checkoutSession = await stripe.checkout.sessions.create({
         client_reference_id: input.siteId,

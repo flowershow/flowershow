@@ -5,6 +5,9 @@ import { useSearchParams } from 'next/navigation';
 import posthog from 'posthog-js';
 import { useEffect, useState } from 'react';
 
+import type { AccountPlan, PlanSource } from '@prisma/client';
+import Link from 'next/link';
+import { ACCOUNT_PLAN_SITE_ALLOWANCE } from '@/lib/account-plans';
 import type { Plan, PlanType } from '@/lib/stripe-plans';
 import { applyDiscount } from '@/lib/stripe-plans';
 import { api } from '@/trpc/react';
@@ -38,6 +41,9 @@ interface BillingProps {
   subscription: any;
   plans: Record<PlanType, Plan>;
   bundleInfo?: BundleInfo;
+  planSource: PlanSource | null;
+  accountPlansEnabled: boolean;
+  accountPlan: AccountPlan | null;
 }
 
 const ordinal = (n: number) => {
@@ -51,6 +57,9 @@ export default function Billing({
   subscription,
   plans,
   bundleInfo,
+  planSource,
+  accountPlansEnabled,
+  accountPlan,
 }: BillingProps) {
   const [loading, setLoading] = useState(false);
   const [frequency, setFrequency] = useState(frequencies[0]);
@@ -59,6 +68,7 @@ export default function Billing({
   const activeSiteCount = bundleInfo?.activeSiteCount ?? 0;
   const nextSiteDiscountPercent = bundleInfo?.nextSiteDiscountPercent ?? 0;
   const isEligibleForDiscount =
+    !accountPlansEnabled &&
     (!subscription || subscription.status !== 'active') &&
     nextSiteDiscountPercent > 0;
 
@@ -73,7 +83,7 @@ export default function Billing({
   // Fire once when the pricing ladder is shown to a user who hasn't yet
   // upgraded this site, so we can measure bundle-discount interest.
   useEffect(() => {
-    if (subscription?.status === 'active') return;
+    if (accountPlansEnabled || subscription?.status === 'active') return;
     posthog.capture('bundle_ladder_shown', {
       siteId,
       activeSiteCount,
@@ -150,6 +160,43 @@ export default function Billing({
     setLoading(true);
     createBillingPortalSession.mutate({ siteId });
   };
+
+  // Premium through the account or granted by us: nothing to buy per site.
+  if (
+    accountPlansEnabled &&
+    (planSource === 'ACCOUNT' || planSource === 'MANUAL')
+  ) {
+    return (
+      <div
+        data-testid="billing"
+        className="rounded-lg border border-stone-200 bg-white dark:border-zinc-700 dark:bg-zinc-950"
+      >
+        <div className="relative flex flex-col space-y-4 p-5 sm:p-10">
+          <h2 id="billing" className="font-dashboard-heading text-xl">
+            Billing
+          </h2>
+          {planSource === 'ACCOUNT' ? (
+            <>
+              <p className="font-semibold">
+                Premium through your{' '}
+                {accountPlan === 'UNLIMITED' ? 'Unlimited' : 'Pro'} plan
+              </p>
+              <p className="text-sm text-stone-500 dark:text-zinc-400">
+                <Link
+                  href="/settings/billing"
+                  className="underline hover:text-stone-700 dark:hover:text-zinc-200"
+                >
+                  Manage account billing
+                </Link>
+              </p>
+            </>
+          ) : (
+            <p className="font-semibold">Premium (granted by Flowershow)</p>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -231,62 +278,74 @@ export default function Billing({
               </p>
             </div>
 
-            {/* Multi-site bundle discount ladder */}
-            <div className="rounded-md bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200 dark:bg-zinc-950 dark:ring-zinc-700">
-              <p className="mb-2 font-medium text-stone-700 dark:text-zinc-200">
-                Save more with every site
+            {/* Multi-site bundle discount ladder (retired by account plans) */}
+            {accountPlansEnabled ? (
+              <p className="text-sm text-stone-600 dark:text-zinc-300">
+                <Link
+                  href="/settings/billing"
+                  className="underline hover:text-stone-900 dark:hover:text-zinc-100"
+                >
+                  Have several sites? Pro covers up to{' '}
+                  {ACCOUNT_PLAN_SITE_ALLOWANCE.PRO}.
+                </Link>
               </p>
-              <ul className="space-y-1 text-stone-600 dark:text-zinc-300">
-                {(() => {
-                  const price = getIntervalPrice(plans.PREMIUM);
-                  if (!price) return null;
-                  const rows = [
-                    { label: '1st site', percentOff: 0 },
-                    ...(bundleInfo?.tiers ?? []).map((tier) => ({
-                      label:
-                        tier.minExistingSites === 1
-                          ? '2nd site'
-                          : `${ordinal(tier.minExistingSites + 1)}+ site`,
-                      percentOff: tier.percentOff,
-                    })),
-                  ];
-                  return rows.map((row) => {
-                    const isCurrent =
-                      row.percentOff === nextSiteDiscountPercent &&
-                      isEligibleForDiscount;
-                    return (
-                      <li
-                        key={row.label}
-                        className={`flex items-center justify-between ${
-                          isCurrent
-                            ? 'font-semibold text-stone-900 dark:text-zinc-100'
-                            : ''
-                        }`}
-                      >
-                        <span>{row.label}</span>
-                        <span className="flex items-center gap-x-2">
-                          <span>
-                            {formatAmount(
-                              applyDiscount(price.amount, row.percentOff),
-                              price.currency,
-                            )}
-                            /{frequency.value}
-                          </span>
-                          {row.percentOff > 0 && (
-                            <span className="text-xs text-green-700 dark:text-green-400">
-                              {row.percentOff}% off
+            ) : (
+              <div className="rounded-md bg-stone-50 p-3 text-sm ring-1 ring-inset ring-stone-200 dark:bg-zinc-950 dark:ring-zinc-700">
+                <p className="mb-2 font-medium text-stone-700 dark:text-zinc-200">
+                  Save more with every site
+                </p>
+                <ul className="space-y-1 text-stone-600 dark:text-zinc-300">
+                  {(() => {
+                    const price = getIntervalPrice(plans.PREMIUM);
+                    if (!price) return null;
+                    const rows = [
+                      { label: '1st site', percentOff: 0 },
+                      ...(bundleInfo?.tiers ?? []).map((tier) => ({
+                        label:
+                          tier.minExistingSites === 1
+                            ? '2nd site'
+                            : `${ordinal(tier.minExistingSites + 1)}+ site`,
+                        percentOff: tier.percentOff,
+                      })),
+                    ];
+                    return rows.map((row) => {
+                      const isCurrent =
+                        row.percentOff === nextSiteDiscountPercent &&
+                        isEligibleForDiscount;
+                      return (
+                        <li
+                          key={row.label}
+                          className={`flex items-center justify-between ${
+                            isCurrent
+                              ? 'font-semibold text-stone-900 dark:text-zinc-100'
+                              : ''
+                          }`}
+                        >
+                          <span>{row.label}</span>
+                          <span className="flex items-center gap-x-2">
+                            <span>
+                              {formatAmount(
+                                applyDiscount(price.amount, row.percentOff),
+                                price.currency,
+                              )}
+                              /{frequency.value}
                             </span>
-                          )}
-                        </span>
-                      </li>
-                    );
-                  });
-                })()}
-              </ul>
-              <p className="mt-2 text-xs text-stone-400 dark:text-zinc-500">
-                Discounts apply automatically at checkout.
-              </p>
-            </div>
+                            {row.percentOff > 0 && (
+                              <span className="text-xs text-green-700 dark:text-green-400">
+                                {row.percentOff}% off
+                              </span>
+                            )}
+                          </span>
+                        </li>
+                      );
+                    });
+                  })()}
+                </ul>
+                <p className="mt-2 text-xs text-stone-400 dark:text-zinc-500">
+                  Discounts apply automatically at checkout.
+                </p>
+              </div>
+            )}
 
             <div className="inline-block">
               <fieldset aria-label="Payment frequency">
