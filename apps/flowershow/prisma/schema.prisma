@@ -30,6 +30,7 @@ model User {
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
   cancelBonusGrantedAt DateTime?           @map("cancel_bonus_granted_at")
+  storagePoolWarningSentAt DateTime?       @map("storage_pool_warning_sent_at") // last Free-pool over-limit email
   accounts            Account[]
   sessions            Session[]
   sites               Site[]
@@ -126,6 +127,7 @@ model Site {
   showSidebar             Boolean       @default(true) @map("show_sidebar")
   plan                    Plan          @default(FREE)
   storageAllowanceBytes   BigInt?       @map("storage_allowance_bytes") // grandfathered storage limit override
+  storageWarningSentAt    DateTime?     @map("storage_warning_sent_at") // last over-limit email for this site
   subscription            Subscription?
   blobs                   Blob[]
   publishes               Publish[]

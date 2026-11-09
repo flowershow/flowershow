@@ -2,6 +2,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/server/db', () => ({ default: { $queryRaw: vi.fn() } }));
 
+const sendWarning = vi.hoisted(() => vi.fn());
+vi.mock('./storage-warning', () => ({ sendStorageWarning: sendWarning }));
+
 import { GB, MB } from './entitlements';
 import prisma from '@/server/db';
 import { checkStorageLimit, noteStorageOverLimit } from './storage-limits';
@@ -199,5 +202,48 @@ describe('noteStorageOverLimit', () => {
       noteStorageOverLimit(site(), 10 * MB, 20 * MB),
     ).resolves.toBeUndefined();
     err.mockRestore();
+  });
+});
+
+describe('noteStorageOverLimit warning emails', () => {
+  const site = {
+    id: 's1',
+    userId: 'owner',
+    plan: 'FREE' as const,
+    storageAllowanceBytes: null,
+    projectName: 'notes',
+  };
+
+  beforeEach(() => {
+    (prisma.$queryRaw as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
+      [{ total: BigInt(0) }],
+    );
+    sendWarning.mockReset();
+    sendWarning.mockResolvedValue(undefined);
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+  });
+
+  it('sends a warning when over the limit', async () => {
+    await noteStorageOverLimit(site, 50 * MB, 250 * MB);
+    expect(sendWarning).toHaveBeenCalledTimes(1);
+    expect(sendWarning.mock.calls[0]![0].violation.scope).toBe('site');
+  });
+
+  it('does not send on a dry run', async () => {
+    await noteStorageOverLimit(site, 50 * MB, 250 * MB, { dryRun: true });
+    expect(sendWarning).not.toHaveBeenCalled();
+  });
+
+  it('does not send when under the limit', async () => {
+    await noteStorageOverLimit(site, 10 * MB, 20 * MB);
+    expect(sendWarning).not.toHaveBeenCalled();
+  });
+
+  it('does not reject when the send throws', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    sendWarning.mockRejectedValue(new Error('boom'));
+    await expect(
+      noteStorageOverLimit(site, 50 * MB, 250 * MB),
+    ).resolves.toBeUndefined();
   });
 });
