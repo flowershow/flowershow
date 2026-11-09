@@ -1,12 +1,14 @@
 # Site layouts: design
 
-Status: draft for Rufus's OK, 2026-11-09. Nothing gets built until it's approved. Bead: flowershow-otm.
+Status: draft, 2026-11-09. Rufus has approved the approach (named layouts built on the left rail, no slots). Nothing gets built until the open questions below are settled. Bead: flowershow-otm.
 
-**TL;DR:** add one setting, `layout`, that chooses a site's structure: `docs` (today), `reading` (no site contents beside the text, page rail on the left), or `journal` (the LessWrong pattern: site contents on the home page and listings, `reading` everywhere else). A page can override it in frontmatter. Themes keep doing the look.
+**TL;DR:** add one setting, `layout`, with two values: `docs` (today) and `reading` (no site contents beside the text, page rail on the left). A page can override it in frontmatter. Themes keep doing the look.
 
 ## Why
 
-Flowershow has one structure: site contents on the left, text, page contents on the right. Rufus wants essay-style pages where the page contents are on the left, and a left rail beside a site sidebar is "terrible ux". Rufus also prefers defaults to more options. Named layouts give a site one word to choose, instead of a set of switches that have to agree.
+Flowershow has one structure: site contents on the left, text, page contents on the right. Rufus wants essay-style pages where the page contents are on the left, and a left rail beside a site sidebar is "terrible ux". Named layouts give a site one word to choose, instead of a set of switches that have to agree.
+
+Rufus rejected configurable slots (`left: site-toc, right: page-rail`): "Our watchword and brand is simplicity and speed not complexity and endless options." Each proposed layout has to earn its place against that.
 
 Prior thinking: `life-itself/design/projects/2640-research-site-style/flowershow-layouts.md`, and the survey in `docs/plans/2026-11-07-toc-layout-survey.md`.
 
@@ -18,14 +20,14 @@ Prior thinking: `life-itself/design/projects/2640-research-site-style/flowershow
 - **Rail:** the page contents as a column of ticks, one per heading, which opens an outline on hover or focus. Shipped in #1531.
 - **The course:** the Collective Action course site, the test case for these mockups.
 
-## The three layouts
+## The two layouts
 
-| | `docs` | `reading` | `journal` |
-|---|---|---|---|
-| For | Docs, knowledge bases | Essays, papers, courses | Sites of essays with a front page |
-| Site contents | Permanent, left | Behind a menu button | Permanent on front pages; menu button elsewhere |
-| Page contents | Right, panel or rail (`toc.style`) | Rail, far left | Front pages: right, as `docs`. Elsewhere: rail, far left |
-| Text | Between the columns | Centred | As `docs` on front pages; centred elsewhere |
+| | `docs` | `reading` |
+|---|---|---|
+| For | Docs, knowledge bases | Essays, papers, courses |
+| Site contents | Permanent, left | Behind a menu button |
+| Page contents | Right, panel or rail (`toc.style`) | Rail, far left |
+| Text | Between the columns | Centred |
 
 `docs` is the default and changes nothing.
 
@@ -39,17 +41,11 @@ layout: docs
 ---
 ```
 
-### Which pages `journal` treats as a front page
+### Site contents on the front page only
 
-The home page of the site, and listing and changelog pages that have a page of their own. These use the `docs` arrangement. Everything else is an article page and uses `reading`.
-
-"Folder index pages" would be the obvious rule, and it's wrong: each course chapter is a folder `README.md`, so every chapter would keep the permanent sidebar. A folder page that wants the front-page treatment sets `layout: docs`, as the course's `/course` page would.
+LessWrong shows site contents on its home page and hides them on posts. This needs no third layout: the site sets `reading`, and its home or section page sets `layout: docs`, as the course's `/course` page would. An earlier draft had a `journal` layout for this, which guessed which pages were front pages. Dropped: it was one more option, the guess needed exceptions (each course chapter is a folder `README.md`), and Rufus reads "journal" as a blog.
 
 Limits that stay as they are today: a `layout: plain` home page has no site contents, a listing with no `README` page has no sidebar, and `sidebar.paths` still decides where site contents appear. The course limits its sidebar to `/course`, so its `/` page has none.
-
-### Why `journal` and not `magazine`
-
-`magazine` is already a listing `view` value. `blog` and `post` already mean a post page. `journal` is free and means a front page with articles.
 
 ## Behaviour
 
@@ -70,10 +66,10 @@ Limits that stay as they are today: a `layout: plain` home page has no site cont
 
 **Pages with their own template:**
 
-| Page | Under `reading` or a `journal` article page |
+| Page | Under `reading` |
 |---|---|
 | `layout: plain`, canvas | Unchanged. They return before the columns exist. |
-| Listings and changelog pages with a page | `reading`: no permanent sidebar. Under `journal` they're front pages. |
+| Listings and changelog pages with a page | No permanent sidebar. To keep it, set `layout: docs`, or `showSidebar: true` on a page that already says `layout: list` or `changelog`. |
 | Listings with no page | Unchanged. |
 | Posts | Keep the post header and footer; the rail goes left and the sidebar goes. |
 | Hero | Unchanged. It sits above the columns. |
@@ -112,9 +108,9 @@ Not a plan yet; the plan follows approval.
 
 ## Not in this
 
-- A `wiki` layout, footnote cards, wide figures and page apparatus (from the 2640 note). A layout can bundle these later.
+- A really good default blog or magazine layout, borrowing directly from Substack. Rufus wants this; it's a separate design under flowershow-9xp, and the name `journal` is left free for it. `layout: blog` clashes with the legacy post value.
+- A `wiki` layout, footnote cards, wide figures and page apparatus (from the 2640 note). A layout can bundle these later. Rufus sees LessWrong as this wiki, forum or knowledge-base type, not as a blog.
 - Readers switching layouts.
-- Index presets (flowershow-9xp). Its proposed `layout: blog` clashes with the legacy post value, so it needs another name.
 - Moving the site contents to the right. No surveyed site does this.
 - Ticks spaced by section length, as LessWrong does. Worth trying on the rail separately.
 
@@ -122,7 +118,7 @@ Not a plan yet; the plan follows approval.
 
 1. **Add previous and next links to `reading` pages in the first version?** Recommended: yes, using the site tree's order, shown when the sidebar is hidden. Without them a course reader has to open the menu for every chapter.
 2. **Keep site contents behind a menu button under `reading`, or remove them altogether?** Recommended: keep the button. LessWrong does exactly this, it takes almost no space, and without it a reader has no way to browse the site.
-3. **Which layout should the course use?** Recommended: stay on `docs` with the right rail (bead flowershow-6e1.9) now, and try `journal` once previous and next links exist.
+3. **Which layout should the course use?** Recommended: stay on `docs` with the right rail (bead flowershow-6e1.9) now, and try `reading` with `layout: docs` on `/course` once previous and next links exist.
 
 ## Evidence
 
