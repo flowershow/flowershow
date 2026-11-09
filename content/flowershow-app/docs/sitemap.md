@@ -46,6 +46,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Callouts](/docs/reference/callouts) — Obsidian callout syntax, supported types and aliases, custom titles, folding, and nesting in Flowershow.
 - [Changelog](/docs/reference/changelog) — Publish a changelog: Flowershow turns a changelog folder or a CHANGELOG.md file into a timeline page automatically
 - [Flowershow CLI](/docs/reference/cli) — Install and use fl, the Flowershow CLI, to publish your notes from the terminal. A single binary, no Node.js or npm needed.
+- [Invite editors to a site](/docs/reference/collaborators) — Invite people by email to publish to your Flowershow site and change its settings, while you stay in charge of billing, the domain and who has access.
 - [Comments](/docs/reference/comments) — Enable comments on your site's pages. Powered by Giscus and GitHub Discussions.
 - [`config.json` file](/docs/reference/config-file) — Reference for all available options in the config.json site configuration file.
 - [Content filtering](/docs/reference/content-filtering) — Control which files and directories get published

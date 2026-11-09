@@ -21,8 +21,12 @@ _Avoid_: Asset (overloaded with the Blob term above), media file
 ### Sites and Content
 
 **Site**:
-A user's published website on Flowershow. May be backed by a GitHub repository (webhook-driven) or fed by direct file uploads from the CLI, Obsidian plugin, or dashboard.
+A published website on Flowershow, owned by one user (its owner) and optionally managed by editors (site members). May be backed by a GitHub repository (webhook-driven) or fed by direct file uploads from the CLI, Obsidian plugin, or dashboard.
 _Avoid_: Project, blog, workspace
+
+**Site Member / Editor**:
+A person the owner of a Site has invited by email to help manage it, stored as a `SiteMember` row (the owner never has one). Sites on a paid plan only (Premium today); when Premium lapses the membership stays but the editor loses access until the owner renews. Editors can publish, change ordinary settings and site config, turn password protection on or off, and moderate annotations. Owner-only: custom domain, root directory, renaming, the GitHub connection, inviting and removing people, billing, deleting the Site. See ADR-0016.
+_Avoid_: role names other than owner and editor (collaborator, admin, contributor)
 
 **Site Name**:
 The human-facing label of a Site, stored raw in `blob`-adjacent column `Site.projectName` exactly as the user typed it (e.g. `"My Notes"`). Also the key used to look a Site up by name (`GET /api/sites/{username}/{projectname}`, CLI, Obsidian plugin) — matched **exactly and case-sensitively**, never slugified. Unique per user (exact), enforced by a DB unique index on `(userId, projectName)`. Validated only enough to guarantee a derivable, URL-safe Subdomain: at least one alphanumeric character, no `/` or control characters, bounded length. Passing the wrong casing/characters is a caller error → 404. See ADR-0011.
@@ -77,7 +81,7 @@ _Avoid_: Link indexing, link building
 ### Annotations
 
 **Annotation**:
-A note a visitor leaves on a selected passage of a published Markdown page, with no account. Stored in the `Annotation` table against `(siteId, path)`, where `path` is the Page File's vault path, with a W3C TextQuote selector (the exact text plus up to 32 characters before and after), a TextPosition (start/end offsets in the rendered text of the page body), and the page's Blob sha at the time. Status is `open` or `resolved`. Turned on per site (`annotations` in site config); site-level off is final, and a page can opt out with `annotations: false` in frontmatter. Visible to everyone who can view the page; only the site owner can resolve or delete one. On the page, an annotation whose quote can't be found is **outdated** (still open, just labelled); elsewhere, "page edited since note" means the page's Blob sha changed after the note.
+A note a visitor leaves on a selected passage of a published Markdown page, with no account. Stored in the `Annotation` table against `(siteId, path)`, where `path` is the Page File's vault path, with a W3C TextQuote selector (the exact text plus up to 32 characters before and after), a TextPosition (start/end offsets in the rendered text of the page body), and the page's Blob sha at the time. Status is `open` or `resolved`. Turned on per site (`annotations` in site config); site-level off is final, and a page can opt out with `annotations: false` in frontmatter. Visible to everyone who can view the page; anyone who can comment on the page can resolve one or reply, and only the site owner or an editor can delete one. On the page, an annotation whose quote can't be found is **outdated** (still open, just labelled); elsewhere, "page edited since note" means the page's Blob sha changed after the note.
 _Avoid_: Comment (that is Giscus), highlight, review
 
 ### Tags

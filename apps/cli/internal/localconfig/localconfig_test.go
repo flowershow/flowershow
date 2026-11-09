@@ -56,6 +56,20 @@ func TestWriteAnonAndLoad(t *testing.T) {
 	}
 }
 
+func TestRead_AccountSiteWithSiteID(t *testing.T) {
+	dir := t.TempDir()
+	if err := Write(dir, &Config{SiteName: "bob/notes", SiteID: "site-1"}); err != nil {
+		t.Fatal(err)
+	}
+	cfg := Read(dir)
+	if cfg == nil || cfg.SiteName != "bob/notes" || cfg.SiteID != "site-1" {
+		t.Fatalf("got %+v", cfg)
+	}
+	if cfg.IsAnon() {
+		t.Fatal("an account link with a siteId is not anonymous")
+	}
+}
+
 func TestGitStateOutsideRepo(t *testing.T) {
 	if st := Git(t.TempDir()); st.InRepo {
 		t.Fatalf("temp dir should not be a git repo, got %+v", st)

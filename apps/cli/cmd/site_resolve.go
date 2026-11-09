@@ -11,6 +11,10 @@ import (
 
 // resolveSite picks the site for commands that take --name: the flag, else the
 // site linked to the current folder, else the user's only site.
+//
+// A bare name, and the "only site" shortcut, only ever pick sites the user
+// owns: a site shared with the user is reached only as "owner/name", so a
+// command can never act on someone else's site by accident.
 func resolveSite(nameFlag string) (*api.Site, error) {
 	siteName := nameFlag
 	if siteName == "" {
@@ -30,23 +34,51 @@ func resolveSite(nameFlag string) (*api.Site, error) {
 	}
 	sp.Stop()
 
+	var owned []*api.Site
+	for i := range sitesData.Sites {
+		if !sitesData.Sites[i].IsShared() {
+			owned = append(owned, &sitesData.Sites[i])
+		}
+	}
+
 	if siteName == "" {
-		if len(sitesData.Sites) == 0 {
+		if len(owned) == 0 {
+			if len(sitesData.Sites) > 0 {
+				return nil, fail("You have no sites of your own.\nSpecify a site shared with you with --name owner/name (see `fl list`).")
+			}
 			return nil, fail("You have no sites yet.\nRun `fl <path>` to publish your first site.")
 		}
-		if len(sitesData.Sites) > 1 {
+		if len(owned) > 1 {
 			fmt.Fprintf(os.Stderr, "\n%s\n\n", ui.Bold("Multiple sites found — specify one with --name:"))
-			for _, s := range sitesData.Sites {
-				fmt.Fprintf(os.Stderr, "  %s\n", ui.Cyan(s.ProjectName))
+			for _, s := range owned {
+				fmt.Fprintf(os.Stderr, "  %s\n", ui.Cyan(s.DisplayName()))
 			}
 			fmt.Fprintln(os.Stderr)
 			return nil, failSilently("multiple sites found; specify one with --name")
 		}
-		return &sitesData.Sites[0], nil
+		return owned[0], nil
 	}
-	for i := range sitesData.Sites {
-		if sitesData.Sites[i].ProjectName == siteName {
-			return &sitesData.Sites[i], nil
+
+	owner, name := parseSiteRef(siteName)
+	if owner == "" {
+		for _, s := range owned {
+			if s.ProjectName == name {
+				return s, nil
+			}
+		}
+	} else {
+		for i := range sitesData.Sites {
+			s := &sitesData.Sites[i]
+			if s.DisplayName() == siteName || (s.Owner != nil && s.Owner.Username == owner && s.ProjectName == name) {
+				return s, nil
+			}
+		}
+	}
+	if owner != "" {
+		// A shared site whose owner's Premium has lapsed is left out of the
+		// list; ask the server directly so the user gets the real reason.
+		if _, err := api.GetSiteByName(owner, name); err != nil {
+			return nil, fail(err.Error())
 		}
 	}
 	return nil, fail(fmt.Sprintf("Site %q not found.\nUse `fl list` to see all sites.", siteName))
