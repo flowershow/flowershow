@@ -1,3 +1,4 @@
+import { after } from 'next/server';
 import type { Plan } from '@prisma/client';
 import prisma from '@/server/db';
 import { getEntitlements } from './entitlements';
@@ -125,7 +126,16 @@ export async function noteStorageOverLimit(
         `[storage-limit] over limit (advisory): site=${site.id} scope=${violation.scope} limitBytes=${violation.limitBytes} projectedBytes=${violation.projectedBytes}`,
       );
       if (!opts.dryRun) {
-        await sendStorageWarning({ site, violation });
+        // After the response, so a slow or hung email provider can never
+        // hold up a publish. Outside a request scope `after` throws and the
+        // email is dropped (the outer catch logs it).
+        after(async () => {
+          try {
+            await sendStorageWarning({ site, violation });
+          } catch (error) {
+            console.error('[storage-limit] warning email failed', error);
+          }
+        });
       }
     }
   } catch (error) {

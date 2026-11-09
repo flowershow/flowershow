@@ -25,6 +25,7 @@ export async function sendStorageWarning(input: {
     userId: string;
     plan: 'FREE' | 'PREMIUM' | string | null;
     projectName: string;
+    storageAllowanceBytes?: bigint | null;
   };
   violation: StorageViolation;
   live?: boolean;
@@ -95,6 +96,8 @@ export async function sendStorageWarning(input: {
       siteName: site.projectName,
       scope: violation.scope,
       isPremium,
+      grandfathered:
+        violation.scope === 'site' && site.storageAllowanceBytes != null,
       usedBytes: violation.projectedBytes,
       limitBytes: violation.limitBytes,
       upgradeUrl,

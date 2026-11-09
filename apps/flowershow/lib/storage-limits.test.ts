@@ -2,6 +2,16 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/server/db', () => ({ default: { $queryRaw: vi.fn() } }));
 
+const afterCbs = vi.hoisted(() => [] as Array<() => unknown>);
+vi.mock('next/server', () => ({
+  after: (cb: () => unknown) => {
+    afterCbs.push(cb);
+  },
+}));
+const runAfter = async () => {
+  for (const cb of afterCbs.splice(0)) await cb();
+};
+
 const sendWarning = vi.hoisted(() => vi.fn());
 vi.mock('./storage-warning', () => ({ sendStorageWarning: sendWarning }));
 
@@ -218,6 +228,7 @@ describe('noteStorageOverLimit warning emails', () => {
     (prisma.$queryRaw as unknown as ReturnType<typeof vi.fn>).mockResolvedValue(
       [{ total: BigInt(0) }],
     );
+    afterCbs.length = 0;
     sendWarning.mockReset();
     sendWarning.mockResolvedValue(undefined);
     vi.spyOn(console, 'warn').mockImplementation(() => {});
@@ -225,23 +236,35 @@ describe('noteStorageOverLimit warning emails', () => {
 
   it('sends a warning when over the limit', async () => {
     await noteStorageOverLimit(site, 50 * MB, 250 * MB);
+    expect(sendWarning).not.toHaveBeenCalled(); // deferred until after the response
+    await runAfter();
     expect(sendWarning).toHaveBeenCalledTimes(1);
     expect(sendWarning.mock.calls[0]![0].violation.scope).toBe('site');
   });
 
   it('does not send on a dry run', async () => {
     await noteStorageOverLimit(site, 50 * MB, 250 * MB, { dryRun: true });
+    await runAfter();
     expect(sendWarning).not.toHaveBeenCalled();
   });
 
   it('does not send when under the limit', async () => {
     await noteStorageOverLimit(site, 10 * MB, 20 * MB);
+    await runAfter();
     expect(sendWarning).not.toHaveBeenCalled();
   });
 
   it('does not reject when the send throws', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     sendWarning.mockRejectedValue(new Error('boom'));
+    await expect(
+      noteStorageOverLimit(site, 50 * MB, 250 * MB),
+    ).resolves.toBeUndefined();
+    await expect(runAfter()).resolves.toBeUndefined();
+  });
+
+  it('resolves without waiting for a send that never resolves', async () => {
+    sendWarning.mockReturnValue(new Promise(() => {}));
     await expect(
       noteStorageOverLimit(site, 50 * MB, 250 * MB),
     ).resolves.toBeUndefined();

@@ -27,6 +27,7 @@ const site = (over: Record<string, unknown> = {}) => ({
   userId: 'u1',
   plan: 'FREE' as const,
   projectName: 'notes',
+  storageAllowanceBytes: null,
   ...over,
 });
 const siteViolation = {
@@ -133,6 +134,14 @@ describe('sendStorageWarning', () => {
     );
     expect(params.react.props.upgradeUrl).toBe('https://cloud.example.com');
     expect(params.idempotencyKey).toMatch(/^storage-over-limit:pool:u1:/);
+  });
+
+  it('marks grandfathered sites for site scope only', async () => {
+    const g = site({ storageAllowanceBytes: BigInt(500 * MB) });
+    await sendStorageWarning({ site: g, violation: siteViolation, live: true });
+    expect(send.mock.calls[0]![0].react.props.grandfathered).toBe(true);
+    await sendStorageWarning({ site: g, violation: poolViolation, live: true });
+    expect(send.mock.calls[1]![0].react.props.grandfathered).toBe(false);
   });
 
   it('gives Premium no button URL', async () => {

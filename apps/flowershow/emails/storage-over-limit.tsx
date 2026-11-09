@@ -12,7 +12,28 @@ export function formatStorageSize(bytes: number): string {
   return `${Math.round(bytes / MB)} MB`;
 }
 
+/**
+ * Format used and limit so they never read as equal: if they round to the same
+ * string, add a decimal, and if still equal round used up.
+ */
+export function formatStorageSizes(
+  usedBytes: number,
+  limitBytes: number,
+): { used: string; limit: string } {
+  const limit = formatStorageSize(limitBytes);
+  let used = formatStorageSize(usedBytes);
+  if (used !== limit) return { used, limit };
+  const unit = limitBytes >= GB ? GB : MB;
+  const label = limitBytes >= GB ? 'GB' : 'MB';
+  const fixed = (n: number) => `${Number(n.toFixed(1))} ${label}`;
+  used = fixed(usedBytes / unit);
+  if (used === limit) used = fixed(Math.ceil((usedBytes / unit) * 10) / 10);
+  return { used, limit };
+}
+
 export interface StorageOverLimitEmailProps {
+  /** Site has its own grandfathered allowance (site scope only). */
+  grandfathered?: boolean;
   userName?: string;
   siteName?: string;
   /** 'site': one site is over its limit. 'pool': the Free sites together are. */
@@ -52,12 +73,12 @@ export function StorageOverLimitEmail({
   siteName = 'your site',
   scope,
   isPremium,
+  grandfathered = false,
   usedBytes,
   limitBytes,
   upgradeUrl,
 }: StorageOverLimitEmailProps) {
-  const used = formatStorageSize(usedBytes);
-  const limit = formatStorageSize(limitBytes);
+  const { used, limit } = formatStorageSizes(usedBytes, limitBytes);
   const previewText = storageOverLimitSubject({ scope, isPremium, siteName });
 
   if (scope === 'pool') {
@@ -80,7 +101,7 @@ Upgrading your largest site to Premium takes it out of the shared total:`}
         <Markdown markdownCustomStyles={paragraphStyles}>
           {`If you'd like a hand working out what's taking up the space, just reply to this email.
 
-— The Flowershow team`}
+— Ola & Rufus`}
         </Markdown>
       </EmailLayout>
     );
@@ -96,24 +117,32 @@ Thanks for being on Premium. Your site **${siteName}** is now using ${used} of s
 
 Nothing has changed for your site, and you don't need to do anything right now. We'd like to hear what you're building and make sure Flowershow works well at this size, so if you have a moment, just reply to this email.
 
-— The Flowershow team`}
+— Ola & Rufus`}
         </Markdown>
       </EmailLayout>
     );
   }
 
+  const showUpgrade = !(grandfathered && limitBytes >= 5 * GB);
+  const limitPhrase = grandfathered
+    ? `the ${limit} set aside for this site`
+    : `the ${limit} included with the Free plan`;
   return (
     <EmailLayout previewText={previewText}>
       <Markdown markdownCustomStyles={paragraphStyles}>
         {`Hi ${userName},
 
-Your site **${siteName}** is now using ${used} of storage, which is more than the ${limit} included with the Free plan.
+Your site **${siteName}** is now using ${used} of storage, which is more than ${limitPhrase}.
 
-Nothing has changed for your site. It's still online and you can keep publishing. We just wanted to let you know.
+Nothing has changed for your site. It's still online and you can keep publishing. We just wanted to let you know.${
+          showUpgrade
+            ? `
 
-If the site is going to stay this size, Premium gives it 5 GB, along with a custom domain and full-text search:`}
+If the site is going to stay this size, Premium gives it 5 GB, along with a custom domain and full-text search:`
+            : ''
+        }`}
       </Markdown>
-      {upgradeUrl && (
+      {showUpgrade && upgradeUrl && (
         <Button className={buttonClass} href={upgradeUrl}>
           {`Upgrade ${siteName}`}
         </Button>
@@ -121,7 +150,7 @@ If the site is going to stay this size, Premium gives it 5 GB, along with a cust
       <Markdown markdownCustomStyles={paragraphStyles}>
         {`If you didn't expect it to be this big, large images or videos are usually the reason. And if Flowershow isn't quite fitting what you need, just reply to this email and we'll help.
 
-— The Flowershow team`}
+— Ola & Rufus`}
       </Markdown>
     </EmailLayout>
   );

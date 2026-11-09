@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { GB, MB } from '@/lib/entitlements';
 import StorageOverLimitEmail, {
   formatStorageSize,
+  formatStorageSizes,
   storageOverLimitSubject,
 } from './storage-over-limit';
 
@@ -23,6 +24,67 @@ describe('formatStorageSize', () => {
   });
 });
 
+describe('formatStorageSizes', () => {
+  it('shows a decimal when used and limit would round the same', () => {
+    expect(formatStorageSizes(200.4 * MB, 200 * MB)).toEqual({
+      used: '200.4 MB',
+      limit: '200 MB',
+    });
+  });
+  it('rounds used up when still equal', () => {
+    expect(formatStorageSizes(200.04 * MB, 200 * MB)).toEqual({
+      used: '200.1 MB',
+      limit: '200 MB',
+    });
+  });
+  it('handles GB', () => {
+    expect(formatStorageSizes(1.04 * GB, GB)).toEqual({
+      used: '1.1 GB',
+      limit: '1 GB',
+    });
+  });
+  it('leaves normal values alone', () => {
+    expect(formatStorageSizes(250 * MB, 200 * MB)).toEqual({
+      used: '250 MB',
+      limit: '200 MB',
+    });
+  });
+});
+
+describe('grandfathered copy', () => {
+  it('says set aside for this site and keeps the Premium pitch under 5 GB', async () => {
+    const html = await render(
+      <StorageOverLimitEmail
+        {...base}
+        scope="site"
+        isPremium={false}
+        grandfathered
+        usedBytes={600 * MB}
+        limitBytes={500 * MB}
+      />,
+    );
+    expect(html).toContain('the 500 MB set aside for this site');
+    expect(html).not.toContain('included with the Free plan');
+    expect(html).toContain('Premium gives it 5 GB');
+  });
+  it('drops the Premium line and button at 5 GB or more', async () => {
+    const html = await render(
+      <StorageOverLimitEmail
+        {...base}
+        scope="site"
+        isPremium={false}
+        grandfathered
+        usedBytes={6 * GB}
+        limitBytes={5.5 * GB}
+      />,
+    );
+    expect(html).toContain('set aside for this site');
+    expect(html).not.toContain('Premium gives it');
+    expect(html).not.toContain(base.upgradeUrl);
+    expect(html).toContain('just reply to this email');
+  });
+});
+
 describe('StorageOverLimitEmail', () => {
   it('renders the Free site variant', async () => {
     const html = await render(
@@ -34,7 +96,7 @@ describe('StorageOverLimitEmail', () => {
     expect(html).toContain('Premium gives it 5 GB');
     expect(html).toContain('Upgrade notes');
     expect(html).toContain(base.upgradeUrl);
-    expect(html).toContain('The Flowershow team');
+    expect(html).toContain('Ola &amp; Rufus');
     expect(html).not.toMatch(/\$\d/);
   });
 
