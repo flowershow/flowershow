@@ -364,6 +364,8 @@ export const stripeRouter = createTRPCRouter({
       cancelAtPeriodEnd: account?.cancelAtPeriodEnd ?? false,
       currentPeriodEnd: account?.currentPeriodEnd ?? null,
       siteAllowance: account?.siteAllowance ?? null,
+      // The Pro allowance, for the no-plan card (independent of any account row).
+      proSiteAllowance: ACCOUNT_PLAN_SITE_ALLOWANCE.PRO,
       creditBalanceCents,
       prices: {
         PRO: { month: proMonth, year: proYear },

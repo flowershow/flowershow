@@ -125,7 +125,7 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
                   >
                     <p className="font-medium">
                       {p === 'PRO'
-                        ? `Pro: up to ${data.siteAllowance ?? 5} sites on Premium`
+                        ? `Pro: up to ${data.proSiteAllowance} sites on Premium`
                         : 'Unlimited: every site on Premium'}
                     </p>
                     {price && (
@@ -154,7 +154,7 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
           <>
             <p className="text-lg font-medium">
               {`${PLAN_NAME[plan]}, ${coveredCount} of ${
-                plan === 'PRO' ? (data.siteAllowance ?? 5) : 'all'
+                plan === 'PRO' ? data.proSiteAllowance : 'all'
               } sites covered`}
             </p>
             {data.creditBalanceCents > 0 && (

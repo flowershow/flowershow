@@ -78,6 +78,7 @@ const base: AccountPlanData = {
   cancelAtPeriodEnd: false,
   currentPeriodEnd: null,
   siteAllowance: null,
+  proSiteAllowance: 7,
   creditBalanceCents: 0,
   prices,
   sites: [],
@@ -93,9 +94,9 @@ afterEach(() => {
 
 describe('AccountBilling without a plan', () => {
   it('shows both cards with live prices, annual first', () => {
-    render(<AccountBilling data={{ ...base, siteAllowance: 5 }} />);
+    render(<AccountBilling data={base} />);
     expect(
-      screen.getByText('Pro: up to 5 sites on Premium'),
+      screen.getByText('Pro: up to 7 sites on Premium'),
     ).toBeInTheDocument();
     expect(
       screen.getByText('Unlimited: every site on Premium'),
@@ -137,6 +138,7 @@ describe('AccountBilling with Pro', () => {
     interval: 'year',
     status: 'active',
     siteAllowance: 5,
+    proSiteAllowance: 5,
     sites: [
       ...covered,
       site('f'),

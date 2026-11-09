@@ -495,6 +495,7 @@ describe('stripe.getAccountPlan', () => {
       enabled: false,
       plan: null,
       siteAllowance: null,
+      proSiteAllowance: 5,
       creditBalanceCents: 0,
     });
     expect(result.sites.map((s) => s.id)).toEqual(['a', 'b']);
