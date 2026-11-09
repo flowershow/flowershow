@@ -340,7 +340,7 @@ That branch is docs-only so far; its plan adds `SiteMember`, `SiteInvite`, `Publ
 
 ## Launch checklist (phase 3, `flowershow-a7k`, not this plan)
 
-Create the Pro and Unlimited products and four prices in Stripe (test mode first); fill `ACCOUNT_PRICE_IDS` in a commit; add `customer.subscription.created` to the webhook endpoint's events; configure the billing portal to allow switching between the two account products; grandfather the three multi-site accounts (Pro subscription created on an account customer with `platform`, `kind: account` and `userId` metadata and a forever `amount_off` coupon; consolidation runs on sync); flip `ACCOUNT_PLANS_LIVE`; ship `fl upgrade` (Task 12 note); then delete the ladder, `getBundleInfo`, `BUNDLE_TIERS` and the coupon env vars.
+Create the Pro and Unlimited products and four prices in Stripe (test mode first); run one full purchase, consolidation, plan change and cancellation against Stripe test mode, since every phase 2 test mocks Stripe (check that metadata merges across the two `update` calls, that the invoice line period equals `current_period_*`, and `cancel` with `prorate: false`); fill `ACCOUNT_PRICE_IDS` in a commit; add `customer.subscription.created` to the webhook endpoint's events; configure the billing portal to allow switching between the two account products; grandfather the three multi-site accounts (Pro subscription created on an account customer with `platform`, `kind: account` and `userId` metadata and a forever `amount_off` coupon; consolidation runs on sync); flip `ACCOUNT_PLANS_LIVE`; ship `fl upgrade` (Task 12 note); then delete the ladder, `getBundleInfo`, `BUNDLE_TIERS` and the coupon env vars.
 
 ## Follow-ups (beads)
 
