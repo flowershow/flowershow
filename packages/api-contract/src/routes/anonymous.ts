@@ -109,7 +109,7 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
         description: 'Rate limit exceeded',
         content: {
           'application/json': {
-            schema: z.object({ error: z.string(), message: z.string() }),
+            schema: z.object({ error: z.string() }),
           },
         },
       },
@@ -315,7 +315,7 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
       '401': {
         description: 'Wrong password',
         content: {
-          'application/json': { schema: z.object({ error: z.string() }) },
+          'application/json': { schema: z.object({ error: z.string(), message: z.string() }) },
         },
       },
     },
