@@ -92,7 +92,7 @@ Notes are written by other people. Each one is wrapped in `<untrusted-annotation
 
 ## Resolving and deleting annotations
 
-Anyone who can comment can resolve or reopen a comment on the page (see [Replying and resolving](#replying-and-resolving)). Only the site owner can delete comments:
+Anyone who can comment can resolve or reopen a comment on the page (see [Replying and resolving](#replying-and-resolving)). Only the site owner or an [[collaborators|editor]] can delete comments:
 
 - **On the page:** click **View signed in** on your site's page in the dashboard, or open the comments panel on your site and choose **Site owner? Sign in to manage comments**. You come back to the page signed in as the owner (an **Owner** badge shows in the comments bar), with **Delete** on each comment, and your replies carry the **Author** badge. This sign-in is for that one site only, lasts 7 days, and works on custom domains too; **Sign out as owner** at the bottom of the panel ends it.
 - **Dashboard:** open your site and go to the **Annotations** tab, which shows the open count. Resolve or reopen a note, delete one, or delete all.
