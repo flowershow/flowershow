@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## Unreleased
+## 2.11.0
 
 - Sites shared with you: `fl list` now also shows sites other people have shared with you (you are an editor), under "Shared with you", as `owner/name`. Publish to one with `fl --name owner/name <folder>`; `--overwrite` is required unless the folder is already linked to that site, as publishing replaces the site's content. Sharing needs the site owner to be on Premium; if it lapses, `fl` says so and publishes nothing.
 - A bare name never means a shared site: `--name notes`, `fl settings`, `fl annotations ...` and `fl delete notes` only match sites you own, and with no `--name` only your own sites count as "your only site". Reach a shared site as `owner/name`. Only the owner can delete a site.

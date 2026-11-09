@@ -1,6 +1,6 @@
 ---
 title: Invite editors to your site
-date: 2026-11-17
+date: 2026-11-09
 description: Invite people by email to publish to your site and manage it with you, each with their own account. Included with Premium.
 authors:
   - rufuspollock
