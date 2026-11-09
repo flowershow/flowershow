@@ -258,3 +258,20 @@ func TestPublish_NameAliceSlashBlog_NoRepointWarning(t *testing.T) {
 		t.Fatalf("unexpected warning:\n%s", out)
 	}
 }
+
+func TestPublish_SharedRef_SameNameDifferentID_NeedsOverwrite(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	f.share("bob", "notes")
+	dir := makeFolder(t, "x", "")
+	_ = localconfig.Write(dir, &localconfig.Config{SiteName: "bob/notes", SiteID: "id-old"})
+	err := runPublish([]string{dir}, "bob/notes", true, false, false)
+	if err == nil || !strings.Contains(err.Error(), "--overwrite") {
+		t.Fatalf("got %v", err)
+	}
+	if f.syncedTo("id-bob-notes") {
+		t.Fatal("must not sync")
+	}
+	if cfg := localconfig.Read(dir); cfg.SiteID != "id-old" {
+		t.Fatalf("link changed: %+v", cfg)
+	}
+}

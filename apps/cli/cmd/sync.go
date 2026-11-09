@@ -71,7 +71,7 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 		}
 	}
 	if owner, _ := parseSiteRef(ref); owner != "" {
-		return fail(fmt.Sprintf("%q is a site owned by someone else, which `fl sync` can't update.\nNothing was synced. Use `fl --name %s %s` instead.", ref, ref, shellQuoteAll([]string{inputPath})))
+		return fail(fmt.Sprintf("%q is an owner/name reference, which `fl sync` doesn't support.\nNothing was synced. Use `fl --name %s %s` instead.", ref, ref, shellQuoteAll([]string{inputPath})))
 	}
 
 	sp := ui.NewSpinner()
