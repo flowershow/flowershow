@@ -15,13 +15,20 @@ import { registerDcrClient, resolveClient } from './clients';
 import { SafeFetchError } from './safe-fetch';
 
 const CIMD_URL = 'https://claude.ai/oauth/mcp-oauth-client-metadata';
+// claude.ai's live document (fetched 2026-11-09), including the jwt-bearer
+// grant it declares but we don't offer.
 const doc = (over: Record<string, unknown> = {}) => ({
   client_id: CIMD_URL,
   client_name: 'Claude',
+  client_uri: 'https://claude.ai',
   redirect_uris: ['https://claude.ai/api/mcp/auth_callback'],
-  token_endpoint_auth_method: 'none',
-  grant_types: ['authorization_code', 'refresh_token'],
+  grant_types: [
+    'authorization_code',
+    'refresh_token',
+    'urn:ietf:params:oauth:grant-type:jwt-bearer',
+  ],
   response_types: ['code'],
+  token_endpoint_auth_method: 'none',
   ...over,
 });
 const jsonResponse = (body: unknown, contentType = 'application/json') => ({

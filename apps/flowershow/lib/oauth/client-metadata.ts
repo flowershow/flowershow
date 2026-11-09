@@ -98,18 +98,16 @@ export function validateClientMetadata(raw: unknown): MetadataResult {
     return invalid('Client secrets are not supported');
   }
 
+  // A client may declare grants we don't offer (claude.ai's document lists
+  // urn:ietf:params:oauth:grant-type:jwt-bearer). The token endpoint only
+  // issues authorization_code and refresh_token, so extra entries are
+  // ignored; the client must still be able to use authorization_code.
   const grantTypes = m.grant_types;
-  if (grantTypes !== undefined) {
-    if (
-      !Array.isArray(grantTypes) ||
-      !grantTypes.every(
-        (g) => g === 'authorization_code' || g === 'refresh_token',
-      )
-    ) {
-      return invalid(
-        'Only the authorization_code and refresh_token grant types are supported',
-      );
-    }
+  if (
+    grantTypes !== undefined &&
+    (!Array.isArray(grantTypes) || !grantTypes.includes('authorization_code'))
+  ) {
+    return invalid('The authorization_code grant type is required');
   }
   const responseTypes = m.response_types;
   if (responseTypes !== undefined) {
