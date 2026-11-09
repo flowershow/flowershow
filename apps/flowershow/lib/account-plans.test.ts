@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('@/env.mjs', () => ({
   env: {
     STRIPE_SECRET_KEY: 'sk_test_x',
+    NEXT_PUBLIC_CLOUD_DOMAIN: 'cloud.test',
     NEXT_PUBLIC_STRIPE_PREMIUM_MONTHLY_PRICE_ID: 'price_monthly',
     NEXT_PUBLIC_STRIPE_PREMIUM_YEARLY_PRICE_ID: 'price_yearly',
   },
@@ -14,6 +15,7 @@ import {
   ACCOUNT_PLAN_SITE_ALLOWANCE,
   ACCOUNT_PRICE_IDS,
   accountPlanForPriceId,
+  accountBillingUrl,
   accountPlansEnabled,
   isCoveringAccountStatus,
   isLiveSiteStatus,
@@ -178,5 +180,11 @@ describe('shipped constants', () => {
   it('has no price ids configured', () => {
     expect(accountPlanForPriceId('price_pro_month_test')).toBeNull();
     expect(accountPlansEnabled()).toBe(false);
+  });
+});
+
+describe('accountBillingUrl', () => {
+  it('points at the account billing page on the cloud domain', () => {
+    expect(accountBillingUrl()).toBe('https://cloud.test/settings/billing');
   });
 });
