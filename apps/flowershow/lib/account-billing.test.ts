@@ -126,8 +126,8 @@ describe('consolidateSiteSubscriptions', () => {
     stripeCustomerId: 'cus_acct_1',
     stripeSubscriptionId: 'sub_acct_1',
   };
-  // Account start_date falls a quarter of the way through the per-site period.
-  const ACCOUNT_START = 1_900_001_000;
+  // Consolidation first runs a quarter of the way through the per-site period.
+  const CONSOLIDATION_NOW = 1_900_001_000;
   const PERIOD_START = 1_900_000_000;
   const PERIOD_END = 1_900_004_000;
   const AMOUNT_PAID = 1000;
@@ -137,6 +137,7 @@ describe('consolidateSiteSubscriptions', () => {
   let balanceTransactions: any[];
   let invoices: Record<string, any[]>;
   let siteStatuses: Record<string, string>;
+  let siteMetadata: Record<string, Record<string, string>>;
   let accountSubscription: Record<string, unknown>;
 
   async function* paged<T>(items: T[]) {
@@ -218,10 +219,14 @@ describe('consolidateSiteSubscriptions', () => {
     balanceTransactions = [];
     invoices = {};
     siteStatuses = {};
+    siteMetadata = {};
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date(CONSOLIDATION_NOW * 1000));
     accountSubscription = {
       id: ACCOUNT.stripeSubscriptionId,
       status: 'active',
-      start_date: ACCOUNT_START,
+      // Long before the per-site period: the credit must not depend on it.
+      start_date: PERIOD_START - 200 * 86_400,
       currency: 'usd',
     };
 
@@ -233,6 +238,7 @@ describe('consolidateSiteSubscriptions', () => {
         : {
             id,
             status: siteStatuses[id] ?? 'active',
+            metadata: siteMetadata[id] ?? {},
             current_period_start: PERIOD_START,
             current_period_end: PERIOD_END,
           }) as any);
@@ -249,7 +255,10 @@ describe('consolidateSiteSubscriptions', () => {
       return params;
     }) as any);
     mockUpdate.mockReset();
-    mockUpdate.mockResolvedValue({} as any);
+    mockUpdate.mockImplementation((async (id: string, params: any) => {
+      siteMetadata[id] = { ...siteMetadata[id], ...params.metadata };
+      return {};
+    }) as any);
     mockCancel.mockReset();
     mockCancel.mockResolvedValue({} as any);
   });
@@ -287,14 +296,21 @@ describe('consolidateSiteSubscriptions', () => {
     expect(consolidatedRows()).toEqual(['sub_a', 'sub_b']);
   });
 
-  it('credits, then tags, then cancels, then records', async () => {
+  it('stamps, credits, tags, cancels, then records', async () => {
     seed(['a']);
 
     await consolidateSiteSubscriptions(ACCOUNT);
 
+    const callIndex = (key: string) =>
+      mockUpdate.mock.calls.findIndex(
+        ([, params]) => params?.metadata?.[key] !== undefined,
+      );
+    const updateOrder = (key: string) =>
+      mockUpdate.mock.invocationCallOrder[callIndex(key)]!;
     const order = [
+      updateOrder('consolidationStartedAt'),
       mockCreateCredit.mock.invocationCallOrder[0]!,
-      mockUpdate.mock.invocationCallOrder[0]!,
+      updateOrder('reason'),
       mockCancel.mock.invocationCallOrder[0]!,
       db.subscription.update.mock.invocationCallOrder[0]!,
     ];
@@ -470,17 +486,61 @@ describe('consolidateSiteSubscriptions', () => {
 
   it('retries compute the same credit', async () => {
     seed(['a']);
-    vi.useFakeTimers({ toFake: ['Date'] });
-    vi.setSystemTime(new Date((ACCOUNT_START + 60) * 1000));
     mockCreateCredit.mockRejectedValueOnce(new Error('stripe down'));
 
     await expect(consolidateSiteSubscriptions(ACCOUNT)).rejects.toThrow();
-    vi.setSystemTime(new Date((ACCOUNT_START + 86_400) * 1000));
+    // A day on is past this period's end: only the stamp gives a credit at all.
+    vi.setSystemTime(new Date((CONSOLIDATION_NOW + 86_400) * 1000));
     await consolidateSiteSubscriptions(ACCOUNT);
 
     const [first, second] = mockCreateCredit.mock.calls;
     expect(first![1].amount).toBe(-EXPECTED_CREDIT);
     expect(second![1].amount).toBe(first![1].amount);
     expect(second![2]).toEqual(first![2]);
+    expect(siteMetadata.sub_a!.consolidationStartedAt).toBe(
+      String(CONSOLIDATION_NOW),
+    );
+  });
+
+  it('late coverage credits only the unused time', async () => {
+    seed(['a']);
+    const span = PERIOD_END - PERIOD_START;
+    siteMetadata.sub_a = {
+      consolidationStartedAt: String(PERIOD_START + span * 0.75),
+    };
+
+    const result = await consolidateSiteSubscriptions(ACCOUNT);
+
+    expect(result.creditedCents).toBe(AMOUNT_PAID * 0.25);
+    expect(mockCreateCredit.mock.calls[0]![1].amount).toBe(-AMOUNT_PAID * 0.25);
+  });
+
+  it('does not re-stamp when the stamp exists', async () => {
+    seed(['a']);
+    siteMetadata.sub_a = {
+      consolidationStartedAt: String(CONSOLIDATION_NOW - 100),
+    };
+
+    await consolidateSiteSubscriptions(ACCOUNT);
+
+    expect(mockUpdate).not.toHaveBeenCalledWith(
+      'sub_a',
+      expect.objectContaining({
+        metadata: { consolidationStartedAt: expect.anything() },
+      }),
+    );
+    expect(siteMetadata.sub_a!.consolidationStartedAt).toBe(
+      String(CONSOLIDATION_NOW - 100),
+    );
+  });
+
+  it('stamps a subscription that has no stamp with the current time', async () => {
+    seed(['a']);
+
+    await consolidateSiteSubscriptions(ACCOUNT);
+
+    expect(mockUpdate).toHaveBeenCalledWith('sub_a', {
+      metadata: { consolidationStartedAt: String(CONSOLIDATION_NOW) },
+    });
   });
 });

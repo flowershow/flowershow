@@ -39,7 +39,8 @@ export async function getOrCreateStripeCustomer(
 
 /**
  * The unused share of a paid period, in cents, floored. `now` before the period
- * is treated as the period start, so a credit never exceeds what was paid.
+ * is treated as the period start, so a credit never exceeds what was paid (a
+ * stamp can predate the period if the subscription renews before a retry).
  */
 export function computeUnusedCreditCents(input: {
   amountPaidCents: number;
@@ -94,13 +95,28 @@ async function hasConsolidationCredit(
   return false;
 }
 
-// Credits the unused prepaid time to the account customer. Returns the cents
-// credited. "Now" is the account's start_date, so a retry computes the same
-// amount and the idempotency key stays valid.
+// When consolidation of this subscription began, stored on the subscription so
+// a retry computes the same credit however much later it runs.
+async function consolidationStamp(
+  subscription: Stripe.Subscription,
+): Promise<number> {
+  const stored = Number(subscription.metadata?.consolidationStartedAt);
+  if (stored > 0) return stored;
+
+  const consolidationStartedAt = Math.floor(Date.now() / 1000);
+  await stripe.subscriptions.update(subscription.id, {
+    metadata: { consolidationStartedAt: String(consolidationStartedAt) },
+  });
+  return consolidationStartedAt;
+}
+
+// Credits the unused prepaid time, as of `now`, to the account customer.
+// Returns the cents credited.
 async function creditUnusedTime(
   siteSubscription: Stripe.Subscription,
   accountSubscription: Stripe.Subscription,
   customerId: string,
+  now: number,
 ): Promise<number> {
   const invoice = await findCurrentPeriodInvoice(siteSubscription);
   if (!invoice) return 0;
@@ -124,7 +140,7 @@ async function creditUnusedTime(
     amountPaidCents: invoice.amount_paid,
     periodStart: siteSubscription.current_period_start,
     periodEnd: siteSubscription.current_period_end,
-    now: accountSubscription.start_date,
+    now,
   });
   if (cents === 0) return 0;
 
@@ -145,8 +161,8 @@ async function creditUnusedTime(
 }
 
 /**
- * Move the per-site subscriptions the account plan covers onto it: credit the
- * unused prepaid time, tag the subscription, cancel it, record that.
+ * Move the per-site subscriptions the account plan covers onto it: stamp the
+ * start, credit the unused prepaid time, tag, cancel, record that.
  *
  * Safe to repeat. Any step that throws propagates so Stripe retries the event,
  * and the retry resumes: consolidatedAt skips finished subscriptions, the
@@ -215,11 +231,13 @@ export async function consolidateSiteSubscriptions(account: {
     // Already canceled (say the cancel worked but the write below failed): only
     // the record is missing.
     if (isLiveSiteStatus(siteSubscription.status)) {
+      const now = await consolidationStamp(siteSubscription);
       if (!(await hasConsolidationCredit(account.stripeCustomerId, id))) {
         result.creditedCents += await creditUnusedTime(
           siteSubscription,
           accountSubscription,
           account.stripeCustomerId,
+          now,
         );
       }
       await stripe.subscriptions.update(id, {

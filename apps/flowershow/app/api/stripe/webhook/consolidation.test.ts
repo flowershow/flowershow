@@ -306,6 +306,33 @@ describe('consolidated per-site events', () => {
     expectSilent();
   });
 
+  it('the stamp update is an ordinary update, and arriving late does not revive a canceled row', async () => {
+    seedConsolidating();
+    const stampEvent = () =>
+      siteEvent('customer.subscription.updated', 'sub_site_1', {
+        status: 'active',
+        metadata: {
+          platform: 'flowershow',
+          siteId: 'site-1',
+          consolidationStartedAt: String(PERIOD_START),
+        },
+      });
+
+    await fire(stampEvent());
+    expect(db.snapshot().subscriptions[0]!.status).toBe('active');
+    expectSilent();
+
+    await fire(fixture('site-subscription-deleted-consolidated'));
+    await fire(stampEvent());
+
+    expect(db.snapshot().subscriptions[0]!.status).toBe('canceled');
+    expect(sitesOf()['site-1']).toMatchObject({
+      plan: 'PREMIUM',
+      planSource: 'ACCOUNT',
+    });
+    expectSilent();
+  });
+
   it('a consolidated update with cancel_at_period_end grants no bonus and sends nothing', async () => {
     seedConsolidating();
 

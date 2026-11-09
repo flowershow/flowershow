@@ -286,28 +286,34 @@ export async function POST(req: Request) {
             throw new Error('Missing required subscription data');
           }
 
+          // Stripe does not order events and canceled is final: a late update
+          // (consolidation sends two just before cancelling) must not turn a
+          // canceled row live again.
+          if (
+            dbSubscription.status === 'canceled' &&
+            subscription.status !== 'canceled'
+          ) {
+            break;
+          }
+
           // Folded into an account plan: the site stays Premium, so this is
           // not a cancellation (no email, no cancel bonus, no domain removal).
           if (subscription.metadata?.reason === 'consolidated') {
-            // Stripe does not order events: a late metadata update must not
-            // turn a canceled row live again.
-            if (dbSubscription.status !== 'canceled') {
-              await prisma.subscription.update({
-                where: { stripeSubscriptionId: subscription.id },
-                data: {
-                  status: subscription.status,
-                  currentPeriodStart: new Date(
-                    subscription.current_period_start * 1000,
-                  ),
-                  currentPeriodEnd: new Date(
-                    subscription.current_period_end * 1000,
-                  ),
-                  cancelAtPeriodEnd: subscription.cancel_at_period_end,
-                  stripePriceId: priceId,
-                  interval: interval,
-                },
-              });
-            }
+            await prisma.subscription.update({
+              where: { stripeSubscriptionId: subscription.id },
+              data: {
+                status: subscription.status,
+                currentPeriodStart: new Date(
+                  subscription.current_period_start * 1000,
+                ),
+                currentPeriodEnd: new Date(
+                  subscription.current_period_end * 1000,
+                ),
+                cancelAtPeriodEnd: subscription.cancel_at_period_end,
+                stripePriceId: priceId,
+                interval: interval,
+              },
+            });
             await reconcileUserSitePlans(dbSubscription.site.userId);
             break;
           }
