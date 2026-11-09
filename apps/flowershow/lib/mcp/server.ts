@@ -25,6 +25,10 @@ export type SiteSummary = {
   name: string;
   url: string;
   lastPublishedAt: string | null;
+  /** `editor` for a site shared with the caller; `owner` for their own. */
+  role: 'owner' | 'editor';
+  /** Username of the site's owner. */
+  owner: string;
 };
 
 export type ClaimedSite = { siteId: string; name: string; url: string };
@@ -218,7 +222,7 @@ export function createFlowershowMcpServer(
       {
         title: 'List my Flowershow sites',
         description:
-          'List the sites in the signed-in Flowershow account, with their siteId (use it with list-files to see what a site has, and with publish to update it), URL and when each was last published.',
+          'List the sites in the signed-in Flowershow account and sites shared with it (role editor), with their siteId (use it with list-files to see what a site has, and with publish to update it), URL and when each was last published.',
         outputSchema: {
           sites: z.array(
             z.object({
@@ -226,6 +230,8 @@ export function createFlowershowMcpServer(
               name: z.string(),
               url: z.string(),
               lastPublishedAt: z.string().nullable(),
+              role: z.enum(['owner', 'editor']),
+              owner: z.string(),
             }),
           ),
         },
@@ -241,7 +247,7 @@ export function createFlowershowMcpServer(
                 ? sites
                     .map(
                       (s) =>
-                        `${s.name} (${s.siteId}): ${s.url}${s.lastPublishedAt ? ` — last published ${s.lastPublishedAt}` : ''}`,
+                        `${s.role === 'editor' ? `${s.owner}/` : ''}${s.name} (${s.siteId}): ${s.url}${s.role === 'editor' ? ' (editor)' : ''}${s.lastPublishedAt ? ` — last published ${s.lastPublishedAt}` : ''}`,
                     )
                     .join('\n')
                 : 'No sites yet.',

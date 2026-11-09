@@ -429,4 +429,54 @@ describe('realMcpDeps', () => {
       ).rejects.toBeInstanceOf(ApiError);
     });
   });
+  describe('listSites', () => {
+    it('returns owned and Premium shared sites with role and owner', async () => {
+      const findMany = prisma.site.findMany as ReturnType<typeof vi.fn>;
+      findMany.mockResolvedValue([
+        {
+          id: 's1',
+          userId: 'u1',
+          projectName: 'notes',
+          customDomain: null,
+          subdomain: 'notes-alice',
+          user: { username: 'alice' },
+          publishes: [],
+        },
+        {
+          id: 's2',
+          userId: 'u2',
+          projectName: 'notes',
+          customDomain: null,
+          subdomain: 'notes-bob',
+          user: { username: 'bob' },
+          publishes: [{ startedAt: new Date('2026-10-18T09:00:00.000Z') }],
+        },
+      ]);
+      const sites = await realMcpDeps().listSites('u1');
+      expect(findMany).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: {
+            OR: [
+              { userId: 'u1' },
+              { members: { some: { userId: 'u1' } }, plan: 'PREMIUM' },
+            ],
+          },
+        }),
+      );
+      expect(sites).toEqual([
+        expect.objectContaining({
+          siteId: 's1',
+          role: 'owner',
+          owner: 'alice',
+          lastPublishedAt: null,
+        }),
+        expect.objectContaining({
+          siteId: 's2',
+          role: 'editor',
+          owner: 'bob',
+          lastPublishedAt: '2026-10-18T09:00:00.000Z',
+        }),
+      ]);
+    });
+  });
 });

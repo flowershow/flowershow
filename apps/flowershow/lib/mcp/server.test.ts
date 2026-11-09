@@ -54,6 +54,8 @@ function deps(over: Partial<McpDeps> = {}): McpDeps {
         name: 'notes',
         url: 'https://notes-alice.flowershow.me',
         lastPublishedAt: '2026-10-18T09:00:00.000Z',
+        role: 'owner',
+        owner: 'alice',
       },
     ]),
     listFiles: vi.fn().mockResolvedValue([
@@ -171,8 +173,35 @@ describe('Flowershow MCP server', () => {
           name: 'notes',
           url: 'https://notes-alice.flowershow.me',
           lastPublishedAt: '2026-10-18T09:00:00.000Z',
+          role: 'owner',
+          owner: 'alice',
         },
       ],
+    });
+  });
+
+  it('list-sites text marks shared sites as owner/name', async () => {
+    const d = deps();
+    (d.listSites as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        siteId: 's2',
+        name: 'notes',
+        url: 'https://notes-bob.flowershow.me',
+        lastPublishedAt: null,
+        role: 'editor',
+        owner: 'bob',
+      },
+    ]);
+    const client = await connect(USER, d);
+    const res = await client.callTool({ name: 'list-sites', arguments: {} });
+    expect(res.content).toEqual([
+      {
+        type: 'text',
+        text: 'bob/notes (s2): https://notes-bob.flowershow.me (editor)',
+      },
+    ]);
+    expect(res.structuredContent).toMatchObject({
+      sites: [{ siteId: 's2', role: 'editor', owner: 'bob' }],
     });
   });
 

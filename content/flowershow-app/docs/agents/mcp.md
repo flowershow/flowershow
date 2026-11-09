@@ -77,13 +77,13 @@ Chat-app connectors can't sign in to your account yet. From MCP clients that let
 }
 ```
 
-With a token, `list-sites` shows your sites, and `publish` updates the one you name by its `siteId`, in any conversation. Before changing a site, your AI can see which files it has with `list-files` and read a page's current text with `read-file`, so it adds or edits pages and leaves the rest of the site as it was. In local agents with a terminal, the [Flowershow skill](/docs/agents/skills) and `fl` are usually the better fit.
+With a token, `list-sites` shows your sites and the sites shared with you, and `publish` updates the one you name by its `siteId`, in any conversation. Before changing a site, your AI can see which files it has with `list-files` and read a page's current text with `read-file`, so it adds or edits pages and leaves the rest of the site as it was. In local agents with a terminal, the [Flowershow skill](/docs/agents/skills) and `fl` are usually the better fit.
 
 ## Tools
 
 | Tool | What it does |
 |---|---|
 | `publish` | Publishes files (text, or base64 for binary). Without `siteId`: creates a new site and returns `liveUrl`, `claimUrl`, `claimToken` and `expiresAt`. With `siteId` (plus `claimToken` when not using an account token): adds or updates the files sent and keeps the others. `delete` lists paths to remove; `replaceWholeSite: true` makes the files sent the whole site, removing everything else. If that would remove existing files, the call is refused with the count and paths, and goes ahead only when repeated with `confirmDeleteCount` set to that count. |
-| `list-sites` | Account tokens only: lists your sites with their `siteId` and URL. |
+| `list-sites` | Account tokens only: lists your sites, and sites shared with you as an editor, with their `siteId`, URL, `role` (`owner` or `editor`) and `owner` username. |
 | `list-files` | Account tokens only: lists the files on one of your sites (`siteId`) with their size and last change. Returns up to 1,000 paths; `folder` lists one folder. |
 | `read-file` | Account tokens only: returns the current text of one file (`siteId`, `path`), so the AI can change a page without losing what's on it. Text files only (Markdown, HTML, CSS, JSON, …), up to 256 KB. |

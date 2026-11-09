@@ -14,6 +14,7 @@ import PostHogClient from '@/lib/server-posthog';
 import {
   PREMIUM_REQUIRED,
   PREMIUM_REQUIRED_MESSAGE,
+  isSiteOwner,
   siteAuthzSelect,
   siteRole,
 } from '@/lib/site-authz';
@@ -245,10 +246,17 @@ export function realMcpDeps(caller?: AnonCaller): McpDeps {
 
     async listSites(userId) {
       const sites = await prisma.site.findMany({
-        where: { userId },
+        // Lapsed shared sites are left out; only the dashboard shows them.
+        where: {
+          OR: [
+            { userId },
+            { members: { some: { userId } }, plan: 'PREMIUM' as const },
+          ],
+        },
         orderBy: { updatedAt: 'desc' },
         select: {
           id: true,
+          userId: true,
           projectName: true,
           customDomain: true,
           subdomain: true,
@@ -265,6 +273,8 @@ export function realMcpDeps(caller?: AnonCaller): McpDeps {
         name: s.projectName,
         url: getSiteUrl(s),
         lastPublishedAt: s.publishes[0]?.startedAt.toISOString() ?? null,
+        role: isSiteOwner(userId, s) ? ('owner' as const) : ('editor' as const),
+        owner: s.user.username,
       }));
     },
 
