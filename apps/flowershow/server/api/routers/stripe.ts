@@ -1,14 +1,23 @@
 import { isSiteOwner } from '@/lib/site-authz';
+import type { AccountPlan } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod';
 import { env } from '@/env.mjs';
-import { getOrCreateStripeCustomer } from '@/lib/account-billing';
 import {
+  consolidateSiteSubscriptions,
+  getOrCreateStripeCustomer,
+} from '@/lib/account-billing';
+import {
+  ACCOUNT_PLAN_SITE_ALLOWANCE,
   accountPlansEnabled,
   accountPriceId,
+  type BillingInterval,
+  isCoveringAccountStatus,
   isLiveSiteStatus,
+  isManualSite,
   premiumPriceIds,
 } from '@/lib/account-plans';
+import { reconcileUserSitePlans } from '@/lib/site-plans';
 import { FLOWERSHOW_PLATFORM, stripe } from '@/lib/stripe';
 import type { BundleTierId } from '@/lib/stripe-plans';
 import { BUNDLE_TIERS, getBundleTierId } from '@/lib/stripe-plans';
@@ -296,6 +305,187 @@ export const stripeRouter = createTRPCRouter({
 
       return { url: checkoutSession.url };
     }),
+
+  // Everything the billing page needs about the account plan. Amounts are read
+  // live from Stripe; the credit is the customer's balance (negative = credit).
+  getAccountPlan: protectedProcedure.query(async ({ ctx }) => {
+    const userId = ctx.session.user.id;
+    const [account, user, sites] = await Promise.all([
+      ctx.db.accountSubscription.findUnique({ where: { userId } }),
+      ctx.db.user.findUnique({
+        where: { id: userId },
+        select: { stripeCustomerId: true },
+      }),
+      ctx.db.site.findMany({
+        where: { userId, isTemporary: false },
+        orderBy: { createdAt: 'asc' },
+        select: {
+          id: true,
+          projectName: true,
+          plan: true,
+          planSource: true,
+          coveredByAccountPlan: true,
+          subscription: { select: { status: true } },
+        },
+      }),
+    ]);
+
+    const priceFor = async (plan: AccountPlan, interval: BillingInterval) => {
+      // Dark: no Stripe lookups for plans nobody can buy yet.
+      const priceId = accountPlansEnabled()
+        ? accountPriceId(plan, interval)
+        : null;
+      return priceId ? getPriceAmount(priceId) : null;
+    };
+    const [proMonth, proYear, unlMonth, unlYear, creditBalanceCents] =
+      await Promise.all([
+        priceFor('PRO', 'month'),
+        priceFor('PRO', 'year'),
+        priceFor('UNLIMITED', 'month'),
+        priceFor('UNLIMITED', 'year'),
+        (async () => {
+          if (!user?.stripeCustomerId) return 0;
+          try {
+            const customer = await stripe.customers.retrieve(
+              user.stripeCustomerId,
+            );
+            return customer.deleted ? 0 : Math.max(0, -customer.balance);
+          } catch {
+            return 0;
+          }
+        })(),
+      ]);
+
+    return {
+      enabled: accountPlansEnabled(),
+      plan: account?.plan ?? null,
+      interval: account?.interval ?? null,
+      status: account?.status ?? null,
+      cancelAtPeriodEnd: account?.cancelAtPeriodEnd ?? false,
+      currentPeriodEnd: account?.currentPeriodEnd ?? null,
+      siteAllowance: account?.siteAllowance ?? null,
+      creditBalanceCents,
+      prices: {
+        PRO: { month: proMonth, year: proYear },
+        UNLIMITED: { month: unlMonth, year: unlYear },
+      },
+      sites: sites.map((site) => ({
+        id: site.id,
+        projectName: site.projectName,
+        plan: site.plan,
+        planSource: site.planSource,
+        covered: site.coveredByAccountPlan || site.planSource === 'ACCOUNT',
+        hasSiteSubscription:
+          !!site.subscription && isLiveSiteStatus(site.subscription.status),
+      })),
+    };
+  }),
+
+  // Cover or uncover one site with the account plan. Owner only.
+  setSiteCovered: protectedProcedure
+    .input(z.object({ siteId: z.string(), covered: z.boolean() }))
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+
+      const site = await ctx.db.site.findUnique({
+        where: { id: input.siteId },
+        select: {
+          id: true,
+          userId: true,
+          plan: true,
+          planSource: true,
+          subscription: { select: { status: true } },
+        },
+      });
+      if (!site) {
+        throw new TRPCError({ code: 'NOT_FOUND', message: 'Site not found' });
+      }
+      if (!isSiteOwner(userId, site)) {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized' });
+      }
+
+      const account = accountPlansEnabled()
+        ? await ctx.db.accountSubscription.findUnique({ where: { userId } })
+        : null;
+      if (!account || !isCoveringAccountStatus(account.status)) {
+        throw new TRPCError({
+          code: 'PRECONDITION_FAILED',
+          message: 'You need an active account plan to cover sites.',
+        });
+      }
+
+      if (isManualSite(site)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'This site was granted Premium by Flowershow.',
+        });
+      }
+
+      if (input.covered) {
+        const allowance = ACCOUNT_PLAN_SITE_ALLOWANCE[account.plan];
+        if (allowance !== null) {
+          const used = await ctx.db.site.count({
+            where: {
+              userId,
+              isTemporary: false,
+              coveredByAccountPlan: true,
+              NOT: { id: site.id },
+            },
+          });
+          if (used >= allowance) {
+            throw new TRPCError({
+              code: 'CONFLICT',
+              message: `All ${allowance} sites on your Pro plan are in use. Remove one first.`,
+            });
+          }
+        }
+      }
+
+      // Clear the flag before reconciling, and tell the reconciler the site was
+      // released, or its stateless trim would refill the freed slot at once.
+      await ctx.db.site.update({
+        where: { id: site.id },
+        data: { coveredByAccountPlan: input.covered },
+      });
+      if (input.covered) {
+        await reconcileUserSitePlans(userId);
+        // Only active or trialing plans consolidate (an incomplete plan must
+        // never cancel subscriptions someone is paying for).
+        if (
+          site.subscription &&
+          isLiveSiteStatus(site.subscription.status) &&
+          (account.status === 'active' || account.status === 'trialing')
+        ) {
+          await consolidateSiteSubscriptions({
+            userId,
+            stripeCustomerId: account.stripeCustomerId,
+            stripeSubscriptionId: account.stripeSubscriptionId,
+          });
+        }
+      } else {
+        await reconcileUserSitePlans(userId, { released: [site.id] });
+      }
+
+      return { covered: input.covered };
+    }),
+
+  getAccountBillingPortal: protectedProcedure.mutation(async ({ ctx }) => {
+    const user = await ctx.db.user.findUnique({
+      where: { id: ctx.session.user.id },
+      select: { stripeCustomerId: true },
+    });
+    if (!user?.stripeCustomerId) {
+      throw new TRPCError({
+        code: 'NOT_FOUND',
+        message: 'No billing account found',
+      });
+    }
+    const portalSession = await stripe.billingPortal.sessions.create({
+      customer: user.stripeCustomerId,
+      return_url: `${cloudBase}/settings/billing`,
+    });
+    return { url: portalSession.url };
+  }),
 
   // Returns the bundle-discount context for the current user, with all money
   // amounts read live from Stripe (prices + coupon percentages). Drives the
