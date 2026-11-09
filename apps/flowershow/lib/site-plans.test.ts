@@ -242,6 +242,42 @@ describe('computeSitePlans', () => {
     );
   });
 
+  describe('Pro with PREMIUM/ACCOUNT sites left unflagged by Unlimited', () => {
+    const eight = Array.from({ length: 8 }, (_, i) =>
+      site(`s${i}`, i + 1, { plan: 'PREMIUM', planSource: 'ACCOUNT' }),
+    );
+
+    it('keeps the five most recently published whatever autoFill says', () => {
+      const targets = byId(computeSitePlans(eight, pro, { autoFill: 'none' }));
+
+      for (const id of ['s3', 's4', 's5', 's6', 's7']) {
+        expect(targets[id]).toEqual(premiumAccount(id, true));
+      }
+      for (const id of ['s0', 's1', 's2']) {
+        expect(targets[id]).toEqual(free(id, false));
+      }
+    });
+
+    it('never fills a released site', () => {
+      const targets = byId(
+        computeSitePlans(eight, pro, { autoFill: 'none', released: ['s7'] }),
+      );
+
+      expect(targets.s7).toEqual(free('s7', false));
+      for (const id of ['s2', 's3', 's4', 's5', 's6']) {
+        expect(targets[id]).toEqual(premiumAccount(id, true));
+      }
+    });
+
+    it('released also wins over autoFill all', () => {
+      const targets = byId(
+        computeSitePlans(eight, pro, { autoFill: 'all', released: ['s7'] }),
+      );
+
+      expect(targets.s7).toEqual(free('s7', false));
+    });
+  });
+
   it('orders by createdAt when never published, ties broken by id', () => {
     const sites = [
       site('b', 0, { lastPublishedAt: null, createdAt: day(5) }),
@@ -387,6 +423,22 @@ describe('reconcileUserSitePlans', () => {
     ].map((c) => (c[0] as any).where.id);
     expect(touched).not.toContain('man');
     expect(changed.map((t) => t.id).sort()).toEqual(['acc', 'sub']);
+  });
+
+  it('passes released through to the computation', async () => {
+    vi.mocked(prisma.site.findMany).mockResolvedValue([
+      dbSite('gone', { plan: 'PREMIUM', planSource: 'ACCOUNT' }),
+    ] as any);
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue({
+      status: 'active',
+      siteAllowance: 5,
+    } as any);
+
+    const { changed } = await reconcileUserSitePlans('user-1', {
+      released: ['gone'],
+    });
+
+    expect(changed).toEqual([free('gone', false)]);
   });
 
   it("only loads the user's non-temporary sites", async () => {

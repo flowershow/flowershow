@@ -62,11 +62,19 @@ function byRecency(a: SitePlanInput, b: SitePlanInput): number {
  * autoFill says which unflagged sites may take a free Pro slot: 'all' at first
  * activation and plan change, { siteId } on create or claim (so slots the
  * owner emptied stay empty), 'none' otherwise.
+ *
+ * Whatever autoFill says, a site still PREMIUM/ACCOUNT but unflagged can take a
+ * free slot: Unlimited never writes flags, so this is how Unlimited to Pro trims
+ * to the allowance on every sync, including a retry after a failed reconcile.
+ * Ids in `released` (sites the owner just removed) are never filled.
  */
 export function computeSitePlans(
   sites: SitePlanInput[],
   account: AccountPlanInput,
-  opts: { autoFill: 'all' | 'none' | { siteId: string } },
+  opts: {
+    autoFill: 'all' | 'none' | { siteId: string };
+    released?: string[];
+  },
 ): SitePlanTarget[] {
   const covering = account !== null && isCoveringAccountStatus(account.status);
   const unlimited = covering && account.siteAllowance === null;
@@ -84,11 +92,14 @@ export function computeSitePlans(
 
     const slots = Math.max(0, account.siteAllowance - flagged.length);
     const { autoFill } = opts;
+    const released = new Set(opts.released);
     const fillable = candidates.filter(
       (s) =>
         !s.coveredByAccountPlan &&
+        !released.has(s.id) &&
         (autoFill === 'all' ||
-          (typeof autoFill === 'object' && s.id === autoFill.siteId)),
+          (typeof autoFill === 'object' && s.id === autoFill.siteId) ||
+          (s.plan === 'PREMIUM' && s.planSource === 'ACCOUNT')),
     );
     fillable.sort(
       (a, b) =>
@@ -205,7 +216,10 @@ export async function downgradeSiteToFree(
  */
 export async function reconcileUserSitePlans(
   userId: string,
-  opts: { autoFill?: 'all' | 'none' | { siteId: string } } = {},
+  opts: {
+    autoFill?: 'all' | 'none' | { siteId: string };
+    released?: string[];
+  } = {},
 ): Promise<{ changed: SitePlanTarget[] }> {
   const [sites, account] = await Promise.all([
     prisma.site.findMany({
@@ -243,7 +257,7 @@ export async function reconcileUserSitePlans(
       createdAt: s.createdAt,
     })),
     account,
-    { autoFill: opts.autoFill ?? 'none' },
+    { autoFill: opts.autoFill ?? 'none', released: opts.released },
   );
 
   const changed: SitePlanTarget[] = [];

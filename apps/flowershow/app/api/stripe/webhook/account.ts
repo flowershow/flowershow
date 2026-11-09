@@ -59,10 +59,14 @@ export async function syncAccountSubscription(
   }
 
   // Throws so Stripe retries once the price id is configured.
-  const priceId = subscription.items.data[0]?.price?.id;
+  const { data: items } = subscription.items;
+  const priceId = items.find((item) => accountPlanForPriceId(item.price.id))
+    ?.price.id;
   const mapped = priceId ? accountPlanForPriceId(priceId) : null;
   if (!priceId || !mapped) {
-    throw new Error(`Unknown account price: ${priceId}`);
+    throw new Error(
+      `Unknown account price: ${items.map((item) => item.price.id).join(', ')}`,
+    );
   }
 
   const existing = await prisma.accountSubscription.findUnique({

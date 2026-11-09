@@ -352,6 +352,48 @@ describe('account subscription webhooks', () => {
     expect(sites['site-0']).toMatchObject({ plan: 'FREE', planSource: null });
   });
 
+  it('plan change retried after a failed reconcile leaves exactly five', async () => {
+    // Most recent first, so the writes that land before the failure are fills.
+    db.seed({
+      users: [{ ...USER }],
+      accountSubscriptions: [accountRow()],
+      sites: Array.from({ length: 8 }, (_, i) =>
+        accountSite(`site-${7 - i}`, {
+          publishes: [{ startedAt: new Date(Date.UTC(2026, 0, 8 - i)) }],
+        }),
+      ),
+    });
+    mockRetrieve(withPrice(PRO_PRICE));
+    const event = fixture('account-subscription-updated-plan-change');
+    const write = db.site.updateMany.getMockImplementation()!;
+    db.site.updateMany
+      .mockImplementationOnce(write)
+      .mockImplementationOnce(write)
+      .mockImplementationOnce(async () => {
+        throw new Error('db blip');
+      });
+
+    const failed = await fire(event);
+    expect(failed.status).toBe(500);
+    expect(accountOf()).toMatchObject({ plan: 'PRO' });
+
+    const retried = await fire(event);
+
+    expect(retried.status).toBe(200);
+    const sites = sitesOf();
+    const covered = Object.values(sites)
+      .filter((s) => s.plan === 'PREMIUM' && s.planSource === 'ACCOUNT')
+      .map((s) => s.id)
+      .sort();
+    expect(covered).toEqual(['site-3', 'site-4', 'site-5', 'site-6', 'site-7']);
+    for (const id of covered) {
+      expect(sites[id].coveredByAccountPlan).toBe(true);
+    }
+    for (const id of ['site-0', 'site-1', 'site-2']) {
+      expect(sites[id]).toMatchObject({ plan: 'FREE', planSource: null });
+    }
+  });
+
   it('stale event for an old subscription is ignored', async () => {
     const stored = accountRow({ stripeSubscriptionId: 'sub_acct_2' });
     db.seed({
@@ -500,6 +542,26 @@ describe('account subscription webhooks', () => {
     await fire(fixture('account-subscription-created'));
 
     expect(accountOf()).toMatchObject({ userId: USER.id });
+  });
+
+  it('finds the account price when it is not the first item', async () => {
+    mockRetrieve({
+      items: {
+        data: [
+          { price: { id: 'price_addon', recurring: { interval: 'month' } } },
+          ...withPrice(PRO_PRICE).items.data,
+        ],
+      },
+    });
+
+    const res = await fire(fixture('account-subscription-created'));
+
+    expect(res.status).toBe(200);
+    expect(accountOf()).toMatchObject({
+      plan: 'PRO',
+      siteAllowance: 5,
+      stripePriceId: PRO_PRICE,
+    });
   });
 
   it('unknown account price returns 500', async () => {
