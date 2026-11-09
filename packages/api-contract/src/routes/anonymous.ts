@@ -109,7 +109,7 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
         description: 'Rate limit exceeded',
         content: {
           'application/json': {
-            schema: z.object({ error: z.string() }),
+            schema: z.object({ error: z.string(), message: z.string() }),
           },
         },
       },
@@ -309,13 +309,13 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
       '400': {
         description: 'Invalid site',
         content: {
-          'application/json': { schema: z.object({ error: z.string(), message: z.string() }) },
+          'application/json': { schema: z.object({ error: z.string() }) },
         },
       },
       '401': {
         description: 'Wrong password',
         content: {
-          'application/json': { schema: z.object({ error: z.string(), message: z.string() }) },
+          'application/json': { schema: z.object({ error: z.string() }) },
         },
       },
     },
@@ -370,9 +370,11 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
       },
       '403': {
         description:
-          '`premium_required` when the caller is an editor and the site\'s Premium plan has lapsed',
+          "`premium_required` when the caller is an editor and the site's Premium plan has lapsed",
         content: {
-          'application/json': { schema: z.object({ error: z.string() }) },
+          'application/json': {
+            schema: z.object({ error: z.string(), message: z.string() }),
+          },
         },
       },
       '404': {
