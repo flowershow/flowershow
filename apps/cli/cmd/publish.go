@@ -264,6 +264,29 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 		return runAnonPublish(anonCfg, isFolderMode, isFolderMode && localCfg == nil, folderPath, discovered, sp, startTime)
 	}
 
+	// A folder linked by site ID follows its site through renames and reaches
+	// a site shared with you. 404 falls through to the name path below (which
+	// never creates a site for a linked folder); anything else, including a
+	// 403 (access removed, or the owner's Premium lapsed), stops here.
+	if nameFlag == "" && localCfg != nil && localCfg.SiteID != "" {
+		detail, err := api.GetSiteByID(localCfg.SiteID)
+		if err == nil {
+			if detail.Site.ID == "" {
+				return fail(fmt.Sprintf("You can't publish to %q: no access to this site.\nNothing was published.", localCfg.SiteName))
+			}
+			site := api.Site{ID: detail.Site.ID, ProjectName: detail.Site.ProjectName, URL: detail.Site.URL}
+			ref := linkedSiteRef(localCfg.SiteName, site.ProjectName)
+			if ref != localCfg.SiteName {
+				_ = linkFolder(folderPath, site, ref)
+			}
+			return doSync(site, ref, discovered, sp, startTime)
+		}
+		var httpErr *api.HTTPError
+		if !errors.As(err, &httpErr) || httpErr.StatusCode != 404 {
+			return fail(accessErrorMsg(err, localCfg.SiteName))
+		}
+	}
+
 	// Resolve site name
 	var siteName string
 	switch {
@@ -276,6 +299,15 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 		if err != nil {
 			return fail(err.Error())
 		}
+	}
+
+	// owner/name: a site owned by someone else. It is only ever synced if it
+	// was shared with you; a site is never created for such a reference.
+	if owner, name := parseSiteRef(siteName); owner != "" {
+		if owner != userInfo.Username {
+			return publishToSharedSite(owner, name, localCfg, overwrite, isFolderMode, folderPath, discovered, sp, startTime)
+		}
+		siteName = name // your own site, written with your username
 	}
 
 	// Look up existing site on the server
@@ -325,7 +357,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 			))
 		}
 
-		_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: newName})
+		_ = linkFolder(folderPath, renamed.Site, newName)
 		fmt.Printf("%s\n", ui.Green(fmt.Sprintf("✓ Re-pointed .flowershow to %q", newName)))
 		return doSync(renamed.Site, newName, discovered, sp, startTime)
 	}
@@ -348,8 +380,8 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	if existingSite != nil {
 		// Persist the name in folder mode, both when there is no local config
 		// yet and when --name re-pointed the folder to a different site.
-		if isFolderMode && (localCfg == nil || localCfg.SiteName != siteName) {
-			_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: siteName})
+		if isFolderMode && (localCfg == nil || localCfg.SiteName != siteName || localCfg.SiteID != existingSite.Site.ID) {
+			_ = linkFolder(folderPath, existingSite.Site, siteName)
 		}
 		return doSync(existingSite.Site, siteName, discovered, sp, startTime)
 	}
@@ -379,7 +411,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 			}
 			if existingSite != nil {
 				if isFolderMode {
-					_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: siteName})
+					_ = linkFolder(folderPath, existingSite.Site, siteName)
 				}
 				return doSync(existingSite.Site, siteName, discovered, sp, startTime)
 			}
@@ -410,7 +442,7 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	}
 	// Write config only after a fully successful upload in folder mode
 	if isFolderMode {
-		_ = localconfig.Write(folderPath, &localconfig.Config{SiteName: siteName})
+		_ = linkFolder(folderPath, site, siteName)
 	}
 
 	failed := waitForProcessing(site.ID)
@@ -519,7 +551,8 @@ func printAnonNote(anonCfg *localconfig.Config, why string) {
 // It returns the new local config.
 func relinkClaimedSite(folderPath string, anonCfg *localconfig.Config, projectName, siteURL, msg string) *localconfig.Config {
 	cfg := *anonCfg
-	cfg.Anon, cfg.SiteID, cfg.ClaimToken, cfg.ExpiresAt, cfg.LiveURL, cfg.ClaimURL = false, "", "", "", "", ""
+	// The claimed site keeps its ID (cfg.SiteID), so the link follows renames.
+	cfg.Anon, cfg.ClaimToken, cfg.ExpiresAt, cfg.LiveURL, cfg.ClaimURL = false, "", "", "", ""
 	cfg.SiteName = projectName
 	if err := localconfig.Write(folderPath, &cfg); err != nil {
 		ui.PrintWarning(fmt.Sprintf("Couldn't update .flowershow: %s", err))
@@ -528,6 +561,64 @@ func relinkClaimedSite(folderPath string, anonCfg *localconfig.Config, projectNa
 	}
 	fmt.Printf("\n%s %s %s\n\n", ui.Green("✓"), msg, siteURL)
 	return &cfg
+}
+
+// linkFolder links folderPath to site in .flowershow: the site's ID (so the
+// link survives a rename) and siteRef, which is "owner/name" for a site shared
+// with you and the bare name for your own. Callers ignore the error as the
+// publish itself is not affected by it.
+func linkFolder(folderPath string, site api.Site, siteRef string) error {
+	return localconfig.Write(folderPath, &localconfig.Config{SiteName: siteRef, SiteID: site.ID})
+}
+
+// linkedSiteRef is the up-to-date reference for a linked site: the stored
+// ref's owner prefix (if it has one) with the site's current name.
+func linkedSiteRef(storedRef, currentName string) string {
+	if owner, _ := parseSiteRef(storedRef); owner != "" {
+		return owner + "/" + currentName
+	}
+	return currentName
+}
+
+// accessErrorMsg explains a failed lookup of a site the user is trying to
+// publish to, using the server's message (e.g. the premium_required one).
+func accessErrorMsg(err error, siteRef string) string {
+	var httpErr *api.HTTPError
+	if errors.As(err, &httpErr) {
+		if httpErr.StatusCode == 403 {
+			return fmt.Sprintf("You can't publish to %q: %s\nNothing was published.", siteRef, httpErr.Message)
+		}
+		return fmt.Sprintf("Couldn't check %q: %s\nNothing was published. Try again in a moment.", siteRef, httpErr.Message)
+	}
+	return fmt.Sprintf("Couldn't check %q: %s\nNothing was published. Try again in a moment.", siteRef, err)
+}
+
+// publishToSharedSite syncs discovered files to owner/name, a site owned by
+// someone else. It fails, and never creates a site, if the site isn't found,
+// isn't shared with the user, or the user can't manage it (Premium lapsed).
+// An unlinked folder needs --overwrite: the sync replaces the site's content
+// and deletes its files that aren't in the folder.
+func publishToSharedSite(owner, name string, localCfg *localconfig.Config, overwrite, isFolderMode bool, folderPath string, discovered []files.FileInfo, sp *ui.Spinner, startTime time.Time) error {
+	ref := owner + "/" + name
+	res, err := api.GetSiteByName(owner, name)
+	if err != nil {
+		return fail(accessErrorMsg(err, ref))
+	}
+	if res == nil || res.Site.ID == "" {
+		return fail(fmt.Sprintf("Site %q not found or not shared with you. Run `fl list` to see your sites.", ref))
+	}
+	site := res.Site
+	if localCfg == nil && !overwrite {
+		return fail(fmt.Sprintf(
+			"%q is shared with you. Publishing replaces its content and deletes files that aren't in this path.\n"+
+				"To do that, run again with --overwrite.",
+			ref,
+		))
+	}
+	if isFolderMode && (localCfg == nil || localCfg.SiteName != ref || localCfg.SiteID != site.ID) {
+		_ = linkFolder(folderPath, site, ref)
+	}
+	return doSync(site, ref, discovered, sp, startTime)
 }
 
 // uploadNewSite uploads all discovered files to a freshly created site.

@@ -1,5 +1,11 @@
 # CHANGELOG
 
+## Unreleased
+
+- Sites shared with you: `fl list` now also shows sites other people have shared with you (you are an editor), under "Shared with you", as `owner/name`. Publish to one with `fl --name owner/name <folder>`; the first publish of an unlinked folder needs `--overwrite`, as it replaces the site's content. Sharing needs the site owner to be on Premium; if it lapses, `fl` says so and publishes nothing.
+- A bare name never means a shared site: `--name notes`, `fl settings`, `fl annotations ...` and `fl delete notes` only match sites you own, and with no `--name` only your own sites count as "your only site". Reach a shared site as `owner/name`. Only the owner can delete a site.
+- `.flowershow` now also stores the site ID, so a linked folder keeps publishing to the same site after it is renamed. Folders linked by an older `fl` still work by name. If the stored site is gone or you lost access, `fl` stops with an error rather than creating a new site.
+
 ## 2.10.0
 
 - New `fl annotations reply <id> -m "text"`: reply to a visitor's note as the site author (the reply shows an Author badge on the page). `fl annotations resolve <ids...> -m "text"` posts the message as a reply to each id, then resolves them (ids only, not `--all`).

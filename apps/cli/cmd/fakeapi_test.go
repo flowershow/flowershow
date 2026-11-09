@@ -42,6 +42,7 @@ type fakeAPI struct {
 	sites       map[string]api.Site // by project name
 	shared      map[string]api.Site // sites shared with the user, by "owner/name"
 	listQueries []string            // raw query of each GET /api/sites
+	publicOnly  map[string]bool     // "owner/name" -> GET returns public fields only (caller can't manage it)
 	syncCalls   []string            // site IDs that received a sync request
 	created     []string            // project names created via POST /api/sites
 	server      *httptest.Server
@@ -277,14 +278,23 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 	case strings.HasPrefix(path, "/api/sites/") && !strings.HasPrefix(path, "/api/sites/id/") && strings.Count(strings.TrimPrefix(path, "/api/sites/"), "/") == 1 && r.Method == "GET":
 		// GET /api/sites/{owner}/{name} for someone else's site: extended data
 		// (with role and owner) if it is shared with the user, else 404.
+		key := strings.TrimPrefix(path, "/api/sites/")
 		f.mu.Lock()
-		site, ok := f.shared[strings.TrimPrefix(path, "/api/sites/")]
+		site, ok := f.shared[key]
+		status := f.siteStatus[site.ID]
+		publicOnly := f.publicOnly[key]
 		f.mu.Unlock()
-		if !ok {
+		switch {
+		case !ok:
 			writeJSON(w, 404, map[string]string{"message": "not found"})
-			return
+		case status == 403:
+			writeJSON(w, 403, map[string]string{"error": "premium_required", "message": fakePremiumLapsedMsg})
+		case publicOnly:
+			// A caller who can't manage the site gets public fields only.
+			writeJSON(w, 200, map[string]interface{}{"id": site.ID, "projectName": site.ProjectName, "subdomain": site.ProjectName})
+		default:
+			writeJSON(w, 200, map[string]interface{}{"site": site})
 		}
-		writeJSON(w, 200, map[string]interface{}{"site": site})
 	case strings.HasPrefix(path, "/api/sites/id/") && !strings.Contains(strings.TrimPrefix(path, "/api/sites/id/"), "/") && r.Method == "GET":
 		// Mirrors GET /api/sites/id/:id: 200 for the user's own site, 403 for
 		// someone else's (an anonymous site is owned by the anonymous user),
@@ -415,6 +425,7 @@ func setupFakeAPI(t *testing.T, loggedIn bool, existing ...string) *fakeAPI {
 	f := &fakeAPI{
 		sites:         map[string]api.Site{},
 		shared:        map[string]api.Site{},
+		publicOnly:    map[string]bool{},
 		siteStatus:    map[string]int{},
 		claimTokens:   map[string]string{anonClaimToken: anonSiteID},
 		annotationsOn: map[string]bool{}, openAnnotations: map[string]int{},
