@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
-const navSections = [
+const allSections = [
   { name: 'General', id: 'general' },
   { name: 'Appearance', id: 'appearance' },
   { name: 'Navigation', id: 'navigation' },
@@ -15,11 +15,24 @@ const navSections = [
   { name: 'Danger Zone', id: 'danger' },
 ];
 
-interface SettingsNavProps {
-  hasGhRepository?: boolean;
+const OWNER_ONLY = new Set(['github', 'billing', 'danger']);
+
+export function navSectionsFor(
+  isOwner: boolean,
+): Array<{ name: string; id: string }> {
+  return allSections.filter((s) => isOwner || !OWNER_ONLY.has(s.id));
 }
 
-export default function SettingsNav({ hasGhRepository: _ }: SettingsNavProps) {
+interface SettingsNavProps {
+  hasGhRepository?: boolean;
+  isOwner?: boolean;
+}
+
+export default function SettingsNav({
+  hasGhRepository: _,
+  isOwner = false,
+}: SettingsNavProps) {
+  const navSections = useMemo(() => navSectionsFor(isOwner), [isOwner]);
   const [activeSection, setActiveSection] = useState('general');
 
   useEffect(() => {
@@ -38,7 +51,7 @@ export default function SettingsNav({ hasGhRepository: _ }: SettingsNavProps) {
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
-  }, []);
+  }, [navSections]);
 
   return (
     <ul className="space-y-2 rounded-lg border border-stone-200 bg-white px-4 py-5 dark:border-zinc-700 dark:bg-zinc-950">

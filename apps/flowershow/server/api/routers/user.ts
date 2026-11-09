@@ -12,6 +12,19 @@ import {
 import { generatePatToken, hashToken } from '@/lib/cli-auth';
 import { listConnectedApps, revokeUserGrant } from '@/lib/oauth/grants';
 import { TRPCError } from '@trpc/server';
+import type { Plan } from '@prisma/client';
+import { isSiteOwner } from '@/lib/site-authz';
+
+export type DashboardSite = {
+  id: string;
+  projectName: string;
+  subdomain: string;
+  customDomain: string | null;
+  plan: Plan;
+  role: 'owner' | 'editor';
+  lapsed: boolean;
+  ownerUsername: string;
+};
 
 export const userRouter = createTRPCRouter({
   getStats: publicProcedure.query(async ({ ctx }) => {
@@ -53,10 +66,45 @@ export const userRouter = createTRPCRouter({
   getSites: protectedProcedure
     .input(z.object({ limit: z.number().min(1).optional() }).optional())
     .query(async ({ ctx, input }) => {
-      return await ctx.db.site.findMany({
-        where: { userId: ctx.session.user.id },
-        take: input?.limit,
+      const callerId = ctx.session.user.id;
+      const rows = await ctx.db.site.findMany({
+        where: {
+          OR: [
+            { userId: callerId },
+            { members: { some: { userId: callerId } } },
+          ],
+        },
+        select: {
+          id: true,
+          projectName: true,
+          subdomain: true,
+          customDomain: true,
+          plan: true,
+          userId: true,
+          user: { select: { username: true } },
+        },
       });
+      const sites: DashboardSite[] = rows.map((row) => {
+        // List presentation only; not an authorization decision.
+        const owned = isSiteOwner(callerId, row);
+        return {
+          id: row.id,
+          projectName: row.projectName,
+          subdomain: row.subdomain,
+          customDomain: row.customDomain,
+          plan: row.plan,
+          role: owned ? 'owner' : 'editor',
+          lapsed: !owned && row.plan !== 'PREMIUM',
+          ownerUsername: row.user.username,
+        };
+      });
+      // Owned first, then shared; each group by name.
+      sites.sort(
+        (a, b) =>
+          Number(a.role === 'editor') - Number(b.role === 'editor') ||
+          a.projectName.localeCompare(b.projectName),
+      );
+      return input?.limit ? sites.slice(0, input.limit) : sites;
     }),
   getGitHubScopes: protectedProcedure.query(async ({ ctx }) => {
     const accessToken = ctx.session.accessToken;

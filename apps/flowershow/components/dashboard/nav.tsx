@@ -47,9 +47,9 @@ export default function Nav({ children }: { children: ReactNode }) {
 
   const sortedSites = useMemo(
     () =>
-      [...(sites ?? [])].sort((a, b) =>
-        a.projectName.localeCompare(b.projectName),
-      ),
+      [...(sites ?? [])]
+        .filter((s) => !s.lapsed)
+        .sort((a, b) => a.projectName.localeCompare(b.projectName)),
     [sites],
   );
 

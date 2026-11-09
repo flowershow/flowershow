@@ -12,6 +12,7 @@ import SettingsNav from '@/components/dashboard/settings-nav';
 import { validDomainRegex } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
+import { ownerSectionVisibility } from '@/lib/settings-sections';
 import { PLANS } from '@/lib/stripe-plans';
 import { OFFICIAL_THEMES } from '@/lib/themes';
 import { SITE_NAME_MAX_LENGTH } from '@/lib/validate-site-name';
@@ -27,14 +28,20 @@ export default async function SiteSettingsPage(props: {
   const site = await api.site.getById.query({ id: siteId });
   if (!site) notFound();
 
+  // Rendering only; the server enforces ownership on every owner-only call.
+  const membership = await api.siteMember.list.query({ siteId: site.id });
+  const isOwner = membership.role === 'owner';
+  const showOwnerSections = ownerSectionVisibility(membership.role);
+
   const [siteConfig, subscription, bundleInfo] = await Promise.all([
     api.site.getDbConfig.query({ siteId: site.id }).catch(() => null),
-    api.stripe.getSiteSubscription.query({ siteId: site.id }),
-    api.stripe.getBundleInfo.query(),
+    isOwner ? api.stripe.getSiteSubscription.query({ siteId: site.id }) : null,
+    isOwner ? api.stripe.getBundleInfo.query() : null,
   ]);
 
   const repoFullName = getRepoFullName(site);
-  const isRepoAccessLost = !site.installationRepository && !!site.ghRepository;
+  const isRepoAccessLost =
+    isOwner && !site.installationRepository && !!site.ghRepository;
   let hasInstallationForRepo = false;
   if (isRepoAccessLost) {
     try {
@@ -254,7 +261,7 @@ export default async function SiteSettingsPage(props: {
   return (
     <div className="sm:grid sm:grid-cols-12 sm:space-x-6">
       <div className="sticky top-[5rem] col-span-2 hidden self-start sm:col-span-3 sm:block lg:col-span-2">
-        <SettingsNav hasGhRepository={!!repoFullName} />
+        <SettingsNav hasGhRepository={!!repoFullName} isOwner={isOwner} />
       </div>
 
       <div className="col-span-10 flex flex-col space-y-12 sm:col-span-9 lg:col-span-10">
@@ -265,34 +272,36 @@ export default async function SiteSettingsPage(props: {
               General
             </h2>
           </div>
-          <Form
-            title="Name"
-            description="The name of your site. Shown in the navbar and footer, and appended as a suffix to every page title (browser tabs, search results, social shares, and bookmarks)."
-            inputAttrs={{
-              name: 'projectName',
-              type: 'text',
-              defaultValue: site.projectName,
-              placeholder: 'My Notes',
-              maxLength: SITE_NAME_MAX_LENGTH,
-              // Must contain at least one letter or number and no "/".
-              pattern: '^(?=.*[a-zA-Z0-9])[^/]+$',
-            }}
-            handleSubmit={renameSite}
-            helpText={
-              <>
-                It must contain at least one letter or number and cannot contain
-                &quot;/&quot;. Renaming does not change your site&apos;s URL.
-                Maximum {SITE_NAME_MAX_LENGTH} characters.{' '}
-                <a
-                  className="underline"
-                  href="https://flowershow.app/docs/reference/seo-social-metadata"
-                >
-                  Learn more
-                  <ExternalLinkIcon className="inline h-4" />
-                </a>
-              </>
-            }
-          />
+          {isOwner && (
+            <Form
+              title="Name"
+              description="The name of your site. Shown in the navbar and footer, and appended as a suffix to every page title (browser tabs, search results, social shares, and bookmarks)."
+              inputAttrs={{
+                name: 'projectName',
+                type: 'text',
+                defaultValue: site.projectName,
+                placeholder: 'My Notes',
+                maxLength: SITE_NAME_MAX_LENGTH,
+                // Must contain at least one letter or number and no "/".
+                pattern: '^(?=.*[a-zA-Z0-9])[^/]+$',
+              }}
+              handleSubmit={renameSite}
+              helpText={
+                <>
+                  It must contain at least one letter or number and cannot
+                  contain &quot;/&quot;. Renaming does not change your
+                  site&apos;s URL. Maximum {SITE_NAME_MAX_LENGTH} characters.{' '}
+                  <a
+                    className="underline"
+                    href="https://flowershow.app/docs/reference/seo-social-metadata"
+                  >
+                    Learn more
+                    <ExternalLinkIcon className="inline h-4" />
+                  </a>
+                </>
+              }
+            />
+          )}
           <Form
             title="Description"
             description="Default description used in search results and social previews when a page has no description of its own."
@@ -1123,29 +1132,36 @@ export default async function SiteSettingsPage(props: {
 
         <hr className="border-stone-200 dark:border-zinc-700" />
 
-        {/* GitHub */}
-        <section id="github" className="scroll-mt-24 flex flex-col space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
-              GitHub
-            </h2>
-          </div>
-          {isRepoAccessLost && (
-            <RepoAccessLostForm
-              siteId={site.id}
-              repositoryName={site.ghRepository ?? ''}
-              hasInstallation={hasInstallationForRepo}
-            />
-          )}
-          <GitHubConnectionForm
-            siteId={site.id}
-            ghRepository={repoFullName}
-            ghBranch={site.ghBranch}
-            rootDir={site.rootDir}
-          />
-        </section>
+        {isOwner && (
+          <>
+            {/* GitHub */}
+            <section
+              id="github"
+              className="scroll-mt-24 flex flex-col space-y-6"
+            >
+              <div>
+                <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+                  GitHub
+                </h2>
+              </div>
+              {isRepoAccessLost && (
+                <RepoAccessLostForm
+                  siteId={site.id}
+                  repositoryName={site.ghRepository ?? ''}
+                  hasInstallation={hasInstallationForRepo}
+                />
+              )}
+              <GitHubConnectionForm
+                siteId={site.id}
+                ghRepository={repoFullName}
+                ghBranch={site.ghBranch}
+                rootDir={site.rootDir}
+              />
+            </section>
 
-        <hr className="border-stone-200 dark:border-zinc-700" />
+            <hr className="border-stone-200 dark:border-zinc-700" />
+          </>
+        )}
 
         {/* Access & Domains */}
         <section id="access" className="scroll-mt-24 flex flex-col space-y-6">
@@ -1154,65 +1170,77 @@ export default async function SiteSettingsPage(props: {
               Access &amp; Domains
             </h2>
           </div>
-          <Form
-            title="Custom Domain"
-            description="The custom domain for your site."
-            disabled={!isFeatureEnabled(Feature.CustomDomain, site)}
-            helpText={
-              <a
-                className="underline"
-                href="https://flowershow.app/docs/reference/custom-domain"
-              >
-                Learn more
-                <ExternalLinkIcon className="inline h-4" />
-              </a>
-            }
-            inputAttrs={{
-              name: 'customDomain',
-              type: 'text',
-              defaultValue: isFeatureEnabled(Feature.CustomDomain, site)
-                ? (site.customDomain ?? '')
-                : '',
-              placeholder: 'yourdomain.com',
-              maxLength: 64,
-              pattern: validDomainRegex.source,
-            }}
-            handleSubmit={updateSite}
-          />
+          {isOwner && (
+            <Form
+              title="Custom Domain"
+              description="The custom domain for your site."
+              disabled={!isFeatureEnabled(Feature.CustomDomain, site)}
+              helpText={
+                <a
+                  className="underline"
+                  href="https://flowershow.app/docs/reference/custom-domain"
+                >
+                  Learn more
+                  <ExternalLinkIcon className="inline h-4" />
+                </a>
+              }
+              inputAttrs={{
+                name: 'customDomain',
+                type: 'text',
+                defaultValue: isFeatureEnabled(Feature.CustomDomain, site)
+                  ? (site.customDomain ?? '')
+                  : '',
+                placeholder: 'yourdomain.com',
+                maxLength: 64,
+                pattern: validDomainRegex.source,
+              }}
+              handleSubmit={updateSite}
+            />
+          )}
           <SitePasswordProtectionForm
             disabled={!isFeatureEnabled(Feature.PasswordProtection, site)}
             siteId={site.id}
           />
         </section>
 
-        <hr className="border-stone-200 dark:border-zinc-700" />
+        {showOwnerSections.billing && (
+          <>
+            <hr className="border-stone-200 dark:border-zinc-700" />
 
-        {/* Billing */}
-        <section id="billing" className="scroll-mt-24 flex flex-col space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
-              Billing
-            </h2>
-          </div>
-          <Billing
-            siteId={site.id}
-            subscription={subscription}
-            plans={PLANS}
-            bundleInfo={bundleInfo}
-          />
-        </section>
+            {/* Billing */}
+            <section
+              id="billing"
+              className="scroll-mt-24 flex flex-col space-y-6"
+            >
+              <div>
+                <h2 className="text-xl font-semibold text-stone-800 dark:text-zinc-100">
+                  Billing
+                </h2>
+              </div>
+              <Billing
+                siteId={site.id}
+                subscription={subscription}
+                plans={PLANS}
+                bundleInfo={bundleInfo ?? undefined}
+              />
+            </section>
 
-        <hr className="border-stone-200 dark:border-zinc-700" />
+            <hr className="border-stone-200 dark:border-zinc-700" />
 
-        {/* Danger Zone */}
-        <section id="danger" className="scroll-mt-24 flex flex-col space-y-6">
-          <div>
-            <h2 className="text-xl font-semibold text-red-700 dark:text-red-400">
-              Danger Zone
-            </h2>
-          </div>
-          <DeleteSiteForm siteName={site.projectName} />
-        </section>
+            {/* Danger Zone */}
+            <section
+              id="danger"
+              className="scroll-mt-24 flex flex-col space-y-6"
+            >
+              <div>
+                <h2 className="text-xl font-semibold text-red-700 dark:text-red-400">
+                  Danger Zone
+                </h2>
+              </div>
+              <DeleteSiteForm siteName={site.projectName} />
+            </section>
+          </>
+        )}
       </div>
     </div>
   );
