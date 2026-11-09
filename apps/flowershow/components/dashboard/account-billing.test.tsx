@@ -75,6 +75,7 @@ const base: AccountPlanData = {
   plan: null,
   interval: null,
   status: null,
+  live: false,
   cancelAtPeriodEnd: false,
   currentPeriodEnd: null,
   siteAllowance: null,
@@ -137,6 +138,7 @@ describe('AccountBilling with Pro', () => {
     plan: 'PRO',
     interval: 'year',
     status: 'active',
+    live: true,
     siteAllowance: 5,
     proSiteAllowance: 5,
     sites: [
@@ -164,6 +166,23 @@ describe('AccountBilling with Pro', () => {
     expect(box).toBeChecked();
     expect(box).toBeDisabled();
     expect(screen.getByText('Premium (granted)')).toBeInTheDocument();
+  });
+
+  it('treats PREMIUM with a null source as manual: checked and disabled', () => {
+    render(
+      <AccountBilling
+        data={{
+          ...pro,
+          sites: [
+            ...pro.sites,
+            site('n', { projectName: 'Null source', plan: 'PREMIUM' }),
+          ],
+        }}
+      />,
+    );
+    const box = screen.getByRole('checkbox', { name: 'Null source' });
+    expect(box).toBeChecked();
+    expect(box).toBeDisabled();
   });
 
   it('labels a site with its own subscription', () => {
@@ -211,6 +230,43 @@ describe('AccountBilling with Pro', () => {
   });
 });
 
+describe('AccountBilling with a lapsed plan', () => {
+  it.each(['canceled', 'incomplete_expired'] as const)(
+    'shows the buy cards and credit, no picker, for a %s plan',
+    (status) => {
+      render(
+        <AccountBilling
+          data={{
+            ...base,
+            plan: 'PRO',
+            interval: 'year',
+            status,
+            live: false,
+            siteAllowance: 5,
+            creditBalanceCents: 1234,
+            sites: [
+              site('a', {
+                plan: 'PREMIUM',
+                planSource: 'ACCOUNT',
+                covered: true,
+              }),
+            ],
+          }}
+        />,
+      );
+      expect(
+        screen.getByRole('button', { name: 'Choose Pro' }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole('button', { name: 'Choose Unlimited' }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Credit applied: \$12\.34/)).toBeInTheDocument();
+      expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+      expect(screen.queryByText(/sites covered/)).not.toBeInTheDocument();
+    },
+  );
+});
+
 describe('AccountBilling with Unlimited', () => {
   it('shows no toggles', () => {
     render(
@@ -220,6 +276,7 @@ describe('AccountBilling with Unlimited', () => {
           plan: 'UNLIMITED',
           interval: 'month',
           status: 'active',
+          live: true,
           sites: [
             site('a', {
               plan: 'PREMIUM',

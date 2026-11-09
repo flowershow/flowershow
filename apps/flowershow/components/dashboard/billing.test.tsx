@@ -37,10 +37,10 @@ const base = {
   subscription: null,
   plans: PLANS,
   bundleInfo,
+  sitePlan: 'FREE',
   planSource: null,
   accountPlansEnabled: false,
   accountPlan: null,
-  isOwner: true,
 } as const;
 
 afterEach(() => {
@@ -77,10 +77,39 @@ describe('Billing (site settings)', () => {
   );
 
   it('MANUAL site shows granted by Flowershow with no buttons', () => {
-    render(<Billing {...base} accountPlansEnabled planSource="MANUAL" />);
+    render(
+      <Billing
+        {...base}
+        accountPlansEnabled
+        sitePlan="PREMIUM"
+        planSource="MANUAL"
+      />,
+    );
     expect(screen.getByText('Premium (granted by Flowershow)')).toBeTruthy();
     expect(screen.queryByRole('button')).toBeNull();
     expect(capture).not.toHaveBeenCalled();
+  });
+
+  it('PREMIUM with a null source is treated as manual', () => {
+    render(
+      <Billing
+        {...base}
+        accountPlansEnabled
+        sitePlan="PREMIUM"
+        planSource={null}
+      />,
+    );
+    expect(screen.getByText('Premium (granted by Flowershow)')).toBeTruthy();
+    expect(screen.queryByRole('button')).toBeNull();
+  });
+
+  it('with the flag on the per-site price comes from live data, not PLANS', () => {
+    render(<Billing {...base} accountPlansEnabled />);
+    expect(screen.getByText('$111')).toBeTruthy();
+    const fallback = PLANS.PREMIUM.price?.month?.amount;
+    if (fallback !== undefined && fallback !== 111) {
+      expect(screen.queryByText(`$${fallback}`)).toBeNull();
+    }
   });
 
   it('FREE site with the flag on keeps per-site upgrade, links to account billing, no ladder', () => {
@@ -131,48 +160,5 @@ describe('Billing (site settings)', () => {
     expect(
       screen.getByRole('button', { name: 'Manage Subscription' }),
     ).toBeTruthy();
-  });
-
-  describe('as an editor', () => {
-    it('ACCOUNT site says the owner pays, with no link and no buttons', () => {
-      render(
-        <Billing
-          {...base}
-          accountPlansEnabled
-          isOwner={false}
-          planSource="ACCOUNT"
-          accountPlan="PRO"
-        />,
-      );
-      expect(
-        screen.getByText("Premium through the site owner's plan"),
-      ).toBeTruthy();
-      expect(screen.queryByRole('link')).toBeNull();
-      expect(screen.queryByRole('button')).toBeNull();
-    });
-
-    it('MANUAL site has no buttons and no link', () => {
-      render(
-        <Billing
-          {...base}
-          accountPlansEnabled
-          isOwner={false}
-          planSource="MANUAL"
-        />,
-      );
-      expect(screen.getByText('Premium (granted by Flowershow)')).toBeTruthy();
-      expect(screen.queryByRole('link')).toBeNull();
-      expect(screen.queryByRole('button')).toBeNull();
-    });
-
-    it('FREE site has no Pro line or account billing link', () => {
-      render(<Billing {...base} accountPlansEnabled isOwner={false} />);
-      expect(screen.queryByText(/Have several sites/)).toBeNull();
-      expect(
-        screen
-          .queryAllByRole('link')
-          .some((l) => l.getAttribute('href') === '/settings/billing'),
-      ).toBe(false);
-    });
   });
 });

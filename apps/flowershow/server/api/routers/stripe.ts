@@ -17,6 +17,7 @@ import {
   isManualSite,
   premiumPriceIds,
 } from '@/lib/account-plans';
+import { log, SeverityNumber } from '@/lib/otel-logger';
 import { reconcileUserSitePlans } from '@/lib/site-plans';
 import { FLOWERSHOW_PLATFORM, stripe } from '@/lib/stripe';
 import type { BundleTierId } from '@/lib/stripe-plans';
@@ -353,7 +354,11 @@ export const stripeRouter = createTRPCRouter({
               user.stripeCustomerId,
             );
             return customer.deleted ? 0 : Math.max(0, -customer.balance);
-          } catch {
+          } catch (error) {
+            log('Account credit balance lookup failed', SeverityNumber.ERROR, {
+              stripeCustomerId: user.stripeCustomerId,
+              error: error instanceof Error ? error.message : String(error),
+            });
             return 0;
           }
         })(),
@@ -364,6 +369,8 @@ export const stripeRouter = createTRPCRouter({
       plan: account?.plan ?? null,
       interval: account?.interval ?? null,
       status: account?.status ?? null,
+      // Same predicate checkout uses: a lapsed plan is bought again, not managed.
+      live: !!account && isLiveSiteStatus(account.status),
       cancelAtPeriodEnd: account?.cancelAtPeriodEnd ?? false,
       currentPeriodEnd: account?.currentPeriodEnd ?? null,
       siteAllowance: account?.siteAllowance ?? null,
@@ -412,10 +419,15 @@ export const stripeRouter = createTRPCRouter({
       const account = accountPlansEnabled()
         ? await ctx.db.accountSubscription.findUnique({ where: { userId } })
         : null;
-      if (!account || !isCoveringAccountStatus(account.status)) {
+      // Unlimited covers every site; there is nothing to pick.
+      if (
+        !account ||
+        account.plan !== 'PRO' ||
+        !isCoveringAccountStatus(account.status)
+      ) {
         throw new TRPCError({
           code: 'PRECONDITION_FAILED',
-          message: 'You need an active account plan to cover sites.',
+          message: 'You need an active Pro plan to cover sites.',
         });
       }
 
@@ -569,9 +581,9 @@ export const stripeRouter = createTRPCRouter({
       return { url: portalSession.url };
     }),
 
-  // What the site settings billing panel needs, for anyone who can manage the
-  // site (owner or Premium editor). No Stripe calls. `accountPlan` is the
-  // OWNER's plan, never the caller's.
+  // What the site settings billing panel needs. Billing is owner-only: anyone
+  // else who can manage the site gets null (never an error, so the settings
+  // page's Promise.all stays safe). No Stripe calls.
   getSiteBillingStatus: protectedProcedure
     .input(z.object({ siteId: z.string() }))
     .query(async ({ ctx, input }) => {
@@ -586,14 +598,14 @@ export const stripeRouter = createTRPCRouter({
       if (!canManageSite(userId, site)) {
         throw new TRPCError({ code: 'FORBIDDEN', message: 'Not authorized' });
       }
+      if (!isSiteOwner(userId, site)) return null;
 
       const account = await ctx.db.accountSubscription.findUnique({
-        where: { userId: site.userId },
+        where: { userId },
         select: { plan: true, status: true },
       });
       return {
         planSource: site.planSource,
-        isOwner: isSiteOwner(userId, site),
         accountPlan:
           account && isCoveringAccountStatus(account.status)
             ? account.plan

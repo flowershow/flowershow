@@ -36,6 +36,11 @@ vi.mock('@/lib/account-billing', () => ({
   consolidateSiteSubscriptions: vi.fn().mockResolvedValue({}),
 }));
 
+vi.mock('@/lib/otel-logger', () => ({
+  log: vi.fn(),
+  SeverityNumber: { ERROR: 17, WARN: 13, INFO: 9 },
+}));
+
 vi.mock('@/lib/site-plans', () => ({
   reconcileUserSitePlans: vi.fn().mockResolvedValue({ changed: [] }),
 }));
@@ -53,6 +58,7 @@ import {
   consolidateSiteSubscriptions,
   getOrCreateStripeCustomer,
 } from '@/lib/account-billing';
+import { log, SeverityNumber } from '@/lib/otel-logger';
 import { reconcileUserSitePlans } from '@/lib/site-plans';
 import { stripe } from '@/lib/stripe';
 import { appRouter } from '@/server/api/root';
@@ -396,6 +402,20 @@ describe('stripe.setSiteCovered', () => {
     expect(db.site.update).not.toHaveBeenCalled();
   });
 
+  it('is PRECONDITION_FAILED on an Unlimited plan and writes nothing', async () => {
+    const db = makeCoverDb({
+      account: { ...livePro, plan: 'UNLIMITED', siteAllowance: null },
+    });
+    await expect(
+      createCaller(db).stripe.setSiteCovered({
+        siteId: 'site-1',
+        covered: true,
+      }),
+    ).rejects.toMatchObject({ code: 'PRECONDITION_FAILED' });
+    expect(db.site.update).not.toHaveBeenCalled();
+    expect(reconcileUserSitePlans).not.toHaveBeenCalled();
+  });
+
   it('is BAD_REQUEST for a MANUAL site', async () => {
     const db = makeCoverDb({
       site: coverSite({ plan: 'PREMIUM', planSource: 'MANUAL' }),
@@ -522,7 +542,7 @@ describe('stripe.getSiteBillingStatus', () => {
     return db;
   };
 
-  it('gives an editor isOwner false, the planSource and the OWNER plan, without calling Stripe', async () => {
+  it('gives an editor null and reads no plan data, without calling Stripe', async () => {
     const db = dbFor(siteRow(), { plan: 'UNLIMITED', status: 'active' });
     const result = await createCaller(
       db,
@@ -530,11 +550,20 @@ describe('stripe.getSiteBillingStatus', () => {
     ).stripe.getSiteBillingStatus({
       siteId: 'site-1',
     });
-    expect(result).toEqual({
-      planSource: 'ACCOUNT',
-      isOwner: false,
-      accountPlan: 'UNLIMITED',
-    });
+    expect(result).toBeNull();
+    expect(db.accountSubscription.findUnique).not.toHaveBeenCalled();
+    expect(stripe.customers.retrieve).not.toHaveBeenCalled();
+    expect(stripe.prices.retrieve).not.toHaveBeenCalled();
+    expect(stripe.checkout.sessions.create).not.toHaveBeenCalled();
+  });
+
+  it('gives the owner the planSource and plan, without calling Stripe', async () => {
+    const db = dbFor(siteRow(), { plan: 'UNLIMITED', status: 'active' });
+    const result = await createCaller(
+      db,
+      'owner-1',
+    ).stripe.getSiteBillingStatus({ siteId: 'site-1' });
+    expect(result).toEqual({ planSource: 'ACCOUNT', accountPlan: 'UNLIMITED' });
     expect(db.accountSubscription.findUnique).toHaveBeenCalledWith(
       expect.objectContaining({ where: { userId: 'owner-1' } }),
     );
@@ -543,16 +572,12 @@ describe('stripe.getSiteBillingStatus', () => {
     expect(stripe.checkout.sessions.create).not.toHaveBeenCalled();
   });
 
-  it('gives the owner isOwner true and no plan when the account plan does not cover sites', async () => {
+  it('gives the owner no plan when the account plan does not cover sites', async () => {
     const result = await createCaller(
       dbFor(siteRow(), { plan: 'PRO', status: 'canceled' }),
       'owner-1',
     ).stripe.getSiteBillingStatus({ siteId: 'site-1' });
-    expect(result).toEqual({
-      planSource: 'ACCOUNT',
-      isOwner: true,
-      accountPlan: null,
-    });
+    expect(result).toEqual({ planSource: 'ACCOUNT', accountPlan: null });
   });
 
   it('denies a stranger', async () => {
@@ -621,6 +646,44 @@ describe('stripe.getAccountPlan', () => {
     });
     expect(result.sites[0]).toMatchObject({ covered: true });
     expect(result.prices.PRO.year).toEqual({ amount: 7, currency: 'USD' });
+  });
+
+  it('marks the plan live for an active subscription', async () => {
+    const db = makeCoverDb();
+    const result = await createCaller(db).stripe.getAccountPlan();
+    expect(result.live).toBe(true);
+  });
+
+  it.each(['canceled', 'incomplete_expired'])(
+    'marks a %s plan not live and keeps the credit',
+    async (status) => {
+      vi.mocked(stripe.customers.retrieve).mockResolvedValue({
+        id: 'cus_1',
+        balance: -500,
+      } as any);
+      const db = makeCoverDb({ account: { ...livePro, status } });
+      const result = await createCaller(db).stripe.getAccountPlan();
+      expect(result.live).toBe(false);
+      expect(result.creditBalanceCents).toBe(500);
+    },
+  );
+
+  it('has no plan and is not live without an account row', async () => {
+    const result = await createCaller(
+      makeCoverDb({ account: null }),
+    ).stripe.getAccountPlan();
+    expect(result.live).toBe(false);
+  });
+
+  it('logs at ERROR and returns 0 when the credit balance lookup fails', async () => {
+    vi.mocked(stripe.customers.retrieve).mockRejectedValue(new Error('boom'));
+    const result = await createCaller(makeCoverDb()).stripe.getAccountPlan();
+    expect(result.creditBalanceCents).toBe(0);
+    expect(log).toHaveBeenCalledWith(
+      expect.any(String),
+      SeverityNumber.ERROR,
+      expect.objectContaining({ stripeCustomerId: 'cus_1' }),
+    );
   });
 });
 

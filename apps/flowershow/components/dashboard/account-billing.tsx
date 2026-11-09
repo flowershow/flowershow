@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+import { isManualSite } from '@/lib/account-plans';
 import type { AppRouter } from '@/server/api/root';
 import { api } from '@/trpc/react';
 import { LoadingButton } from './loading-button';
@@ -84,6 +85,18 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
 
   const coveredCount = data.sites.filter((s) => s.covered).length;
   const plan = data.plan as Plan | null;
+  const creditLine = data.creditBalanceCents > 0 && (
+    <p className="text-sm text-stone-500 dark:text-zinc-400">
+      Credit applied:{' '}
+      {formatAmount(
+        data.creditBalanceCents / 100,
+        (plan &&
+          data.interval &&
+          data.prices[plan][data.interval as Interval]?.currency) ||
+          'USD',
+      )}
+    </p>
+  );
 
   return (
     <div
@@ -95,8 +108,10 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
           Billing
         </h2>
 
-        {!plan ? (
+        {/* A lapsed plan (canceled, expired) is bought again, with any credit kept. */}
+        {!plan || !data.live ? (
           <>
+            {creditLine}
             <fieldset aria-label="Payment frequency" className="inline-block">
               <RadioGroup
                 value={frequency}
@@ -157,17 +172,7 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
                 plan === 'PRO' ? data.proSiteAllowance : 'all'
               } sites covered`}
             </p>
-            {data.creditBalanceCents > 0 && (
-              <p className="text-sm text-stone-500 dark:text-zinc-400">
-                Credit applied:{' '}
-                {formatAmount(
-                  data.creditBalanceCents / 100,
-                  (data.interval &&
-                    data.prices[plan][data.interval as Interval]?.currency) ||
-                    'USD',
-                )}
-              </p>
-            )}
+            {creditLine}
             {data.cancelAtPeriodEnd && data.currentPeriodEnd && (
               <p className="text-sm font-medium text-amber-600 dark:text-amber-400">
                 Ends on {formatDate(data.currentPeriodEnd)}
@@ -178,7 +183,7 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
             {plan === 'PRO' && (
               <ul className="divide-y divide-stone-200 rounded-md ring-1 ring-inset ring-stone-200 dark:divide-zinc-700 dark:ring-zinc-700">
                 {data.sites.map((site) => {
-                  const manual = site.planSource === 'MANUAL';
+                  const manual = isManualSite(site);
                   const atLimit =
                     data.siteAllowance !== null &&
                     coveredCount >= data.siteAllowance;
