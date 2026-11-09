@@ -309,7 +309,7 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
       '400': {
         description: 'Invalid site',
         content: {
-          'application/json': { schema: z.object({ error: z.string() }) },
+          'application/json': { schema: z.object({ error: z.string(), message: z.string() }) },
         },
       },
       '401': {

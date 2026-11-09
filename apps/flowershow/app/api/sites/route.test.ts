@@ -125,7 +125,43 @@ describe('POST /api/sites rate limit', () => {
 });
 
 describe('GET /api/sites', () => {
-  it('lists owned sites and sites the caller can edit, with role and owner', async () => {
+  it('lists only owned sites by default', async () => {
+    const d = new Date(0);
+    (validateAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue({
+      userId: 'ada-1',
+    });
+    (prisma.user.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue({
+      username: 'ada',
+    });
+    (prisma.site.findMany as ReturnType<typeof vi.fn>).mockResolvedValue([
+      {
+        id: 's1',
+        projectName: 'mine',
+        subdomain: 'mine-ada',
+        customDomain: null,
+        createdAt: d,
+        updatedAt: d,
+        _count: { blobs: 1 },
+        userId: 'ada-1',
+        plan: 'FREE',
+        members: [],
+        user: { username: 'ada' },
+      },
+    ]);
+    const res = await GET(
+      new NextRequest('http://localhost/api/sites', { method: 'GET' }),
+    );
+    const json = await res.json();
+    expect(prisma.site.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 'ada-1' } }),
+    );
+    expect(json.sites.map((s: any) => [s.role, s.owner.username])).toEqual([
+      ['owner', 'ada'],
+    ]);
+    expect(ListSitesResponseSchema.safeParse(json).success).toBe(true);
+  });
+
+  it('with includeShared=true lists owned sites and sites the caller can edit, with role and owner', async () => {
     const d = new Date(0);
     (validateAccessToken as ReturnType<typeof vi.fn>).mockResolvedValue({
       userId: 'ada-1',
@@ -162,7 +198,9 @@ describe('GET /api/sites', () => {
       },
     ]);
     const res = await GET(
-      new NextRequest('http://localhost/api/sites', { method: 'GET' }),
+      new NextRequest('http://localhost/api/sites?includeShared=true', {
+        method: 'GET',
+      }),
     );
     const json = await res.json();
     expect(prisma.site.findMany).toHaveBeenCalledWith(

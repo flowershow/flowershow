@@ -88,8 +88,9 @@ export async function GET(
         })
       : null;
 
-  // An editor of a lapsed site is told why (403 premium_required). Strangers
-  // and removed editors fall through to the public fields below.
+  // An editor of a lapsed site is told why (403 premium_required). Only call
+  // siteAccessDenied for lapsed_editor: it also returns 403 for a null role,
+  // and strangers and removed editors must keep getting the public fields.
   if (role === 'lapsed_editor') {
     const denied = siteAccessDenied(role);
     if (denied) return denied;

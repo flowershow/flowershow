@@ -8,6 +8,7 @@ import {
   DeleteSiteResponseSchema,
   ErrorSchema,
   GetSiteResponseSchema,
+  ListSitesQuerySchema,
   ListSitesResponseSchema,
   PublicStatusResponseSchema,
   PublishFilesRequestSchema,
@@ -137,9 +138,10 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
     operationId: 'listSites',
     summary: "List user's sites",
     description:
-      "Lists sites the caller owns and sites shared with them as an editor. Each site has a `role` (`owner` or `editor`) and an `owner.username`. Shared sites whose Premium plan has lapsed are left out.",
+      "Lists the sites the caller owns. With `includeShared=true` it also lists sites shared with them as an editor (Premium sites only; sites whose plan has lapsed are left out). Each site has a `role` (`owner` or `editor`) and an `owner.username`, in both modes.",
     tags: ['Sites'],
     security: [{ bearerToken: [] }],
+    request: { query: ListSitesQuerySchema },
     responses: {
       '200': {
         description: 'List of sites',

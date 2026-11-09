@@ -1,5 +1,6 @@
 import {
   CreateSiteRequestSchema,
+  ListSitesQuerySchema,
   type CreateSiteResponse,
   type ListSitesResponse,
 } from '@flowershow/api-contract';
@@ -242,6 +243,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Shared sites are opt-in: released CLIs resolve site names from this list.
+    const query = ListSitesQuerySchema.safeParse(
+      Object.fromEntries(request.nextUrl.searchParams),
+    );
+    if (!query.success) {
+      return NextResponse.json(
+        { error: 'bad_request', error_description: query.error.message },
+        { status: 400 },
+      );
+    }
+    const includeShared = query.data.includeShared === 'true';
+
     // Get user info for URL generation
     const user = await prisma.user.findUnique({
       where: { id: auth.userId },
@@ -260,11 +273,18 @@ export async function GET(request: NextRequest) {
     // Fetch all sites for the user
     const sites = await prisma.site.findMany({
       where: {
-        OR: [
-          { userId: auth.userId },
-          // Lapsed shared sites are left out; only the dashboard shows them.
-          { members: { some: { userId: auth.userId } }, plan: 'PREMIUM' },
-        ],
+        ...(includeShared
+          ? {
+              OR: [
+                { userId: auth.userId },
+                // Lapsed shared sites are left out; only the dashboard shows them.
+                {
+                  members: { some: { userId: auth.userId } },
+                  plan: 'PREMIUM' as const,
+                },
+              ],
+            }
+          : { userId: auth.userId }),
       },
       select: {
         ...siteAuthzSelect(auth.userId),

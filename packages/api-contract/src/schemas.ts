@@ -17,6 +17,11 @@ export const SiteSummarySchema = z.object({
 });
 export type SiteSummary = z.infer<typeof SiteSummarySchema>;
 
+export const ListSitesQuerySchema = z.object({
+  includeShared: z.enum(['true', 'false']).optional(),
+});
+export type ListSitesQuery = z.infer<typeof ListSitesQuerySchema>;
+
 export const ListSitesResponseSchema = z.object({
   sites: z.array(SiteSummarySchema),
   total: z.number(),
