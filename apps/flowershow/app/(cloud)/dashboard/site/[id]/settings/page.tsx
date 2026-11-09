@@ -11,7 +11,6 @@ import JsonForm from '@/components/dashboard/json-form';
 import SettingsNav from '@/components/dashboard/settings-nav';
 import { accountPlansEnabled } from '@/lib/account-plans';
 import { validDomainRegex } from '@/lib/domains';
-import { getEntitlements } from '@/lib/entitlements';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { ownerSectionVisibility } from '@/lib/settings-sections';

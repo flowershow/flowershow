@@ -35,6 +35,9 @@ vi.mock('@/trpc/server', () => ({
       getBundleInfo: { query: q.getBundleInfo },
       getSiteBillingStatus: { query: q.getSiteBillingStatus },
     },
+    siteMember: {
+      list: { query: vi.fn().mockResolvedValue({ role: 'owner' }) },
+    },
     github: { listInstallations: { query: vi.fn() } },
   },
 }));
