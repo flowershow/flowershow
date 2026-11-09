@@ -126,15 +126,6 @@ export const stripeRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      // Only the Premium prices may be bought per site; a client-supplied
-      // account price must never end up attached to a single site.
-      if (!premiumPriceIds().has(input.priceId)) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'Invalid price',
-        });
-      }
-
       const site = await ctx.db.site.findUnique({
         where: { id: input.siteId },
         include: { user: true },
@@ -151,6 +142,15 @@ export const stripeRouter = createTRPCRouter({
         throw new TRPCError({
           code: 'FORBIDDEN',
           message: 'Not authorized',
+        });
+      }
+
+      // Only the Premium prices may be bought per site; a client-supplied
+      // account price must never end up attached to a single site.
+      if (!premiumPriceIds().has(input.priceId)) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Invalid price',
         });
       }
 

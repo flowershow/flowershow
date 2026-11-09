@@ -2339,6 +2339,9 @@ describe('site router: editor allow and deny', () => {
     );
     expect((db.site as any).update).not.toHaveBeenCalled();
     expect((db.site as any).delete).not.toHaveBeenCalled();
+  });
+});
+
 describe('site.create account plan', () => {
   function createDb() {
     const created = makeSite({
