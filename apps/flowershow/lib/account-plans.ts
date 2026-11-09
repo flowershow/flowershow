@@ -1,4 +1,9 @@
-import type { AccountPlan, SubscriptionStatus } from '@prisma/client';
+import type {
+  AccountPlan,
+  Plan,
+  PlanSource,
+  SubscriptionStatus,
+} from '@prisma/client';
 import { env } from '@/env.mjs';
 
 // Account plans stay dark until phase 3 (`flowershow-a7k`) flips this in code
@@ -72,6 +77,17 @@ export function accountPlansEnabled(
 // A per-site subscription keeps its site Premium unless it is over for good.
 export function isLiveSiteStatus(status: SubscriptionStatus | string): boolean {
   return status !== 'canceled' && status !== 'incomplete_expired';
+}
+
+// PREMIUM with a null source is an admin grant (an admin who forgot the column).
+export function isManualSite(site: {
+  plan: Plan;
+  planSource: PlanSource | null;
+}): boolean {
+  return (
+    site.planSource === 'MANUAL' ||
+    (site.plan === 'PREMIUM' && site.planSource === null)
+  );
 }
 
 // An account subscription covers sites only while it is actually paying.

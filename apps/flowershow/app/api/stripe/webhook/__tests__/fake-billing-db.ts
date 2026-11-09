@@ -78,9 +78,12 @@ export function createFakeBillingDb() {
       ),
     },
     subscription: {
-      findUnique: vi.fn(async ({ where }: any) =>
-        clone(findOne(state.subscriptions, where)),
-      ),
+      findUnique: vi.fn(async ({ where, include }: any) => {
+        const row = findOne(state.subscriptions, where);
+        if (!row || !include?.site) return clone(row);
+        const site = state.sites.find((s) => s.id === row.siteId);
+        return structuredClone({ ...row, site });
+      }),
       findMany: vi.fn(async ({ where }: any = {}) =>
         structuredClone(
           state.subscriptions.filter((row) => matches(row, where)),
@@ -104,6 +107,9 @@ export function createFakeBillingDb() {
     user: {
       findUnique: vi.fn(async ({ where }: any) =>
         clone(findOne(state.users, where)),
+      ),
+      update: vi.fn(async ({ where, data }: any) =>
+        updateOne(state.users, where, data),
       ),
       updateMany: vi.fn(async ({ where, data }: any) =>
         updateAll(state.users, where, data),

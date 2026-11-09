@@ -1,3 +1,6 @@
+import type Stripe from 'stripe';
+import { isLiveSiteStatus, isManualSite } from '@/lib/account-plans';
+import { log, SeverityNumber } from '@/lib/otel-logger';
 import { FLOWERSHOW_PLATFORM, stripe } from '@/lib/stripe';
 import prisma from '@/server/db';
 
@@ -34,11 +37,206 @@ export async function getOrCreateStripeCustomer(
   return stored?.stripeCustomerId ?? customer.id;
 }
 
-// Stub: Task 7 fills in consolidation of per-site subscriptions.
-export async function consolidateSiteSubscriptions(_account: {
+/**
+ * The unused share of a paid period, in cents, floored. `now` before the period
+ * is treated as the period start, so a credit never exceeds what was paid.
+ */
+export function computeUnusedCreditCents(input: {
+  amountPaidCents: number;
+  periodStart: number;
+  periodEnd: number;
+  now: number;
+}): number {
+  const { amountPaidCents, periodStart, periodEnd, now } = input;
+  if (amountPaidCents === 0 || now >= periodEnd) return 0;
+  const remaining = periodEnd - Math.max(now, periodStart);
+  return Math.floor((amountPaidCents * remaining) / (periodEnd - periodStart));
+}
+
+// The paid invoice for the subscription's current Stripe period. Matching on
+// the line period skips later proration invoices, and uses Stripe's period
+// rather than the DB one, which the cancel bonus may have extended.
+async function findCurrentPeriodInvoice(
+  subscription: Stripe.Subscription,
+): Promise<Stripe.Invoice | null> {
+  const invoices = stripe.invoices.list({
+    subscription: subscription.id,
+    status: 'paid',
+    limit: 100,
+  });
+  for await (const invoice of invoices) {
+    const covers = invoice.lines.data.some(
+      (line) =>
+        line.type === 'subscription' &&
+        !line.proration &&
+        line.period.start === subscription.current_period_start &&
+        line.period.end === subscription.current_period_end,
+    );
+    if (covers) return invoice;
+  }
+  return null;
+}
+
+// Stripe idempotency keys expire after 24 hours and webhook retries run for 3
+// days, so the durable guard against a second credit is this lookup.
+async function hasConsolidationCredit(
+  customerId: string,
+  siteSubscriptionId: string,
+): Promise<boolean> {
+  const transactions = stripe.customers.listBalanceTransactions(customerId, {
+    limit: 100,
+  });
+  for await (const transaction of transactions) {
+    if (transaction.metadata?.siteSubscriptionId === siteSubscriptionId) {
+      return true;
+    }
+  }
+  return false;
+}
+
+// Credits the unused prepaid time to the account customer. Returns the cents
+// credited. "Now" is the account's start_date, so a retry computes the same
+// amount and the idempotency key stays valid.
+async function creditUnusedTime(
+  siteSubscription: Stripe.Subscription,
+  accountSubscription: Stripe.Subscription,
+  customerId: string,
+): Promise<number> {
+  const invoice = await findCurrentPeriodInvoice(siteSubscription);
+  if (!invoice) return 0;
+
+  if (invoice.currency !== accountSubscription.currency) {
+    log(
+      'Consolidation credit skipped: currency differs',
+      SeverityNumber.ERROR,
+      {
+        siteSubscriptionId: siteSubscription.id,
+        accountSubscriptionId: accountSubscription.id,
+        invoiceCurrency: invoice.currency,
+        accountCurrency: accountSubscription.currency,
+        reason: 'currency_mismatch',
+      },
+    );
+    return 0;
+  }
+
+  const cents = computeUnusedCreditCents({
+    amountPaidCents: invoice.amount_paid,
+    periodStart: siteSubscription.current_period_start,
+    periodEnd: siteSubscription.current_period_end,
+    now: accountSubscription.start_date,
+  });
+  if (cents === 0) return 0;
+
+  await stripe.customers.createBalanceTransaction(
+    customerId,
+    {
+      amount: -cents,
+      currency: invoice.currency,
+      metadata: {
+        platform: FLOWERSHOW_PLATFORM,
+        reason: 'consolidation_credit',
+        siteSubscriptionId: siteSubscription.id,
+      },
+    },
+    { idempotencyKey: `consolidation-credit:${siteSubscription.id}` },
+  );
+  return cents;
+}
+
+/**
+ * Move the per-site subscriptions the account plan covers onto it: credit the
+ * unused prepaid time, tag the subscription, cancel it, record that.
+ *
+ * Safe to repeat. Any step that throws propagates so Stripe retries the event,
+ * and the retry resumes: consolidatedAt skips finished subscriptions, the
+ * balance transaction lookup stops a second credit.
+ */
+export async function consolidateSiteSubscriptions(account: {
   userId: string;
   stripeCustomerId: string;
   stripeSubscriptionId: string;
 }): Promise<{ consolidated: string[]; creditedCents: number }> {
-  return { consolidated: [], creditedCents: 0 };
+  const result = { consolidated: [] as string[], creditedCents: 0 };
+
+  const [accountRow, sites] = await Promise.all([
+    prisma.accountSubscription.findUnique({
+      where: { userId: account.userId },
+      select: { siteAllowance: true },
+    }),
+    prisma.site.findMany({
+      where: { userId: account.userId, isTemporary: false },
+      select: {
+        plan: true,
+        planSource: true,
+        coveredByAccountPlan: true,
+        subscription: {
+          select: {
+            id: true,
+            stripeSubscriptionId: true,
+            status: true,
+            consolidatedAt: true,
+          },
+        },
+      },
+    }),
+  ]);
+  if (!accountRow) return result;
+
+  // Unlimited covers sites without setting coveredByAccountPlan.
+  const unlimited = accountRow.siteAllowance === null;
+  const inScope = sites.flatMap((site) => {
+    const { subscription } = site;
+    return subscription &&
+      subscription.consolidatedAt === null &&
+      isLiveSiteStatus(subscription.status) &&
+      !isManualSite(site) &&
+      (unlimited || site.coveredByAccountPlan)
+      ? [subscription]
+      : [];
+  });
+  if (inScope.length === 0) return result;
+
+  const accountSubscription = await stripe.subscriptions.retrieve(
+    account.stripeSubscriptionId,
+  );
+  // Never cancel subscriptions someone is paying for on an unpaid plan (Ruling 4).
+  if (
+    accountSubscription.status !== 'active' &&
+    accountSubscription.status !== 'trialing'
+  ) {
+    return result;
+  }
+
+  for (const row of inScope) {
+    const id = row.stripeSubscriptionId;
+    const siteSubscription = await stripe.subscriptions.retrieve(id);
+
+    // Already canceled (say the cancel worked but the write below failed): only
+    // the record is missing.
+    if (isLiveSiteStatus(siteSubscription.status)) {
+      if (!(await hasConsolidationCredit(account.stripeCustomerId, id))) {
+        result.creditedCents += await creditUnusedTime(
+          siteSubscription,
+          accountSubscription,
+          account.stripeCustomerId,
+        );
+      }
+      await stripe.subscriptions.update(id, {
+        metadata: {
+          reason: 'consolidated',
+          consolidatedInto: account.stripeSubscriptionId,
+        },
+      });
+      await stripe.subscriptions.cancel(id, { prorate: false });
+    }
+
+    await prisma.subscription.update({
+      where: { id: row.id },
+      data: { consolidatedAt: new Date() },
+    });
+    result.consolidated.push(id);
+  }
+
+  return result;
 }

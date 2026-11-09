@@ -5,7 +5,11 @@ import { PLAN_LIMITS } from '@/lib/entitlements';
 import { log, SeverityNumber } from '@/lib/otel-logger';
 import { getSiteStorageBytes } from '@/lib/storage-limits';
 import prisma from '@/server/db';
-import { isCoveringAccountStatus, isLiveSiteStatus } from './account-plans';
+import {
+  isCoveringAccountStatus,
+  isLiveSiteStatus,
+  isManualSite,
+} from './account-plans';
 
 export type SitePlanInput = {
   id: string;
@@ -31,13 +35,7 @@ export type SitePlanTarget = {
 };
 
 // MANUAL > live site subscription (SITE) > covered by a live account plan
-// (ACCOUNT) > FREE. PREMIUM with a null source is an admin grant: MANUAL.
-function isManual(site: SitePlanInput): boolean {
-  return (
-    site.planSource === 'MANUAL' ||
-    (site.plan === 'PREMIUM' && site.planSource === null)
-  );
-}
+// (ACCOUNT) > FREE.
 
 function hasLiveSiteSubscription(site: SitePlanInput): boolean {
   return (
@@ -83,7 +81,7 @@ export function computeSitePlans(
   // a lapsed account keeps them, so the owner's selection survives either.
   const flags = new Map(sites.map((s) => [s.id, s.coveredByAccountPlan]));
   if (covering && account.siteAllowance !== null) {
-    const candidates = sites.filter((s) => !isManual(s));
+    const candidates = sites.filter((s) => !isManualSite(s));
     // Flagged sites with a live site subscription count: they are about to be
     // consolidated into the account plan.
     const flagged = candidates.filter((s) => s.coveredByAccountPlan);
@@ -110,7 +108,7 @@ export function computeSitePlans(
   }
 
   return sites.map((site): SitePlanTarget => {
-    if (isManual(site)) {
+    if (isManualSite(site)) {
       return {
         id: site.id,
         plan: site.plan,
