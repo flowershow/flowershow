@@ -43,6 +43,9 @@ func resolveSite(nameFlag string) (*api.Site, error) {
 
 	if siteName == "" {
 		if len(owned) == 0 {
+			if len(sitesData.Sites) > 0 {
+				return nil, fail("You have no sites of your own.\nSpecify a site shared with you with --name owner/name (see `fl list`).")
+			}
 			return nil, fail("You have no sites yet.\nRun `fl <path>` to publish your first site.")
 		}
 		if len(owned) > 1 {
@@ -69,6 +72,13 @@ func resolveSite(nameFlag string) (*api.Site, error) {
 			if s.DisplayName() == siteName || (s.Owner != nil && s.Owner.Username == owner && s.ProjectName == name) {
 				return s, nil
 			}
+		}
+	}
+	if owner != "" {
+		// A shared site whose owner's Premium has lapsed is left out of the
+		// list; ask the server directly so the user gets the real reason.
+		if _, err := api.GetSiteByName(owner, name); err != nil {
+			return nil, fail(err.Error())
 		}
 	}
 	return nil, fail(fmt.Sprintf("Site %q not found.\nUse `fl list` to see all sites.", siteName))

@@ -215,7 +215,8 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 
 	// If --name is given and differs from the stored name, treat it as an
 	// explicit re-point request (e.g. after a server-side rename)
-	if !anon && localCfg != nil && nameFlag != "" && nameFlag != localCfg.SiteName {
+	if !anon && localCfg != nil && nameFlag != "" && nameFlag != localCfg.SiteName &&
+		nameFlag != userInfo.Username+"/"+localCfg.SiteName {
 		ui.PrintWarning(fmt.Sprintf(
 			"Re-pointing this folder from %q to %q (--name overrides .flowershow).",
 			localCfg.SiteName, nameFlag,
@@ -265,9 +266,9 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 	}
 
 	// A folder linked by site ID follows its site through renames and reaches
-	// a site shared with you. 404 falls through to the name path below (which
-	// never creates a site for a linked folder); anything else, including a
-	// 403 (access removed, or the owner's Premium lapsed), stops here.
+	// a site shared with you. Any failure stops here, never falling back to a
+	// same-named site: a 404 (the site is gone) and a 403 (access removed, or the
+	// owner's Premium lapsed) alike.
 	if nameFlag == "" && localCfg != nil && localCfg.SiteID != "" {
 		detail, err := api.GetSiteByID(localCfg.SiteID)
 		if err == nil {
@@ -282,9 +283,12 @@ func runPublish(inputPaths []string, nameFlag string, skipConfirm, overwrite, an
 			return doSync(site, ref, discovered, sp, startTime)
 		}
 		var httpErr *api.HTTPError
-		if !errors.As(err, &httpErr) || httpErr.StatusCode != 404 {
-			return fail(accessErrorMsg(err, localCfg.SiteName))
+		if errors.As(err, &httpErr) && httpErr.StatusCode == 404 {
+			return fail(fmt.Sprintf(
+				"The site this folder is linked to (%q) no longer exists.\nNothing was published. To link this folder to another site, run:\n  fl --name <site> %s",
+				localCfg.SiteName, folderPath))
 		}
+		return fail(accessErrorMsg(err, localCfg.SiteName))
 	}
 
 	// Resolve site name
@@ -608,11 +612,16 @@ func publishToSharedSite(owner, name string, localCfg *localconfig.Config, overw
 		return fail(fmt.Sprintf("Site %q not found or not shared with you. Run `fl list` to see your sites.", ref))
 	}
 	site := res.Site
-	if localCfg == nil && !overwrite {
+	linkedHere := localCfg != nil && (localCfg.SiteID == site.ID || localCfg.SiteName == ref)
+	if !linkedHere && !overwrite {
+		target := "<path>"
+		if isFolderMode {
+			target = folderPath
+		}
 		return fail(fmt.Sprintf(
 			"%q is shared with you. Publishing replaces its content and deletes files that aren't in this path.\n"+
-				"To do that, run again with --overwrite.",
-			ref,
+				"To do that, run:\n  fl --name %s --overwrite %s",
+			ref, ref, target,
 		))
 	}
 	if isFolderMode && (localCfg == nil || localCfg.SiteName != ref || localCfg.SiteID != site.ID) {

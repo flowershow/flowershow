@@ -142,7 +142,7 @@ Publish files or folders to Flowershow. If the path is linked to a site (a folde
 **Options:**
 
 - `--name <siteName>` - Custom name for the site (defaults to file/folder name). Only needed on the first publish; for folder mode, the name is saved to a local `.flowershow` file and remembered automatically.
-  To publish to a site someone else shared with you, use `--name owner/name` (see `fl list`). `fl` syncs only if the site is shared with you and its owner is on Premium; it never creates a site for `owner/name`. An unlinked folder needs `--overwrite` the first time, since publishing replaces the site's content. A bare name never matches a shared site.
+  To publish to a site someone else shared with you, use `--name owner/name` (see `fl list`). `fl` syncs only if the site is shared with you and its owner is on Premium; it never creates a site for `owner/name`. Publishing replaces the site's content, so `--overwrite` is required unless the folder is already linked to that site (an unlinked folder, or one linked to a different site, is refused without it; the error shows the command to run). A bare name never matches a shared site.
 - `--yes` - Skip the new-site name confirmation prompt (useful for scripts and CI). It does not allow overwriting an existing site.
 - `--overwrite` - Publish an unlinked path (no `.flowershow` file, e.g. a single file or a folder published for the first time) into an existing site with the same name, replacing its content and deleting its files that aren't in the path. Without it, `fl` asks interactively whether to overwrite or choose a new name, and with `--yes` it refuses and exits non-zero.
 - `--anon` - Publish without an account. The site gets a random name and expires in 7 days unless claimed; `fl` prints the live URL and a claim link. See [Publishing without an account](#publishing-without-an-account).
@@ -193,6 +193,8 @@ fl --anon ./my-notes
 9. For folder mode, the site name and site ID are saved to `.flowershow` in the folder for future runs (the ID keeps the link working after the site is renamed; for a shared site the name is `owner/name`)
 
 **What happens (subsequent runs):**
+
+If the site a folder is linked to no longer exists, `fl` stops and publishes nothing; run `fl --name <site> <folder>` to link it elsewhere. `fl sync` (deprecated) does not support shared sites: use `fl --name owner/name`.
 
 For folders, `fl` reads the site name from `.flowershow` and performs a delta sync — uploading only new or modified files and removing deleted ones. Single files (and multiple files) are never linked, so re-publishing them into their existing site needs `--overwrite` (or confirming the overwrite prompt).
 

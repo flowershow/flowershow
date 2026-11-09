@@ -38,14 +38,16 @@ const fakePremiumLapsedMsg = "This site is shared with you, but its Premium plan
 // fakeAPI is an in-memory stand-in for the Flowershow API, so publish tests
 // never talk to production. It records every mutating call.
 type fakeAPI struct {
-	mu          sync.Mutex
-	sites       map[string]api.Site // by project name
-	shared      map[string]api.Site // sites shared with the user, by "owner/name"
-	listQueries []string            // raw query of each GET /api/sites
-	publicOnly  map[string]bool     // "owner/name" -> GET returns public fields only (caller can't manage it)
-	syncCalls   []string            // site IDs that received a sync request
-	created     []string            // project names created via POST /api/sites
-	server      *httptest.Server
+	mu           sync.Mutex
+	sites        map[string]api.Site // by project name
+	shared       map[string]api.Site // sites shared with the user, by "owner/name"
+	listQueries  []string            // raw query of each GET /api/sites
+	omitFromList map[string]bool     // site IDs left out of GET /api/sites (a lapsed shared site)
+	noRoles      bool                // list rows carry no role/owner (an old server)
+	publicOnly   map[string]bool     // "owner/name" -> GET returns public fields only (caller can't manage it)
+	syncCalls    []string            // site IDs that received a sync request
+	created      []string            // project names created via POST /api/sites
+	server       *httptest.Server
 
 	anonCreates     int               // calls to POST /api/sites/anon
 	anonCreateAuth  []string          // Authorization header of each anon create
@@ -243,13 +245,17 @@ func (f *fakeAPI) handler(w http.ResponseWriter, r *http.Request) {
 		f.listQueries = append(f.listQueries, r.URL.RawQuery)
 		list := []api.Site{}
 		for _, site := range f.sites {
-			site.Role = "owner"
-			site.Owner = &api.SiteOwner{Username: testUser}
+			if !f.noRoles {
+				site.Role = "owner"
+				site.Owner = &api.SiteOwner{Username: testUser}
+			}
 			list = append(list, site)
 		}
 		if r.URL.Query().Get("includeShared") == "true" {
 			for _, site := range f.shared {
-				list = append(list, site)
+				if !f.omitFromList[site.ID] {
+					list = append(list, site)
+				}
 			}
 		}
 		f.mu.Unlock()
@@ -426,6 +432,7 @@ func setupFakeAPI(t *testing.T, loggedIn bool, existing ...string) *fakeAPI {
 		sites:         map[string]api.Site{},
 		shared:        map[string]api.Site{},
 		publicOnly:    map[string]bool{},
+		omitFromList:  map[string]bool{},
 		siteStatus:    map[string]int{},
 		claimTokens:   map[string]string{anonClaimToken: anonSiteID},
 		annotationsOn: map[string]bool{}, openAnnotations: map[string]int{},

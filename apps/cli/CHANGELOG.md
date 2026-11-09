@@ -2,9 +2,9 @@
 
 ## Unreleased
 
-- Sites shared with you: `fl list` now also shows sites other people have shared with you (you are an editor), under "Shared with you", as `owner/name`. Publish to one with `fl --name owner/name <folder>`; the first publish of an unlinked folder needs `--overwrite`, as it replaces the site's content. Sharing needs the site owner to be on Premium; if it lapses, `fl` says so and publishes nothing.
+- Sites shared with you: `fl list` now also shows sites other people have shared with you (you are an editor), under "Shared with you", as `owner/name`. Publish to one with `fl --name owner/name <folder>`; `--overwrite` is required unless the folder is already linked to that site, as publishing replaces the site's content. Sharing needs the site owner to be on Premium; if it lapses, `fl` says so and publishes nothing.
 - A bare name never means a shared site: `--name notes`, `fl settings`, `fl annotations ...` and `fl delete notes` only match sites you own, and with no `--name` only your own sites count as "your only site". Reach a shared site as `owner/name`. Only the owner can delete a site.
-- `.flowershow` now also stores the site ID, so a linked folder keeps publishing to the same site after it is renamed. Folders linked by an older `fl` still work by name. If the stored site is gone or you lost access, `fl` stops with an error rather than creating a new site.
+- `.flowershow` now also stores the site ID, so a linked folder keeps publishing to the same site after it is renamed. Folders linked by an older `fl` still work by name. If the stored site is gone (404) or you lost access (403), `fl` stops and publishes nothing, never falling back to a same-named site; run `fl --name <site> <folder>` to link elsewhere. `fl sync` stops on a shared-site link and points to `fl`.
 
 ## 2.10.0
 

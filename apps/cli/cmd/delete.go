@@ -76,6 +76,14 @@ func runDelete(projectName string, skipConfirm bool) error {
 		}
 	}
 
+	if siteToDelete == nil && owner != "" {
+		// Not in the list: a lapsed shared site is omitted. Ask the server.
+		if _, err := api.GetSiteByName(owner, name); err != nil {
+			sp.Fail("Can't delete '" + projectName + "'")
+			return fail(err.Error())
+		}
+	}
+
 	if siteToDelete == nil {
 		sp.Fail(fmt.Sprintf("Site '%s' not found", projectName))
 		return fail(fmt.Sprintf("Site '%s' not found.\nUse 'fl list' to see all sites.", projectName))

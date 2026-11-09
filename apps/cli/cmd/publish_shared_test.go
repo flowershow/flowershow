@@ -164,3 +164,97 @@ func TestPublish_SharedSiteLapsed_ReportsPremiumRequired(t *testing.T) {
 		t.Fatal("must not create a site")
 	}
 }
+
+func TestPublish_StoredSiteID_Gone_NameCollision_NeverSyncs(t *testing.T) {
+	f := setupFakeAPI(t, true, "blog")
+	dir := makeFolder(t, "x", "")
+	_ = localconfig.Write(dir, &localconfig.Config{SiteName: "blog", SiteID: "id-deleted"})
+	err := runPublish([]string{dir}, "", true, false, false)
+	if err == nil {
+		t.Fatal("expected an error")
+	}
+	if f.syncedTo("id-blog") || len(f.createdNames()) != 0 {
+		t.Fatal("must not sync into the same-named site or create one")
+	}
+	if cfg := localconfig.Read(dir); cfg.SiteID != "id-deleted" {
+		t.Fatalf("link must be unchanged: %+v", cfg)
+	}
+}
+
+func TestPublish_LinkedFolder_ToSharedSite_NeedsOverwrite(t *testing.T) {
+	f := setupFakeAPI(t, true, "blog")
+	f.share("bob", "notes")
+	dir := makeFolder(t, "x", "")
+	_ = localconfig.Write(dir, &localconfig.Config{SiteName: "blog", SiteID: "id-blog"})
+	err := runPublish([]string{dir}, "bob/notes", true, false, false)
+	if err == nil || !strings.Contains(err.Error(), "--overwrite") {
+		t.Fatalf("got %v", err)
+	}
+	if f.syncedTo("id-bob-notes") {
+		t.Fatal("must not sync")
+	}
+	if cfg := localconfig.Read(dir); cfg.SiteName != "blog" || cfg.SiteID != "id-blog" {
+		t.Fatalf("link changed: %+v", cfg)
+	}
+}
+
+func TestSync_SharedLink_StopsAndPointsToFl(t *testing.T) {
+	f := setupFakeAPI(t, true, "notes")
+	dir := makeFolder(t, "notes", "")
+	_ = localconfig.Write(dir, &localconfig.Config{SiteName: "bob/notes", SiteID: "id-bob-notes"})
+	if err := runSync(dir, "", false, false); err == nil {
+		t.Fatal("expected an error")
+	}
+	if err := runSync(dir, "bob/notes", false, false); err == nil {
+		t.Fatal("expected an error for --name owner/name")
+	}
+	if len(f.syncIDs()) != 0 {
+		t.Fatal("must not sync")
+	}
+}
+
+func TestResolveSite_LapsedSharedSite_ReportsServerMessage(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	f.share("bob", "notes")
+	f.siteStatus["id-bob-notes"] = 403
+	f.omitFromList["id-bob-notes"] = true
+	_, err := resolveSite("bob/notes")
+	if err == nil || !strings.Contains(err.Error(), "Premium") {
+		t.Fatalf("got %v", err)
+	}
+}
+
+func TestResolveSite_OldServerRowsWithoutRoleCountAsOwned(t *testing.T) {
+	f := setupFakeAPI(t, true, "blog")
+	f.noRoles = true
+	s, err := resolveSite("blog")
+	if err != nil || s.ProjectName != "blog" {
+		t.Fatalf("got %+v, %v", s, err)
+	}
+	if s, err := resolveSite(""); err != nil || s.ProjectName != "blog" {
+		t.Fatalf("got %+v, %v", s, err)
+	}
+}
+
+func TestDelete_LapsedSharedSite_ReportsServerMessage(t *testing.T) {
+	f := setupFakeAPI(t, true)
+	f.share("bob", "notes")
+	f.siteStatus["id-bob-notes"] = 403
+	f.omitFromList["id-bob-notes"] = true
+	err := runDelete("bob/notes", true)
+	if err == nil || !strings.Contains(err.Error(), "Premium") {
+		t.Fatalf("got %v", err)
+	}
+}
+
+func TestPublish_NameAliceSlashBlog_NoRepointWarning(t *testing.T) {
+	setupFakeAPI(t, true, "blog")
+	dir := makeFolder(t, "blog", "blog")
+	out, err := captureOutput(t, func() error { return runPublish([]string{dir}, "alice/blog", true, false, false) })
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(out, "Re-pointing") {
+		t.Fatalf("unexpected warning:\n%s", out)
+	}
+}
