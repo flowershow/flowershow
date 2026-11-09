@@ -7,11 +7,11 @@ authors:
 showToc: false
 ---
 
-Running a site with other people no longer means sharing a login. Open your site's **Members** tab, enter an email address, and that person can publish to the site and manage it with you. See [[collaborators|Invite editors to a site]] for the details.
+Running a site with other people no longer means sharing a login. Open your site's **Members** tab and enter an email address, and that person gets an invite. Once they accept, they can publish to the site and manage it with you. See [[collaborators|Invite editors to a site]] for the details.
 
 - **You stay the owner.** Editors can publish, change settings and site config, turn password protection on or off, and moderate annotations. The custom domain, root directory, renaming, the GitHub connection, inviting and removing people, billing and deleting the site stay with you.
 - **Invites go to one address.** A link lasts 14 days and only works for an account with that verified email. Signing in with an email link is enough, so editors don't need a GitHub account.
 - **Included with Premium.** No charge per editor, up to 20 editors per site. If Premium lapses, editors lose access until you renew, and nobody needs inviting again.
-- **Publish from the terminal or your AI.** Update `fl`, then `fl list` shows shared sites as `owner/name` and `fl --name owner/name --overwrite <folder>` publishes to one. The Flowershow connector's `list-sites` shows them too. The Obsidian plugin doesn't support shared sites yet.
+- **Publish from the terminal.** Update `fl`, then `fl list` shows shared sites as `owner/name` and `fl --name owner/name --overwrite <folder>` publishes to one. AI tools that connect with a personal access token can publish to them too, but Claude and ChatGPT connectors can't yet, and neither can the Obsidian plugin.
 
 Publishing a folder with `fl` replaces the whole site, so two editors publishing from different folders overwrite each other. Agree on one source for the site; the **History** tab shows who published each run.
