@@ -133,14 +133,23 @@ test.describe('MCP OAuth consent', () => {
     const page = await context.newPage();
     await signIn(context);
     const clientId = await registerClient(page);
-    const arrived = await captureRedirect(page);
 
     await page.goto(authorizeUrl(clientId, 'state-nojs'));
-    await page.getByTestId('oauth-allow').click();
-    await expect
-      .poll(() => arrived()?.searchParams.get('code') ?? null)
-      .not.toBeNull();
-    expect(arrived()?.searchParams.get('state')).toBe('state-nojs');
+    // The browser follows the 303 itself, and page.route doesn't see
+    // redirected requests, so check the POST's own redirect.
+    const [post] = await Promise.all([
+      page.waitForResponse(
+        (r) =>
+          r.request().method() === 'POST' &&
+          r.url().startsWith(`${CLOUD}/oauth/consent`),
+      ),
+      page.getByTestId('oauth-allow').click(),
+    ]);
+    expect(post.status()).toBe(303);
+    const location = new URL(post.headers().location as string);
+    expect(`${location.origin}${location.pathname}`).toBe(REDIRECT);
+    expect(location.searchParams.get('code')).toBeTruthy();
+    expect(location.searchParams.get('state')).toBe('state-nojs');
     await context.close();
   });
 
