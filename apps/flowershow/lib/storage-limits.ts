@@ -1,6 +1,8 @@
+import { after } from 'next/server';
 import type { Plan } from '@prisma/client';
 import prisma from '@/server/db';
 import { getEntitlements } from './entitlements';
+import { sendStorageWarning } from './storage-warning';
 
 /** Total stored bytes of a site (sum of its blobs). */
 export async function getSiteStorageBytes(siteId: string): Promise<number> {
@@ -101,9 +103,11 @@ export async function noteStorageOverLimit(
     userId: string;
     plan: Plan | null;
     storageAllowanceBytes: bigint | null;
+    projectName: string;
   },
   currentSiteBytes: number,
   projectedSiteBytes: number,
+  opts: { dryRun?: boolean } = {},
 ): Promise<void> {
   try {
     const usesFreePool =
@@ -121,6 +125,18 @@ export async function noteStorageOverLimit(
       console.warn(
         `[storage-limit] over limit (advisory): site=${site.id} scope=${violation.scope} limitBytes=${violation.limitBytes} projectedBytes=${violation.projectedBytes}`,
       );
+      if (!opts.dryRun) {
+        // After the response, so a slow or hung email provider can never
+        // hold up a publish. Outside a request scope `after` throws and the
+        // email is dropped (the outer catch logs it).
+        after(async () => {
+          try {
+            await sendStorageWarning({ site, violation });
+          } catch (error) {
+            console.error('[storage-limit] warning email failed', error);
+          }
+        });
+      }
     }
   } catch (error) {
     console.error('[storage-limit] check failed', error);

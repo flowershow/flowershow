@@ -31,6 +31,15 @@ vi.mock('@/lib/content-store', async (importOriginal) => ({
     .mockResolvedValue('https://s3.example.com/presigned'),
 }));
 
+// Wrap (not replace) the real function so the storage-limit tests below still
+// exercise it, while we can assert on its arguments.
+const noteOverLimit = vi.hoisted(() => vi.fn());
+vi.mock('@/lib/storage-limits', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/lib/storage-limits')>();
+  noteOverLimit.mockImplementation(actual.noteStorageOverLimit);
+  return { ...actual, noteStorageOverLimit: noteOverLimit };
+});
+
 vi.mock('@/lib/cloudflare-worker', () => ({
   startPublishFinalizerWorkflow: vi.fn().mockResolvedValue(undefined),
   terminatePublishFinalizerWorkflows: vi.fn().mockResolvedValue(undefined),
@@ -845,6 +854,37 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
   });
 
   describe('dryRun mode', () => {
+    it('passes dryRun to the storage over-limit note', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([]);
+      await POST(
+        makeRequest(
+          { files: [{ path: 'new.md', size: 100, sha: 'abc' }] },
+          { searchParams: 'dryRun=true' },
+        ),
+        makeParams(SITE_ID),
+      );
+      expect(noteOverLimit).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(Number),
+        expect.any(Number),
+        { dryRun: true },
+      );
+    });
+
+    it('passes dryRun false on a real sync', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([]);
+      await POST(
+        makeRequest({ files: [{ path: 'new.md', size: 100, sha: 'abc' }] }),
+        makeParams(SITE_ID),
+      );
+      expect(noteOverLimit).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.any(Number),
+        expect.any(Number),
+        { dryRun: false },
+      );
+    });
+
     it('returns the diff plan without creating a publish record', async () => {
       vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([]);
 
