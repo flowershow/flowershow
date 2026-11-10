@@ -1,9 +1,11 @@
 'use client';
 
 import { useSession } from 'next-auth/react';
+import type { CaptureResult } from 'posthog-js';
 import posthog from 'posthog-js';
 import { PostHogProvider as PHProvider } from 'posthog-js/react';
 import { useEffect, useState } from 'react';
+import { z } from 'zod';
 import { CookieBanner } from '@/components/cookie-banner';
 import { env } from '@/env.mjs';
 import { redactClaimTokensInEvent } from '@/lib/redact-claim-token';
@@ -13,6 +15,35 @@ const COOKIE_SETTINGS_HASH = '#cookie-settings';
 
 type ConsentStatus = 'granted' | 'denied' | 'pending';
 
+const VisitorGeo = z.object({
+  country: z.string().nullable(),
+  region: z.string().nullable(),
+  city: z.string().nullable(),
+});
+
+// Location for cookieless events, from middleware.ts (`visitorGeo`): PostHog
+// strips their IP before its own GeoIP step. Same property names, so web
+// analytics maps and breakdowns work for them too.
+async function fetchGeoProperties() {
+  try {
+    const res = await fetch('/relay-qYYb/geo', {
+      signal: AbortSignal.timeout(1500),
+    });
+    const { country, region, city } = VisitorGeo.parse(await res.json());
+    if (!country) return {};
+    return {
+      $geoip_country_code: country,
+      $geoip_country_name:
+        new Intl.DisplayNames(['en'], { type: 'region' }).of(country) ??
+        country,
+      ...(region && { $geoip_subdivision_1_code: region }),
+      ...(city && { $geoip_city_name: city }),
+    };
+  } catch {
+    return {};
+  }
+}
+
 export function PostHogProvider({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   // null on published sites: they never ask, because nothing is stored.
@@ -20,9 +51,9 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // flowershow.app and the dashboard use PostHog cookies once the visitor
-    // accepts them (cookieless counting if they reject; nothing is captured
-    // until they choose). Published sites never store anything in the
-    // browser: PostHog counts visitors with a daily-salted server-side hash.
+    // accepts them; until then, and after a reject, visits are counted
+    // cookieless. Published sites never store anything in the browser.
+    // Cookieless: PostHog counts visitors with a daily-salted server-side hash.
     const { host } = window.location;
     const asksConsent =
       host === env.NEXT_PUBLIC_HOME_DOMAIN ||
@@ -35,39 +66,59 @@ export function PostHogProvider({ children }: { children: React.ReactNode }) {
       ? JSON.parse(decodeURIComponent(rawCookie))
       : undefined;
 
-    posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
-      api_host: '/relay-qYYb',
-      ui_host: env.NEXT_PUBLIC_POSTHOG_HOST,
-      cookieless_mode: asksConsent ? 'on_reject' : 'always',
-      persistence: 'cookie', // localStorage+cookie won't work across subdomains
-      cross_subdomain_cookie: true,
-      // Keep the consent choice in a cookie too, so it is shared between
-      // flowershow.app and cloud.flowershow.app.
-      opt_out_capturing_persistence_type: 'cookie',
-      disable_web_experiments: false, // https://posthog.com/docs/experiments/no-code-web-experiments
-      bootstrap: bootstrapData,
-      disable_session_recording: true, // TODO temporary patch https://github.com/flowershow/flowershow/issues/1131
-      // Claim links carry a bearer token; keep it out of $current_url etc.
-      before_send: redactClaimTokensInEvent,
-      loaded: (ph) => {
-        // Expose PostHog on window so the PostHog Toolbar and the no-code
-        // web-experiments visual editor can attach. The posthog-js/react npm
-        // integration (unlike the HTML snippet) does not do this automatically.
-        Object.assign(window, { posthog: ph });
-      },
-    });
-
-    if (!asksConsent) return;
-
+    let cancelled = false;
     const syncConsent = () =>
       setConsent(
         window.location.hash === COOKIE_SETTINGS_HASH
           ? 'pending'
           : posthog.get_explicit_consent_status(),
       );
-    syncConsent();
-    window.addEventListener('hashchange', syncConsent);
-    return () => window.removeEventListener('hashchange', syncConsent);
+
+    // Init after the location arrives, so the first pageview carries it.
+    fetchGeoProperties().then((geo) => {
+      if (cancelled) return;
+      const addGeo = (event: CaptureResult | null) => {
+        if (event?.properties.$cookieless_mode) {
+          Object.assign(event.properties, geo);
+        }
+        return event;
+      };
+
+      posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
+        api_host: '/relay-qYYb',
+        ui_host: env.NEXT_PUBLIC_POSTHOG_HOST,
+        cookieless_mode: asksConsent ? 'on_reject' : 'always',
+        // With on_reject, an undecided visitor then counts as rejected
+        // (cookieless) instead of not at all; the banner still shows, since
+        // the explicit consent status stays "pending".
+        opt_out_capturing_by_default: true,
+        persistence: 'cookie', // localStorage+cookie won't work across subdomains
+        cross_subdomain_cookie: true,
+        // Keep the consent choice in a cookie too, so it is shared between
+        // flowershow.app and cloud.flowershow.app.
+        opt_out_capturing_persistence_type: 'cookie',
+        disable_web_experiments: false, // https://posthog.com/docs/experiments/no-code-web-experiments
+        bootstrap: bootstrapData,
+        disable_session_recording: true, // TODO temporary patch https://github.com/flowershow/flowershow/issues/1131
+        // Claim links carry a bearer token; keep it out of $current_url etc.
+        before_send: [redactClaimTokensInEvent, addGeo],
+        loaded: (ph) => {
+          // Expose PostHog on window so the PostHog Toolbar and the no-code
+          // web-experiments visual editor can attach. The posthog-js/react npm
+          // integration (unlike the HTML snippet) does not do this automatically.
+          Object.assign(window, { posthog: ph });
+        },
+      });
+
+      if (!asksConsent) return;
+      syncConsent();
+      window.addEventListener('hashchange', syncConsent);
+    });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('hashchange', syncConsent);
+    };
   }, []);
 
   useEffect(() => {
