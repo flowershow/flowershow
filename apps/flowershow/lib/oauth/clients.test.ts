@@ -69,6 +69,14 @@ describe('validateClientMetadata', () => {
       'invalid_client_metadata',
     ],
     [
+      {
+        redirect_uris: ['https://a.example/cb'],
+        token_endpoint_auth_method: 'none',
+        token_endpoint_auth_methods_supported: ['private_key_jwt'],
+      },
+      'invalid_client_metadata',
+    ],
+    [
       { redirect_uris: ['https://a.example/cb'], client_secret: 'x' },
       'invalid_client_metadata',
     ],
@@ -148,6 +156,32 @@ describe('CIMD client_id URLs', () => {
     expect(
       validateCimdDocument(CIMD_URL, doc({ client_id: undefined })),
     ).toMatchObject({ ok: false });
+  });
+
+  it("accepts ChatGPT's document, which prefers private_key_jwt but also supports none", () => {
+    // ChatGPT's live document, fetched 2026-11-09.
+    const url = 'https://chatgpt.com/oauth/client.json';
+    expect(
+      validateCimdDocument(url, {
+        client_id: url,
+        client_uri: 'https://chatgpt.com/',
+        redirect_uris: [
+          'https://chatgpt.com/connector_platform_oauth_redirect',
+        ],
+        token_endpoint_auth_method: 'private_key_jwt',
+        token_endpoint_auth_methods_supported: ['none', 'private_key_jwt'],
+        grant_types: [
+          'authorization_code',
+          'refresh_token',
+          'urn:ietf:params:oauth:grant-type:jwt-bearer',
+        ],
+        response_types: ['code'],
+        client_name: 'ChatGPT',
+        logo_uri: 'https://persistent.oaistatic.com/sonic/misc/openai-logo.png',
+        token_endpoint_auth_signing_alg: 'RS256',
+        jwks_uri: 'https://chatgpt.com/oauth/jwks.json',
+      }),
+    ).toMatchObject({ ok: true, metadata: { name: 'ChatGPT' } });
   });
 });
 
