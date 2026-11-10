@@ -15,14 +15,17 @@ export function CookieBanner({
   return (
     <section
       aria-label="Cookie consent"
-      className="font-sans fixed inset-x-4 bottom-4 z-50 rounded-lg bg-gray-900 p-4 text-sm text-white shadow-lg sm:right-auto sm:max-w-sm dark:bg-gray-800"
+      className="font-sans fixed inset-x-4 bottom-4 z-50 rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600 shadow-lg sm:right-auto sm:max-w-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
     >
-      <p>
-        May we use analytics cookies to see how Flowershow is used? If you
-        reject them, we only count visits, without cookies.{' '}
+      <p className="font-medium text-zinc-900 dark:text-zinc-100">
+        Help us make Flowershow better
+      </p>
+      <p className="mt-1">
+        We&apos;d like to use cookies to see how people use Flowershow. No ads,
+        and we never sell your data.{' '}
         <a
           href={`${protocol}://${env.NEXT_PUBLIC_HOME_DOMAIN}/privacy`}
-          className="underline"
+          className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100"
         >
           Privacy policy
         </a>
@@ -30,17 +33,17 @@ export function CookieBanner({
       <div className="mt-3 flex gap-2">
         <button
           type="button"
-          onClick={() => onChoice(true)}
-          className="flex-1 rounded-md bg-white px-3 py-1.5 font-medium text-gray-900 hover:bg-gray-200"
+          onClick={() => onChoice(false)}
+          className="flex-1 rounded-md border border-zinc-300 px-3 py-1.5 font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-600 dark:text-zinc-100 dark:hover:bg-zinc-800"
         >
-          Accept
+          No thanks
         </button>
         <button
           type="button"
-          onClick={() => onChoice(false)}
-          className="flex-1 rounded-md bg-white px-3 py-1.5 font-medium text-gray-900 hover:bg-gray-200"
+          onClick={() => onChoice(true)}
+          className="flex-1 rounded-md bg-zinc-900 px-3 py-1.5 font-medium text-white hover:bg-zinc-700 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-300"
         >
-          Reject
+          Accept
         </button>
       </div>
     </section>
