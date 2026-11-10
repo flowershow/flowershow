@@ -59,6 +59,9 @@ export default async function middleware(req: NextRequest) {
   const posthog = PostHogClient();
 
   // 0) PostHog proxy
+  if (url.pathname === '/relay-qYYb/geo') {
+    return visitorGeo(req);
+  }
   if (url.pathname.startsWith('/relay-qYYb/')) {
     return proxyPostHog(req);
   }
@@ -662,6 +665,22 @@ function proxyPostHog(req: NextRequest) {
   return NextResponse.rewrite(proxied, {
     request: { headers: requestHeaders },
   });
+}
+
+// PostHog drops the IP of cookieless events before its GeoIP step
+// (posthog/posthog#48660), so the client attaches the location Vercel already
+// derived from the IP (see providers/posthog-provider.tsx). The IP itself
+// never leaves here.
+function visitorGeo(req: NextRequest) {
+  const city = req.headers.get('x-vercel-ip-city');
+  return NextResponse.json(
+    {
+      country: req.headers.get('x-vercel-ip-country'),
+      region: req.headers.get('x-vercel-ip-country-region'),
+      city: city ? decodeURIComponent(city) : null,
+    },
+    { headers: { 'Cache-Control': 'private, no-store' } },
+  );
 }
 
 type PHBootstrap = {
