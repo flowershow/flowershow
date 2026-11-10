@@ -81,7 +81,7 @@ export default async function middleware(req: NextRequest) {
   const searchParams = search; // Preserve for rewrites
 
   // Build PostHog bootstrap cookie once for all routes
-  const phBootstrap = await buildPHBootstrapCookie(req, posthog);
+  const phBootstrap = await buildPHBootstrapCookie(req, posthog, hostname);
 
   // 3) Legacy user-site paths: flowershow.app/@user/project/... are gone.
   // These pre-subdomain URLs (content now lives at *.flowershow.me) were the
@@ -673,15 +673,30 @@ type PHBootstrap = {
   };
 } | null;
 
-async function buildPHBootstrapCookie(req: NextRequest, posthog: PostHog) {
+async function buildPHBootstrapCookie(
+  req: NextRequest,
+  posthog: PostHog,
+  hostname: string,
+) {
   // Only for real HTML page views
   const isGet = req.method === 'GET';
   const accept = req.headers.get('accept') || '';
   const isHtml = accept.includes('text/html');
   if (!isGet || !isHtml) return null;
 
+  // Published sites are cookieless, and flowershow.app and the dashboard set
+  // PostHog cookies only after the visitor accepts them (see
+  // providers/posthog-provider.tsx), so bootstrap only with that consent.
+  if (
+    hostname !== env.NEXT_PUBLIC_HOME_DOMAIN &&
+    hostname !== env.NEXT_PUBLIC_CLOUD_DOMAIN
+  ) {
+    return null;
+  }
+
   const apiKey = env.NEXT_PUBLIC_POSTHOG_KEY;
   if (!apiKey) return null;
+  if (req.cookies.get(`__ph_opt_in_out_${apiKey}`)?.value !== '1') return null;
 
   // Try to reuse PH’s own cookie if it exists (so the user keeps the same distinct_id)
   const phCookieName = `ph_${apiKey}_posthog`;
