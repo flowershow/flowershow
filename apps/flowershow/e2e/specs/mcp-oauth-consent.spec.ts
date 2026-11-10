@@ -122,6 +122,28 @@ test.describe('MCP OAuth consent', () => {
     expect(tokens.refresh_token).toMatch(/^fs_ort_/);
   });
 
+  // Clicking Allow before the page hydrates (or with scripts blocked) posts
+  // the form natively. Under Referrer-Policy no-referrer the browser sends
+  // Origin: null for that POST and the server action fails with a bare 400
+  // (seen from ChatGPT, 2026-11-10).
+  test('approving works without JavaScript (native form post)', async ({
+    browser,
+  }) => {
+    const context = await browser.newContext({ javaScriptEnabled: false });
+    const page = await context.newPage();
+    await signIn(context);
+    const clientId = await registerClient(page);
+    const arrived = await captureRedirect(page);
+
+    await page.goto(authorizeUrl(clientId, 'state-nojs'));
+    await page.getByTestId('oauth-allow').click();
+    await expect
+      .poll(() => arrived()?.searchParams.get('code') ?? null)
+      .not.toBeNull();
+    expect(arrived()?.searchParams.get('state')).toBe('state-nojs');
+    await context.close();
+  });
+
   test('cancel returns access_denied', async ({ page, context }) => {
     await signIn(context);
     const clientId = await registerClient(page);

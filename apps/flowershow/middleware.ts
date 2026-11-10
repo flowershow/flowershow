@@ -134,11 +134,15 @@ export default async function middleware(req: NextRequest) {
     }
 
     // MCP OAuth consent (flowershow-3fr.2): never framed (clickjacking on Allow).
+    // Referrer-Policy same-origin, not no-referrer: the request id still never
+    // leaves in a Referer, but under no-referrer a native form POST (Allow
+    // clicked before hydration) carries Origin: null, which the server
+    // action rejects with a 400.
     if (pathname === '/oauth/consent') {
       const res = NextResponse.rewrite(new URL(path, req.url));
       res.headers.set('X-Frame-Options', 'DENY');
       res.headers.set('Content-Security-Policy', "frame-ancestors 'none'");
-      res.headers.set('Referrer-Policy', 'no-referrer');
+      res.headers.set('Referrer-Policy', 'same-origin');
       res.headers.set('Cache-Control', 'no-store');
       return withPHBootstrapCookie(res, phBootstrap);
     }
