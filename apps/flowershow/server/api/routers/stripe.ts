@@ -329,6 +329,7 @@ export const stripeRouter = createTRPCRouter({
           plan: true,
           planSource: true,
           coveredByAccountPlan: true,
+          customDomain: true,
           subscription: { select: { status: true } },
         },
       }),
@@ -387,6 +388,7 @@ export const stripeRouter = createTRPCRouter({
         plan: site.plan,
         planSource: site.planSource,
         covered: site.coveredByAccountPlan || site.planSource === 'ACCOUNT',
+        hasCustomDomain: !!site.customDomain,
         hasSiteSubscription:
           !!site.subscription && isLiveSiteStatus(site.subscription.status),
       })),
@@ -438,31 +440,37 @@ export const stripeRouter = createTRPCRouter({
         });
       }
 
-      if (input.covered) {
-        const allowance = ACCOUNT_PLAN_SITE_ALLOWANCE[account.plan];
-        if (allowance !== null) {
-          const used = await ctx.db.site.count({
-            where: {
-              userId,
-              isTemporary: false,
-              coveredByAccountPlan: true,
-              NOT: { id: site.id },
-            },
-          });
-          if (used >= allowance) {
-            throw new TRPCError({
-              code: 'CONFLICT',
-              message: `All ${allowance} sites on your Pro plan are in use. Remove one first.`,
+      // Lock the account row so concurrent covers count and write one at a
+      // time; otherwise two could both pass the check and the reconciler's
+      // trim would drop some other site to Free.
+      await ctx.db.$transaction(async (tx) => {
+        await tx.$queryRaw`SELECT id FROM "AccountSubscription" WHERE user_id = ${userId} FOR UPDATE`;
+        if (input.covered) {
+          const allowance = ACCOUNT_PLAN_SITE_ALLOWANCE[account.plan];
+          if (allowance !== null) {
+            const used = await tx.site.count({
+              where: {
+                userId,
+                isTemporary: false,
+                coveredByAccountPlan: true,
+                NOT: { id: site.id },
+              },
             });
+            if (used >= allowance) {
+              throw new TRPCError({
+                code: 'CONFLICT',
+                message: `All ${allowance} sites on your Pro plan are in use. Remove one first.`,
+              });
+            }
           }
         }
-      }
 
-      // Clear the flag before reconciling, and tell the reconciler the site was
-      // released, or its stateless trim would refill the freed slot at once.
-      await ctx.db.site.update({
-        where: { id: site.id },
-        data: { coveredByAccountPlan: input.covered },
+        // Clear the flag before reconciling, and tell the reconciler the site
+        // was released, or its stateless trim would refill the freed slot.
+        await tx.site.update({
+          where: { id: site.id },
+          data: { coveredByAccountPlan: input.covered },
+        });
       });
       if (input.covered) {
         await reconcileUserSitePlans(userId);
