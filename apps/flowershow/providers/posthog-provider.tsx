@@ -36,9 +36,8 @@ export function PostHogProvider({
   /** Identify the signed-in user (needs a SessionProvider). */
   identify?: boolean;
 }) {
-  const memory = persistence === 'memory';
-
   useEffect(() => {
+    const memory = persistence === 'memory';
     const rawCookie = memory
       ? undefined
       : document.cookie.match(/(?:^|;\s*)ph_bootstrap=([^;]+)/)?.[1];
@@ -64,7 +63,7 @@ export function PostHogProvider({
         (window as unknown as { posthog?: typeof ph }).posthog = ph;
       },
     });
-  }, []);
+  }, [persistence]);
 
   return (
     <PHProvider client={posthog}>

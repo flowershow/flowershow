@@ -84,15 +84,15 @@ export default function AnalyticsView({
   let toggle = false;
 
   if (countability.kind === 'password') {
-    body = <p className={note}>Password-protected sites aren't counted.</p>;
+    body = <p className={note}>{"Password-protected sites aren't counted."}</p>;
   } else if (countability.kind === 'html-only') {
     body = (
       <p className={note}>
-        This site's pages are raw HTML, which we can't count yet.
+        {"This site's pages are raw HTML, which we can't count yet."}
       </p>
     );
   } else if (data.status === 'unavailable') {
-    body = <p className={note}>Numbers aren't available right now.</p>;
+    body = <p className={note}>{"Numbers aren't available right now."}</p>;
   } else {
     toggle = true;
     const since = formatDay(data.countingSince);
@@ -159,7 +159,7 @@ export default function AnalyticsView({
       {body}
       {toggle && countability.hasRawHtml && (
         <p className={`mt-6 ${note}`}>
-          Pages published as raw HTML aren't counted.
+          {"Pages published as raw HTML aren't counted."}
         </p>
       )}
       {toggle && footer}
