@@ -25,6 +25,7 @@ type Ok = Extract<SiteAnalytics, { status: 'ok' }>;
 const ok = (over: Partial<Ok> = {}): SiteAnalytics => ({
   status: 'ok',
   range: 30,
+  chartStart: '2026-11-12',
   countingSince: '2026-11-12',
   fetchedAt: '2026-11-20T12:00:00Z',
   totals: { people: 412, views: 1380 },
@@ -124,6 +125,35 @@ describe('AnalyticsView', () => {
     expect(
       screen.getByRole('button', { name: 'Copy link' }),
     ).toBeInTheDocument();
+  });
+
+  it('footer uses countingSince, not the chart start', () => {
+    view(ok({ chartStart: '2026-12-01', countingSince: '2026-11-12' }));
+    expect(
+      screen.getByText(
+        'Counted without cookies since 12 Nov. Includes your own visits.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('7-day zero after counting began: no readers in range, no copy link', () => {
+    view(
+      ok({
+        range: 7,
+        chartStart: '2027-01-04',
+        countingSince: '2026-11-12',
+        totals: { people: 0, views: 0 },
+        pages: [],
+        referrers: [],
+      }),
+      counted,
+      7,
+    );
+    expect(
+      screen.getByText('No readers in the last 7 days.'),
+    ).toBeInTheDocument();
+    expect(screen.queryByText(/No readers yet/)).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Copy link' })).toBeNull();
   });
 
   it('notes raw HTML pages', () => {

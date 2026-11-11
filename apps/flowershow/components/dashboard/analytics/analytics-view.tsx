@@ -97,8 +97,11 @@ export default function AnalyticsView({
     toggle = true;
     const since = formatDay(data.countingSince);
     const referrers = data.referrers.slice(0, 5);
+    const empty = data.totals.people === 0 && data.totals.views === 0;
     body =
-      data.totals.people === 0 && data.totals.views === 0 ? (
+      empty && data.chartStart !== data.countingSince ? (
+        <p className={note}>No readers in the last {range} days.</p>
+      ) : empty ? (
         <div className="space-y-3">
           <p className={note}>
             No readers yet. Counting started on {since}. Numbers update every 10

@@ -31,7 +31,8 @@ const series = Array.from({ length: 30 }, (_, i) => ({
 const ok: SiteAnalytics = {
   status: 'ok',
   range: 30,
-  countingSince: '2026-11-12',
+  chartStart: '2026-10-22',
+  countingSince: '2026-10-22',
   fetchedAt: '2026-11-20T12:00:00Z',
   totals: { people: 412, views: 1380 },
   series,
@@ -72,6 +73,20 @@ export const NoReadersYet: Story = {
   args: {
     data: {
       ...ok,
+      totals: { people: 0, views: 0 },
+      series: [],
+      pages: [],
+      referrers: [],
+    } as SiteAnalytics,
+  },
+};
+export const NoReadersInRange: Story = {
+  args: {
+    range: 7,
+    data: {
+      ...ok,
+      range: 7,
+      chartStart: '2026-11-14',
       totals: { people: 0, views: 0 },
       series: [],
       pages: [],

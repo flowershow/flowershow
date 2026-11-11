@@ -20,12 +20,13 @@ describe('rangeWindow', () => {
   it('starts 30 days including today at 00:00 UTC', () => {
     const w = rangeWindow(30, now, new Date('2026-01-01T00:00:00Z'));
     expect(new Date(w.startAt).toISOString()).toBe('2026-11-21T00:00:00.000Z');
-    expect(w.countingSince).toBe('2026-11-21');
+    expect(w.chartStart).toBe('2026-11-21');
     expect(w.endAt).toBe(now.getTime());
   });
   it('moves to the site creation day when later', () => {
     const w = rangeWindow(30, now, new Date('2026-12-15T10:00:00Z'));
     expect(new Date(w.startAt).toISOString()).toBe('2026-12-15T00:00:00.000Z');
+    expect(w.chartStart).toBe('2026-12-15');
     expect(w.countingSince).toBe('2026-12-15');
   });
   it('uses the launch date when later than the range start', () => {
@@ -34,7 +35,18 @@ describe('rangeWindow', () => {
       new Date('2026-11-15T12:00:00Z'),
       new Date('2026-01-01T00:00:00Z'),
     );
+    expect(w.chartStart).toBe('2026-11-11');
     expect(w.countingSince).toBe('2026-11-11');
+  });
+  it('keeps countingSince fixed for an old site 60 days after launch', () => {
+    const later = new Date('2027-01-10T12:00:00Z');
+    const created = new Date('2026-01-01T00:00:00Z');
+    const w30 = rangeWindow(30, later, created);
+    const w7 = rangeWindow(7, later, created);
+    expect(w30.chartStart).toBe('2026-12-12');
+    expect(w7.chartStart).toBe('2027-01-04');
+    expect(w30.countingSince).toBe('2026-11-11');
+    expect(w7.countingSince).toBe('2026-11-11');
   });
 });
 
@@ -124,6 +136,7 @@ describe('getSiteAnalytics', () => {
       loadPages,
     });
     if (r.status !== 'ok') throw new Error('expected ok');
+    expect(r.chartStart).toBe('2026-12-18');
     expect(r.countingSince).toBe('2026-12-18');
     expect(r.series.map((s) => s.date)).toEqual([
       '2026-12-18',

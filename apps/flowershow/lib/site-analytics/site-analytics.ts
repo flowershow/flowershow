@@ -23,6 +23,9 @@ export type SiteAnalytics =
   | {
       status: 'ok';
       range: AnalyticsRange;
+      /** First day of the chart (YYYY-MM-DD). */
+      chartStart: string;
+      /** First day this site was counted at all (YYYY-MM-DD). */
       countingSince: string;
       fetchedAt: string;
       totals: { people: number; views: number };
@@ -51,18 +54,32 @@ const utcDay = (d: Date) =>
   Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 const dayString = (ms: number) => new Date(ms).toISOString().slice(0, 10);
 
-/** Last N UTC days including today, never before launch or the site's creation day. */
+/**
+ * Last N UTC days including today, never before launch or the site's creation
+ * day (chartStart). countingSince is when counting began for the site at all,
+ * independent of the range.
+ */
 export function rangeWindow(
   range: AnalyticsRange,
   now: Date,
   siteCreatedAt: Date,
-): { startAt: number; endAt: number; countingSince: string } {
-  const startAt = Math.max(
-    utcDay(now) - (range - 1) * DAY_MS,
+): {
+  startAt: number;
+  endAt: number;
+  chartStart: string;
+  countingSince: string;
+} {
+  const counting = Math.max(
     utcDay(ANALYTICS_COUNTING_SINCE),
     utcDay(siteCreatedAt),
   );
-  return { startAt, endAt: now.getTime(), countingSince: dayString(startAt) };
+  const startAt = Math.max(utcDay(now) - (range - 1) * DAY_MS, counting);
+  return {
+    startAt,
+    endAt: now.getTime(),
+    chartStart: dayString(startAt),
+    countingSince: dayString(counting),
+  };
 }
 
 export function attachTitles(
@@ -135,7 +152,7 @@ export async function getSiteAnalytics(
   if (!client) return { status: 'unavailable' };
   const now = deps.now ?? new Date();
   const loadPages = deps.loadPages ?? loadPagesFromDb;
-  const { startAt, endAt, countingSince } = rangeWindow(
+  const { startAt, endAt, chartStart, countingSince } = rangeWindow(
     range,
     now,
     site.createdAt,
@@ -168,6 +185,7 @@ export async function getSiteAnalytics(
     return {
       status: 'ok',
       range,
+      chartStart,
       countingSince,
       fetchedAt: now.toISOString(),
       totals: { people: stats.visitors, views: stats.pageviews },
