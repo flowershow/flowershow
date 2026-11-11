@@ -1,7 +1,72 @@
 import { unstable_cache } from 'next/cache';
+import prisma from '@/server/db';
 import { ANALYTICS_CACHE_SECONDS, ANALYTICS_COUNTING_SINCE } from './config';
-import { rangeWindow } from './site-analytics';
+import {
+  PAGE_BLOB_WHERE,
+  RAW_HTML_BLOB_WHERE,
+  rangeWindow,
+  siteCountability,
+} from './site-analytics';
 import { getUmamiClient, type UmamiClient } from './umami-client';
+
+export type BlobCounts = { pages: number; rawHtml: number };
+
+type GroupDb = {
+  blob: {
+    groupBy(args: {
+      by: ['siteId'];
+      where: Record<string, unknown>;
+      _count: { _all: true };
+    }): Promise<Array<{ siteId: string; _count: { _all: number } }>>;
+  };
+};
+
+/**
+ * Page and raw-HTML file counts for many sites, in two grouped queries.
+ * Never throws: on a database error returns {} (sites are treated as counted).
+ */
+export async function loadBlobCountsBySite(
+  siteIds: string[],
+  db: GroupDb = prisma as unknown as GroupDb,
+): Promise<Record<string, BlobCounts>> {
+  if (siteIds.length === 0) return {};
+  const count = (where: Record<string, unknown>) =>
+    db.blob.groupBy({
+      by: ['siteId'],
+      where: { siteId: { in: siteIds }, ...where },
+      _count: { _all: true },
+    });
+  try {
+    const [pages, rawHtml] = await Promise.all([
+      count(PAGE_BLOB_WHERE),
+      count(RAW_HTML_BLOB_WHERE),
+    ]);
+    const out: Record<string, BlobCounts> = {};
+    for (const id of siteIds) out[id] = { pages: 0, rawHtml: 0 };
+    for (const r of pages) if (out[r.siteId]) out[r.siteId]!.pages = r._count._all;
+    for (const r of rawHtml)
+      if (out[r.siteId]) out[r.siteId]!.rawHtml = r._count._all;
+    return out;
+  } catch (error) {
+    console.error('[site-analytics] blob counts by site failed:', error);
+    return {};
+  }
+}
+
+/**
+ * The people number to show on a site card, or undefined for no line:
+ * password-protected and html-only sites, or when numbers are unavailable.
+ */
+export function cardPeople(
+  site: { id: string; privacyMode: string },
+  counts: BlobCounts | undefined,
+  people: Record<string, number> | null,
+): number | undefined {
+  if (!people) return undefined;
+  const { kind } = siteCountability(site, counts ?? { pages: 0, rawHtml: 0 });
+  if (kind !== 'counted') return undefined;
+  return people[site.id];
+}
 
 const PAGE_SIZE = 500;
 // Safety stop so a misbehaving API can never loop forever.
