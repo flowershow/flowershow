@@ -8,6 +8,7 @@ vi.mock('next/cache', () => ({
 import {
   attachTitles,
   getSiteAnalytics,
+  loadSiteCountability,
   rangeWindow,
   siteCountability,
 } from './site-analytics';
@@ -150,5 +151,64 @@ describe('getSiteAnalytics', () => {
     expect(
       await getSiteAnalytics(site, 30, { client: null, now, loadPages }),
     ).toEqual({ status: 'unavailable' });
+  });
+});
+
+describe('getSiteAnalytics titles failure', () => {
+  it('still returns numbers when loadPages rejects', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const r = await getSiteAnalytics(
+      {
+        id: 's1',
+        createdAt: new Date('2026-12-18T10:00:00Z'),
+        url: 'https://x.example',
+      },
+      30,
+      {
+        client: {
+          stats: async () => ({ pageviews: 1, visitors: 1 }),
+          pageviewsByDay: async () => [],
+          metrics: async ({ type }) =>
+            type === 'path' ? [{ name: '/a', pageviews: 1, visitors: 1 }] : [],
+        },
+        now,
+        loadPages: async () => {
+          throw new Error('db down');
+        },
+      },
+    );
+    if (r.status !== 'ok') throw new Error('expected ok');
+    expect(r.pages).toEqual([
+      { path: '/a', title: null, href: null, people: 1, views: 1 },
+    ]);
+  });
+});
+
+describe('loadSiteCountability', () => {
+  const site = { id: 's1', privacyMode: 'PUBLIC' };
+  it('counts pages and html files', async () => {
+    const count = vi.fn().mockResolvedValueOnce(0).mockResolvedValueOnce(2);
+    expect(await loadSiteCountability(site, { blob: { count } })).toEqual({
+      kind: 'html-only',
+      hasRawHtml: true,
+    });
+    expect(count.mock.calls[1]![0].where.path).toEqual({
+      endsWith: '.html',
+      mode: 'insensitive',
+    });
+  });
+  it('defaults to counted when the db fails', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const db = {
+      blob: {
+        count: async () => {
+          throw new Error('x');
+        },
+      },
+    };
+    expect(await loadSiteCountability(site, db)).toEqual({
+      kind: 'counted',
+      hasRawHtml: false,
+    });
   });
 });

@@ -151,7 +151,13 @@ export async function getSiteAnalytics(
       client.pageviewsByDay(w),
       client.metrics({ ...w, type: 'path', limit: MAX_PAGES }),
       client.metrics({ ...w, type: 'referrer', limit: 20 }),
-      loadPages(site.id),
+      loadPages(site.id).catch((error) => {
+        console.error(
+          `[site-analytics] page titles failed for site ${site.id}:`,
+          error,
+        );
+        return [] as PageTitleInfo[];
+      }),
     ]);
     const views = new Map(byDay.map((d) => [d.date, d.pageviews]));
     const series: Array<{ date: string; views: number }> = [];
@@ -166,7 +172,7 @@ export async function getSiteAnalytics(
       fetchedAt: now.toISOString(),
       totals: { people: stats.visitors, views: stats.pageviews },
       series,
-      pages: attachTitles(pathRows, pages, site.url).slice(0, MAX_PAGES),
+      pages: attachTitles(pathRows, pages, site.url),
       referrers: refRows
         .filter((r) => r.name !== '')
         .slice(0, MAX_REFERRERS)
@@ -177,7 +183,7 @@ export async function getSiteAnalytics(
   try {
     return await unstable_cache(
       fetchOk,
-      ['site-analytics', site.id, String(range)],
+      ['site-analytics', site.id, String(range), site.url],
       {
         revalidate: ANALYTICS_CACHE_SECONDS,
         tags: [`site-analytics-${site.id}`],
@@ -192,15 +198,31 @@ export async function getSiteAnalytics(
   }
 }
 
-export async function loadSiteCountability(site: {
-  id: string;
-  privacyMode: string;
-}): Promise<SiteCountability> {
-  const [pages, rawHtml] = await Promise.all([
-    prisma.blob.count({ where: { siteId: site.id, appPath: { not: null } } }),
-    prisma.blob.count({
-      where: { siteId: site.id, path: { endsWith: '.html' } },
-    }),
-  ]);
-  return siteCountability(site, { pages, rawHtml });
+type CountDb = {
+  blob: { count(args: { where: Record<string, unknown> }): Promise<number> };
+};
+
+/** Never throws: on a database error the site is treated as counted. */
+export async function loadSiteCountability(
+  site: { id: string; privacyMode: string },
+  db: CountDb = prisma as unknown as CountDb,
+): Promise<SiteCountability> {
+  try {
+    const [pages, rawHtml] = await Promise.all([
+      db.blob.count({ where: { siteId: site.id, appPath: { not: null } } }),
+      db.blob.count({
+        where: {
+          siteId: site.id,
+          path: { endsWith: '.html', mode: 'insensitive' },
+        },
+      }),
+    ]);
+    return siteCountability(site, { pages, rawHtml });
+  } catch (error) {
+    console.error(
+      `[site-analytics] countability lookup failed for site ${site.id}:`,
+      error,
+    );
+    return { kind: 'counted', hasRawHtml: false };
+  }
 }
