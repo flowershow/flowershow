@@ -73,6 +73,15 @@ describe('AnalyticsView', () => {
     expect(l7).not.toHaveAttribute('aria-current');
   });
 
+  it('labels the chart', () => {
+    view(ok());
+    expect(
+      screen.getByRole('img', {
+        name: 'Views per day, 12 Nov to 13 Nov: 12 in total.',
+      }),
+    ).toBeInTheDocument();
+  });
+
   it('shows 20 pages then all', () => {
     const pages = Array.from({ length: 25 }, (_, i) => page(i));
     view(ok({ pages }));

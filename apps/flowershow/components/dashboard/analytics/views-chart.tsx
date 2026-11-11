@@ -10,7 +10,7 @@ export default function ViewsChart({ series }: { series: Point[] }) {
   const max = Math.max(1, ...series.map((p) => p.views));
   const total = series.reduce((sum, p) => sum + p.views, 0);
   const step = 10;
-  const label = `Views per day, ${formatDay(first.date)} to ${formatDay(last.date)}:${total.toLocaleString('en-US')} in total.`;
+  const label = `Views per day, ${formatDay(first.date)} to ${formatDay(last.date)}: ${total.toLocaleString('en-US')} in total.`;
 
   return (
     <svg
