@@ -53,7 +53,7 @@ showEditLink: false
           <div className="step" id="install">
             <span className="step-num">1</span>
             <h3>Connect your AI</h3>
-            <p><b>Claude or ChatGPT app:</b> add this connector URL (beta). <a href="/docs/agents/mcp">How →</a></p>
+            <p><b>Claude or ChatGPT app:</b> add this connector URL, or <code>https://flowershow.app/api/mcp/account</code> to sign in and publish to your account. <a href="/docs/agents/mcp">How →</a></p>
             <div className="cmd-line url-line">https://flowershow.app/api/mcp</div>
             <p><b>Claude Code, Codex, Cursor:</b> ask your agent to install the skill. Nothing else to install. <a href="/docs/agents/supported-agents">Other ways →</a></p>
             <div className="prompt-line">Install the Flowershow skill from https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md</div>
@@ -170,7 +170,7 @@ showEditLink: false
         <div className="faq-grid reveal">
           <div className="faq-item">
             <h3>Which AI agents does it work with?</h3>
-            <p>In the Claude and ChatGPT apps, use the <a href="/docs/agents/mcp">Flowershow connector</a> (beta). In coding agents such as Claude Code, Codex and Cursor, and any agent that supports skills, use the skill, which publishes with the <code>fl</code> CLI. See the <a href="/docs/agents/supported-agents">per-agent install steps</a>.</p>
+            <p>In the Claude and ChatGPT apps, use the <a href="/docs/agents/mcp">Flowershow connector</a>. In coding agents such as Claude Code, Codex and Cursor, and any agent that supports skills, use the skill, which publishes with the <code>fl</code> CLI. See the <a href="/docs/agents/supported-agents">per-agent install steps</a>.</p>
           </div>
           <div className="faq-item">
             <h3>Do I need Node.js?</h3>
@@ -178,7 +178,7 @@ showEditLink: false
           </div>
           <div className="faq-item">
             <h3>Do I need an account?</h3>
-            <p>Not to try it. Without an account your site gets a live link that lasts 7 days, plus a claim link: sign in or sign up from it to keep the site.</p>
+            <p>Not to try it. Without an account your site gets a live link that lasts 7 days, plus a claim link: sign in or sign up from it to keep the site. In Claude and ChatGPT you can also connect with your account, and your AI publishes straight to it.</p>
           </div>
           <div className="faq-item">
             <h3>I publish from GitHub or Obsidian. Is this for me?</h3>
