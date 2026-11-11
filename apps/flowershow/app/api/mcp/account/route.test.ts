@@ -1,5 +1,6 @@
 import { NextRequest } from 'next/server';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { z } from 'zod';
 import { fakeDb as db } from '@/lib/oauth/fake-db';
 
 vi.mock('@/server/db', async () => ({
@@ -68,9 +69,22 @@ const anonCall = (
   );
 const ANON_CHALLENGE = `Bearer error="invalid_token", error_description="Sign in to Flowershow to use this tool (a free account).", resource_metadata="${ISSUER}/.well-known/oauth-protected-resource/api/mcp", scope="sites:write"`;
 const bearer = (t: string) => ({ authorization: `Bearer ${t}` });
+const toolList = z.object({
+  result: z.object({
+    tools: z.array(
+      z.object({
+        name: z.string(),
+        _meta: z
+          .object({ securitySchemes: z.array(z.object({ type: z.string() })) })
+          .optional(),
+      }),
+    ),
+  }),
+});
 const toolNames = async (res: Response) =>
-  ((await res.json()).result.tools as { name: string }[])
-    .map((t) => t.name)
+  toolList
+    .parse(await res.json())
+    .result.tools.map((t) => t.name)
     .sort();
 
 /** Issue OAuth tokens for `resource` through the real code exchange. */
@@ -223,15 +237,28 @@ describe('/api/mcp', () => {
     expect(await toolNames(res)).toEqual(['publish']);
   });
 
-  it.each(['list-sites', 'list-files', 'read-file', 'claim-site'])(
-    'answers an anonymous %s call with 401 and a sign-in challenge',
-    async (name) => {
+  it('answers every tool that needs an account with 401 and a sign-in challenge', async () => {
+    const { tools } = toolList.parse(
+      await (await anonPOST(anon())).json(),
+    ).result;
+    const signedInOnly = tools
+      .filter((t) => !t._meta?.securitySchemes.some((s) => s.type === 'noauth'))
+      .map((t) => t.name)
+      .sort();
+    expect(signedInOnly).toEqual([
+      'claim-site',
+      'list-files',
+      'list-sites',
+      'read-file',
+    ]);
+    vi.mocked(realMcpDeps).mockClear();
+    for (const name of signedInOnly) {
       const res = await anonPOST(anonCall(name, { siteId: 's1' }));
-      expect(res.status).toBe(401);
+      expect(res.status, name).toBe(401);
       expect(res.headers.get('www-authenticate')).toBe(ANON_CHALLENGE);
-      expect(realMcpDeps).not.toHaveBeenCalled();
-    },
-  );
+    }
+    expect(realMcpDeps).not.toHaveBeenCalled();
+  });
 
   it('answers 401 when the call carries other client _meta (Claude Code)', async () => {
     const res = await anonPOST(
@@ -251,15 +278,21 @@ describe('/api/mcp', () => {
     expect(res.headers.get('www-authenticate')).toBeNull();
   });
 
-  it('asks ChatGPT to sign in through the tool result instead of a 401', async () => {
-    const res = await anonPOST(
-      anonCall('list-sites', {}, { meta: { 'openai/subject': 'u-9' } }),
-    );
-    expect(res.status).toBe(200);
-    const { result } = await res.json();
-    expect(result.isError).toBe(true);
-    expect(result._meta).toEqual({ 'mcp/www_authenticate': [ANON_CHALLENGE] });
-  });
+  it.each([
+    { 'openai/subject': 'u-9' },
+    { 'openai/session': 's-1', 'openai/locale': 'en-GB' },
+  ])(
+    'asks ChatGPT to sign in through the tool result instead of a 401 (%o)',
+    async (meta) => {
+      const res = await anonPOST(anonCall('list-sites', {}, { meta }));
+      expect(res.status).toBe(200);
+      const { result } = await res.json();
+      expect(result.isError).toBe(true);
+      expect(result._meta).toEqual({
+        'mcp/www_authenticate': [ANON_CHALLENGE],
+      });
+    },
+  );
 
   it('runs an account tool for a signed-in caller', async () => {
     const t = await oauthTokens(anonResource());
