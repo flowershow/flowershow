@@ -69,7 +69,7 @@ fl --name owner/name --overwrite ./my-folder
 
 ### From your AI
 
-Chat apps such as Claude and ChatGPT can't sign in to your Flowershow account yet, so they can't publish to shared sites. An MCP client that can set request headers can: connect it with a [personal access token](https://cloud.flowershow.app/tokens), as in [Publish to your own account](/docs/agents/mcp#publish-to-your-own-account). Its `list-sites` tool then shows the sites shared with you, and your AI publishes to one by its `siteId`.
+Connect Claude, ChatGPT or another AI app with the [signed-in connector](/docs/agents/mcp) (`https://flowershow.app/api/mcp/account`), or an MCP client with a [personal access token](/docs/agents/mcp#other-mcp-clients). Its `list-sites` tool then shows the sites shared with you, and your AI publishes to one by its `siteId`. The no-account connector can't publish to shared sites.
 
 ### From Obsidian
 
