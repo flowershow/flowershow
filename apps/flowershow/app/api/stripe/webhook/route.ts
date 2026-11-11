@@ -6,19 +6,19 @@ import { PremiumDowngradeEmail } from '@/emails/premium-downgrade';
 import { PremiumExpiredEmail } from '@/emails/premium-expired';
 import { PremiumUpgradeEmail } from '@/emails/premium-upgrade';
 import { RenewalReminderEmail } from '@/emails/renewal-reminder';
-import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
 import { sendEmail } from '@/lib/email';
 import { flushLogs, log, SeverityNumber } from '@/lib/otel-logger';
-import { PLAN_LIMITS } from '@/lib/entitlements';
-import { getSiteStorageBytes } from '@/lib/storage-limits';
 import PostHogClient from '@/lib/server-posthog';
+import { reconcileUserSitePlans } from '@/lib/site-plans';
 import {
   FLOWERSHOW_PLATFORM,
+  getSubscriptionKind,
   isFlowershowSubscription,
   stripe,
 } from '@/lib/stripe';
 import { sendTransactionalEmail } from '@/lib/transactional-email';
 import prisma from '@/server/db';
+import { handleAccountEvent } from './account';
 
 // Email ownership: payment-failure emails are sent by Stripe itself.
 // We therefore do NOT handle `invoice.payment_failed` here.
@@ -27,6 +27,7 @@ import prisma from '@/server/db';
 // payment_failure, handled in the subscription case below).
 const relevantEvents = new Set([
   'checkout.session.completed',
+  'customer.subscription.created',
   'customer.subscription.updated',
   'customer.subscription.deleted',
   'invoice.upcoming',
@@ -125,6 +126,13 @@ export async function POST(req: Request) {
             break;
           }
 
+          // Deliberately not behind accountPlansEnabled(): inert while the
+          // price ids are null, and phase 3 grandfathering relies on it.
+          if (checkoutSession.metadata?.kind === 'account') {
+            await handleAccountEvent(event);
+            break;
+          }
+
           const subscription = await stripe.subscriptions.retrieve(
             checkoutSession.subscription,
           );
@@ -171,22 +179,21 @@ export async function POST(req: Request) {
             },
           });
 
-          // Update site's features to PREMIUM
-          const updatedSite = await prisma.site.update({
-            where: {
-              id: checkoutSession.metadata.siteId,
-            },
-            data: {
-              plan: 'PREMIUM',
-            },
-            include: {
-              user: true,
-            },
+          const site = await prisma.site.findUnique({
+            where: { id: checkoutSession.metadata.siteId },
+            include: { user: true },
           });
+          if (!site) {
+            throw new Error('Site not found for checkout session');
+          }
+
+          // The live Subscription row written above makes the site PREMIUM
+          // (source SITE) through the reconciler.
+          await reconcileUserSitePlans(site.userId);
 
           const posthog = PostHogClient();
           posthog.capture({
-            distinctId: updatedSite.userId,
+            distinctId: site.userId,
             event: 'site_upgraded',
             properties: {
               siteId: checkoutSession.metadata.siteId,
@@ -197,10 +204,9 @@ export async function POST(req: Request) {
           await posthog.shutdown();
 
           // Send premium upgrade email
-          const upgradeUserName =
-            updatedSite.user.name?.split(' ')[0] || 'there';
+          const upgradeUserName = site.user.name?.split(' ')[0] || 'there';
           await sendEmail({
-            to: updatedSite.user.email!,
+            to: site.user.email!,
             subject: "You're now on Flowershow Premium",
             react: PremiumUpgradeEmail({
               userName: upgradeUserName,
@@ -211,6 +217,7 @@ export async function POST(req: Request) {
 
           break;
         }
+        case 'customer.subscription.created':
         case 'customer.subscription.updated':
         case 'customer.subscription.deleted': {
           const subscription = event.data.object as any;
@@ -231,6 +238,16 @@ export async function POST(req: Request) {
                 reason: 'not_flowershow',
               },
             );
+            break;
+          }
+
+          if (getSubscriptionKind(subscription) === 'account') {
+            await handleAccountEvent(event);
+            break;
+          }
+
+          // Per-site subscriptions are provisioned by checkout.session.completed.
+          if (event.type === 'customer.subscription.created') {
             break;
           }
 
@@ -268,6 +285,38 @@ export async function POST(req: Request) {
 
           if (!priceId || !interval) {
             throw new Error('Missing required subscription data');
+          }
+
+          // Stripe does not order events and canceled is final: a late update
+          // (consolidation sends two just before cancelling) must not turn a
+          // canceled row live again.
+          if (
+            dbSubscription.status === 'canceled' &&
+            subscription.status !== 'canceled'
+          ) {
+            break;
+          }
+
+          // Folded into an account plan: the site stays Premium, so this is
+          // not a cancellation (no email, no cancel bonus, no domain removal).
+          if (subscription.metadata?.reason === 'consolidated') {
+            await prisma.subscription.update({
+              where: { stripeSubscriptionId: subscription.id },
+              data: {
+                status: subscription.status,
+                currentPeriodStart: new Date(
+                  subscription.current_period_start * 1000,
+                ),
+                currentPeriodEnd: new Date(
+                  subscription.current_period_end * 1000,
+                ),
+                cancelAtPeriodEnd: subscription.cancel_at_period_end,
+                stripePriceId: priceId,
+                interval: interval,
+              },
+            });
+            await reconcileUserSitePlans(dbSubscription.site.userId);
+            break;
           }
 
           // Detect new cancellation: cancel_at_period_end just flipped to true
@@ -360,38 +409,11 @@ export async function POST(req: Request) {
             }
           }
 
-          // When Stripe confirms the subscription is fully cancelled, downgrade to FREE
+          // When Stripe confirms the subscription is fully cancelled, the
+          // reconciler downgrades the site to FREE unless something else
+          // (a manual grant, the account plan) keeps it Premium.
           if (subscription.status === 'canceled') {
-            const site = dbSubscription.site;
-
-            if (
-              site.customDomain &&
-              env.NEXT_PUBLIC_VERCEL_ENV === 'production'
-            ) {
-              await removeDomainAndVariantFromVercelProject(site.customDomain);
-            }
-
-            // Password protection is kept on lapse (the access gate is
-            // plan-independent). A site over the Free cap gets an allowance
-            // so it can keep publishing edits and stays out of the Free pool.
-            const totalBytes = await getSiteStorageBytes(dbSubscription.siteId);
-            let storageAllowanceBytes: bigint | undefined;
-            if (totalBytes > PLAN_LIMITS.FREE.siteHardBytes) {
-              const needed = BigInt(Math.ceil((totalBytes * 11) / 10));
-              const existing = site.storageAllowanceBytes ?? BigInt(0);
-              storageAllowanceBytes = needed > existing ? needed : existing;
-            }
-
-            await prisma.site.update({
-              where: { id: dbSubscription.siteId },
-              data: {
-                plan: 'FREE',
-                ...(site.customDomain && { customDomain: null }),
-                ...(storageAllowanceBytes !== undefined && {
-                  storageAllowanceBytes,
-                }),
-              },
-            });
+            await reconcileUserSitePlans(dbSubscription.site.userId);
 
             // Involuntary expiry: the subscription was cancelled because payment
             // failed (not a voluntary cancellation). Send a distinct "expired,

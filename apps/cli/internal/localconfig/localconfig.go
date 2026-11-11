@@ -13,8 +13,11 @@ import (
 const FileName = ".flowershow"
 
 // Config is the .flowershow link file. A folder is linked either to a site in
-// the user's account (SiteName) or to an anonymous site (Anon, SiteID, ...),
-// never both.
+// the user's account (SiteName, plus SiteID so the link follows renames) or to
+// an anonymous site (Anon, SiteID, ...), never both. SiteName is the bare name
+// of your own site, or "owner/name" for a site shared with you. An older fl
+// reading "owner/name" looks it up under its own username and fails on the
+// "/" (names cannot contain one) instead of creating a duplicate site.
 //
 // ClaimToken and ClaimURL (which embeds the token) are secrets: they are kept
 // in the user's config dir (package claims), never written to .flowershow.

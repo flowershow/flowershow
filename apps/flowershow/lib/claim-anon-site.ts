@@ -3,6 +3,7 @@ import {
   verifyOwnershipToken,
   verifySiteClaimToken,
 } from '@/lib/anonymous-user';
+import { reconcileAfterSiteChange } from '@/lib/site-plans';
 import prisma from '@/server/db';
 
 /**
@@ -116,6 +117,9 @@ export async function claimAnonSite(
     // Lost a race with another claim (or the site expired in between).
     return fail(409, 'This site has already been claimed');
   }
+
+  // The claimed site may take a free account plan slot.
+  await reconcileAfterSiteChange(userId, siteId);
 
   const claimed = await prisma.site.findUnique({
     where: { id: siteId },

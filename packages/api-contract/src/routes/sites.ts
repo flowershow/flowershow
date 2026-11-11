@@ -8,6 +8,7 @@ import {
   DeleteSiteResponseSchema,
   ErrorSchema,
   GetSiteResponseSchema,
+  ListSitesQuerySchema,
   ListSitesResponseSchema,
   PublicStatusResponseSchema,
   PublishFilesRequestSchema,
@@ -136,12 +137,19 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
     path: '/api/sites',
     operationId: 'listSites',
     summary: "List user's sites",
+    description:
+      "Lists the sites the caller owns. With `includeShared=true` it also lists sites shared with them as an editor (Premium sites only; sites whose plan has lapsed are left out). Each site has a `role` (`owner` or `editor`) and an `owner.username`, in both modes.",
     tags: ['Sites'],
     security: [{ bearerToken: [] }],
+    request: { query: ListSitesQuerySchema },
     responses: {
       '200': {
         description: 'List of sites',
         content: { 'application/json': { schema: ListSitesResponse } },
+      },
+      '400': {
+        description: 'Invalid query parameter',
+        content: { 'application/json': { schema: ErrorResponse } },
       },
       '401': {
         description: 'Not authenticated',

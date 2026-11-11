@@ -402,6 +402,24 @@ describe('publish (failures after the site was created)', () => {
 const USER = { kind: 'user' as const, userId: 'u1' };
 
 describe('publish (signed in)', () => {
+  it('passes a lapsed editor premium_required message through and does not suggest a new site', async () => {
+    const d = makeDeps({
+      sync: vi
+        .fn()
+        .mockRejectedValue(
+          new ApiError(
+            403,
+            'premium_required',
+            'Premium has lapsed on this site',
+          ),
+        ),
+    });
+    await expect(
+      publish({ files: [html], siteId: 'site-u' }, USER, d),
+    ).rejects.toMatchObject({ message: 'Premium has lapsed on this site' });
+    expect(d.createUserSite).not.toHaveBeenCalled();
+  });
+
   it('publishes to the given site as the user, with no claim link', async () => {
     const res = await publish({ files: [html], siteId: 'site-u' }, USER, deps);
     expect(deps.createAnonSite).not.toHaveBeenCalled();
@@ -426,7 +444,7 @@ describe('publish (signed in)', () => {
       });
       await expect(
         publish({ files: [html], siteId: 'other' }, USER, deps),
-      ).rejects.toThrow(/not found in your account.*list-sites/);
+      ).rejects.toThrow(/not found among the sites you can edit.*list-sites/);
     },
   );
 

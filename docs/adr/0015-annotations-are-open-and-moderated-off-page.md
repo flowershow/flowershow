@@ -1,6 +1,6 @@
 # ADR 0015: Annotations are open to anyone who can view the page, and moderated off-page
 
-**Status**: Accepted (Phase 0, 2026-10)
+**Status**: Accepted (Phase 0, 2026-10); amended by ADR 0016 (editors can delete annotations)
 
 ## Context
 

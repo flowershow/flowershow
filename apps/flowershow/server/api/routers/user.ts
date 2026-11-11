@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { AccountDeletedEmail } from '@/emails/account-deleted';
+import { isLiveSiteStatus } from '@/lib/account-plans';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchGitHubScopeRepositories, fetchGitHubScopes } from '@/lib/github';
 import PostHogClient from '@/lib/server-posthog';
@@ -12,6 +13,20 @@ import {
 import { generatePatToken, hashToken } from '@/lib/cli-auth';
 import { listConnectedApps, revokeUserGrant } from '@/lib/oauth/grants';
 import { TRPCError } from '@trpc/server';
+import type { Plan, PrivacyMode } from '@prisma/client';
+import { isSiteOwner } from '@/lib/site-authz';
+
+export type DashboardSite = {
+  id: string;
+  projectName: string;
+  subdomain: string;
+  customDomain: string | null;
+  plan: Plan;
+  role: 'owner' | 'editor';
+  lapsed: boolean;
+  ownerUsername: string;
+  privacyMode: PrivacyMode;
+};
 
 export const userRouter = createTRPCRouter({
   getStats: publicProcedure.query(async ({ ctx }) => {
@@ -53,10 +68,47 @@ export const userRouter = createTRPCRouter({
   getSites: protectedProcedure
     .input(z.object({ limit: z.number().min(1).optional() }).optional())
     .query(async ({ ctx, input }) => {
-      return await ctx.db.site.findMany({
-        where: { userId: ctx.session.user.id },
-        take: input?.limit,
+      const callerId = ctx.session.user.id;
+      const rows = await ctx.db.site.findMany({
+        where: {
+          OR: [
+            { userId: callerId },
+            { members: { some: { userId: callerId } } },
+          ],
+        },
+        select: {
+          id: true,
+          projectName: true,
+          subdomain: true,
+          customDomain: true,
+          plan: true,
+          privacyMode: true,
+          userId: true,
+          user: { select: { username: true } },
+        },
       });
+      const sites: DashboardSite[] = rows.map((row) => {
+        // List presentation only; not an authorization decision.
+        const owned = isSiteOwner(callerId, row);
+        return {
+          id: row.id,
+          projectName: row.projectName,
+          subdomain: row.subdomain,
+          customDomain: row.customDomain,
+          plan: row.plan,
+          role: owned ? 'owner' : 'editor',
+          lapsed: !owned && row.plan !== 'PREMIUM',
+          ownerUsername: row.user.username,
+          privacyMode: row.privacyMode,
+        };
+      });
+      // Owned first, then shared; each group by name.
+      sites.sort(
+        (a, b) =>
+          Number(a.role === 'editor') - Number(b.role === 'editor') ||
+          a.projectName.localeCompare(b.projectName),
+      );
+      return input?.limit ? sites.slice(0, input.limit) : sites;
     }),
   getGitHubScopes: protectedProcedure.query(async ({ ctx }) => {
     const accessToken = ctx.session.accessToken;
@@ -214,6 +266,7 @@ export const userRouter = createTRPCRouter({
           username: true,
           name: true,
           email: true,
+          accountSubscription: { select: { status: true } },
           sites: {
             select: {
               id: true,
@@ -232,6 +285,18 @@ export const userRouter = createTRPCRouter({
 
       if (input.confirm !== user.username) {
         throw new Error('Confirmation does not match username');
+      }
+
+      // A live account plan keeps billing a deleted user, so cancel it first.
+      if (
+        user.accountSubscription &&
+        isLiveSiteStatus(user.accountSubscription.status)
+      ) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message:
+            'Please cancel your account plan before deleting your account.',
+        });
       }
 
       // Check for sites with active subscriptions

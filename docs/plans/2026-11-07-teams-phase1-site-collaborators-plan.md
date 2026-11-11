@@ -18,7 +18,7 @@
 - Inviting requires `site.plan === PREMIUM`; accept re-checks `plan` at accept time. Owner actions on members (remove, revoke) never require Premium.
 - `MAX_SITE_MEMBERS = 20` editors per site; at most 20 pending invites per site (`MAX_PENDING_INVITES = 20`).
 - Invite token: random 32 bytes, stored only as its SHA-256 hex hash (same as `AccessToken`), expires after 14 days. Invite email is lower-cased and trimmed.
-- Accept requires: token hash matches, invite unexpired, site still Premium, caller is not the owner, member limit holds, invite email equals the signed-in user's email **and** that email is trusted (`isExistingUserEmailTrusted`). There is no "accept with this account anyway".
+- Accept requires: token hash matches, invite unexpired, site still Premium, caller is not the owner, member limit holds, invite email equals the signed-in user's email **and** that email is verified (`User.emailVerified` is set; a linked Google account alone does not count, as Google may not have verified the address). There is no "accept with this account anyway".
 - Lapsed Premium: REST, sync and MCP return HTTP 403 `{ error: 'premium_required' }` to an editor, never "site not found".
 - No resend, no scheduled sweep, no daily invite rate limit, no feature flag, no REST or MCP endpoints for member management in phase 1.
 - No new inline authorization checks anywhere; no `site.userId === x` comparisons outside `lib/site-authz.ts`.
@@ -668,7 +668,7 @@ git commit -m "feat(members): siteMember router with email invites, limits and o
 - Test: `apps/flowershow/server/api/routers/__tests__/site-member.test.ts`
 
 **Interfaces:**
-- Consumes: `hashInviteToken`, `normalizeInviteEmail`, `MAX_SITE_MEMBERS`, `deleteExpiredInvites` (Task 8); `isExistingUserEmailTrusted({ emailVerified, accounts })` from `lib/account-linking.ts`.
+- Consumes: `hashInviteToken`, `normalizeInviteEmail`, `MAX_SITE_MEMBERS`, `deleteExpiredInvites` (Task 8); the trust rule is `User.emailVerified != null` (not `lib/account-linking.ts`).
 - Produces:
   - `getInvite({ token }) → { state: 'ok' | 'not_found' | 'expired' | 'lapsed' | 'owner' | 'email_mismatch' | 'email_untrusted' | 'already_member'; siteId?: string; projectName?: string; ownerUsername?: string; invitedEmail?: string }` (`invitedEmail` only when `state` is `email_mismatch` or `email_untrusted`, as the spec requires the page to name it)
   - `accept({ token }) → { siteId: string }`
@@ -716,7 +716,7 @@ it('acceptPending refuses an invite addressed to someone else', async () => { /*
 Run: `cd apps/flowershow && pnpm exec vitest run --project=unit server/api/routers/__tests__/site-member.test.ts`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement.** `accept` hashes the token, loads the invite with `site: { select: { id, userId, plan, projectName, user: { select: { username } } } }`, loads the caller with `{ email, emailVerified, accounts: { select: { provider } } }`, then inside `ctx.db.$transaction(async (tx) => ...)` re-reads the invite by id (gone → `NOT_FOUND 'Invite not found'`), checks in order: expired → delete it and `NOT_FOUND 'This invite has expired'`; caller is owner → `BAD_REQUEST`; `plan !== 'PREMIUM'` → `FORBIDDEN 'This site is no longer on Premium'`; email mismatch or untrusted → `FORBIDDEN`; `siteMember.count >= MAX_SITE_MEMBERS` → `FORBIDDEN`; already a member → delete invite and return `{ siteId }`; else create member, delete invite. After commit, PostHog `site_members_changed` with `change: 'joined'`. `getInvite` runs the same checks without writing and maps them to `state`. `pendingForMe` returns `[]` unless `isExistingUserEmailTrusted`.
+- [ ] **Step 3: Implement.** `accept` hashes the token, loads the invite with `site: { select: { id, userId, plan, projectName, user: { select: { username } } } }`, loads the caller with `{ email, emailVerified, accounts: { select: { provider } } }`, then inside `ctx.db.$transaction(async (tx) => ...)` re-reads the invite by id (gone → `NOT_FOUND 'Invite not found'`), checks in order: expired → delete it and `NOT_FOUND 'This invite has expired'`; caller is owner → `BAD_REQUEST`; `plan !== 'PREMIUM'` → `FORBIDDEN 'This site is no longer on Premium'`; email mismatch or untrusted → `FORBIDDEN`; `siteMember.count >= MAX_SITE_MEMBERS` → `FORBIDDEN`; already a member → delete invite and return `{ siteId }`; else create member, delete invite. After commit, PostHog `site_members_changed` with `change: 'joined'`. `getInvite` runs the same checks without writing and maps them to `state`. `pendingForMe` returns `[]` unless `emailVerified` is set.
 
 - [ ] **Step 4: Run to verify they pass**
 
@@ -932,7 +932,7 @@ git commit -m "feat(mcp): list-sites includes sites shared with you" -m "Claude-
   - `api.Site` gains `Role string \`json:"role,omitempty"\`` and `Owner *api.SiteOwner \`json:"owner,omitempty"\``; `type SiteOwner struct { Username string \`json:"username"\` }`.
   - `func (s Site) IsShared() bool` (`s.Role == "editor"`); `func (s Site) DisplayName() string` (`owner/name` when shared, else `ProjectName`).
   - `func parseSiteRef(ref string) (owner, name string)` in `cmd/site_ref.go`: splits on the first `/` (site names cannot contain `/`, `validate-site-name.ts`); no slash → `owner == ""`.
-  - Fake API: `fakeAPI.shared map[string]api.Site` keyed `"owner/name"`; `GET /api/sites` appends them with `Role: "editor"`; `GET /api/sites/{owner}/{name}` serves them for `owner != testUser`; `fakeAPI` gains a helper `f.share(owner, name string)` that adds `api.Site{ID: "id-" + owner + "-" + name, ProjectName: name, Role: "editor", Owner: &api.SiteOwner{Username: owner}}`.
+  - Fake API: `fakeAPI.shared map[string]api.Site` keyed `"owner/name"`; `GET /api/sites?includeShared=true` appends them with `Role: "editor"` (without the query it returns owned sites only); the CLI client's list call passes `?includeShared=true` (client method and a test asserting the query is sent); `GET /api/sites/{owner}/{name}` serves them for `owner != testUser`; `fakeAPI` gains a helper `f.share(owner, name string)` that adds `api.Site{ID: "id-" + owner + "-" + name, ProjectName: name, Role: "editor", Owner: &api.SiteOwner{Username: owner}}`.
 
 - [ ] **Step 1: Write the failing tests.**
 

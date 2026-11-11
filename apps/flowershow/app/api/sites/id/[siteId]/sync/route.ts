@@ -206,7 +206,9 @@ export async function POST(
         .reduce((n, b) => n + b.size, 0);
       const projectedSiteBytes =
         keptBytes + files.reduce((n, f) => n + f.size, 0);
-      await noteStorageOverLimit(site, currentSiteBytes, projectedSiteBytes);
+      await noteStorageOverLimit(site, currentSiteBytes, projectedSiteBytes, {
+        dryRun,
+      });
     }
 
     let uploadUrls: PresignedUrl[] = [];

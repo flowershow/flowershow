@@ -25,6 +25,10 @@ export type SiteSummary = {
   name: string;
   url: string;
   lastPublishedAt: string | null;
+  /** `editor` for a site shared with the caller; `owner` for their own. */
+  role: 'owner' | 'editor';
+  /** Username of the site's owner. */
+  owner: string;
 };
 
 export type ClaimedSite = { siteId: string; name: string; url: string };
@@ -73,7 +77,7 @@ Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, 
 
 ${CHECK_RULES}
 
-Without an account this creates a new site that expires in 7 days and returns a claim link: always show the user the live URL and the claim link exactly as returned, so they can keep the site. To update that site later in the conversation, call publish again with its siteId and claimToken and only the files you changed or added: files you don't send are kept as they are. ${UPDATE_RULES} For bigger sites, suggest the Flowershow CLI (fl).`;
+Without an account this creates a new site that expires in 7 days and returns a claim link: always show the user the live URL and the claim link exactly as returned, so they can keep the site. To update that site later in the conversation, call publish again with its siteId and claimToken and only the files you changed or added: files you don't send are kept as they are. ${UPDATE_RULES}`;
 
 const ACCOUNT_PUBLISH_DESCRIPTION = `Publish files as a live website in the user's Flowershow account and get a shareable URL. Use when the user says "publish this", "put this online", "make this a website", "share this as a page", "host this" or "update my site".
 
@@ -81,7 +85,7 @@ Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, 
 
 ${CHECK_RULES}
 
-Without siteId this creates a new site in the account (optionally give it a name; otherwise it is named after the home page's first heading). With siteId it updates that site: send only the files you changed or added, since files you don't send are kept as they are. ${UPDATE_RULES} Use list-sites to find a site to update and list-files to see which files it already has. Before changing an existing file (for example adding a link to the home page), get its current text with read-file and send it back with your change, so nothing already on the page is lost. To keep an anonymous site published earlier in the conversation (one with a claimToken), call claim-site first. For bigger sites, suggest the Flowershow CLI (fl).`;
+Without siteId this creates a new site in the account (optionally give it a name; otherwise it is named after the home page's first heading). With siteId it updates that site: send only the files you changed or added, since files you don't send are kept as they are. ${UPDATE_RULES} Use list-sites to find a site to update and list-files to see which files it already has. Before changing an existing file (for example adding a link to the home page), get its current text with read-file and send it back with your change, so nothing already on the page is lost. To keep an anonymous site published earlier in the conversation (one with a claimToken), call claim-site first.`;
 
 const fileShape = z.object({
   path: z
@@ -218,7 +222,7 @@ export function createFlowershowMcpServer(
       {
         title: 'List my Flowershow sites',
         description:
-          'List the sites in the signed-in Flowershow account, with their siteId (use it with list-files to see what a site has, and with publish to update it), URL and when each was last published.',
+          'List the sites in the signed-in Flowershow account and sites shared with it (role editor), with their siteId (use it with list-files to see what a site has, and with publish to update it), URL and when each was last published.',
         outputSchema: {
           sites: z.array(
             z.object({
@@ -226,6 +230,8 @@ export function createFlowershowMcpServer(
               name: z.string(),
               url: z.string(),
               lastPublishedAt: z.string().nullable(),
+              role: z.enum(['owner', 'editor']),
+              owner: z.string(),
             }),
           ),
         },
@@ -241,7 +247,7 @@ export function createFlowershowMcpServer(
                 ? sites
                     .map(
                       (s) =>
-                        `${s.name} (${s.siteId}): ${s.url}${s.lastPublishedAt ? ` — last published ${s.lastPublishedAt}` : ''}`,
+                        `${s.role === 'editor' ? `${s.owner}/` : ''}${s.name} (${s.siteId}): ${s.url}${s.role === 'editor' ? ' (editor)' : ''}${s.lastPublishedAt ? ` — last published ${s.lastPublishedAt}` : ''}`,
                     )
                     .join('\n')
                 : 'No sites yet.',

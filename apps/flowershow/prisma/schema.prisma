@@ -30,6 +30,7 @@ model User {
   createdAt           DateTime             @default(now()) @map("created_at")
   updatedAt           DateTime             @updatedAt @map("updated_at")
   cancelBonusGrantedAt DateTime?           @map("cancel_bonus_granted_at")
+  storagePoolWarningSentAt DateTime?       @map("storage_pool_warning_sent_at") // last Free-pool over-limit email
   accounts            Account[]
   sessions            Session[]
   sites               Site[]
@@ -39,6 +40,8 @@ model User {
   oauthGrants         OAuthGrant[]
   siteMemberships     SiteMember[]
   publishes           Publish[]
+  stripeCustomerId    String?              @unique @map("stripe_customer_id") // account-level Stripe customer
+  accountSubscription AccountSubscription?
 }
 
 model Subscription {
@@ -54,9 +57,28 @@ model Subscription {
   cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
   createdAt            DateTime           @default(now()) @map("created_at")
   updatedAt            DateTime           @updatedAt @map("updated_at")
+  consolidatedAt       DateTime?          @map("consolidated_at")
   site                 Site               @relation(fields: [siteId], references: [id], onDelete: Cascade)
 
   @@index([siteId])
+}
+
+model AccountSubscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique @map("user_id")
+  stripeCustomerId     String             @map("stripe_customer_id")
+  stripeSubscriptionId String             @unique @map("stripe_subscription_id")
+  stripePriceId        String             @map("stripe_price_id")
+  plan                 AccountPlan
+  interval             String // month, year
+  siteAllowance        Int?               @map("site_allowance")
+  status               SubscriptionStatus
+  currentPeriodStart   DateTime           @default(now()) @map("current_period_start")
+  currentPeriodEnd     DateTime           @map("current_period_end")
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 // NextAuth.js model - DO NOT modify this model's structure unless specified in NextAuth.js documentation
@@ -125,7 +147,11 @@ model Site {
   enableRss               Boolean       @default(false) @map("enable_rss")
   showSidebar             Boolean       @default(true) @map("show_sidebar")
   plan                    Plan          @default(FREE)
+  // Why the site is PREMIUM. Manual grant: UPDATE "Site" SET plan = 'PREMIUM', plan_source = 'MANUAL' WHERE id = ...
+  planSource              PlanSource?   @map("plan_source")
+  coveredByAccountPlan    Boolean       @default(false) @map("covered_by_account_plan")
   storageAllowanceBytes   BigInt?       @map("storage_allowance_bytes") // grandfathered storage limit override
+  storageWarningSentAt    DateTime?     @map("storage_warning_sent_at") // last over-limit email for this site
   subscription            Subscription?
   blobs                   Blob[]
   publishes               Publish[]
@@ -396,6 +422,17 @@ model PublishFile {
 enum Plan {
   FREE
   PREMIUM
+}
+
+enum PlanSource {
+  SITE
+  ACCOUNT
+  MANUAL
+}
+
+enum AccountPlan {
+  PRO
+  UNLIMITED
 }
 
 enum SubscriptionStatus {

@@ -84,9 +84,18 @@ export function validateClientMetadata(raw: unknown): MetadataResult {
     }
   }
 
-  // Public clients only: no client secrets, no client authentication.
+  // Public clients only: no client secrets, no client authentication. A
+  // client listing several methods (token_endpoint_auth_methods_supported,
+  // MCP SEP-3149; ChatGPT's CIMD lists ["none", "private_key_jwt"] with the
+  // singular field set to "private_key_jwt") is fine if "none" is among them:
+  // it picks from the intersection with our metadata, which offers only
+  // "none". Without the plural field, the singular one is binding.
+  const supported = m.token_endpoint_auth_methods_supported;
   const authMethod = m.token_endpoint_auth_method;
-  if (authMethod !== undefined && authMethod !== 'none') {
+  const canBePublic = Array.isArray(supported)
+    ? supported.includes('none')
+    : authMethod === undefined || authMethod === 'none';
+  if (!canBePublic) {
     return invalid(
       'Only public clients are supported (token_endpoint_auth_method "none")',
     );

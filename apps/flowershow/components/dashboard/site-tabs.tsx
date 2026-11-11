@@ -31,6 +31,7 @@ export default function SiteTabs({
           ? `Annotations (${openAnnotations})`
           : 'Annotations',
     },
+    { href: `${base}/members`, label: 'Members' },
   ];
   const activeHref =
     tabs.find(

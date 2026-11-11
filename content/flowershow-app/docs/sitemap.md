@@ -46,6 +46,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Callouts](/docs/reference/callouts) — Obsidian callout syntax, supported types and aliases, custom titles, folding, and nesting in Flowershow.
 - [Changelog](/docs/reference/changelog) — Publish a changelog: Flowershow turns a changelog folder or a CHANGELOG.md file into a timeline page automatically
 - [Flowershow CLI](/docs/reference/cli) — Install and use fl, the Flowershow CLI, to publish your notes from the terminal. A single binary, no Node.js or npm needed.
+- [Invite editors to a site](/docs/reference/collaborators) — Invite people by email to publish to your Flowershow site and change its settings, while you stay in charge of billing, the domain and who has access.
 - [Comments](/docs/reference/comments) — Enable comments on your site's pages. Powered by Giscus and GitHub Discussions.
 - [`config.json` file](/docs/reference/config-file) — Reference for all available options in the config.json site configuration file.
 - [Content filtering](/docs/reference/content-filtering) — Control which files and directories get published
@@ -94,6 +95,6 @@ An index of all documentation pages. Fetch this file to discover available docs 
 
 - [Publishing HTML](/docs/agents/html) — How to publish HTML pages and sites with Flowershow, standalone or inside Markdown pages. Written for AI agents and the people using them.
 - [Markdown access](/docs/agents/markdown-access) — Every Markdown page on a Flowershow site is also served as raw markdown. Append .md to its URL to get clean, agent-readable content.
-- [Publish from Claude and ChatGPT (beta)](/docs/agents/mcp) — Add Flowershow as a connector in Claude or ChatGPT, then ask it to publish what you've made. You get a live website link, with no account needed.
+- [Publish from Claude and ChatGPT](/docs/agents/mcp) — Add Flowershow as a connector in Claude or ChatGPT, sign in, and ask it to publish what you've made to your account. Or try it without an account and get a live link.
 - [Skills](/docs/agents/skills) — Install the Flowershow skill so your AI assistant can publish and manage Flowershow sites — via the fl CLI, a GitHub repository, or the Obsidian plugin.
 - [Supported agents](/docs/agents/supported-agents) — Which AI agents can use the Flowershow skill, how to install it in each (one file, no Node.js needed), and what each agent can do.

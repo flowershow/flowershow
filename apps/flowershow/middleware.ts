@@ -9,7 +9,6 @@ import { SITE_ACCESS_COOKIE_NAME } from './lib/const';
 import type { InternalSite } from './lib/db/internal';
 import { getSiteUrl } from './lib/get-site-url';
 import { oauthEnabled } from './lib/oauth/config';
-import { shouldBootstrapPostHog } from './lib/posthog-scope';
 import { resolveSiteAlias } from './lib/resolve-site-alias';
 import PostHogClient from './lib/server-posthog';
 import { siteKeyBytes } from './lib/site-hmac-key';
@@ -60,6 +59,9 @@ export default async function middleware(req: NextRequest) {
   const posthog = PostHogClient();
 
   // 0) PostHog proxy
+  if (url.pathname === '/relay-qYYb/geo') {
+    return visitorGeo(req);
+  }
   if (url.pathname.startsWith('/relay-qYYb/')) {
     return proxyPostHog(req);
   }
@@ -82,10 +84,7 @@ export default async function middleware(req: NextRequest) {
   const searchParams = search; // Preserve for rewrites
 
   // Build PostHog bootstrap cookie once for all routes
-  // (only Flowershow's own hosts: published user sites don't load PostHog)
-  const phBootstrap = shouldBootstrapPostHog(hostname)
-    ? await buildPHBootstrapCookie(req, posthog)
-    : null;
+  const phBootstrap = await buildPHBootstrapCookie(req, posthog, hostname);
 
   // 3) Legacy user-site paths: flowershow.app/@user/project/... are gone.
   // These pre-subdomain URLs (content now lives at *.flowershow.me) were the
@@ -138,11 +137,15 @@ export default async function middleware(req: NextRequest) {
     }
 
     // MCP OAuth consent (flowershow-3fr.2): never framed (clickjacking on Allow).
+    // Referrer-Policy same-origin, not no-referrer: the request id still never
+    // leaves in a Referer, but under no-referrer a native form POST (Allow
+    // clicked before hydration) carries Origin: null, which the server
+    // action rejects with a 400.
     if (pathname === '/oauth/consent') {
       const res = NextResponse.rewrite(new URL(path, req.url));
       res.headers.set('X-Frame-Options', 'DENY');
       res.headers.set('Content-Security-Policy', "frame-ancestors 'none'");
-      res.headers.set('Referrer-Policy', 'no-referrer');
+      res.headers.set('Referrer-Policy', 'same-origin');
       res.headers.set('Cache-Control', 'no-store');
       return withPHBootstrapCookie(res, phBootstrap);
     }
@@ -664,6 +667,22 @@ function proxyPostHog(req: NextRequest) {
   });
 }
 
+// PostHog drops the IP of cookieless events before its GeoIP step
+// (posthog/posthog#48660), so the client attaches the location Vercel already
+// derived from the IP (see providers/posthog-provider.tsx). The IP itself
+// never leaves here.
+function visitorGeo(req: NextRequest) {
+  const city = req.headers.get('x-vercel-ip-city');
+  return NextResponse.json(
+    {
+      country: req.headers.get('x-vercel-ip-country'),
+      region: req.headers.get('x-vercel-ip-country-region'),
+      city: city ? decodeURIComponent(city) : null,
+    },
+    { headers: { 'Cache-Control': 'private, no-store' } },
+  );
+}
+
 type PHBootstrap = {
   name: string;
   value: {
@@ -673,15 +692,30 @@ type PHBootstrap = {
   };
 } | null;
 
-async function buildPHBootstrapCookie(req: NextRequest, posthog: PostHog) {
+async function buildPHBootstrapCookie(
+  req: NextRequest,
+  posthog: PostHog,
+  hostname: string,
+) {
   // Only for real HTML page views
   const isGet = req.method === 'GET';
   const accept = req.headers.get('accept') || '';
   const isHtml = accept.includes('text/html');
   if (!isGet || !isHtml) return null;
 
+  // Published sites are cookieless, and flowershow.app and the dashboard set
+  // PostHog cookies only after the visitor accepts them (see
+  // providers/posthog-provider.tsx), so bootstrap only with that consent.
+  if (
+    hostname !== env.NEXT_PUBLIC_HOME_DOMAIN &&
+    hostname !== env.NEXT_PUBLIC_CLOUD_DOMAIN
+  ) {
+    return null;
+  }
+
   const apiKey = env.NEXT_PUBLIC_POSTHOG_KEY;
   if (!apiKey) return null;
+  if (req.cookies.get(`__ph_opt_in_out_${apiKey}`)?.value !== '1') return null;
 
   // Try to reuse PH’s own cookie if it exists (so the user keeps the same distinct_id)
   const phCookieName = `ph_${apiKey}_posthog`;

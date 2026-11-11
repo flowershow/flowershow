@@ -37,6 +37,7 @@ interface PublishEntry {
   source: PublishSource;
   gitCommitSha: string | null;
   gitCommitMessage: string | null;
+  publishedBy?: string | null;
   isInProgress: boolean;
   legacy: boolean;
   counts: {
@@ -159,6 +160,11 @@ function PublishRow({
             <span className="text-xs text-stone-400 dark:text-zinc-500">
               {formattedDate}
             </span>
+            {entry.publishedBy && (
+              <span className="text-xs text-stone-400 dark:text-zinc-500">
+                by {entry.publishedBy}
+              </span>
+            )}
           </div>
 
           {entry.gitCommitSha && (

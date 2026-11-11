@@ -1,6 +1,7 @@
 import { annotationRouter } from '@/server/api/routers/annotation';
 import { githubRouter } from '@/server/api/routers/github';
 import { siteRouter } from '@/server/api/routers/site';
+import { siteMemberRouter } from '@/server/api/routers/site-member';
 import { stripeRouter } from '@/server/api/routers/stripe';
 import { userRouter } from '@/server/api/routers/user';
 import { createTRPCRouter } from '@/server/api/trpc';
@@ -13,6 +14,7 @@ import { createTRPCRouter } from '@/server/api/trpc';
 export const appRouter = createTRPCRouter({
   user: userRouter,
   site: siteRouter,
+  siteMember: siteMemberRouter,
   stripe: stripeRouter,
   github: githubRouter,
   annotation: annotationRouter,

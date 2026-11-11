@@ -9,6 +9,7 @@ import (
 	"github.com/flowershow/publish/internal/auth"
 	"github.com/flowershow/publish/internal/config"
 	"github.com/flowershow/publish/internal/files"
+	"github.com/flowershow/publish/internal/localconfig"
 	"github.com/flowershow/publish/internal/siteconfig"
 	"github.com/flowershow/publish/internal/telemetry"
 	"github.com/flowershow/publish/internal/ui"
@@ -57,6 +58,20 @@ func runSync(inputPath, siteName string, dryRun, verbose bool) error {
 			}
 			return fail(msg + ".")
 		}
+	}
+
+	// `fl sync` only knows your own sites. A shared-site link (or --name
+	// owner/name) must go through `fl`, never into a same-named site of yours.
+	ref := siteName
+	if ref == "" {
+		if absPath, err := filepath.Abs(inputPath); err == nil {
+			if cfg := localconfig.Read(absPath); cfg != nil && !cfg.IsAnon() {
+				ref = cfg.SiteName
+			}
+		}
+	}
+	if owner, _ := parseSiteRef(ref); owner != "" {
+		return fail(fmt.Sprintf("%q is an owner/name reference, which `fl sync` doesn't support.\nNothing was synced. Use `fl --name %s %s` instead.", ref, shellQuoteAll([]string{ref}), shellQuoteAll([]string{inputPath})))
 	}
 
 	sp := ui.NewSpinner()

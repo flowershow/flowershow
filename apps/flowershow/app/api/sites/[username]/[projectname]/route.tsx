@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import {
-  canManageSite,
   siteAuthzSelect,
+  siteRole,
   type SiteAuthzFields,
 } from '@/lib/site-authz';
+import { siteAccessDenied } from '@/lib/site-auth';
+import type { SiteLookupResponse } from '@flowershow/api-contract';
 import { InternalSite, internalSiteSelect } from '@/lib/db/internal';
 import { validateAccessToken } from '@/lib/cli-auth';
 import prisma from '@/server/db';
@@ -77,18 +79,26 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  const role =
+    auth?.userId && site.userId && site.members
+      ? siteRole(auth.userId, {
+          userId: site.userId,
+          plan: site.plan,
+          members: site.members,
+        })
+      : null;
+
+  // An editor of a lapsed site is told why (403 premium_required). Only call
+  // siteAccessDenied for lapsed_editor: it also returns 403 for a null role,
+  // and strangers and removed editors must keep getting the public fields.
+  if (role === 'lapsed_editor') {
+    const denied = siteAccessDenied(role);
+    if (denied) return denied;
+  }
+
   // If the caller may manage the site (owner or Premium editor), return
   // extended data for CLI usage.
-  if (
-    auth?.userId &&
-    site.userId &&
-    site.members &&
-    canManageSite(auth.userId, {
-      userId: site.userId,
-      plan: site.plan,
-      members: site.members,
-    })
-  ) {
+  if (role === 'owner' || role === 'editor') {
     const extendedSite = await prisma.site.findUnique({
       where: { id: site.id },
       select: {
@@ -145,8 +155,10 @@ export async function GET(
           totalSize,
           updatedAt: extendedSite.updatedAt.toISOString(),
           createdAt: extendedSite.createdAt.toISOString(),
+          role,
+          owner: { username: extendedSite.user.username },
         },
-      });
+      } satisfies SiteLookupResponse);
     }
   }
 

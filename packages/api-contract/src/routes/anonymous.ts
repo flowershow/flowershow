@@ -11,7 +11,7 @@ import {
   ClaimSiteWithTokenRequestSchema,
   ClaimSiteWithTokenResponseSchema,
   ErrorSchema,
-  SiteDetailSchema,
+  SiteLookupResponseSchema,
   SuccessResponseSchema,
 } from '../schemas.js';
 
@@ -44,9 +44,9 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
     'Error',
     ErrorSchema.openapi('Error'),
   );
-  const SiteDetail = registry.register(
-    'SiteDetail',
-    SiteDetailSchema.openapi('SiteDetail'),
+  const SiteLookupResponse = registry.register(
+    'SiteLookupResponse',
+    SiteLookupResponseSchema.openapi('SiteLookupResponse'),
   );
 
   registry.registerPath({
@@ -364,7 +364,16 @@ export function registerAnonymousRoutes(registry: OpenAPIRegistry) {
         description: 'Site found',
         content: {
           'application/json': {
-            schema: z.union([z.object({ site: SiteDetail }), z.object({})]),
+            schema: z.union([SiteLookupResponse, z.object({})]),
+          },
+        },
+      },
+      '403': {
+        description:
+          "`premium_required` when the caller is an editor and the site's Premium plan has lapsed",
+        content: {
+          'application/json': {
+            schema: z.object({ error: z.string(), message: z.string() }),
           },
         },
       },

@@ -98,6 +98,8 @@ Rufus's decision: readers' traffic comes from Umami, and PostHog is only for Flo
 
 ### PostHog off published sites
 
+> **Superseded (2026-11-11):** while this was being built, main gained Ola's PostHog change (c62a0b4a, 7e70ed8c). It makes PostHog cookieless on published sites, adds a consent banner on flowershow.app and the dashboard, and sets `ph_bootstrap` only on those hosts. That removes the reader cookies this section was about, so the analytics PR does not take PostHog off published sites. Whether to remove it entirely is a separate decision for Rufus. The text below is the original plan, kept for the record.
+
 - **Claimed sites:** `PostHogProvider` and `SessionProvider` come out of the site layout's providers. `SessionProvider` is there only for PostHog's `identify`, and it causes next-auth cookies on readers' browsers.
 - **Temporary (unclaimed) sites:** PostHog stays, because the banner's `anon_banner_*` events are Flowershow's own claim funnel, but with `persistence: 'memory'` and no `identify`. That sets no cookie, so nothing lands on `.flowershow.me` for claimed sites to receive. Both events happen within one page load, so the funnel still works.
 - **flowershow.app and the dashboard:** unchanged.

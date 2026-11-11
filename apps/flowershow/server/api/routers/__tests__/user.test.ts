@@ -104,6 +104,27 @@ describe('user.deleteAccount', () => {
     expect(sendTransactionalEmail).not.toHaveBeenCalled();
   });
 
+  it('blocks deletion when a live account plan exists', async () => {
+    const db = makeDb({ ...USER, accountSubscription: { status: 'active' } });
+    const caller = createCaller(db);
+
+    await expect(caller.user.deleteAccount({ confirm: 'ada' })).rejects.toThrow(
+      'Please cancel your account plan before deleting your account.',
+    );
+
+    expect(db.user.delete).not.toHaveBeenCalled();
+    expect(sendTransactionalEmail).not.toHaveBeenCalled();
+  });
+
+  it('allows deletion when the account plan is canceled', async () => {
+    const db = makeDb({ ...USER, accountSubscription: { status: 'canceled' } });
+    const caller = createCaller(db);
+
+    await caller.user.deleteAccount({ confirm: 'ada' });
+
+    expect(db.user.delete).toHaveBeenCalled();
+  });
+
   it('blocks deletion (and sends nothing) when a site has an active subscription', async () => {
     const db = makeDb({
       ...USER,
@@ -123,5 +144,54 @@ describe('user.deleteAccount', () => {
 
     expect(db.user.delete).not.toHaveBeenCalled();
     expect(sendTransactionalEmail).not.toHaveBeenCalled();
+  });
+});
+
+describe('user.getSites', () => {
+  it('returns owned sites first, then shared ones with role and owner, and flags lapsed shares', async () => {
+    const row = (
+      id: string,
+      userId: string,
+      plan: string,
+      username: string,
+    ) => ({
+      id,
+      projectName: id,
+      subdomain: id,
+      customDomain: null,
+      plan,
+      userId,
+      user: { username },
+    });
+    const db = {
+      site: {
+        findMany: vi
+          .fn()
+          .mockResolvedValue([
+            row('b-shared', 'owner-2', 'PREMIUM', 'bob'),
+            row('mine', 'user-1', 'FREE', 'ada'),
+            row('c-lapsed', 'owner-3', 'FREE', 'cat'),
+          ]),
+      },
+    };
+    const sites = await createCaller(db).user.getSites({});
+    expect(db.site.findMany).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [
+            { userId: 'user-1' },
+            { members: { some: { userId: 'user-1' } } },
+          ],
+        },
+      }),
+    );
+    expect(sites.map((s) => [s.id, s.role, s.lapsed, s.ownerUsername])).toEqual(
+      [
+        ['mine', 'owner', false, 'ada'],
+        ['b-shared', 'editor', false, 'bob'],
+        ['c-lapsed', 'editor', true, 'cat'],
+      ],
+    );
+    expect(sites[0]).not.toHaveProperty('accessPasswordHash');
   });
 });

@@ -18,11 +18,15 @@ const site = {
   plan: 'FREE',
   customDomain: null,
   subdomain: 'notes-ada',
+  role: 'owner',
+  lapsed: false,
+  ownerUsername: 'ada',
+  privacyMode: 'PUBLIC',
 } as never;
 
 describe('SiteCard people line', () => {
   it('links the people count to the Analytics tab', () => {
-    render(<SiteCard data={site} username="ada" people={412} />);
+    render(<SiteCard data={site} people={412} />);
     const link = screen.getByRole('link', {
       name: '412 people in the last 30 days',
     });
@@ -30,12 +34,22 @@ describe('SiteCard people line', () => {
   });
 
   it('says No readers yet for zero', () => {
-    render(<SiteCard data={site} username="ada" people={0} />);
+    render(<SiteCard data={site} people={0} />);
     expect(screen.getByText('No readers yet')).toBeTruthy();
   });
 
+  it('renders no line on a lapsed shared site', () => {
+    render(
+      <SiteCard
+        data={{ ...(site as object), role: 'editor', lapsed: true } as never}
+        people={412}
+      />,
+    );
+    expect(screen.queryByText(/people in the last/)).toBeNull();
+  });
+
   it('renders no line when people is undefined', () => {
-    render(<SiteCard data={site} username="ada" />);
+    render(<SiteCard data={site} />);
     expect(screen.queryByText(/people in the last/)).toBeNull();
     expect(screen.queryByText('No readers yet')).toBeNull();
   });
