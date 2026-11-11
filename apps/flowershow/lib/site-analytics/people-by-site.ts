@@ -43,7 +43,8 @@ export async function loadBlobCountsBySite(
     ]);
     const out: Record<string, BlobCounts> = {};
     for (const id of siteIds) out[id] = { pages: 0, rawHtml: 0 };
-    for (const r of pages) if (out[r.siteId]) out[r.siteId]!.pages = r._count._all;
+    for (const r of pages)
+      if (out[r.siteId]) out[r.siteId]!.pages = r._count._all;
     for (const r of rawHtml)
       if (out[r.siteId]) out[r.siteId]!.rawHtml = r._count._all;
     return out;

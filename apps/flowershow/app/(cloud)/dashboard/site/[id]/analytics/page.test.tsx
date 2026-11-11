@@ -69,18 +69,18 @@ describe('SiteAnalyticsPage', () => {
     await expect(SiteAnalyticsPage(props)).rejects.toThrow('NEXT_NOT_FOUND');
   });
 
-  it.each([
-    'password',
-    'html-only',
-  ] as const)('skips Umami for a %s site', async (kind) => {
-    findUnique.mockResolvedValueOnce(site('me'));
-    vi.mocked(loadSiteCountability).mockResolvedValueOnce({
-      kind,
-      hasRawHtml: kind === 'html-only',
-    });
-    await SiteAnalyticsPage(props);
-    expect(getSiteAnalytics).not.toHaveBeenCalled();
-  });
+  it.each(['password', 'html-only'] as const)(
+    'skips Umami for a %s site',
+    async (kind) => {
+      findUnique.mockResolvedValueOnce(site('me'));
+      vi.mocked(loadSiteCountability).mockResolvedValueOnce({
+        kind,
+        hasRawHtml: kind === 'html-only',
+      });
+      await SiteAnalyticsPage(props);
+      expect(getSiteAnalytics).not.toHaveBeenCalled();
+    },
+  );
 
   it('loads numbers for a counted site', async () => {
     findUnique.mockResolvedValueOnce(site('me'));
