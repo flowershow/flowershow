@@ -1,6 +1,7 @@
 import { canManageSite, siteAuthzSelect } from '@/lib/site-authz';
 import { notFound, redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
+import { getUmamiClient } from '@/lib/site-analytics/umami-client';
 import SiteTabs from '@/components/dashboard/site-tabs';
 import { fullSiteSelect } from '@/server/api/types';
 import { getSession } from '@/server/auth';
@@ -41,7 +42,11 @@ export default async function SiteTabsLayout({
   return (
     <>
       <SiteSettingsHeader site={site} />
-      <SiteTabs siteId={site.id} openAnnotations={openAnnotations} />
+      <SiteTabs
+        siteId={site.id}
+        openAnnotations={openAnnotations}
+        showAnalytics={getUmamiClient() !== null}
+      />
       {children}
     </>
   );

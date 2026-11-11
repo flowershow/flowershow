@@ -6,9 +6,12 @@ import { env } from '@/env.mjs';
 export default function SiteCard({
   data: site,
   username,
+  people,
 }: {
   data: Site;
   username: string;
+  /** People in the last 30 days; undefined shows no line. */
+  people?: number;
 }) {
   let url: string;
 
@@ -43,6 +46,16 @@ export default function SiteCard({
           </h3>
         </div>
       </Link>
+      {people !== undefined && (
+        <Link
+          href={`/site/${site.id}/analytics`}
+          className="block px-4 pb-2 text-sm text-stone-500 hover:text-stone-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          {people === 0
+            ? 'No readers yet'
+            : `${people.toLocaleString('en-US')} ${people === 1 ? 'person' : 'people'} in the last 30 days`}
+        </Link>
+      )}
       <div className="absolute bottom-4 flex w-full justify-between space-x-4 px-4">
         <a
           href={url}

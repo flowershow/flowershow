@@ -2,6 +2,7 @@ import { redirect } from 'next/navigation';
 import CreateSiteButton from '@/components/dashboard/create-site-button';
 import DashboardEmptyState from '@/components/dashboard/dashboard-empty-state';
 import SiteCard from '@/components/dashboard/site-card';
+import { getPeopleBySite } from '@/lib/site-analytics/people-by-site';
 import { getSession } from '@/server/auth';
 import { api } from '@/trpc/server';
 
@@ -12,6 +13,7 @@ export default async function AllSites() {
   }
 
   const sites = await api.user.getSites.query({});
+  const people = await getPeopleBySite(sites.map((s) => s.id));
 
   return (
     <div className="h-full flex flex-col space-y-6">
@@ -30,6 +32,11 @@ export default async function AllSites() {
                   key={site.id}
                   data={site}
                   username={session.user?.username}
+                  people={
+                    site.privacyMode === 'PASSWORD'
+                      ? undefined
+                      : (people?.[site.id] ?? undefined)
+                  }
                 />
               ))}
           </div>
