@@ -1,0 +1,154 @@
+import { describe, expect, it, vi } from 'vitest';
+
+vi.mock('@/server/db', () => ({ default: {}, db: {} }));
+vi.mock('next/cache', () => ({
+  unstable_cache: (fn: (...a: unknown[]) => unknown) => fn,
+}));
+
+import {
+  attachTitles,
+  getSiteAnalytics,
+  rangeWindow,
+  siteCountability,
+} from './site-analytics';
+import type { UmamiClient } from './umami-client';
+
+const now = new Date('2026-12-20T15:00:00Z');
+
+describe('rangeWindow', () => {
+  it('starts 30 days including today at 00:00 UTC', () => {
+    const w = rangeWindow(30, now, new Date('2026-01-01T00:00:00Z'));
+    expect(new Date(w.startAt).toISOString()).toBe('2026-11-21T00:00:00.000Z');
+    expect(w.countingSince).toBe('2026-11-21');
+    expect(w.endAt).toBe(now.getTime());
+  });
+  it('moves to the site creation day when later', () => {
+    const w = rangeWindow(30, now, new Date('2026-12-15T10:00:00Z'));
+    expect(new Date(w.startAt).toISOString()).toBe('2026-12-15T00:00:00.000Z');
+    expect(w.countingSince).toBe('2026-12-15');
+  });
+  it('uses the launch date when later than the range start', () => {
+    const w = rangeWindow(
+      30,
+      new Date('2026-11-15T12:00:00Z'),
+      new Date('2026-01-01T00:00:00Z'),
+    );
+    expect(w.countingSince).toBe('2026-11-11');
+  });
+});
+
+describe('attachTitles', () => {
+  const pages = [
+    { appPath: '/', permalink: null, title: 'Home' },
+    { appPath: '/blog/a', permalink: '/my-link', title: 'A post' },
+  ];
+  const rows = [
+    { name: '/', pageviews: 5, visitors: 3 },
+    { name: '/my-link', pageviews: 2, visitors: 2 },
+    { name: '/old-page', pageviews: 4, visitors: 1 },
+  ];
+  it('matches by appPath and permalink; unmatched is null', () => {
+    const out = attachTitles(rows, pages, 'https://x.example');
+    expect(out[0]).toEqual({
+      path: '/',
+      title: 'Home',
+      href: 'https://x.example/',
+      people: 3,
+      views: 5,
+    });
+    expect(out[1]!.title).toBe('A post');
+    expect(out[2]).toEqual({
+      path: '/old-page',
+      title: null,
+      href: null,
+      people: 1,
+      views: 4,
+    });
+  });
+  it('falls back to Home for an untitled root', () => {
+    const out = attachTitles(
+      [rows[0]!],
+      [{ appPath: '/', permalink: null, title: '' }],
+      'https://x.example',
+    );
+    expect(out[0]!.title).toBe('Home');
+  });
+});
+
+describe('siteCountability', () => {
+  it('classifies', () => {
+    expect(
+      siteCountability({ privacyMode: 'PASSWORD' }, { pages: 3, rawHtml: 0 })
+        .kind,
+    ).toBe('password');
+    expect(
+      siteCountability({ privacyMode: 'PUBLIC' }, { pages: 0, rawHtml: 3 })
+        .kind,
+    ).toBe('html-only');
+    expect(
+      siteCountability({ privacyMode: 'PUBLIC' }, { pages: 4, rawHtml: 1 }),
+    ).toEqual({ kind: 'counted', hasRawHtml: true });
+  });
+});
+
+describe('getSiteAnalytics', () => {
+  const site = {
+    id: 's1',
+    createdAt: new Date('2026-12-18T10:00:00Z'),
+    url: 'https://x.example',
+  };
+  const loadPages = async () => [
+    { appPath: '/', permalink: null, title: 'Home' },
+  ];
+  const okClient = (): UmamiClient => ({
+    stats: async () => ({ pageviews: 9, visitors: 4 }),
+    pageviewsByDay: async () => [{ date: '2026-12-19', pageviews: 9 }],
+    metrics: async ({ type }) =>
+      type === 'path'
+        ? [{ name: '/', pageviews: 9, visitors: 4 }]
+        : [
+            { name: '', pageviews: 50, visitors: 50 },
+            ...Array.from({ length: 7 }, (_, i) => ({
+              name: `r${i}.com`,
+              pageviews: 1,
+              visitors: 7 - i,
+            })),
+          ],
+  });
+
+  it('assembles, zero-fills series and trims referrers', async () => {
+    const r = await getSiteAnalytics(site, 30, {
+      client: okClient(),
+      now,
+      loadPages,
+    });
+    if (r.status !== 'ok') throw new Error('expected ok');
+    expect(r.countingSince).toBe('2026-12-18');
+    expect(r.series.map((s) => s.date)).toEqual([
+      '2026-12-18',
+      '2026-12-19',
+      '2026-12-20',
+    ]);
+    expect(r.series.map((s) => s.views)).toEqual([0, 9, 0]);
+    expect(r.totals).toEqual({ people: 4, views: 9 });
+    expect(r.referrers).toHaveLength(5);
+    expect(r.referrers.every((x) => x.domain !== '')).toBe(true);
+    expect(r.pages[0]!.title).toBe('Home');
+    expect(JSON.parse(JSON.stringify(r))).toEqual(r);
+  });
+  it('is unavailable when stats rejects', async () => {
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const c = okClient();
+    c.stats = async () => {
+      throw new Error('boom');
+    };
+    expect(
+      await getSiteAnalytics(site, 30, { client: c, now, loadPages }),
+    ).toEqual({ status: 'unavailable' });
+  });
+  it('is unavailable with no client', async () => {
+    expect(
+      await getSiteAnalytics(site, 30, { client: null, now, loadPages }),
+    ).toEqual({ status: 'unavailable' });
+  });
+});
