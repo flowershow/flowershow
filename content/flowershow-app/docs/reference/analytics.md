@@ -1,15 +1,48 @@
 ---
 title: Analytics
-description: Configure analytics for your Flowershow site using Google Analytics 4 or Umami.
+description: See how many people read your Flowershow site with built-in analytics, and add Google Analytics 4 or Umami if you want your own.
 ---
 
-Configure analytics for your site from the **Flowershow dashboard** under **Site Settings → Analytics**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
+> [!tip] Using an AI assistant?
+> Give it this page as Markdown: https://flowershow.app/docs/reference/analytics.md. For all of Flowershow, point it at https://flowershow.app/llms.txt.
 
-## Google Analytics 4
+Every Flowershow site has built-in analytics. There is nothing to set up: it is on for every site on every plan.
+
+## Built-in analytics
+
+Open your site in the Flowershow dashboard and choose the **Analytics** tab. Site cards on the dashboard also show a people count.
+
+You see:
+
+- **People** and **Views** over the last 7 or 30 days.
+- **Top pages**: the pages your readers open most.
+- **Came from**: where your readers arrived from.
+
+Numbers update every 10 minutes.
+
+### What is counted
+
+- Visits are counted without cookies.
+- Your own visits are included.
+- Numbers are estimates. They run low for readers who use ad blockers.
+- Counting starts when built-in analytics launched, so there is no history before that.
+
+### What is not counted
+
+- Raw `.html` pages.
+- Password-protected sites.
+
+## Use your own analytics too
+
+Built-in analytics works alongside your own. If you add Google Analytics or Umami as below, they keep working as before.
+
+Configure them from the **Flowershow dashboard** under **Site Settings → Analytics**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
+
+### Google Analytics 4
 
 Go to **Settings → Analytics → Google Analytics** and enter your GA4 Measurement ID (e.g. `G-XXXXXXXXXX`).
 
-### Setting up a data stream
+#### Setting up a data stream
 
 If you don't have a Measurement ID yet:
 
@@ -21,7 +54,7 @@ If you don't have a Measurement ID yet:
 > [!note]
 > Make sure data collection is enabled for your property: **Admin > Data Collection and Modification > Data Collection**.
 
-### Verifying the configuration
+#### Verifying the configuration
 
 **Real-Time Reports:**
 
@@ -34,33 +67,33 @@ If you don't have a Measurement ID yet:
 2. Go to the **Network** tab and reload the page
 3. Filter for "analytics" — you should see requests that include your Measurement ID
 
-### Troubleshooting
+#### Troubleshooting
 
 - **No data in Real-Time reports:** verify your Measurement ID is correct, disable any ad blockers, and ensure your configuration is valid
 - **Console errors:** confirm you're using a GA4 ID (starts with `G-`), not a Universal Analytics ID
 
 ---
 
-## Umami
+### Umami
 
 [Umami](https://umami.is/) is a simple, privacy-focused analytics tool. Works with [Umami Cloud](https://cloud.umami.is/) or a self-hosted instance.
 
 Go to **Settings → Analytics → Umami Analytics** and enter your Umami Website ID (e.g. `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`).
 
-### Getting your website ID
+#### Getting your website ID
 
 1. Log in to your Umami account
 2. Go to **Settings > Websites**
 3. Add your site or select an existing one
 4. Copy the **Website ID** from the website details
 
-### Self-hosted Umami
+#### Self-hosted Umami
 
 If you run your own Umami instance, also go to **Settings → Analytics → Umami Script URL** and enter your custom script URL (e.g. `https://your-umami.example.com/script.js`). Leave blank to use the default Umami Cloud script.
 
 ---
 
-## Using config.json
+### Using config.json
 
 If you want to version-control your configuration, or have your editor's AI agent manage settings without touching the dashboard, you can define everything in `config.json` instead. Values set in `config.json` take precedence over dashboard settings.
 
