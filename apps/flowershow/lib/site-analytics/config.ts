@@ -1,0 +1,16 @@
+// Site analytics config. Constants live in code, not env vars; only the
+// Umami API key is a secret (UMAMI_API_KEY).
+
+// Our self-hosted Umami. Filled in by the connect bead.
+export const UMAMI_HOST = '';
+export const UMAMI_WEBSITE_ID = '';
+
+// Numbers only count from this date. Reset to the real launch day at connect.
+export const ANALYTICS_COUNTING_SINCE = new Date('2026-11-11T00:00:00Z');
+
+export const ANALYTICS_RANGES = [7, 30] as const;
+export type AnalyticsRange = 7 | 30;
+export const DEFAULT_RANGE: AnalyticsRange = 30;
+
+// How long Umami responses are cached.
+export const ANALYTICS_CACHE_SECONDS = 600;

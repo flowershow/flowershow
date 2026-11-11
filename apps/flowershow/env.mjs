@@ -86,6 +86,7 @@ export const env = createEnv({
     CF_WORKER_URL: z.string(),
     CF_WORKER_SECRET: z.string(),
     INTERNAL_API_SECRET: z.string().optional(),
+    UMAMI_API_KEY: z.string().optional(),
     SOCIAL_CARDS_ENABLED: z.enum(['true', 'false']).optional(),
   },
 
@@ -196,6 +197,7 @@ export const env = createEnv({
     CF_WORKER_URL: process.env.CF_WORKER_URL,
     CF_WORKER_SECRET: process.env.CF_WORKER_SECRET,
     INTERNAL_API_SECRET: process.env.INTERNAL_API_SECRET,
+    UMAMI_API_KEY: process.env.UMAMI_API_KEY,
     SOCIAL_CARDS_ENABLED: process.env.SOCIAL_CARDS_ENABLED,
   },
   skipValidation: !!process.env.SKIP_ENV_VALIDATION,
