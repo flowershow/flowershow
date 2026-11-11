@@ -9,6 +9,7 @@ import { SITE_ACCESS_COOKIE_NAME } from './lib/const';
 import type { InternalSite } from './lib/db/internal';
 import { getSiteUrl } from './lib/get-site-url';
 import { oauthEnabled } from './lib/oauth/config';
+import { shouldBootstrapPostHog } from './lib/posthog-scope';
 import { resolveSiteAlias } from './lib/resolve-site-alias';
 import PostHogClient from './lib/server-posthog';
 import { siteKeyBytes } from './lib/site-hmac-key';
@@ -81,7 +82,10 @@ export default async function middleware(req: NextRequest) {
   const searchParams = search; // Preserve for rewrites
 
   // Build PostHog bootstrap cookie once for all routes
-  const phBootstrap = await buildPHBootstrapCookie(req, posthog);
+  // (only Flowershow's own hosts: published user sites don't load PostHog)
+  const phBootstrap = shouldBootstrapPostHog(hostname)
+    ? await buildPHBootstrapCookie(req, posthog)
+    : null;
 
   // 3) Legacy user-site paths: flowershow.app/@user/project/... are gone.
   // These pre-subdomain URLs (content now lives at *.flowershow.me) were the

@@ -7,13 +7,41 @@ import { useEffect } from 'react';
 import { env } from '@/env.mjs';
 import { redactClaimTokensInEvent } from '@/lib/redact-claim-token';
 
-export function PostHogProvider({ children }) {
+/** Identifies the signed-in user. Needs a SessionProvider above it. */
+function IdentifyUser() {
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    const rawCookie = document.cookie.match(
-      /(?:^|;\s*)ph_bootstrap=([^;]+)/,
-    )?.[1];
+    const userId = session?.user?.id;
+
+    if (status === 'authenticated' && userId) {
+      posthog.identify(userId, {
+        name: session.user.username,
+        email: session.user.email,
+      });
+    }
+  }, [session, status]);
+
+  return null;
+}
+
+export function PostHogProvider({
+  children,
+  persistence = 'cookie',
+  identify = true,
+}: {
+  children: React.ReactNode;
+  /** 'memory' sets no cookies or storage (temporary sites). */
+  persistence?: 'cookie' | 'memory';
+  /** Identify the signed-in user (needs a SessionProvider). */
+  identify?: boolean;
+}) {
+  const memory = persistence === 'memory';
+
+  useEffect(() => {
+    const rawCookie = memory
+      ? undefined
+      : document.cookie.match(/(?:^|;\s*)ph_bootstrap=([^;]+)/)?.[1];
     const bootstrapData = rawCookie
       ? JSON.parse(decodeURIComponent(rawCookie))
       : undefined;
@@ -21,8 +49,9 @@ export function PostHogProvider({ children }) {
     posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
       api_host: '/relay-qYYb',
       ui_host: env.NEXT_PUBLIC_POSTHOG_HOST,
-      persistence: 'cookie', // localStorage+cookie won't work across subdomains
-      cross_subdomain_cookie: true,
+      // cookie: localStorage+cookie won't work across subdomains
+      persistence,
+      ...(memory ? {} : { cross_subdomain_cookie: true }),
       disable_web_experiments: false, // https://posthog.com/docs/experiments/no-code-web-experiments
       bootstrap: bootstrapData,
       disable_session_recording: true, // TODO temporary patch https://github.com/flowershow/flowershow/issues/1131
@@ -37,16 +66,10 @@ export function PostHogProvider({ children }) {
     });
   }, []);
 
-  useEffect(() => {
-    const userId = session?.user?.id;
-
-    if (status === 'authenticated' && userId) {
-      posthog.identify(userId, {
-        name: session.user.username,
-        email: session.user.email,
-      });
-    }
-  }, [session, status]);
-
-  return <PHProvider client={posthog}>{children}</PHProvider>;
+  return (
+    <PHProvider client={posthog}>
+      {identify && <IdentifyUser />}
+      {children}
+    </PHProvider>
+  );
 }

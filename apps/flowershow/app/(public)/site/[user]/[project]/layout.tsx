@@ -36,6 +36,7 @@ import { loadCustomFooter, loadCustomNavbar } from '@/lib/site-chrome';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
 import { api } from '@/trpc/server';
+import { posthogModeForSite } from '@/lib/posthog-scope';
 import Providers from './_components/providers';
 import '@/styles/prism.css';
 import '@/styles/callouts.css';
@@ -323,7 +324,7 @@ export default async function PublicLayout(props: {
           <GoogleAnalytics gaId={siteConfig.analytics} />
         )}
         <TRPCReactProvider>
-          <Providers>
+          <Providers posthog={posthogModeForSite(site)}>
             <SiteProvider
               value={{
                 user: params.user,
