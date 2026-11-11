@@ -205,10 +205,18 @@ describe('loadSiteCountability', () => {
       kind: 'html-only',
       hasRawHtml: true,
     });
-    expect(count.mock.calls[1]![0].where.path).toEqual({
+    expect(count.mock.calls[1]![0].where.path).toMatchObject({
       endsWith: '.html',
       mode: 'insensitive',
     });
+  });
+  it('does not count _footer.html and _navbar.html as raw HTML', async () => {
+    const count = vi.fn().mockResolvedValue(1);
+    await loadSiteCountability(site, { blob: { count } });
+    expect(count.mock.calls[1]![0].where.path.notIn).toEqual([
+      '_footer.html',
+      '_navbar.html',
+    ]);
   });
   it('defaults to counted when the db fails', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});

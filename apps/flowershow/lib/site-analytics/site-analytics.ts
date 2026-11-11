@@ -1,3 +1,4 @@
+import { SITE_CHROME_FILES } from '@flowershow/core';
 import { unstable_cache } from 'next/cache';
 import prisma from '@/server/db';
 import {
@@ -111,6 +112,18 @@ export function attachTitles(
     };
   });
 }
+
+/** Blob filter for counted pages (markdown pages have an app path). */
+export const PAGE_BLOB_WHERE = { appPath: { not: null } };
+
+/** Blob filter for raw HTML files; site chrome (_footer/_navbar) isn't content. */
+export const RAW_HTML_BLOB_WHERE = {
+  path: {
+    endsWith: '.html',
+    mode: 'insensitive' as const,
+    notIn: [...SITE_CHROME_FILES],
+  },
+};
 
 export function siteCountability(
   site: { privacyMode: string },
@@ -227,13 +240,8 @@ export async function loadSiteCountability(
 ): Promise<SiteCountability> {
   try {
     const [pages, rawHtml] = await Promise.all([
-      db.blob.count({ where: { siteId: site.id, appPath: { not: null } } }),
-      db.blob.count({
-        where: {
-          siteId: site.id,
-          path: { endsWith: '.html', mode: 'insensitive' },
-        },
-      }),
+      db.blob.count({ where: { siteId: site.id, ...PAGE_BLOB_WHERE } }),
+      db.blob.count({ where: { siteId: site.id, ...RAW_HTML_BLOB_WHERE } }),
     ]);
     return siteCountability(site, { pages, rawHtml });
   } catch (error) {
