@@ -34,5 +34,7 @@ export function FlowershowAnalytics({
     vercelEnv: env.NEXT_PUBLIC_VERCEL_ENV,
   });
   if (!attrs) return null;
-  return <Script defer {...(attrs as { src: string })} />;
+  const { src, ...rest } = attrs;
+  // lazyOnload: an owner's own Umami script (if any) claims window.umami first.
+  return <Script strategy="lazyOnload" defer src={src} {...rest} />;
 }

@@ -1,5 +1,37 @@
-import { describe, expect, it } from 'vitest';
-import { flowershowUmamiAttrs } from './flowershow-analytics';
+import { render } from '@testing-library/react';
+import { describe, expect, it, vi } from 'vitest';
+
+const scriptProps = vi.hoisted(() => ({ current: null as unknown }));
+vi.mock('next/script', () => ({
+  default: (props: unknown) => {
+    scriptProps.current = props;
+    return null;
+  },
+}));
+vi.mock('@/env.mjs', () => ({
+  env: { NEXT_PUBLIC_VERCEL_ENV: 'production' },
+}));
+vi.mock('@/lib/site-analytics/config', () => ({
+  UMAMI_HOST: 'https://u.example',
+  UMAMI_WEBSITE_ID: 'w1',
+}));
+
+import {
+  FlowershowAnalytics,
+  flowershowUmamiAttrs,
+} from './flowershow-analytics';
+
+describe('FlowershowAnalytics', () => {
+  it('loads lazily and deferred, so an owner’s own Umami claims window.umami first', () => {
+    render(<FlowershowAnalytics site={{ id: 's1', privacyMode: 'PUBLIC' }} />);
+    expect(scriptProps.current).toMatchObject({
+      strategy: 'lazyOnload',
+      defer: true,
+      src: 'https://u.example/script.js',
+      'data-tag': 's1',
+    });
+  });
+});
 
 const opts = {
   host: 'https://u.example',
