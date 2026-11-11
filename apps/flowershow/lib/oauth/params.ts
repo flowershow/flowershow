@@ -1,5 +1,5 @@
 import { createHash, timingSafeEqual } from 'node:crypto';
-import { allowedResources, accountResource, SUPPORTED_SCOPES } from './config';
+import { mcpResource, SUPPORTED_SCOPES } from './config';
 
 /**
  * Pure validation helpers for the OAuth endpoints: PKCE, scope, resource
@@ -63,18 +63,15 @@ export function scopeWithin(requested: string, granted: string): boolean {
 export type ResourceResult = { ok: true; resource: string } | { ok: false };
 
 /**
- * The resource must be exactly one of our MCP URLs; absent defaults to the
- * signed-in endpoint. Exact string match (no normalisation), since the
- * resulting token is only accepted by the route whose URL it names.
+ * The resource must be exactly our MCP URL; absent defaults to it. Exact
+ * string match (no normalisation), since the resulting token is only
+ * accepted by the endpoint it names.
  */
 export function parseResource(raw: unknown): ResourceResult {
   if (raw === undefined || raw === null || raw === '') {
-    return { ok: true, resource: accountResource() };
+    return { ok: true, resource: mcpResource() };
   }
-  if (typeof raw !== 'string') return { ok: false };
-  return allowedResources().includes(raw)
-    ? { ok: true, resource: raw }
-    : { ok: false };
+  return raw === mcpResource() ? { ok: true, resource: raw } : { ok: false };
 }
 
 // ── Redirect URIs ──

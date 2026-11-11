@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { accountResource, anonResource } from './config';
+import { mcpResource } from './config';
 import {
   isAllowedRedirectUri,
   isValidCodeChallenge,
@@ -76,26 +76,23 @@ describe('resource (RFC 8707)', () => {
   it('defaults to the signed-in MCP endpoint', () => {
     expect(parseResource(undefined)).toEqual({
       ok: true,
-      resource: accountResource(),
+      resource: mcpResource(),
     });
   });
 
-  it('accepts both MCP URLs exactly', () => {
-    expect(parseResource(accountResource())).toEqual({
+  it('accepts the MCP URL exactly', () => {
+    expect(parseResource(mcpResource())).toEqual({
       ok: true,
-      resource: accountResource(),
-    });
-    expect(parseResource(anonResource())).toEqual({
-      ok: true,
-      resource: anonResource(),
+      resource: mcpResource(),
     });
   });
 
   it.each([
-    () => `${accountResource()}/`,
-    () => accountResource().toUpperCase(),
-    () => 'https://evil.example/api/mcp/account',
-    () => `${accountResource()}?x=1`,
+    () => `${mcpResource()}/`,
+    () => mcpResource().toUpperCase(),
+    () => `${mcpResource()}/account`,
+    () => 'https://evil.example/api/mcp',
+    () => `${mcpResource()}?x=1`,
     () => 'https://flowershow.app/api/sites',
   ])('rejects other resources (%#)', (r) => {
     expect(parseResource(r())).toEqual({ ok: false });

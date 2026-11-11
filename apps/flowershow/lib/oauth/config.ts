@@ -40,17 +40,7 @@ export function cloudOrigin(): string {
   return `${protocol()}://${env.NEXT_PUBLIC_CLOUD_DOMAIN}`;
 }
 
-/** The signed-in MCP endpoint: the default token audience. */
-export function accountResource(): string {
-  return `${oauthIssuer()}/api/mcp/account`;
-}
-
-/** The anonymous-first MCP endpoint, which also accepts bearer tokens. */
-export function anonResource(): string {
+/** The MCP endpoint: the one resource (RFC 8707) tokens are issued for. */
+export function mcpResource(): string {
   return `${oauthIssuer()}/api/mcp`;
-}
-
-/** Every resource (RFC 8707) a token may be issued for. */
-export function allowedResources(): string[] {
-  return [accountResource(), anonResource()];
 }

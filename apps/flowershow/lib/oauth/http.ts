@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import {
-  accountResource,
-  anonResource,
+  mcpResource,
   oauthEnabled,
   oauthIssuer,
   SUPPORTED_SCOPES,
@@ -131,13 +130,10 @@ export function protectedResourceMetadata(resource: string) {
 
 /**
  * Map the path after /.well-known/oauth-protected-resource to the resource
- * it describes: "/api/mcp/account", "/api/mcp", or "" (origin-root fallback,
- * which describes the signed-in endpoint).
+ * it describes: "/api/mcp", or "" (origin-root fallback).
  */
 export function resourceForMetadataPath(suffix: string): string | null {
-  if (suffix === '' || suffix === '/' || suffix === '/api/mcp/account') {
-    return accountResource();
-  }
-  if (suffix === '/api/mcp') return anonResource();
-  return null;
+  return suffix === '' || suffix === '/' || suffix === '/api/mcp'
+    ? mcpResource()
+    : null;
 }

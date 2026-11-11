@@ -6,7 +6,7 @@ import { CLAIM_TOKEN_PREFIX } from '@/lib/anonymous-user';
 import { validateAccessToken } from '@/lib/cli-auth';
 import {
   ACCESS_TOKEN_PREFIX,
-  allowedResources,
+  mcpResource,
   oauthEnabled,
   oauthIssuer,
   SCOPE_SITES_WRITE,
@@ -23,23 +23,12 @@ import {
   SIGN_IN_REQUIRED,
 } from './server';
 
-/**
- * Shared handler for the two MCP URLs of one server:
- *
- * - `/api/mcp` (the one we document): no Authorization header lists every
- *   tool; `publish` works anonymously (claim links) and the account tools
- *   ask for sign-in when called (lazy sign-in, see `signInGate`). A bearer
- *   token (PAT, CLI token or OAuth access token) publishes into the account.
- * - `/api/mcp/account` (requireAuth): a token is required for everything;
- *   without one the 401 carries `WWW-Authenticate: Bearer
- *   resource_metadata=...`, so clients sign in when the connector is added.
- *   Kept for connectors added with this URL.
- *
- * OAuth access tokens issued for either URL are accepted by both, since
- * they are the same resource server with the same scope.
+/*
+ * The Flowershow MCP endpoint, `/api/mcp`. No Authorization header lists
+ * every tool; `publish` works anonymously (claim links) and the account tools
+ * ask for sign-in when called (lazy sign-in, see `signInGate`). A bearer token
+ * (PAT, CLI token or OAuth access token) publishes into the account.
  */
-
-export type McpEndpoint = { requireAuth: boolean };
 
 function rpcError(
   status: number,
@@ -55,13 +44,11 @@ function rpcError(
 
 /** RFC 9728 §5.1 / RFC 6750 §3 challenge pointing at our resource metadata. */
 export function bearerChallenge(
-  endpoint: McpEndpoint,
   error?: 'invalid_token' | 'insufficient_scope',
   description?: string,
 ): string {
-  const path = endpoint.requireAuth ? '/api/mcp/account' : '/api/mcp';
   const parts = [
-    `resource_metadata="${oauthIssuer()}/.well-known/oauth-protected-resource${path}"`,
+    `resource_metadata="${oauthIssuer()}/.well-known/oauth-protected-resource/api/mcp"`,
     `scope="${SCOPE_SITES_WRITE}"`,
   ];
   if (description) parts.unshift(`error_description="${description}"`);
@@ -70,15 +57,14 @@ export function bearerChallenge(
 }
 
 function unauthorized(
-  endpoint: McpEndpoint,
   message: string,
   opts: { oauth: boolean; error?: 'invalid_token' },
 ) {
-  // /api/mcp keeps its original challenge for PAT/CLI callers so nothing
-  // changes for existing clients; OAuth-related answers point at metadata.
+  // PAT/CLI callers keep the original challenge, so nothing changes for
+  // existing clients; OAuth-related answers point at metadata.
   const challenge =
     opts.oauth && oauthEnabled()
-      ? bearerChallenge(endpoint, opts.error)
+      ? bearerChallenge(opts.error)
       : 'Bearer realm="flowershow"';
   return rpcError(401, -32001, message, { 'www-authenticate': challenge });
 }
@@ -86,41 +72,31 @@ function unauthorized(
 /** Resolve the caller from the Authorization header. */
 async function resolveMode(
   request: NextRequest,
-  endpoint: McpEndpoint,
 ): Promise<McpMode | NextResponse> {
   const authorization = request.headers.get('authorization');
   if (!authorization) {
-    if (!endpoint.requireAuth) {
-      return {
-        kind: 'anon',
-        signInChallenge: oauthEnabled()
-          ? bearerChallenge(endpoint, 'invalid_token', SIGN_IN_REQUIRED)
-          : undefined,
-      };
-    }
-    return unauthorized(
-      endpoint,
-      'Sign in to Flowershow to use this endpoint (OAuth), or send a personal access token. To publish without an account, use https://flowershow.app/api/mcp.',
-      { oauth: true },
-    );
+    return {
+      kind: 'anon',
+      signInChallenge: oauthEnabled()
+        ? bearerChallenge('invalid_token', SIGN_IN_REQUIRED)
+        : undefined,
+    };
   }
   const match = /^bearer\s+(\S+)$/i.exec(authorization.trim());
   const token = match?.[1] ?? '';
   if (token.startsWith(CLAIM_TOKEN_PREFIX)) {
     return unauthorized(
-      endpoint,
       'Claim tokens are not sent as Authorization: pass them to publish as the claimToken argument, and omit Authorization.',
-      { oauth: endpoint.requireAuth },
+      { oauth: false },
     );
   }
 
   if (token.startsWith(ACCESS_TOKEN_PREFIX)) {
     const info = oauthEnabled()
-      ? await validateOAuthAccessToken(token, allowedResources())
+      ? await validateOAuthAccessToken(token, mcpResource())
       : null;
     if (!info) {
       return unauthorized(
-        endpoint,
         'The access token is invalid, expired or revoked. Sign in again.',
         { oauth: true, error: 'invalid_token' },
       );
@@ -131,7 +107,7 @@ async function resolveMode(
         -32001,
         'The access token lacks the sites:write scope.',
         {
-          'www-authenticate': bearerChallenge(endpoint, 'insufficient_scope'),
+          'www-authenticate': bearerChallenge('insufficient_scope'),
         },
       );
     }
@@ -152,11 +128,8 @@ async function resolveMode(
     : null;
   if (!auth) {
     return unauthorized(
-      endpoint,
-      endpoint.requireAuth
-        ? 'Invalid token. Sign in to Flowershow (OAuth) or use a Flowershow personal access token (fs_pat_…).'
-        : 'Invalid token. Omit Authorization to publish anonymously, or use a Flowershow personal access token (fs_pat_…).',
-      { oauth: endpoint.requireAuth, error: 'invalid_token' },
+      'Invalid token. Omit Authorization to publish anonymously, or use a Flowershow personal access token (fs_pat_…).',
+      { oauth: false, error: 'invalid_token' },
     );
   }
   // Personal access and CLI tokens carry full account access.
@@ -233,9 +206,8 @@ async function readMessage(
  */
 export async function handleMcpRequest(
   request: NextRequest,
-  endpoint: McpEndpoint,
 ): Promise<Response> {
-  const mode = await resolveMode(request, endpoint);
+  const mode = await resolveMode(request);
   if (mode instanceof NextResponse) return mode;
 
   let parsedBody: unknown;
@@ -293,16 +265,8 @@ function withSessionId(response: Response): Response {
 
 /**
  * GET: no standalone server-to-client stream (an open GET stream would just
- * hold a serverless function until it times out); the spec allows 405. On
- * the account endpoint an unauthenticated GET still gets the 401 challenge.
+ * hold a serverless function until it times out); the spec allows 405.
  */
-export async function handleMcpGet(
-  request: NextRequest,
-  endpoint: McpEndpoint,
-): Promise<Response> {
-  if (endpoint.requireAuth) {
-    const mode = await resolveMode(request, endpoint);
-    if (mode instanceof NextResponse) return mode;
-  }
+export function handleMcpGet(): Response {
   return new NextResponse(null, { status: 405, headers: { allow: 'POST' } });
 }

@@ -381,8 +381,7 @@ export function oauthRewritePath(pathname: string): string | null {
   }
   if (
     pathname === '/.well-known/oauth-protected-resource' ||
-    pathname === '/.well-known/oauth-protected-resource/api/mcp' ||
-    pathname === '/.well-known/oauth-protected-resource/api/mcp/account'
+    pathname === '/.well-known/oauth-protected-resource/api/mcp'
   ) {
     return `/api/oauth/well-known${pathname.slice('/.well-known'.length)}`;
   }

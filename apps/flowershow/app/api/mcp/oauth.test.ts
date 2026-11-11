@@ -18,15 +18,14 @@ vi.mock('@/lib/mcp/deps', () => ({ realMcpDeps: vi.fn(() => deps) }));
 
 import { validateAccessToken } from '@/lib/cli-auth';
 import { realMcpDeps } from '@/lib/mcp/deps';
-import { accountResource, anonResource } from '@/lib/oauth/config';
+import { mcpResource, oauthIssuer } from '@/lib/oauth/config';
 import { s256 } from '@/lib/oauth/params';
 import {
   createAuthorizationCode,
   exchangeAuthorizationCode,
   revokeGrant,
 } from '@/lib/oauth/tokens';
-import { GET as anonGET, POST as anonPOST } from '../route';
-import { GET, POST } from './route';
+import { POST as anonPOST } from './route';
 
 const validatePat = validateAccessToken as ReturnType<typeof vi.fn>;
 const ISSUER = 'http://test.localhost';
@@ -44,8 +43,7 @@ function post(url: string, body: unknown, headers: Record<string, string>) {
     body: JSON.stringify(body),
   });
 }
-const account = (h: Record<string, string> = {}) =>
-  post(`${ISSUER}/api/mcp/account`, toolsList, h);
+// tools/list on /api/mcp.
 const anon = (h: Record<string, string> = {}) =>
   post(`${ISSUER}/api/mcp`, toolsList, h);
 /** tools/call on /api/mcp. */
@@ -128,27 +126,10 @@ beforeEach(() => {
   validatePat.mockResolvedValue(null);
 });
 
-describe('/api/mcp/account', () => {
-  it('answers 401 with a resource_metadata challenge when unauthenticated', async () => {
-    const res = await POST(account());
-    expect(res.status).toBe(401);
-    expect(res.headers.get('www-authenticate')).toBe(
-      `Bearer resource_metadata="${ISSUER}/.well-known/oauth-protected-resource/api/mcp/account", scope="sites:write"`,
-    );
-    expect((await res.json()).error.code).toBe(-32001);
-  });
-
-  it('challenges an unauthenticated GET too', async () => {
-    const res = await GET(
-      new NextRequest(`${ISSUER}/api/mcp/account`, { method: 'GET' }),
-    );
-    expect(res.status).toBe(401);
-    expect(res.headers.get('www-authenticate')).toMatch(/resource_metadata=/);
-  });
-
-  it('serves the signed-in tools for a valid OAuth token issued for it', async () => {
-    const t = await oauthTokens(accountResource());
-    const res = await POST(account(bearer(t.access_token)));
+describe('/api/mcp with a token', () => {
+  it('serves every tool for a valid OAuth token', async () => {
+    const t = await oauthTokens(mcpResource());
+    const res = await anonPOST(anon(bearer(t.access_token)));
     expect(res.status).toBe(200);
     expect(await toolNames(res)).toEqual([
       'claim-site',
@@ -159,17 +140,19 @@ describe('/api/mcp/account', () => {
     ]);
   });
 
-  it('accepts a token issued for /api/mcp (same server)', async () => {
-    const t = await oauthTokens(anonResource());
-    const res = await POST(account(bearer(t.access_token)));
-    expect(res.status).toBe(200);
-    expect(await toolNames(res)).toContain('list-sites');
+  it('rejects a token issued for the removed /api/mcp/account URL', async () => {
+    const t = await oauthTokens(`${oauthIssuer()}/api/mcp/account`);
+    const res = await anonPOST(anon(bearer(t.access_token)));
+    expect(res.status).toBe(401);
+    expect(res.headers.get('www-authenticate')).toMatch(
+      /error="invalid_token"/,
+    );
   });
 
   it('rejects a revoked token', async () => {
-    const t = await oauthTokens(accountResource());
+    const t = await oauthTokens(mcpResource());
     await revokeGrant(t.grantId);
-    const res = await POST(account(bearer(t.access_token)));
+    const res = await anonPOST(anon(bearer(t.access_token)));
     expect(res.status).toBe(401);
     expect(res.headers.get('www-authenticate')).toMatch(
       /error="invalid_token"/,
@@ -177,44 +160,33 @@ describe('/api/mcp/account', () => {
   });
 
   it('rejects an expired token', async () => {
-    const t = await oauthTokens(accountResource());
+    const t = await oauthTokens(mcpResource());
     for (const row of db.tables.oAuthToken.values()) {
       row.expiresAt = new Date(Date.now() - 1000);
     }
-    expect((await POST(account(bearer(t.access_token)))).status).toBe(401);
+    expect((await anonPOST(anon(bearer(t.access_token)))).status).toBe(401);
   });
 
   it('rejects a refresh token used as a bearer', async () => {
-    const t = await oauthTokens(accountResource());
-    const res = await POST(account(bearer(t.refresh_token)));
+    const t = await oauthTokens(mcpResource());
+    const res = await anonPOST(anon(bearer(t.refresh_token)));
     expect(res.status).toBe(401);
   });
 
   it('answers 403 insufficient_scope for a token without sites:write', async () => {
-    const t = await oauthTokens(accountResource(), 'other:scope');
-    const res = await POST(account(bearer(t.access_token)));
+    const t = await oauthTokens(mcpResource(), 'other:scope');
+    const res = await anonPOST(anon(bearer(t.access_token)));
     expect(res.status).toBe(403);
     expect(res.headers.get('www-authenticate')).toMatch(
       /error="insufficient_scope"/,
     );
   });
 
-  it('also accepts a personal access token', async () => {
+  it('serves the account tools for a personal access token', async () => {
     validatePat.mockResolvedValue({ userId: 'u1' });
-    const res = await POST(account(bearer('fs_pat_ok')));
+    const res = await anonPOST(anon(bearer('fs_pat_ok')));
     expect(res.status).toBe(200);
     expect(await toolNames(res)).toContain('claim-site');
-  });
-
-  it('rejects an unknown token with the OAuth challenge', async () => {
-    const res = await POST(account(bearer('garbage')));
-    expect(res.status).toBe(401);
-    expect(res.headers.get('www-authenticate')).toMatch(/resource_metadata=/);
-  });
-
-  it('404s while MCP OAuth is switched off', async () => {
-    enabled.value = false;
-    expect((await POST(account())).status).toBe(404);
   });
 });
 
@@ -295,18 +267,12 @@ describe('/api/mcp', () => {
   );
 
   it('runs an account tool for a signed-in caller', async () => {
-    const t = await oauthTokens(anonResource());
+    const t = await oauthTokens(mcpResource());
     const res = await anonPOST(
       anonCall('list-sites', {}, { headers: bearer(t.access_token) }),
     );
     expect(res.status).toBe(200);
     expect((await res.json()).result.structuredContent).toEqual({ sites: [] });
-  });
-
-  it('accepts a token issued for /api/mcp/account (same server)', async () => {
-    const t = await oauthTokens(accountResource());
-    const res = await anonPOST(anon(bearer(t.access_token)));
-    expect(res.status).toBe(200);
   });
 
   it('answers an invalid OAuth token with the OAuth challenge', async () => {
@@ -323,12 +289,5 @@ describe('/api/mcp', () => {
     expect(res.headers.get('www-authenticate')).toBe(
       'Bearer realm="flowershow"',
     );
-  });
-
-  it('GET is still 405 without auth', async () => {
-    const res = await anonGET(
-      new NextRequest(`${ISSUER}/api/mcp`, { method: 'GET' }),
-    );
-    expect(res.status).toBe(405);
   });
 });

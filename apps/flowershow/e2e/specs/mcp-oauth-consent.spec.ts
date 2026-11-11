@@ -58,7 +58,7 @@ function authorizeUrl(clientId: string, state: string) {
     code_challenge_method: 'S256',
     state,
     scope: 'sites:write',
-    resource: `${HOME}/api/mcp/account`,
+    resource: `${HOME}/api/mcp`,
   });
   return `${HOME}/oauth/authorize?${q}`;
 }
@@ -279,7 +279,7 @@ test.describe('MCP OAuth consent', () => {
     });
     const { access_token } = await tokenRes.json();
     const mcpCall = () =>
-      page.request.post(`${HOME}/api/mcp/account`, {
+      page.request.post(`${HOME}/api/mcp`, {
         headers: {
           authorization: `Bearer ${access_token}`,
           accept: 'application/json, text/event-stream',

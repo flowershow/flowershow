@@ -8,9 +8,9 @@ import {
 } from '@/lib/oauth/http';
 
 /**
- * GET /.well-known/oauth-protected-resource[/api/mcp[/account]] (RFC 9728),
- * rewritten here by middleware. The bare path describes /api/mcp/account,
- * for clients that fall back to the origin root.
+ * GET /.well-known/oauth-protected-resource[/api/mcp] (RFC 9728), rewritten
+ * here by middleware. The bare path describes /api/mcp too, for clients that
+ * fall back to the origin root.
  */
 export async function GET(
   _request: Request,

@@ -5,7 +5,7 @@ vi.mock('@/server/db', async () => ({
   default: (await import('./fake-db')).fakeDb,
 }));
 
-import { accountResource, anonResource } from './config';
+import { mcpResource } from './config';
 import { s256 } from './params';
 import {
   createAuthorizationCode,
@@ -22,7 +22,7 @@ const REDIRECT = 'https://claude.ai/api/mcp/auth_callback';
 const T0 = new Date('2026-10-18T10:00:00Z');
 const at = (s: number) => new Date(T0.getTime() + s * 1000);
 
-async function setup(resource = accountResource()) {
+async function setup(resource = mcpResource()) {
   const client = await db.oAuthClient.create({
     data: {
       clientId: 'dcr_client1',
@@ -121,7 +121,7 @@ describe('authorization codes', () => {
       expect(
         await validateOAuthAccessToken(
           first.tokens.access_token,
-          [accountResource()],
+          mcpResource(),
           at(2),
         ),
       ).toBeNull();
@@ -166,7 +166,9 @@ describe('authorization codes', () => {
 
   it('rejects a resource different from the grant (invalid_target)', async () => {
     const { code } = await setup();
-    expect(await exchange(code, { resource: anonResource() })).toMatchObject({
+    expect(
+      await exchange(code, { resource: `${mcpResource()}/account` }),
+    ).toMatchObject({
       ok: false,
       error: 'invalid_target',
     });
@@ -174,9 +176,7 @@ describe('authorization codes', () => {
 
   it('accepts the grant resource or no resource', async () => {
     const a = await setup();
-    expect((await exchange(a.code, { resource: accountResource() })).ok).toBe(
-      true,
-    );
+    expect((await exchange(a.code, { resource: mcpResource() })).ok).toBe(true);
   });
 
   it.each(['code', 'clientId', 'redirectUri', 'codeVerifier'])(
@@ -224,7 +224,7 @@ describe('refresh token rotation', () => {
     expect(
       await validateOAuthAccessToken(
         r.tokens.access_token,
-        [accountResource()],
+        mcpResource(),
         at(11),
       ),
     ).toMatchObject({
@@ -245,7 +245,7 @@ describe('refresh token rotation', () => {
     expect(
       await validateOAuthAccessToken(
         rotated.tokens.access_token,
-        [accountResource()],
+        mcpResource(),
         at(21),
       ),
     ).toBeNull();
@@ -310,7 +310,7 @@ describe('refresh token rotation', () => {
       error: 'invalid_scope',
     });
     expect(
-      await refresh(t.refresh_token, { resource: anonResource() }),
+      await refresh(t.refresh_token, { resource: `${mcpResource()}/account` }),
     ).toMatchObject({
       ok: false,
       error: 'invalid_target',
@@ -319,7 +319,7 @@ describe('refresh token rotation', () => {
       (
         await refresh(t.refresh_token, {
           scope: 'sites:write',
-          resource: accountResource(),
+          resource: mcpResource(),
         })
       ).ok,
     ).toBe(true);
@@ -340,28 +340,25 @@ describe('access token validation', () => {
   it('accepts a live token for its own resource', async () => {
     const t = await tokensFor();
     expect(
-      await validateOAuthAccessToken(
-        t.access_token,
-        [accountResource()],
-        at(2),
-      ),
+      await validateOAuthAccessToken(t.access_token, mcpResource(), at(2)),
     ).toEqual({
       userId: 'user-1',
       grantId: t.grantId,
       scopes: ['sites:write'],
-      resource: accountResource(),
+      resource: mcpResource(),
     });
   });
 
   it('rejects a token for another audience (resource)', async () => {
     const t = await tokensFor();
+    db.tables.oAuthGrant.get(t.grantId)!.resource = `${mcpResource()}/account`;
     expect(
-      await validateOAuthAccessToken(t.access_token, [anonResource()], at(2)),
+      await validateOAuthAccessToken(t.access_token, mcpResource(), at(2)),
     ).toBeNull();
     expect(
       await validateOAuthAccessToken(
         t.access_token,
-        ['https://flowershow.app/api/sites'],
+        'https://flowershow.app/api/sites',
         at(2),
       ),
     ).toBeNull();
@@ -370,11 +367,7 @@ describe('access token validation', () => {
   it('rejects an expired token (1 hour)', async () => {
     const t = await tokensFor();
     expect(
-      await validateOAuthAccessToken(
-        t.access_token,
-        [accountResource()],
-        at(3602),
-      ),
+      await validateOAuthAccessToken(t.access_token, mcpResource(), at(3602)),
     ).toBeNull();
   });
 
@@ -382,11 +375,7 @@ describe('access token validation', () => {
     const t = await tokensFor();
     await revokeGrant(t.grantId, at(2));
     expect(
-      await validateOAuthAccessToken(
-        t.access_token,
-        [accountResource()],
-        at(3),
-      ),
+      await validateOAuthAccessToken(t.access_token, mcpResource(), at(3)),
     ).toBeNull();
   });
 
@@ -400,7 +389,7 @@ describe('access token validation', () => {
       `fs_oat_${'x'.repeat(300)}`,
     ]) {
       expect(
-        await validateOAuthAccessToken(tok, [accountResource()], at(2)),
+        await validateOAuthAccessToken(tok, mcpResource(), at(2)),
       ).toBeNull();
     }
   });
@@ -412,11 +401,7 @@ describe('revocation (RFC 7009)', () => {
     await revokeToken(t.refresh_token, 'dcr_client1', at(2));
     expect(db.tables.oAuthGrant.get(t.grantId)!.revokedAt).not.toBeNull();
     expect(
-      await validateOAuthAccessToken(
-        t.access_token,
-        [accountResource()],
-        at(3),
-      ),
+      await validateOAuthAccessToken(t.access_token, mcpResource(), at(3)),
     ).toBeNull();
     expect(db.tables.oAuthToken.size).toBe(0);
   });
@@ -425,11 +410,7 @@ describe('revocation (RFC 7009)', () => {
     const t = await tokensFor();
     await revokeToken(t.access_token, undefined, at(2));
     expect(
-      await validateOAuthAccessToken(
-        t.access_token,
-        [accountResource()],
-        at(3),
-      ),
+      await validateOAuthAccessToken(t.access_token, mcpResource(), at(3)),
     ).toBeNull();
   });
 
@@ -437,11 +418,7 @@ describe('revocation (RFC 7009)', () => {
     const t = await tokensFor();
     await revokeToken(t.access_token, 'dcr_other', at(2));
     expect(
-      await validateOAuthAccessToken(
-        t.access_token,
-        [accountResource()],
-        at(3),
-      ),
+      await validateOAuthAccessToken(t.access_token, mcpResource(), at(3)),
     ).not.toBeNull();
   });
 

@@ -1,6 +1,6 @@
 # Plugin packages
 
-`flowershow/` is the package for the ChatGPT and Codex plugin directory ([submission guide](https://developers.openai.com/plugins/deploy/submission)). It connects the signed-in MCP server, `https://flowershow.app/api/mcp/account`, over OAuth.
+`flowershow/` is the package for the ChatGPT and Codex plugin directory ([submission guide](https://developers.openai.com/plugins/deploy/submission)). It connects the MCP server, `https://flowershow.app/api/mcp`, which asks for sign-in over OAuth when an account tool is called.
 
 Build the ZIP from inside the package folder, so `plugin.json` is at the ZIP root:
 
