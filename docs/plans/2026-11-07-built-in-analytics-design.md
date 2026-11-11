@@ -64,7 +64,8 @@ Updated 6 minutes ago.
 | When | The owner sees |
 |---|---|
 | New site, or no visits yet | "No readers yet. Counting started on 12 Nov. Numbers update every 10 minutes." and the site link with a copy button. On the card: "No readers yet". |
-| Some history, partial range | Chart starts at the first counted day: the later of the launch date (a constant) and the site's creation date. "Counting since" in the footer uses the same date. We never show a run of zeros that looks like nobody came. |
+| Some history, partial range | Chart starts at the later of the range start and the first counted day (the later of the launch date, a constant, and the site's creation date). "Counting since" in the footer always shows the first counted day, so it doesn't move. We never show a run of zeros that looks like nobody came. |
+| Zero visits in the range, but counting started earlier | "No readers in the last 7 days." (or 30), with no copy-link block. |
 | Every page on the site is raw HTML | "This site's pages are raw HTML, which we can't count yet." and no numbers. On the card, nothing. |
 | Some pages are raw HTML | One line: "Pages published as raw HTML aren't counted." |
 | Password-protected site | "Password-protected sites aren't counted." We don't send private page titles to a third party. On the card, nothing. |
