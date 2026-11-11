@@ -16,4 +16,4 @@ The Flowershow connector can now sign in to your account. Add `https://flowersho
 - **Keep a site you made without an account:** if you published without signing in earlier in the conversation, ask your AI to keep the site and it moves into your account.
 - **You stay in control:** see the apps you've connected under **Connected apps** on the [Access tokens](https://cloud.flowershow.app/tokens) page, and revoke any of them there.
 
-Connectors already added with `https://flowershow.app/api/mcp` or `https://flowershow.app/api/mcp/account` keep working.
+If you added Flowershow with `https://flowershow.app/api/mcp/account` before, remove it and add `https://flowershow.app/api/mcp` instead. Connectors added with `https://flowershow.app/api/mcp` keep working.

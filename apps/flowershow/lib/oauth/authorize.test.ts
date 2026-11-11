@@ -14,12 +14,7 @@ import {
   startAuthorization,
 } from './authorize';
 import { registerDcrClient } from './clients';
-import {
-  accountResource,
-  anonResource,
-  cloudOrigin,
-  oauthIssuer,
-} from './config';
+import { cloudOrigin, mcpResource, oauthIssuer } from './config';
 import { s256 } from './params';
 import { exchangeAuthorizationCode } from './tokens';
 
@@ -49,7 +44,7 @@ const query = (over: Record<string, string | undefined> = {}) => {
     code_challenge_method: 'S256',
     state: 'xyz-state',
     scope: 'sites:write',
-    resource: accountResource(),
+    resource: mcpResource(),
     ...over,
   };
   const q = new URLSearchParams();
@@ -105,7 +100,7 @@ describe('startAuthorization', () => {
       redirectUri: REDIRECT,
       codeChallenge: CHALLENGE,
       scope: 'sites:write',
-      resource: accountResource(),
+      resource: mcpResource(),
       state: 'xyz-state',
       bindingHash: expect.stringMatching(/^[0-9a-f]{64}$/),
     });
@@ -116,7 +111,7 @@ describe('startAuthorization', () => {
     const id = await pendingIdFor({ scope: undefined, resource: undefined });
     expect(db.tables.oAuthPendingRequest.get(id)!.params).toMatchObject({
       scope: 'sites:write',
-      resource: accountResource(),
+      resource: mcpResource(),
     });
   });
 
@@ -162,7 +157,8 @@ describe('startAuthorization', () => {
       ['invalid_request', { code_challenge_method: undefined }],
       ['invalid_scope', { scope: 'openid' }],
       ['invalid_target', { resource: 'https://evil.example/mcp' }],
-      ['invalid_target', { resource: `${accountResource()}/` }],
+      ['invalid_target', { resource: `${mcpResource()}/` }],
+      ['invalid_target', { resource: `${mcpResource()}/account` }],
     ])('%s for %j', async (error, over) => {
       const out = await startAuthorization(query(over));
       expect(out.kind).toBe('redirect');
@@ -205,7 +201,7 @@ describe('decideAuthorization (consent)', () => {
         clientId,
         redirectUri: REDIRECT,
         codeVerifier: VERIFIER,
-        resource: accountResource(),
+        resource: mcpResource(),
       },
       new Date(T0.getTime() + 5000),
     );
@@ -213,7 +209,7 @@ describe('decideAuthorization (consent)', () => {
     const grant = [...db.tables.oAuthGrant.values()][0]!;
     expect(grant).toMatchObject({
       userId: 'user-1',
-      resource: accountResource(),
+      resource: mcpResource(),
       scope: 'sites:write',
     });
   });
@@ -276,22 +272,16 @@ describe('decideAuthorization (consent)', () => {
     expect(db.tables.oAuthGrant.size).toBe(1);
   });
 
-  it('creates a separate grant for another user, resource or redirect URI, or after revocation', async () => {
+  it('creates a separate grant for another user or redirect URI, or after revocation', async () => {
     await decide(await pendingIdFor(), 'user-1', 'allow', T0);
     await decide(await pendingIdFor(), 'user-2', 'allow', T0);
-    await decide(
-      await pendingIdFor({ resource: anonResource() }),
-      'user-1',
-      'allow',
-      T0,
-    );
     await decide(
       await pendingIdFor({ redirect_uri: 'http://localhost:3000/callback' }),
       'user-1',
       'allow',
       T0,
     );
-    expect(db.tables.oAuthGrant.size).toBe(4);
+    expect(db.tables.oAuthGrant.size).toBe(3);
     for (const g of db.tables.oAuthGrant.values()) g.revokedAt = T0;
     const after = await decide(await pendingIdFor(), 'user-1', 'allow', T0);
     expect(after.ok && after.newGrant).toBe(true);

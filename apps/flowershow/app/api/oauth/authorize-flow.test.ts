@@ -42,7 +42,7 @@ vi.mock('@/lib/server-posthog', () => ({
 
 import { decideConsent } from '@/app/(cloud)/oauth/consent/actions';
 import { bindingCookieName } from '@/lib/oauth/binding';
-import { accountResource, cloudOrigin, oauthIssuer } from '@/lib/oauth/config';
+import { cloudOrigin, mcpResource, oauthIssuer } from '@/lib/oauth/config';
 import { s256 } from '@/lib/oauth/params';
 import { validateOAuthAccessToken } from '@/lib/oauth/tokens';
 import { GET as authorizeRoute } from './authorize/route';
@@ -85,7 +85,7 @@ function authorizeUrl(clientId: string, over: Record<string, string> = {}) {
     code_challenge: s256(VERIFIER),
     code_challenge_method: 'S256',
     state: 'st-123',
-    resource: accountResource(),
+    resource: mcpResource(),
     ...over,
   });
   return new NextRequest(`${ISSUER}/oauth/authorize?${q}`, {
@@ -157,7 +157,7 @@ describe('register -> authorize -> consent -> token', () => {
           client_id: clientId,
           redirect_uri: REDIRECT,
           code_verifier: VERIFIER,
-          resource: accountResource(),
+          resource: mcpResource(),
         }).toString(),
       }),
     );
@@ -166,7 +166,7 @@ describe('register -> authorize -> consent -> token', () => {
     expect(body.access_token).toMatch(/^fs_oat_/);
     expect(body.refresh_token).toMatch(/^fs_ort_/);
     expect(
-      await validateOAuthAccessToken(body.access_token, [accountResource()]),
+      await validateOAuthAccessToken(body.access_token, mcpResource()),
     ).toMatchObject({
       userId: 'user-1',
       scopes: ['sites:write'],
@@ -364,7 +364,7 @@ describe('POST /oauth/token refresh with a narrower scope', () => {
     const second = await narrowed.json();
     expect(second.scope).toBe('sites:read');
     expect(
-      (await validateOAuthAccessToken(second.access_token, [accountResource()]))
+      (await validateOAuthAccessToken(second.access_token, mcpResource()))
         ?.scopes,
     ).toEqual(['sites:read']);
 

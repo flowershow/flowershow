@@ -30,7 +30,7 @@ Works in claude.ai, Claude Desktop and Claude mobile, on every plan (the Free pl
 
 When your AI first needs your account, Claude shows a **Connect** button in the chat. A Flowershow window opens: sign in (or sign up) with GitHub, Google or an email link, check that the account shown is yours, and choose **Allow**. Claude then carries on with what you asked.
 
-Connectors added earlier with `https://flowershow.app/api/mcp/account` keep working; that URL asks you to sign in as soon as you add it.
+If you added Flowershow with `https://flowershow.app/api/mcp/account` before, remove it and add `https://flowershow.app/api/mcp` instead.
 
 ## Add it to ChatGPT
 

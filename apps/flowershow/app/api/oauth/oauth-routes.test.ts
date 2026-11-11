@@ -11,7 +11,7 @@ vi.mock('@/lib/oauth/config', async (orig) => ({
   oauthEnabled: () => enabled.value,
 }));
 
-import { accountResource, anonResource } from '@/lib/oauth/config';
+import { mcpResource } from '@/lib/oauth/config';
 import { s256 } from '@/lib/oauth/params';
 import {
   createAuthorizationCode,
@@ -20,7 +20,7 @@ import {
 import { oauthRewritePath } from '@/middleware';
 import { POST as register } from './register/route';
 import { POST as revoke } from './revoke/route';
-import { OPTIONS as tokenOptions, POST as token } from './token/route';
+import { POST as token, OPTIONS as tokenOptions } from './token/route';
 import { GET as asMetadata } from './well-known/oauth-authorization-server/route';
 import { GET as prMetadata } from './well-known/oauth-protected-resource/[[...path]]/route';
 import { GET as oidcMetadata } from './well-known/openid-configuration/route';
@@ -81,7 +81,7 @@ async function issueCode(clientId: string) {
       userId: 'user-1',
       clientId: client!.id,
       scope: 'sites:write',
-      resource: accountResource(),
+      resource: mcpResource(),
       redirectUri: REDIRECT,
     },
   });
@@ -131,9 +131,8 @@ describe('metadata', () => {
   });
 
   it.each([
-    [[], accountResource()],
-    [['api', 'mcp', 'account'], accountResource()],
-    [['api', 'mcp'], anonResource()],
+    [[], mcpResource()],
+    [['api', 'mcp'], mcpResource()],
   ])('serves protected resource metadata for %j', async (path, resource) => {
     const res = await prMetadata(new Request(ISSUER), {
       params: Promise.resolve({ path }),
@@ -148,12 +147,15 @@ describe('metadata', () => {
     });
   });
 
-  it('404s protected resource metadata for other paths', async () => {
-    const res = await prMetadata(new Request(ISSUER), {
-      params: Promise.resolve({ path: ['api', 'sites'] }),
-    });
-    expect(res.status).toBe(404);
-  });
+  it.each([[['api', 'sites']], [['api', 'mcp', 'account']]])(
+    '404s protected resource metadata for %j',
+    async (path) => {
+      const res = await prMetadata(new Request(ISSUER), {
+        params: Promise.resolve({ path }),
+      });
+      expect(res.status).toBe(404);
+    },
+  );
 });
 
 describe('switched off (MCP_OAUTH_ENABLED unset)', () => {
@@ -202,10 +204,6 @@ describe('middleware rewrites (home domain)', () => {
       '/api/oauth/well-known/oauth-protected-resource',
     ],
     [
-      '/.well-known/oauth-protected-resource/api/mcp/account',
-      '/api/oauth/well-known/oauth-protected-resource/api/mcp/account',
-    ],
-    [
       '/.well-known/oauth-protected-resource/api/mcp',
       '/api/oauth/well-known/oauth-protected-resource/api/mcp',
     ],
@@ -222,6 +220,7 @@ describe('middleware rewrites (home domain)', () => {
     '/oauth/other',
     '/.well-known/security.txt',
     '/.well-known/oauth-protected-resource/x',
+    '/.well-known/oauth-protected-resource/api/mcp/account',
     '/api/oauth/token',
   ])('leaves %s alone', (p) => {
     expect(oauthRewritePath(p)).toBeNull();
@@ -304,7 +303,7 @@ describe('POST /oauth/token', () => {
         client_id: clientId,
         redirect_uri: REDIRECT,
         code_verifier: VERIFIER,
-        resource: accountResource(),
+        resource: mcpResource(),
       }),
     );
     expect(res.status).toBe(200);
@@ -317,7 +316,7 @@ describe('POST /oauth/token', () => {
       scope: 'sites:write',
     });
     expect(
-      await validateOAuthAccessToken(body.access_token, [accountResource()]),
+      await validateOAuthAccessToken(body.access_token, mcpResource()),
     ).toMatchObject({
       userId: 'user-1',
     });
@@ -445,7 +444,7 @@ describe('POST /oauth/revoke', () => {
     );
     expect(res.status).toBe(200);
     expect(
-      await validateOAuthAccessToken(issued.access_token, [accountResource()]),
+      await validateOAuthAccessToken(issued.access_token, mcpResource()),
     ).toBeNull();
     expect(
       (await revoke(form('/oauth/revoke', { token: 'fs_oat_unknown' }))).status,

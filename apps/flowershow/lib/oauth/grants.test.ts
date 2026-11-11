@@ -5,7 +5,7 @@ vi.mock('@/server/db', async () => ({
   default: (await import('./fake-db')).fakeDb,
 }));
 
-import { accountResource } from './config';
+import { mcpResource } from './config';
 import { listConnectedApps, revokeUserGrant } from './grants';
 import {
   createAuthorizationCode,
@@ -51,7 +51,7 @@ beforeEach(async () => {
         userId,
         clientId,
         scope: 'sites:write',
-        resource: accountResource(),
+        resource: mcpResource(),
         redirectUri,
         createdAt: T0,
       },
@@ -101,7 +101,7 @@ describe('revokeUserGrant', () => {
       T0,
     );
     expect(
-      await validateOAuthAccessToken(access, [accountResource()], T0),
+      await validateOAuthAccessToken(access, mcpResource(), T0),
     ).toMatchObject({ userId: 'user-1' });
     expect(await revokeUserGrant('user-1', 'g-claude', T0)).toBe(true);
     expect(db.tables.oAuthGrant.get('g-claude')!.revokedAt).toEqual(T0);
@@ -112,7 +112,7 @@ describe('revokeUserGrant', () => {
     ).toHaveLength(0);
     expect(db.tables.oAuthAuthorizationCode.size).toBe(0);
     expect(
-      await validateOAuthAccessToken(access, [accountResource()], T0),
+      await validateOAuthAccessToken(access, mcpResource(), T0),
     ).toBeNull();
     // Other grants are untouched.
     expect(db.tables.oAuthGrant.get('g-inspector')!.revokedAt).toBeNull();

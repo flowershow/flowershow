@@ -13,7 +13,7 @@ One sitting, about 60–75 minutes, covers `flowershow-3fr.5`, `flowershow-h4a` 
 
 ## B. claude.ai: signed-in connector (OAuth, 3fr.5), ~15 min
 
-5. Add a connector at `https://flowershow.app/api/mcp/account`, sign in with Flowershow, and approve the consent screen. **Screenshot the consent screen** for the changelog.
+5. Add a connector at `https://flowershow.app/api/mcp`. Ask to keep a site or list your sites; sign in with Flowershow and approve the consent screen. **Screenshot the consent screen** for the changelog.
 6. New chat: publish a new site. It appears in your dashboard.
 7. Another new chat: "Update <that site>: add an About page." It updates the same site and **the other pages survive** (partial publish, #1508, verified anonymously in prod on 10-26). Then "start the site over with just a home page": the model must first tell you which files would be removed and ask.
 8. In chat, claim the anonymous site from A.
@@ -26,7 +26,7 @@ One sitting, about 60–75 minutes, covers `flowershow-3fr.5`, `flowershow-h4a` 
 
 ## D. ChatGPT Developer mode, ~15 min
 
-12. Add the MCP server (`/api/mcp/account`), sign in, consent.
+12. Add the MCP server (`https://flowershow.app/api/mcp`). Ask to list your sites; sign in, consent.
 13. Repeat steps 6, 7 and 9.
 14. Repeat step 2 using the anonymous endpoint per the docs, if the docs describe a ChatGPT path.
 

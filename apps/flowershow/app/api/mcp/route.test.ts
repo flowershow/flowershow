@@ -160,7 +160,7 @@ describe('/api/mcp', () => {
   });
 
   it('answers GET (no server-to-client stream in stateless mode) with 405', async () => {
-    const res = await GET(rpc(listTools));
+    const res = await GET();
     expect(res.status).toBe(405);
   });
 });
