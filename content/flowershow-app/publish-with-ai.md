@@ -53,7 +53,7 @@ showEditLink: false
           <div className="step" id="install">
             <span className="step-num">1</span>
             <h3>Connect your AI</h3>
-            <p><b>Claude or ChatGPT app:</b> add this connector URL, or <code>https://flowershow.app/api/mcp/account</code> to sign in and publish to your account. <a href="/docs/agents/mcp">How →</a></p>
+            <p><b>Claude or ChatGPT app:</b> add this connector URL. Publish without an account, and sign in when you want to keep your sites. <a href="/docs/agents/mcp">How →</a></p>
             <div className="cmd-line url-line">https://flowershow.app/api/mcp</div>
             <p><b>Claude Code, Codex, Cursor:</b> ask your agent to install the skill. Nothing else to install. <a href="/docs/agents/supported-agents">Other ways →</a></p>
             <div className="prompt-line">Install the Flowershow skill from https://raw.githubusercontent.com/flowershow/skills/main/SKILL.md</div>

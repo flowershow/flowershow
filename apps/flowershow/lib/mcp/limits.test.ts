@@ -139,12 +139,13 @@ describe('reportGlobalLimitReached', () => {
 });
 
 describe('signInHint', () => {
-  it('points at the signed-in connector', () => {
-    expect(signInHint()).toContain('https://flowershow.app/api/mcp/account');
+  // list-sites is only offered to anonymous callers when OAuth is on.
+  it('sends the model to sign in through list-sites', () => {
+    expect(signInHint()).toContain('list-sites');
   });
 
-  it('falls back to a generic hint when OAuth is off', () => {
+  it('does not mention list-sites when OAuth is off', () => {
     mockEnv.env.MCP_OAUTH_ENABLED = undefined;
-    expect(signInHint()).not.toContain('/api/mcp/account');
+    expect(signInHint()).not.toContain('list-sites');
   });
 });

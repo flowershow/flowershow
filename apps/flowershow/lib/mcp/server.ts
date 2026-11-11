@@ -1,5 +1,6 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { z } from 'zod';
+import { SCOPE_SITES_WRITE } from '@/lib/oauth/config';
 import {
   ApiError,
   MAX_DELETE,
@@ -11,7 +12,14 @@ import {
 } from './publish';
 
 export type McpMode =
-  | { kind: 'anon' }
+  | {
+      kind: 'anon';
+      /**
+       * `WWW-Authenticate` challenge for the account tools (lazy sign-in on
+       * /api/mcp). Without it the account tools are not offered.
+       */
+      signInChallenge?: string;
+    }
   | {
       kind: 'user';
       userId: string;
@@ -61,6 +69,29 @@ export interface McpDeps extends PublishDeps {
   ): Promise<ClaimedSite>;
 }
 
+/** Tools that act on the user's account: anonymous callers must sign in. */
+export const ACCOUNT_TOOLS: Readonly<Record<string, true>> = {
+  'list-sites': true,
+  'list-files': true,
+  'read-file': true,
+  'claim-site': true,
+};
+
+/** Refusal for an anonymous call to an account tool (no quotes: it goes into a header). */
+export const SIGN_IN_REQUIRED =
+  'Sign in to Flowershow to use this tool (a free account).';
+
+// OpenAI Apps SDK per-tool auth policy (`_meta.securitySchemes`).
+const PUBLIC_OR_SIGNED_IN = {
+  securitySchemes: [
+    { type: 'noauth' },
+    { type: 'oauth2', scopes: [SCOPE_SITES_WRITE] },
+  ],
+};
+const SIGNED_IN_ONLY = {
+  securitySchemes: [{ type: 'oauth2', scopes: [SCOPE_SITES_WRITE] }],
+};
+
 // How updates work, shared by both publish descriptions.
 const UPDATE_RULES =
   'To remove pages or files, list their paths in delete (files can then be empty). Only when the user explicitly asks to start the site over, set replaceWholeSite to true: the files you send become the whole site and every other file is removed. If that would remove existing files, the call is refused and tells you how many and which; ask the user, then call again with confirmDeleteCount set to that number.';
@@ -78,6 +109,15 @@ Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, 
 ${CHECK_RULES}
 
 Without an account this creates a new site that expires in 7 days and returns a claim link: always show the user the live URL and the claim link exactly as returned, so they can keep the site. To update that site later in the conversation, call publish again with its siteId and claimToken and only the files you changed or added: files you don't send are kept as they are. ${UPDATE_RULES}`;
+
+// Appended for anonymous callers who can sign in when an account tool is called.
+const LAZY_SIGN_IN = `
+
+To keep a site in the user's Flowershow account, call claim-site; to work with sites already in their account, use list-sites, list-files and read-file. Those tools ask the user to sign in to Flowershow first; after that, publish goes into their account.`;
+
+// Appended to the account tools' descriptions for anonymous callers.
+const SIGN_IN_NOTE =
+  ' If the user is not signed in yet, calling it asks them to sign in to Flowershow first.';
 
 const ACCOUNT_PUBLISH_DESCRIPTION = `Publish files as a live website in the user's Flowershow account and get a shareable URL. Use when the user says "publish this", "put this online", "make this a website", "share this as a page", "host this" or "update my site".
 
@@ -125,10 +165,31 @@ function readError(err: unknown, doing: string) {
 }
 
 /**
- * A Flowershow MCP server for one request (stateless). Anonymous callers get
- * `publish` (new or claim-token sites); signed-in callers (PAT, CLI or OAuth
- * token) get `publish` into their account, `list-sites`, `list-files`,
- * `read-file` and `claim-site`.
+ * An anonymous call to an account tool. ChatGPT starts sign-in from
+ * `_meta["mcp/www_authenticate"]`; other clients never get here, since
+ * lib/mcp/http.ts answers them with a 401 before the SDK runs.
+ */
+function signInRequired(mode: Extract<McpMode, { kind: 'anon' }>) {
+  return {
+    isError: true,
+    content: [
+      {
+        type: 'text' as const,
+        text: `${SIGN_IN_REQUIRED} Without signing in, publish still works and returns a claim link the user can open to keep the site.`,
+      },
+    ],
+    ...(mode.signInChallenge && {
+      _meta: { 'mcp/www_authenticate': [mode.signInChallenge] },
+    }),
+  };
+}
+
+/**
+ * A Flowershow MCP server for one request (stateless). Signed-in callers
+ * (PAT, CLI or OAuth token) get `publish` into their account, `list-sites`,
+ * `list-files`, `read-file` and `claim-site`. Anonymous callers get `publish`
+ * (new or claim-token sites), plus the account tools when they can sign in
+ * (`signInChallenge`), which then refuse with a sign-in request.
  */
 export function createFlowershowMcpServer(
   mode: McpMode,
@@ -136,12 +197,17 @@ export function createFlowershowMcpServer(
 ): McpServer {
   const server = new McpServer({ name: 'flowershow', version: '1.0.0' });
   const signedIn = mode.kind === 'user';
+  // Anonymous callers who can sign in see the account tools too (lazy sign-in).
+  const offerAccountTools = signedIn || mode.signInChallenge !== undefined;
+  const signInNote = signedIn ? '' : SIGN_IN_NOTE;
 
   server.registerTool(
     'publish',
     {
       title: 'Publish to Flowershow',
-      description: signedIn ? ACCOUNT_PUBLISH_DESCRIPTION : PUBLISH_DESCRIPTION,
+      description: signedIn
+        ? ACCOUNT_PUBLISH_DESCRIPTION
+        : `${PUBLISH_DESCRIPTION}${offerAccountTools ? LAZY_SIGN_IN : ''}`,
       inputSchema: {
         files: z
           .array(fileShape)
@@ -188,6 +254,7 @@ export function createFlowershowMcpServer(
         }),
       },
       outputSchema: publishOutput,
+      _meta: PUBLIC_OR_SIGNED_IN,
       annotations: {
         title: 'Publish to Flowershow',
         readOnlyHint: false,
@@ -216,13 +283,12 @@ export function createFlowershowMcpServer(
     },
   );
 
-  if (mode.kind === 'user') {
+  if (offerAccountTools) {
     server.registerTool(
       'list-sites',
       {
         title: 'List my Flowershow sites',
-        description:
-          'List the sites in the signed-in Flowershow account and sites shared with it (role editor), with their siteId (use it with list-files to see what a site has, and with publish to update it), URL and when each was last published.',
+        description: `List the sites in the signed-in Flowershow account and sites shared with it (role editor), with their siteId (use it with list-files to see what a site has, and with publish to update it), URL and when each was last published.${signInNote}`,
         outputSchema: {
           sites: z.array(
             z.object({
@@ -236,8 +302,10 @@ export function createFlowershowMcpServer(
           ),
         },
         annotations: { readOnlyHint: true, openWorldHint: false },
+        _meta: SIGNED_IN_ONLY,
       },
       async () => {
+        if (mode.kind !== 'user') return signInRequired(mode);
         const sites = await deps.listSites(mode.userId);
         return {
           content: [
@@ -262,7 +330,7 @@ export function createFlowershowMcpServer(
       'list-files',
       {
         title: 'List the files on a Flowershow site',
-        description: `List the files currently on one of the signed-in user's Flowershow sites: each path, its size in bytes and when it last changed. Use it before updating a site in a new conversation, to see which pages exist, pick the right paths to update or delete, and avoid duplicating a page under a new name. Get siteId from list-sites. Returns up to ${LIST_FILES_MAX} paths; for bigger sites, pass folder to list one folder at a time.`,
+        description: `List the files currently on one of the signed-in user's Flowershow sites: each path, its size in bytes and when it last changed. Use it before updating a site in a new conversation, to see which pages exist, pick the right paths to update or delete, and avoid duplicating a page under a new name. Get siteId from list-sites. Returns up to ${LIST_FILES_MAX} paths; for bigger sites, pass folder to list one folder at a time.${signInNote}`,
         inputSchema: {
           siteId: z.string().describe('siteId of the site, from list-sites'),
           folder: z
@@ -289,8 +357,10 @@ export function createFlowershowMcpServer(
           readOnlyHint: true,
           openWorldHint: false,
         },
+        _meta: SIGNED_IN_ONLY,
       },
       async ({ siteId, folder }) => {
+        if (mode.kind !== 'user') return signInRequired(mode);
         try {
           const all = await deps.listFiles(mode.userId, siteId);
           const dir = (folder ?? '')
@@ -327,7 +397,7 @@ export function createFlowershowMcpServer(
       'read-file',
       {
         title: 'Read a file on a Flowershow site',
-        description: `Get the current text of one file on one of the signed-in user's Flowershow sites, e.g. index.md. Use it before changing a page that is already on the site, then publish the whole updated file, so the parts you didn't mean to change stay as they are. Text files only (Markdown, HTML, CSS, JS, JSON, ...), up to ${READ_FILE_MAX_BYTES / 1024} KB. Get siteId from list-sites and paths from list-files.`,
+        description: `Get the current text of one file on one of the signed-in user's Flowershow sites, e.g. index.md. Use it before changing a page that is already on the site, then publish the whole updated file, so the parts you didn't mean to change stay as they are. Text files only (Markdown, HTML, CSS, JS, JSON, ...), up to ${READ_FILE_MAX_BYTES / 1024} KB. Get siteId from list-sites and paths from list-files.${signInNote}`,
         inputSchema: {
           siteId: z.string().describe('siteId of the site, from list-sites'),
           path: z
@@ -344,8 +414,10 @@ export function createFlowershowMcpServer(
           readOnlyHint: true,
           openWorldHint: false,
         },
+        _meta: SIGNED_IN_ONLY,
       },
       async ({ siteId, path }) => {
+        if (mode.kind !== 'user') return signInRequired(mode);
         const normalised = path.replace(/\\/g, '/').replace(/^\/+/, '');
         try {
           const content = await deps.readFile(mode.userId, siteId, normalised);
@@ -363,8 +435,7 @@ export function createFlowershowMcpServer(
       'claim-site',
       {
         title: 'Keep an anonymous site',
-        description:
-          "Move an anonymous site published earlier in this conversation into the signed-in user's Flowershow account, so it no longer expires and can be updated with publish using siteId alone. Use when the user wants to keep a site that was published without an account. Needs the siteId and claimToken returned by that earlier publish.",
+        description: `Move an anonymous site published earlier in this conversation into the signed-in user's Flowershow account, so it no longer expires and can be updated with publish using siteId alone. Use when the user wants to keep a site that was published without an account. Needs the siteId and claimToken returned by that earlier publish.${signInNote}`,
         inputSchema: {
           siteId: z.string().describe('siteId of the anonymous site'),
           claimToken: z
@@ -386,8 +457,10 @@ export function createFlowershowMcpServer(
           idempotentHint: true,
           openWorldHint: false,
         },
+        _meta: SIGNED_IN_ONLY,
       },
       async ({ siteId, claimToken }) => {
+        if (mode.kind !== 'user') return signInRequired(mode);
         try {
           const site = await deps.claimSite(mode.userId, siteId, claimToken);
           const message = `The site is now in the user's Flowershow account and will not expire: ${site.url}\n\nTo change it, call publish with siteId "${site.siteId}" (no claimToken needed).`;

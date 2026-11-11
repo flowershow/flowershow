@@ -1,6 +1,6 @@
 import { hashIp } from '@/lib/anon-rate-limit';
 import { hitFixedWindow } from '@/lib/fixed-window-limit';
-import { accountResource, oauthEnabled } from '@/lib/oauth/config';
+import { oauthEnabled } from '@/lib/oauth/config';
 import PostHogClient from '@/lib/server-posthog';
 import { platformForIp } from './platform-ips';
 
@@ -58,10 +58,10 @@ export function anonCallerFrom(
   return { ip, callerId };
 }
 
-/** "Sign in for higher limits" pointer at the signed-in connector. */
+/** "Sign in for higher limits" pointer at lazy sign-in (list-sites asks the user to sign in). */
 export function signInHint(): string {
   return oauthEnabled()
-    ? `Sign in for higher limits: add ${accountResource()} as a connector (it publishes into a free Flowershow account).`
+    ? 'Sign in for higher limits: call list-sites, which asks the user to sign in to a free Flowershow account, then publish again.'
     : 'Publish from a Flowershow account for higher limits.';
 }
 

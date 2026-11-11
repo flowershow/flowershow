@@ -166,7 +166,7 @@ describe('register -> authorize -> consent -> token', () => {
     expect(body.access_token).toMatch(/^fs_oat_/);
     expect(body.refresh_token).toMatch(/^fs_ort_/);
     expect(
-      await validateOAuthAccessToken(body.access_token, accountResource()),
+      await validateOAuthAccessToken(body.access_token, [accountResource()]),
     ).toMatchObject({
       userId: 'user-1',
       scopes: ['sites:write'],
@@ -364,7 +364,7 @@ describe('POST /oauth/token refresh with a narrower scope', () => {
     const second = await narrowed.json();
     expect(second.scope).toBe('sites:read');
     expect(
-      (await validateOAuthAccessToken(second.access_token, accountResource()))
+      (await validateOAuthAccessToken(second.access_token, [accountResource()]))
         ?.scopes,
     ).toEqual(['sites:read']);
 

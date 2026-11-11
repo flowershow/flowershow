@@ -69,7 +69,7 @@ fl --name owner/name --overwrite ./my-folder
 
 ### From your AI
 
-Connect Claude, ChatGPT or another AI app with the [signed-in connector](/docs/agents/mcp) (`https://flowershow.app/api/mcp/account`), or an MCP client with a [personal access token](/docs/agents/mcp#other-mcp-clients). Its `list-sites` tool then shows the sites shared with you, and your AI publishes to one by its `siteId`. The no-account connector can't publish to shared sites.
+Connect Claude, ChatGPT or another AI app with the [Flowershow connector](/docs/agents/mcp) and sign in, or connect an MCP client with a [personal access token](/docs/agents/mcp#other-mcp-clients). Its `list-sites` tool then shows the sites shared with you, and your AI publishes to one by its `siteId`. Without signing in, the connector can't publish to shared sites.
 
 ### From Obsidian
 
