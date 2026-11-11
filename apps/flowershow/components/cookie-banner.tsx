@@ -13,9 +13,11 @@ export function CookieBanner({
   onChoice: (accepted: boolean) => void;
 }) {
   return (
+    // z-[110]: above the "Built with Flowershow" badge (z-index 100, pinned
+    // inline with !important), which sits under the full-width banner on mobile.
     <section
       aria-label="Cookie consent"
-      className="font-sans fixed inset-x-4 bottom-4 z-50 rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600 shadow-lg sm:right-auto sm:max-w-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
+      className="font-sans fixed inset-x-4 bottom-4 z-[110] rounded-xl border border-zinc-200 bg-white p-4 text-sm text-zinc-600 shadow-lg sm:right-auto sm:max-w-sm dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300"
     >
       <p className="font-medium text-zinc-900 dark:text-zinc-100">
         Help us make Flowershow better
