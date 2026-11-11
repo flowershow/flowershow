@@ -2,17 +2,17 @@
 title: Terms of Service
 ---
 
-Last update: 2026-01-09
+Last updated: 2026-11-11
 
 ## 1. Acceptance of Terms
 
-1.1. **Datopian (Atomatic Ltd)**, Inc. ("Company" or "we") provides the Flowershow Service (as defined below) to you through its web site and platform located at **https://flowershow.app** (the "Site"), subject to this Terms of Service agreement ("TOS"). By accepting this TOS or by accessing or using the Service or Site, you acknowledge that you have read, understood, and agree to be bound by this TOS. If you are entering into this TOS on behalf of a company, business or other legal entity, you represent that you have the authority to bind such entity and its affiliates to this TOS, in which case the terms "you" or "your" shall refer to such entity and its affiliates. If you do not have such authority, or if you do not agree with this TOS, you must not accept this TOS and may not use the Service.
+1.1. **Viderum Inc., trading as Datopian**, 303 Twin Dolphin Drive, Suite 600, Redwood City, CA 94065, United States ("Company" or "we") provides the Flowershow Service (as defined below) to you through its web site and platform located at **https://flowershow.app** (the "Site"), subject to this Terms of Service agreement ("TOS"). By accepting this TOS or by accessing or using the Service or Site, you acknowledge that you have read, understood, and agree to be bound by this TOS. If you are entering into this TOS on behalf of a company, business or other legal entity, you represent that you have the authority to bind such entity and its affiliates to this TOS, in which case the terms "you" or "your" shall refer to such entity and its affiliates. If you do not have such authority, or if you do not agree with this TOS, you must not accept this TOS and may not use the Service.
 
-1.2. Company may change this TOS from time to time by providing thirty (30) days prior notice either by emailing the email address associated with your account or by posting a notice on the Site. You can review the most current version of this TOS at any time **at https://flowershow.app/terms-of-service**. The revised terms and conditions will become effective thirty (30) days after we post or send you notice of such changes, and if you use the Service after that date, your use will constitute acceptance of the revised terms and conditions. If any change to this TOS is not acceptable to you, your only remedy is stop using the Services and send a cancellation email to **office@datopian.com**.
+1.2. Company may change this TOS from time to time by providing thirty (30) days prior notice either by emailing the email address associated with your account or by posting a notice on the Site. You can review the most current version of this TOS at any time **at https://flowershow.app/terms-of-service**. The revised terms and conditions will become effective thirty (30) days after we post or send you notice of such changes, and if you use the Service after that date, your use will constitute acceptance of the revised terms and conditions. If any change to this TOS is not acceptable to you, your only remedy is stop using the Services and send a cancellation email to **support@flowershow.app**.
 
 ## 2. Description of Service
 
-The "Service" includes (a) the Site, (b) Company's cloud platform for hosting, sharing and processing of data, and (c) all software (including the Software, as defined below), data, reports, text, images, sounds, video, and content made available through any of the foregoing (collectively referred to as the "Content"). Any new features added to or augmenting the Service are also subject to this TOS.
+The "Service" includes (a) the Site, (b) Company's platform for publishing and hosting websites, including the dashboard, the `fl` command line tool, the Obsidian plugin, the GitHub integration and the connector (MCP server) for AI tools, and (c) all software (including the Software, as defined below), data, reports, text, images, sounds, video, and content made available through any of the foregoing (collectively referred to as the "Content"). Any new features added to or augmenting the Service are also subject to this TOS.
 
 ## 3. General Conditions / Access and Use of the Service
 
@@ -42,7 +42,7 @@ You represent and warrant to Company that (i) you have full power and authority 
 
 ## 6. Termination
 
-You have the right to terminate your account at any time by sending a cancellation request to **office@datopian.com**. Subject to earlier termination as provided below, Company may terminate your Account and this TOS at any time by providing thirty (30) days prior notice to the administrative email address associated with your Account. In addition to any other remedies we may have, Company may also terminate this TOS upon ten (10) days' notice (or two (2) days in the case of nonpayment), if you breach any of the terms or conditions of this TOS. Company reserves the right to modify or discontinue, temporarily or permanently, the Service (or any part thereof). All of Your Content on the Service (if any) may be permanently deleted by Company upon any termination of your account in its sole discretion. If Company terminates your account without cause and you have signed up for a fee-bearing service, Company will refund the pro-rated, unearned portion of any amount that you have prepaid to Company for such Service. However, all accrued rights to payment and the terms of Section 4-12 shall survive termination of this TOS.
+You have the right to terminate your account at any time by deleting it in the dashboard settings or by sending a cancellation request to **support@flowershow.app**. Subject to earlier termination as provided below, Company may terminate your Account and this TOS at any time by providing thirty (30) days prior notice to the administrative email address associated with your Account. In addition to any other remedies we may have, Company may also terminate this TOS upon ten (10) days' notice (or two (2) days in the case of nonpayment), if you breach any of the terms or conditions of this TOS. Company reserves the right to modify or discontinue, temporarily or permanently, the Service (or any part thereof). All of Your Content on the Service (if any) may be permanently deleted by Company upon any termination of your account in its sole discretion. If Company terminates your account without cause and you have signed up for a fee-bearing service, Company will refund the pro-rated, unearned portion of any amount that you have prepaid to Company for such Service. However, all accrued rights to payment and the terms of Section 4-12 shall survive termination of this TOS.
 
 ## 7. Disclaimer of Warranties
 
@@ -76,4 +76,4 @@ This agreement is made under the laws of England and Wales.
 
 ## 14. Privacy
 
-Please visit our [Privacy Policy](privacy) to understand how the Company collects and uses personal information.
+Please visit our [Privacy Policy](/privacy) to understand how the Company collects and uses personal information.
