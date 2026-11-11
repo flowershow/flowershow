@@ -7,10 +7,11 @@ export const maxDuration = 60;
 const ENDPOINT = { requireAuth: false };
 
 /**
- * Flowershow MCP endpoint (Streamable HTTP, stateless). No Authorization
- * header: anonymous publishing (claim links). `Authorization: Bearer fs_pat_…`
- * (or fs_cli_…, or an OAuth access token issued for this URL): publish into
- * that account's sites. See lib/mcp/http.ts.
+ * Flowershow MCP endpoint (Streamable HTTP, stateless), the one we document.
+ * No Authorization header: anonymous publishing (claim links); the account
+ * tools ask for sign-in when called (lazy sign-in). A bearer token (fs_pat_…,
+ * fs_cli_… or an OAuth access token): publish into that account's sites.
+ * See lib/mcp/http.ts.
  */
 function handle(request: NextRequest) {
   return handleMcpRequest(request, ENDPOINT);

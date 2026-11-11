@@ -1,12 +1,12 @@
 import { randomUUID } from 'node:crypto';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { NextRequest, NextResponse } from 'next/server';
+import { z } from 'zod';
 import { CLAIM_TOKEN_PREFIX } from '@/lib/anonymous-user';
 import { validateAccessToken } from '@/lib/cli-auth';
 import {
   ACCESS_TOKEN_PREFIX,
-  accountResource,
-  anonResource,
+  allowedResources,
   oauthEnabled,
   oauthIssuer,
   SCOPE_SITES_WRITE,
@@ -16,20 +16,27 @@ import { getClientIp } from '@/lib/rate-limit';
 import { realMcpDeps } from './deps';
 import { anonCallerFrom } from './limits';
 import { MAX_REQUEST_BYTES, MAX_TOTAL_BYTES } from './publish';
-import { createFlowershowMcpServer, type McpMode } from './server';
+import {
+  ACCOUNT_TOOLS,
+  createFlowershowMcpServer,
+  type McpMode,
+  SIGN_IN_REQUIRED,
+} from './server';
 
 /**
- * Shared handler for the two MCP URLs (design decision 1):
+ * Shared handler for the two MCP URLs of one server:
  *
- * - `/api/mcp` (anonymous-first): no Authorization header publishes
- *   anonymously; a bearer token (PAT, CLI token, or an OAuth access token
- *   issued for /api/mcp) signs in.
- * - `/api/mcp/account` (requireAuth): a token is required; without one the
- *   401 carries `WWW-Authenticate: Bearer resource_metadata=...`, which is
- *   what makes Claude and ChatGPT start the OAuth flow.
+ * - `/api/mcp` (the one we document): no Authorization header lists every
+ *   tool; `publish` works anonymously (claim links) and the account tools
+ *   ask for sign-in when called (lazy sign-in, see `signInGate`). A bearer
+ *   token (PAT, CLI token or OAuth access token) publishes into the account.
+ * - `/api/mcp/account` (requireAuth): a token is required for everything;
+ *   without one the 401 carries `WWW-Authenticate: Bearer
+ *   resource_metadata=...`, so clients sign in when the connector is added.
+ *   Kept for connectors added with this URL.
  *
- * OAuth access tokens are only accepted by the route whose URL they were
- * issued for (RFC 8707 audience check).
+ * OAuth access tokens issued for either URL are accepted by both, since
+ * they are the same resource server with the same scope.
  */
 
 export type McpEndpoint = { requireAuth: boolean };
@@ -46,20 +53,18 @@ function rpcError(
   );
 }
 
-function resourceFor(endpoint: McpEndpoint): string {
-  return endpoint.requireAuth ? accountResource() : anonResource();
-}
-
 /** RFC 9728 §5.1 / RFC 6750 §3 challenge pointing at our resource metadata. */
 export function bearerChallenge(
   endpoint: McpEndpoint,
   error?: 'invalid_token' | 'insufficient_scope',
+  description?: string,
 ): string {
   const path = endpoint.requireAuth ? '/api/mcp/account' : '/api/mcp';
   const parts = [
     `resource_metadata="${oauthIssuer()}/.well-known/oauth-protected-resource${path}"`,
     `scope="${SCOPE_SITES_WRITE}"`,
   ];
+  if (description) parts.unshift(`error_description="${description}"`);
   if (error) parts.unshift(`error="${error}"`);
   return `Bearer ${parts.join(', ')}`;
 }
@@ -85,7 +90,14 @@ async function resolveMode(
 ): Promise<McpMode | NextResponse> {
   const authorization = request.headers.get('authorization');
   if (!authorization) {
-    if (!endpoint.requireAuth) return { kind: 'anon' };
+    if (!endpoint.requireAuth) {
+      return {
+        kind: 'anon',
+        signInChallenge: oauthEnabled()
+          ? bearerChallenge(endpoint, 'invalid_token', SIGN_IN_REQUIRED)
+          : undefined,
+      };
+    }
     return unauthorized(
       endpoint,
       'Sign in to Flowershow to use this endpoint (OAuth), or send a personal access token. To publish without an account, use https://flowershow.app/api/mcp.',
@@ -104,12 +116,12 @@ async function resolveMode(
 
   if (token.startsWith(ACCESS_TOKEN_PREFIX)) {
     const info = oauthEnabled()
-      ? await validateOAuthAccessToken(token, resourceFor(endpoint))
+      ? await validateOAuthAccessToken(token, allowedResources())
       : null;
     if (!info) {
       return unauthorized(
         endpoint,
-        'The access token is invalid, expired, revoked or was issued for another endpoint. Sign in again.',
+        'The access token is invalid, expired or revoked. Sign in again.',
         { oauth: true, error: 'invalid_token' },
       );
     }
@@ -154,6 +166,36 @@ async function resolveMode(
     via: 'pat',
     scopes: [SCOPE_SITES_WRITE],
   };
+}
+
+const toolCall = z.object({
+  method: z.literal('tools/call'),
+  params: z.object({
+    name: z.string(),
+    _meta: z.object({ 'openai/subject': z.unknown().optional() }).optional(),
+  }),
+});
+
+/**
+ * Lazy sign-in on /api/mcp: an anonymous call to an account tool is refused
+ * with 401 + `WWW-Authenticate` before the SDK runs. That is what makes
+ * Claude (and MCP SDK clients) start OAuth and then retry the call; a 200
+ * tool error would not. ChatGPT instead starts sign-in from a tool result
+ * carrying `_meta["mcp/www_authenticate"]`, which the tool handler returns
+ * (lib/mcp/server.ts), so its calls (marked by `openai/subject`) go through.
+ */
+function signInGate(mode: McpMode, body: unknown): NextResponse | null {
+  if (mode.kind !== 'anon' || !mode.signInChallenge) return null;
+  const call = toolCall.safeParse(body);
+  if (!call.success || !Object.hasOwn(ACCOUNT_TOOLS, call.data.params.name)) {
+    return null;
+  }
+  if (typeof call.data.params._meta?.['openai/subject'] === 'string') {
+    return null;
+  }
+  return rpcError(401, -32001, SIGN_IN_REQUIRED, {
+    'www-authenticate': mode.signInChallenge,
+  });
 }
 
 /** Read the JSON-RPC body under the size cap; single messages only. */
@@ -202,7 +244,8 @@ export async function handleMcpRequest(
     if (message instanceof NextResponse) return message;
     parsedBody = message.body;
   }
-
+  const refused = signInGate(mode, parsedBody);
+  if (refused) return refused;
   const deps =
     mode.kind === 'anon'
       ? realMcpDeps(

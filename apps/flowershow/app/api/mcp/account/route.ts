@@ -8,10 +8,10 @@ export const maxDuration = 60;
 const ENDPOINT = { requireAuth: true };
 
 /**
- * Signed-in Flowershow MCP endpoint (flowershow-3fr.3): a token is required.
- * Without one it answers 401 with `WWW-Authenticate: Bearer
- * resource_metadata=…`, so Claude and ChatGPT start OAuth sign-in. Accepts
- * OAuth access tokens issued for this URL, and PAT/CLI tokens.
+ * Sign-in-first URL for the same MCP server (flowershow-3fr.3): a token is
+ * required. Without one it answers 401 with `WWW-Authenticate: Bearer
+ * resource_metadata=…`, so clients sign in when the connector is added.
+ * Kept for connectors added with this URL; /api/mcp is the one we document.
  */
 function handle(request: NextRequest) {
   return disabledResponse() ?? handleMcpRequest(request, ENDPOINT);

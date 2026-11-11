@@ -317,7 +317,7 @@ describe('POST /oauth/token', () => {
       scope: 'sites:write',
     });
     expect(
-      await validateOAuthAccessToken(body.access_token, accountResource()),
+      await validateOAuthAccessToken(body.access_token, [accountResource()]),
     ).toMatchObject({
       userId: 'user-1',
     });
@@ -445,7 +445,7 @@ describe('POST /oauth/revoke', () => {
     );
     expect(res.status).toBe(200);
     expect(
-      await validateOAuthAccessToken(issued.access_token, accountResource()),
+      await validateOAuthAccessToken(issued.access_token, [accountResource()]),
     ).toBeNull();
     expect(
       (await revoke(form('/oauth/revoke', { token: 'fs_oat_unknown' }))).status,

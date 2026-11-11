@@ -395,12 +395,13 @@ export type AccessTokenInfo = {
 };
 
 /**
- * Validate an OAuth access token for one resource (audience). Returns null
- * for unknown, expired, revoked or other-audience tokens.
+ * Validate an OAuth access token for a resource server (audience). Returns
+ * null for unknown, expired, revoked or other-audience tokens.
+ * `acceptedResources` are the resource URLs (RFC 8707) the server answers to.
  */
 export async function validateOAuthAccessToken(
   token: string,
-  expectedResource: string,
+  acceptedResources: readonly string[],
   now = new Date(),
 ): Promise<AccessTokenInfo | null> {
   if (!token.startsWith(ACCESS_TOKEN_PREFIX) || token.length > 256) return null;
@@ -425,7 +426,7 @@ export async function validateOAuthAccessToken(
   if (row.expiresAt.getTime() <= now.getTime()) return null;
   const { grant } = row;
   if (grant.revokedAt) return null;
-  if (grant.resource !== expectedResource) return null;
+  if (!acceptedResources.includes(grant.resource)) return null;
 
   prisma.oAuthGrant
     .update({ where: { id: grant.id }, data: { lastUsedAt: now } })

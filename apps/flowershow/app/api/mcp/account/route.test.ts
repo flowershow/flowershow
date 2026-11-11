@@ -11,9 +11,12 @@ vi.mock('@/lib/oauth/config', async (orig) => ({
   oauthEnabled: () => enabled.value,
 }));
 vi.mock('@/lib/cli-auth', () => ({ validateAccessToken: vi.fn() }));
-vi.mock('@/lib/mcp/deps', () => ({ realMcpDeps: vi.fn(() => ({})) }));
+// Only list-sites is exercised; the gate tests check deps are never built.
+const deps = vi.hoisted(() => ({ listSites: async () => [] }));
+vi.mock('@/lib/mcp/deps', () => ({ realMcpDeps: vi.fn(() => deps) }));
 
 import { validateAccessToken } from '@/lib/cli-auth';
+import { realMcpDeps } from '@/lib/mcp/deps';
 import { accountResource, anonResource } from '@/lib/oauth/config';
 import { s256 } from '@/lib/oauth/params';
 import {
@@ -28,8 +31,8 @@ const validatePat = validateAccessToken as ReturnType<typeof vi.fn>;
 const ISSUER = 'http://test.localhost';
 const VERIFIER = 'w'.repeat(50);
 
-const listTools = { jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} };
-function rpc(url: string, headers: Record<string, string> = {}) {
+const toolsList = { jsonrpc: '2.0', id: 1, method: 'tools/list', params: {} };
+function post(url: string, body: unknown, headers: Record<string, string>) {
   return new NextRequest(url, {
     method: 'POST',
     headers: {
@@ -37,12 +40,33 @@ function rpc(url: string, headers: Record<string, string> = {}) {
       accept: 'application/json, text/event-stream',
       ...headers,
     },
-    body: JSON.stringify(listTools),
+    body: JSON.stringify(body),
   });
 }
-const account = (h?: Record<string, string>) =>
-  rpc(`${ISSUER}/api/mcp/account`, h);
-const anon = (h?: Record<string, string>) => rpc(`${ISSUER}/api/mcp`, h);
+const account = (h: Record<string, string> = {}) =>
+  post(`${ISSUER}/api/mcp/account`, toolsList, h);
+const anon = (h: Record<string, string> = {}) =>
+  post(`${ISSUER}/api/mcp`, toolsList, h);
+/** tools/call on /api/mcp. */
+const anonCall = (
+  name: string,
+  args: Record<string, unknown> = {},
+  opts: {
+    headers?: Record<string, string>;
+    meta?: Record<string, unknown>;
+  } = {},
+) =>
+  post(
+    `${ISSUER}/api/mcp`,
+    {
+      jsonrpc: '2.0',
+      id: 7,
+      method: 'tools/call',
+      params: { name, arguments: args, ...(opts.meta && { _meta: opts.meta }) },
+    },
+    opts.headers ?? {},
+  );
+const ANON_CHALLENGE = `Bearer error="invalid_token", error_description="Sign in to Flowershow to use this tool (a free account).", resource_metadata="${ISSUER}/.well-known/oauth-protected-resource/api/mcp", scope="sites:write"`;
 const bearer = (t: string) => ({ authorization: `Bearer ${t}` });
 const toolNames = async (res: Response) =>
   ((await res.json()).result.tools as { name: string }[])
@@ -121,13 +145,11 @@ describe('/api/mcp/account', () => {
     ]);
   });
 
-  it('rejects a token issued for /api/mcp (wrong audience)', async () => {
+  it('accepts a token issued for /api/mcp (same server)', async () => {
     const t = await oauthTokens(anonResource());
     const res = await POST(account(bearer(t.access_token)));
-    expect(res.status).toBe(401);
-    expect(res.headers.get('www-authenticate')).toMatch(
-      /error="invalid_token"/,
-    );
+    expect(res.status).toBe(200);
+    expect(await toolNames(res)).toContain('list-sites');
   });
 
   it('rejects a revoked token', async () => {
@@ -182,25 +204,9 @@ describe('/api/mcp/account', () => {
   });
 });
 
-describe('/api/mcp with OAuth tokens', () => {
-  it('stays anonymous without Authorization (unchanged)', async () => {
+describe('/api/mcp', () => {
+  it('lists every tool without Authorization (lazy sign-in)', async () => {
     const res = await anonPOST(anon());
-    expect(res.status).toBe(200);
-    expect(await toolNames(res)).toEqual(['publish']);
-  });
-
-  it('rejects an /api/mcp/account token (wrong audience)', async () => {
-    const t = await oauthTokens(accountResource());
-    const res = await anonPOST(anon(bearer(t.access_token)));
-    expect(res.status).toBe(401);
-    expect(res.headers.get('www-authenticate')).toBe(
-      `Bearer error="invalid_token", resource_metadata="${ISSUER}/.well-known/oauth-protected-resource/api/mcp", scope="sites:write"`,
-    );
-  });
-
-  it('accepts a token issued for /api/mcp', async () => {
-    const t = await oauthTokens(anonResource());
-    const res = await anonPOST(anon(bearer(t.access_token)));
     expect(res.status).toBe(200);
     expect(await toolNames(res)).toEqual([
       'claim-site',
@@ -209,6 +215,73 @@ describe('/api/mcp with OAuth tokens', () => {
       'publish',
       'read-file',
     ]);
+  });
+
+  it('lists only publish without Authorization while OAuth is off', async () => {
+    enabled.value = false;
+    const res = await anonPOST(anon());
+    expect(await toolNames(res)).toEqual(['publish']);
+  });
+
+  it.each(['list-sites', 'list-files', 'read-file', 'claim-site'])(
+    'answers an anonymous %s call with 401 and a sign-in challenge',
+    async (name) => {
+      const res = await anonPOST(anonCall(name, { siteId: 's1' }));
+      expect(res.status).toBe(401);
+      expect(res.headers.get('www-authenticate')).toBe(ANON_CHALLENGE);
+      expect(realMcpDeps).not.toHaveBeenCalled();
+    },
+  );
+
+  it('answers 401 when the call carries other client _meta (Claude Code)', async () => {
+    const res = await anonPOST(
+      anonCall(
+        'list-sites',
+        {},
+        { meta: { 'claudecode/toolUseId': 'toolu_1', progressToken: 2 } },
+      ),
+    );
+    expect(res.status).toBe(401);
+    expect(res.headers.get('www-authenticate')).toBe(ANON_CHALLENGE);
+  });
+
+  it('runs an anonymous publish without asking for sign-in', async () => {
+    const res = await anonPOST(anonCall('publish', { files: [] }));
+    expect(res.status).toBe(200);
+    expect(res.headers.get('www-authenticate')).toBeNull();
+  });
+
+  it('asks ChatGPT to sign in through the tool result instead of a 401', async () => {
+    const res = await anonPOST(
+      anonCall('list-sites', {}, { meta: { 'openai/subject': 'u-9' } }),
+    );
+    expect(res.status).toBe(200);
+    const { result } = await res.json();
+    expect(result.isError).toBe(true);
+    expect(result._meta).toEqual({ 'mcp/www_authenticate': [ANON_CHALLENGE] });
+  });
+
+  it('runs an account tool for a signed-in caller', async () => {
+    const t = await oauthTokens(anonResource());
+    const res = await anonPOST(
+      anonCall('list-sites', {}, { headers: bearer(t.access_token) }),
+    );
+    expect(res.status).toBe(200);
+    expect((await res.json()).result.structuredContent).toEqual({ sites: [] });
+  });
+
+  it('accepts a token issued for /api/mcp/account (same server)', async () => {
+    const t = await oauthTokens(accountResource());
+    const res = await anonPOST(anon(bearer(t.access_token)));
+    expect(res.status).toBe(200);
+  });
+
+  it('answers an invalid OAuth token with the OAuth challenge', async () => {
+    const res = await anonPOST(anon(bearer('fs_oat_unknown')));
+    expect(res.status).toBe(401);
+    expect(res.headers.get('www-authenticate')).toBe(
+      `Bearer error="invalid_token", resource_metadata="${ISSUER}/.well-known/oauth-protected-resource/api/mcp", scope="sites:write"`,
+    );
   });
 
   it('keeps the original challenge for a bad PAT', async () => {

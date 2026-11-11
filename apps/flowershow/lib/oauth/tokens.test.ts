@@ -121,7 +121,7 @@ describe('authorization codes', () => {
       expect(
         await validateOAuthAccessToken(
           first.tokens.access_token,
-          accountResource(),
+          [accountResource()],
           at(2),
         ),
       ).toBeNull();
@@ -224,7 +224,7 @@ describe('refresh token rotation', () => {
     expect(
       await validateOAuthAccessToken(
         r.tokens.access_token,
-        accountResource(),
+        [accountResource()],
         at(11),
       ),
     ).toMatchObject({
@@ -245,7 +245,7 @@ describe('refresh token rotation', () => {
     expect(
       await validateOAuthAccessToken(
         rotated.tokens.access_token,
-        accountResource(),
+        [accountResource()],
         at(21),
       ),
     ).toBeNull();
@@ -340,7 +340,11 @@ describe('access token validation', () => {
   it('accepts a live token for its own resource', async () => {
     const t = await tokensFor();
     expect(
-      await validateOAuthAccessToken(t.access_token, accountResource(), at(2)),
+      await validateOAuthAccessToken(
+        t.access_token,
+        [accountResource()],
+        at(2),
+      ),
     ).toEqual({
       userId: 'user-1',
       grantId: t.grantId,
@@ -352,12 +356,12 @@ describe('access token validation', () => {
   it('rejects a token for another audience (resource)', async () => {
     const t = await tokensFor();
     expect(
-      await validateOAuthAccessToken(t.access_token, anonResource(), at(2)),
+      await validateOAuthAccessToken(t.access_token, [anonResource()], at(2)),
     ).toBeNull();
     expect(
       await validateOAuthAccessToken(
         t.access_token,
-        'https://flowershow.app/api/sites',
+        ['https://flowershow.app/api/sites'],
         at(2),
       ),
     ).toBeNull();
@@ -368,7 +372,7 @@ describe('access token validation', () => {
     expect(
       await validateOAuthAccessToken(
         t.access_token,
-        accountResource(),
+        [accountResource()],
         at(3602),
       ),
     ).toBeNull();
@@ -378,7 +382,11 @@ describe('access token validation', () => {
     const t = await tokensFor();
     await revokeGrant(t.grantId, at(2));
     expect(
-      await validateOAuthAccessToken(t.access_token, accountResource(), at(3)),
+      await validateOAuthAccessToken(
+        t.access_token,
+        [accountResource()],
+        at(3),
+      ),
     ).toBeNull();
   });
 
@@ -392,7 +400,7 @@ describe('access token validation', () => {
       `fs_oat_${'x'.repeat(300)}`,
     ]) {
       expect(
-        await validateOAuthAccessToken(tok, accountResource(), at(2)),
+        await validateOAuthAccessToken(tok, [accountResource()], at(2)),
       ).toBeNull();
     }
   });
@@ -404,7 +412,11 @@ describe('revocation (RFC 7009)', () => {
     await revokeToken(t.refresh_token, 'dcr_client1', at(2));
     expect(db.tables.oAuthGrant.get(t.grantId)!.revokedAt).not.toBeNull();
     expect(
-      await validateOAuthAccessToken(t.access_token, accountResource(), at(3)),
+      await validateOAuthAccessToken(
+        t.access_token,
+        [accountResource()],
+        at(3),
+      ),
     ).toBeNull();
     expect(db.tables.oAuthToken.size).toBe(0);
   });
@@ -413,7 +425,11 @@ describe('revocation (RFC 7009)', () => {
     const t = await tokensFor();
     await revokeToken(t.access_token, undefined, at(2));
     expect(
-      await validateOAuthAccessToken(t.access_token, accountResource(), at(3)),
+      await validateOAuthAccessToken(
+        t.access_token,
+        [accountResource()],
+        at(3),
+      ),
     ).toBeNull();
   });
 
@@ -421,7 +437,11 @@ describe('revocation (RFC 7009)', () => {
     const t = await tokensFor();
     await revokeToken(t.access_token, 'dcr_other', at(2));
     expect(
-      await validateOAuthAccessToken(t.access_token, accountResource(), at(3)),
+      await validateOAuthAccessToken(
+        t.access_token,
+        [accountResource()],
+        at(3),
+      ),
     ).not.toBeNull();
   });
 
