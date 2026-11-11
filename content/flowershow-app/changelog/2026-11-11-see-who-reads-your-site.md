@@ -8,7 +8,7 @@ draft: true
 showToc: false
 ---
 
-<!-- Held back: draft: true hides this entry. Remove it and set the real date when connect bead flowershow-9bu.11 lands. -->
+<!-- Held back until launch. At launch (connect bead flowershow-9bu.11), in one step: remove `draft: true` AND set `date` to the launch day. -->
 
 Every Flowershow site now has built-in analytics, on for every plan with nothing to set up. Open your site in the dashboard and choose the **Analytics** tab.
 
