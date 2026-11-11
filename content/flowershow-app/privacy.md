@@ -155,5 +155,3 @@ We will update this page when our practices change and change the date at the to
 ## Contact
 
 Viderum Inc., trading as Datopian, 303 Twin Dolphin Drive, Suite 600, Redwood City, CA 94065, United States. Email **support@flowershow.app**.
-
-Our representative in the UK is Viderum Ltd, trading as Datopian, 49 Greek Street, London W1D 4EG, United Kingdom. Our representative in the EU is Viderum OÜ, trading as Datopian, Ahtri tn 12, 10151 Tallinn, Estonia. You can reach both at the same email address.
