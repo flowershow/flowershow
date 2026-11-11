@@ -1,6 +1,6 @@
 import { env } from '@/env.mjs';
 
-import { UMAMI_HOST, UMAMI_WEBSITE_ID } from './config';
+import { UMAMI_HOST, UMAMI_TIMEOUT_MS, UMAMI_WEBSITE_ID } from './config';
 import { createFixtureUmamiClient } from './fixture-client';
 
 export type UmamiWindow = { startAt: number; endAt: number; tag?: string };
@@ -33,7 +33,13 @@ export function createHttpUmamiClient(opts: {
   fetchImpl?: typeof fetch;
   timeoutMs?: number;
 }): UmamiClient {
-  const { host, websiteId, apiKey, fetchImpl = fetch, timeoutMs = 8000 } = opts;
+  const {
+    websiteId,
+    apiKey,
+    fetchImpl = fetch,
+    timeoutMs = UMAMI_TIMEOUT_MS,
+  } = opts;
+  const host = opts.host.replace(/\/+$/, '');
 
   async function get<T>(
     path: string,

@@ -5,6 +5,9 @@
 export const UMAMI_HOST = '';
 export const UMAMI_WEBSITE_ID = '';
 
+// Give up on an Umami request after this long.
+export const UMAMI_TIMEOUT_MS = 5000;
+
 // Numbers only count from this date. Reset to the real launch day at connect.
 export const ANALYTICS_COUNTING_SINCE = new Date('2026-11-11T00:00:00Z');
 

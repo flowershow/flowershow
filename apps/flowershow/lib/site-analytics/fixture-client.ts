@@ -38,10 +38,19 @@ function sampleRows(names: string[], w: UmamiWindow): UmamiRow[] {
 }
 
 export function createFixtureUmamiClient(): UmamiClient {
+  const metrics: UmamiClient['metrics'] = async (w) => {
+    if (isEmpty(w)) return [];
+    const names =
+      w.type === 'path' ? PATHS : w.type === 'referrer' ? REFERRERS : TAGS;
+    return sampleRows(names, w).slice(w.offset ?? 0, (w.offset ?? 0) + w.limit);
+  };
+
   return {
+    metrics,
+
     async stats(w) {
       if (isEmpty(w)) return { pageviews: 0, visitors: 0 };
-      const rows = await this.metrics({ ...w, type: 'path', limit: 500 });
+      const rows = await metrics({ ...w, type: 'path', limit: 500 });
       const pageviews = rows.reduce((n, r) => n + r.pageviews, 0);
       return { pageviews, visitors: Math.round(pageviews / 2) };
     },
@@ -58,16 +67,6 @@ export function createFixtureUmamiClient(): UmamiClient {
         });
       }
       return out;
-    },
-
-    async metrics(w) {
-      if (isEmpty(w)) return [];
-      const names =
-        w.type === 'path' ? PATHS : w.type === 'referrer' ? REFERRERS : TAGS;
-      return sampleRows(names, w).slice(
-        w.offset ?? 0,
-        (w.offset ?? 0) + w.limit,
-      );
     },
   };
 }

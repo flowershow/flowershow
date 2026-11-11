@@ -16,6 +16,8 @@ vi.mock('./config', async (orig) => ({
   },
 }));
 
+import { UMAMI_TIMEOUT_MS } from './config';
+import { createFixtureUmamiClient } from './fixture-client';
 import { createHttpUmamiClient, getUmamiClient } from './umami-client';
 
 const json = (body: unknown, init: ResponseInit = {}) =>
@@ -121,7 +123,45 @@ describe('createHttpUmamiClient', () => {
     );
     await expect(
       make(fetchImpl, 20).stats({ startAt: 1, endAt: 2 }),
-    ).rejects.toBeDefined();
+    ).rejects.toMatchObject({ name: 'TimeoutError' });
+  });
+
+  it('defaults the timeout to UMAMI_TIMEOUT_MS (5000)', async () => {
+    const spy = vi.spyOn(AbortSignal, 'timeout');
+    const fetchImpl = vi.fn(async (..._args: any[]) =>
+      json({ pageviews: 0, visitors: 0 }),
+    );
+    await make(fetchImpl).stats({ startAt: 1, endAt: 2 });
+    expect(UMAMI_TIMEOUT_MS).toBe(5000);
+    expect(spy).toHaveBeenCalledWith(5000);
+    spy.mockRestore();
+  });
+
+  it('trims a trailing slash from host', async () => {
+    const fetchImpl = vi.fn(async (..._args: any[]) =>
+      json({ pageviews: 0, visitors: 0 }),
+    );
+    await createHttpUmamiClient({
+      host: 'https://umami.test/',
+      websiteId: 'site-1',
+      apiKey: 'k',
+      fetchImpl: fetchImpl as unknown as typeof fetch,
+    }).stats({ startAt: 1, endAt: 2 });
+    expect(fetchImpl.mock.calls[0]![0]).toMatch(
+      /^https:\/\/umami\.test\/api\/websites\/site-1\/stats\?/,
+    );
+  });
+});
+
+describe('fixture client empty- tag', () => {
+  it('gives zeros and empty lists', async () => {
+    const c = createFixtureUmamiClient();
+    const w = { startAt: 0, endAt: 3 * 86_400_000, tag: 'empty-site' };
+    expect(await c.stats(w)).toEqual({ pageviews: 0, visitors: 0 });
+    expect(await c.metrics({ ...w, type: 'path', limit: 10 })).toEqual([]);
+    const days = await c.pageviewsByDay(w);
+    expect(days.length).toBeGreaterThan(0);
+    expect(days.every((d) => d.pageviews === 0)).toBe(true);
   });
 });
 
