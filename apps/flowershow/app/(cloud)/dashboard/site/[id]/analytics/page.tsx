@@ -9,6 +9,7 @@ import {
 import {
   getSiteAnalytics,
   loadSiteCountability,
+  type SiteAnalytics,
 } from '@/lib/site-analytics/site-analytics';
 import { getUmamiClient } from '@/lib/site-analytics/umami-client';
 import { canManageSite, siteAuthzSelect } from '@/lib/site-authz';
@@ -50,13 +51,15 @@ export default async function SiteAnalyticsPage(props: {
 
   const range = parseRange(query.range);
   const siteUrl = getSiteUrl(site);
-  const [data, countability] = await Promise.all([
-    getSiteAnalytics(
-      { id: site.id, createdAt: site.createdAt, url: siteUrl },
-      range,
-    ),
-    loadSiteCountability(site),
-  ]);
+  const countability = await loadSiteCountability(site);
+  // The view shows no numbers for password or html-only sites: skip Umami.
+  const data: SiteAnalytics =
+    countability.kind === 'counted'
+      ? await getSiteAnalytics(
+          { id: site.id, createdAt: site.createdAt, url: siteUrl },
+          range,
+        )
+      : { status: 'unavailable' };
 
   return (
     <div className="mt-6">
