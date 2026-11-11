@@ -172,7 +172,7 @@ const toolCall = z.object({
   method: z.literal('tools/call'),
   params: z.object({
     name: z.string(),
-    _meta: z.object({ 'openai/subject': z.unknown().optional() }).optional(),
+    _meta: z.record(z.string(), z.unknown()).optional(),
   }),
 });
 
@@ -182,7 +182,8 @@ const toolCall = z.object({
  * Claude (and MCP SDK clients) start OAuth and then retry the call; a 200
  * tool error would not. ChatGPT instead starts sign-in from a tool result
  * carrying `_meta["mcp/www_authenticate"]`, which the tool handler returns
- * (lib/mcp/server.ts), so its calls (marked by `openai/subject`) go through.
+ * (lib/mcp/server.ts), and does not start it from a 401. So its calls (marked
+ * by any `openai/…` key in `_meta`, such as `openai/subject`) go through.
  */
 function signInGate(mode: McpMode, body: unknown): NextResponse | null {
   if (mode.kind !== 'anon' || !mode.signInChallenge) return null;
@@ -190,9 +191,8 @@ function signInGate(mode: McpMode, body: unknown): NextResponse | null {
   if (!call.success || !Object.hasOwn(ACCOUNT_TOOLS, call.data.params.name)) {
     return null;
   }
-  if (typeof call.data.params._meta?.['openai/subject'] === 'string') {
-    return null;
-  }
+  const meta = call.data.params._meta ?? {};
+  if (Object.keys(meta).some((key) => key.startsWith('openai/'))) return null;
   return rpcError(401, -32001, SIGN_IN_REQUIRED, {
     'www-authenticate': mode.signInChallenge,
   });

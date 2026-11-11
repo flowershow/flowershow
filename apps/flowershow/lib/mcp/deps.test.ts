@@ -33,7 +33,7 @@ vi.mock('./limits', () => ({
   checkAnonCreateLimits: vi.fn(async () => null),
   checkAnonUpdateLimit: vi.fn(async () => true),
   reportGlobalLimitReached: vi.fn(async () => {}),
-  signInHint: () => 'Sign in: https://flowershow.app/api/mcp/account',
+  signInHint: () => 'SIGN_IN_HINT',
   MCP_ANON_LIMITS: { perCaller: 10, perIp: 10, perSiteUpdates: 60 },
 }));
 
@@ -100,7 +100,7 @@ describe('realMcpDeps', () => {
     });
   });
 
-  it('alerts and points at the signed-in connector when the global bucket runs out', async () => {
+  it('alerts and adds the sign-in hint when the global bucket runs out', async () => {
     create.mockImplementation(async (opts) => ({
       ok: false,
       status: 429,
@@ -111,7 +111,7 @@ describe('realMcpDeps', () => {
       .createAnonSite()
       .catch((e) => e);
     expect(err).toBeInstanceOf(PublishError);
-    expect(err.message).toContain('https://flowershow.app/api/mcp/account');
+    expect(err.message).toContain('SIGN_IN_HINT');
     expect(reportGlobalLimitReached).toHaveBeenCalledWith(100);
   });
 
@@ -124,7 +124,7 @@ describe('realMcpDeps', () => {
     expect(checkAnonCreateLimits).toHaveBeenCalledWith(caller);
     expect(err).toBeInstanceOf(PublishError);
     expect(err.message).toMatch(/too many new anonymous sites/);
-    expect(err.message).toContain('https://flowershow.app/api/mcp/account');
+    expect(err.message).toContain('SIGN_IN_HINT');
     expect(create).not.toHaveBeenCalled();
   });
 
