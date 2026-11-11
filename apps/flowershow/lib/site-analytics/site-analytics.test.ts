@@ -150,6 +150,28 @@ describe('getSiteAnalytics', () => {
     expect(r.pages[0]!.title).toBe('Home');
     expect(JSON.parse(JSON.stringify(r))).toEqual(r);
   });
+  it('drops self-referrals, with or without www, any case', async () => {
+    const c = okClient();
+    c.metrics = async ({ type }) =>
+      type === 'path'
+        ? []
+        : [
+            { name: 'x.example', pageviews: 9, visitors: 9 },
+            { name: 'WWW.X.Example', pageviews: 8, visitors: 8 },
+            { name: 'google.com', pageviews: 3, visitors: 3 },
+            { name: 'sub.x.example', pageviews: 2, visitors: 2 },
+          ];
+    const r = await getSiteAnalytics(
+      { ...site, url: 'https://www.x.example' },
+      30,
+      { client: c, now, loadPages },
+    );
+    if (r.status !== 'ok') throw new Error('expected ok');
+    expect(r.referrers.map((x) => x.domain)).toEqual([
+      'google.com',
+      'sub.x.example',
+    ]);
+  });
   it('is unavailable when stats rejects', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     const c = okClient();

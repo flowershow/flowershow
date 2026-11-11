@@ -54,6 +54,8 @@ const MAX_REFERRERS = 5;
 const utcDay = (d: Date) =>
   Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
 const dayString = (ms: number) => new Date(ms).toISOString().slice(0, 10);
+/** Lowercased host without a leading www., for self-referral matching. */
+const bareHost = (host: string) => host.toLowerCase().replace(/^www\./, '');
 
 /**
  * Last N UTC days including today, never before launch or the site's creation
@@ -171,6 +173,12 @@ export async function getSiteAnalytics(
     site.createdAt,
   );
   const w = { startAt, endAt, tag: site.id };
+  let ownHost: string | null = null;
+  try {
+    ownHost = bareHost(new URL(site.url).hostname);
+  } catch {
+    // Unparseable site URL: keep all referrers.
+  }
 
   // Throws on failure so failures are not cached.
   const fetchOk = async (): Promise<
@@ -205,7 +213,7 @@ export async function getSiteAnalytics(
       series,
       pages: attachTitles(pathRows, pages, site.url),
       referrers: refRows
-        .filter((r) => r.name !== '')
+        .filter((r) => r.name !== '' && bareHost(r.name) !== ownHost)
         .slice(0, MAX_REFERRERS)
         .map((r) => ({ domain: r.name, people: r.visitors })),
     };
