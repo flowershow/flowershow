@@ -29,8 +29,9 @@ vi.mock('@/lib/stripe', () => {
   };
 });
 
-vi.mock('@/server/db', () => ({
-  default: {
+vi.mock('@/server/db', () => {
+  const db: any = {
+    $queryRaw: vi.fn().mockResolvedValue([]),
     subscription: {
       findUnique: vi.fn(),
       update: vi.fn(),
@@ -45,8 +46,10 @@ vi.mock('@/server/db', () => ({
     },
     accountSubscription: { findUnique: vi.fn() },
     user: { findUnique: vi.fn(), update: vi.fn() },
-  },
-}));
+  };
+  db.$transaction = vi.fn(async (fn: (tx: unknown) => unknown) => fn(db));
+  return { default: db };
+});
 
 vi.mock('@/lib/storage-limits', () => ({
   getSiteStorageBytes: vi.fn(),

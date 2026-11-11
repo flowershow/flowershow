@@ -157,6 +157,17 @@ describe('AccountBilling right after checkout', () => {
     expect(refresh).toHaveBeenCalledTimes(1);
   });
 
+  it('drops upgrade_success from the URL so a later reload is not stuck', () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/settings/billing?upgrade_success=true',
+    );
+    searchParams = new URLSearchParams('upgrade_success=true');
+    render(<AccountBilling data={base} />);
+    expect(window.location.search).toBe('');
+  });
+
   it('stops refreshing after the cap and points to support, buttons still disabled', () => {
     vi.useFakeTimers();
     searchParams = new URLSearchParams('upgrade_success=true');
@@ -196,6 +207,7 @@ describe('coverConfirmation', () => {
       coverConfirmation(
         site('a', { covered: true, hasCustomDomain: true }),
         false,
+        true,
       ),
     ).toBe(
       'Remove Site a from your plan? It goes back to Free and its custom domain is removed. Covering it again will not restore the domain.',
@@ -203,21 +215,42 @@ describe('coverConfirmation', () => {
   });
 
   it('asks plainly when uncovering a site without a domain', () => {
-    expect(coverConfirmation(site('a', { covered: true }), false)).toBe(
+    expect(coverConfirmation(site('a', { covered: true }), false, true)).toBe(
       'Remove Site a from your plan? It goes back to Free.',
     );
   });
 
+  it('needs no confirmation to uncover a site still on its own subscription', () => {
+    expect(
+      coverConfirmation(
+        site('s', {
+          covered: true,
+          planSource: 'SITE',
+          hasSiteSubscription: true,
+          hasCustomDomain: true,
+        }),
+        false,
+        false,
+      ),
+    ).toBeNull();
+  });
+
+  it('does not promise a cancellation when the plan will not consolidate', () => {
+    expect(
+      coverConfirmation(site('s', { hasSiteSubscription: true }), true, false),
+    ).toBeNull();
+  });
+
   it('warns that covering cancels the site subscription', () => {
     expect(
-      coverConfirmation(site('s', { hasSiteSubscription: true }), true),
+      coverConfirmation(site('s', { hasSiteSubscription: true }), true, true),
     ).toBe(
       'Cover Site s with your plan? Its own subscription is cancelled now, and the unused time is credited to your account.',
     );
   });
 
   it('needs no confirmation to cover a plain Free site', () => {
-    expect(coverConfirmation(site('f'), true)).toBeNull();
+    expect(coverConfirmation(site('f'), true, true)).toBeNull();
   });
 });
 

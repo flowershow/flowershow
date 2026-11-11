@@ -50,14 +50,20 @@ const ACTIVATING_MAX_POLLS = 15;
 type Site = AccountPlanData['sites'][number];
 
 // Both changes are hard to undo, so ask first. Returns the question, or null
-// when the click needs no confirmation.
-export function coverConfirmation(site: Site, covered: boolean): string | null {
-  if (!covered && site.covered) {
+// when the click needs no confirmation. `consolidates`: the plan is active or
+// trialing, so covering a site cancels its own subscription now.
+export function coverConfirmation(
+  site: Site,
+  covered: boolean,
+  consolidates: boolean,
+): string | null {
+  // A covered site still on its own subscription stays Premium when uncovered.
+  if (!covered && site.covered && site.planSource !== 'SITE') {
     return site.hasCustomDomain
       ? `Remove ${site.projectName} from your plan? It goes back to Free and its custom domain is removed. Covering it again will not restore the domain.`
       : `Remove ${site.projectName} from your plan? It goes back to Free.`;
   }
-  if (covered && site.hasSiteSubscription) {
+  if (covered && site.hasSiteSubscription && consolidates) {
     return `Cover ${site.projectName} with your plan? Its own subscription is cancelled now, and the unused time is credited to your account.`;
   }
   return null;
@@ -71,10 +77,21 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
   const [loading, setLoading] = useState(false);
   const [pendingSiteId, setPendingSiteId] = useState<string | null>(null);
   const searchParams = useSearchParams();
-  const activating =
-    searchParams?.get('upgrade_success') === 'true' && !data.live;
+  // Read once: the param is dropped from the URL below, so a reload, Back or a
+  // bookmark later never shows a stale activating state.
+  const [returnedFromCheckout] = useState(
+    () => searchParams?.get('upgrade_success') === 'true',
+  );
+  const activating = returnedFromCheckout && !data.live;
   const [polls, setPolls] = useState(0);
   const stillActivating = activating && polls < ACTIVATING_MAX_POLLS;
+
+  useEffect(() => {
+    if (!returnedFromCheckout) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('upgrade_success');
+    window.history.replaceState(window.history.state, '', url);
+  }, [returnedFromCheckout]);
 
   useEffect(() => {
     if (!stillActivating) return;
@@ -248,7 +265,12 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
                           }
                           onChange={(e) => {
                             const covered = e.target.checked;
-                            const question = coverConfirmation(site, covered);
+                            const question = coverConfirmation(
+                              site,
+                              covered,
+                              data.status === 'active' ||
+                                data.status === 'trialing',
+                            );
                             if (question && !window.confirm(question)) return;
                             setPendingSiteId(site.id);
                             setCovered.mutate({ siteId: site.id, covered });

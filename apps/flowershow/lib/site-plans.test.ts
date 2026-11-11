@@ -4,12 +4,15 @@ vi.mock('@/env.mjs', () => ({
   env: { STRIPE_SECRET_KEY: 'sk_test_x', NEXT_PUBLIC_VERCEL_ENV: 'production' },
 }));
 
-vi.mock('@/server/db', () => ({
-  default: {
+vi.mock('@/server/db', () => {
+  const db: any = {
+    $queryRaw: vi.fn().mockResolvedValue([]),
     site: { findMany: vi.fn(), updateMany: vi.fn(), update: vi.fn() },
     accountSubscription: { findUnique: vi.fn() },
-  },
-}));
+  };
+  db.$transaction = vi.fn(async (fn: (tx: unknown) => unknown) => fn(db));
+  return { default: db };
+});
 
 vi.mock('@/lib/storage-limits', () => ({
   getSiteStorageBytes: vi.fn(),
@@ -451,6 +454,62 @@ describe('reconcileUserSitePlans', () => {
     ].map((c) => (c[0] as any).where.id);
     expect(touched).not.toContain('man');
     expect(changed.map((t) => t.id).sort()).toEqual(['acc', 'sub']);
+  });
+
+  it('reads and writes under the account row lock, removing domains after commit', async () => {
+    const order: string[] = [];
+    vi.mocked(prisma.$transaction).mockImplementation((async (fn: any) => {
+      order.push('begin');
+      const result = await fn(prisma);
+      order.push('commit');
+      return result;
+    }) as any);
+    vi.mocked(prisma.$queryRaw).mockImplementation((async () => {
+      order.push('lock');
+      return [];
+    }) as any);
+    vi.mocked(prisma.site.findMany).mockImplementation((async () => {
+      order.push('read');
+      return [
+        dbSite('acc', {
+          plan: 'PREMIUM',
+          planSource: 'ACCOUNT',
+          coveredByAccountPlan: true,
+          customDomain: 'notes.example.com',
+        }),
+      ];
+    }) as any);
+    vi.mocked(prisma.accountSubscription.findUnique).mockResolvedValue({
+      status: 'canceled',
+      siteAllowance: 5,
+    } as any);
+    vi.mocked(prisma.site.updateMany).mockImplementation((async () => {
+      order.push('write');
+      return { count: 1 };
+    }) as any);
+    vi.mocked(removeDomainAndVariantFromVercelProject).mockImplementation(
+      (async () => {
+        order.push('vercel');
+      }) as any,
+    );
+
+    await reconcileUserSitePlans('user-1');
+
+    expect(order).toEqual([
+      'begin',
+      'lock',
+      'read',
+      'write',
+      'commit',
+      'vercel',
+    ]);
+    expect(
+      (
+        vi.mocked(prisma.$queryRaw).mock.calls[0]![0] as unknown as string[]
+      ).join(''),
+    ).toMatch(/"AccountSubscription" WHERE user_id = .* FOR UPDATE/);
+    vi.mocked(prisma.$transaction).mockImplementation((async (fn: any) =>
+      fn(prisma)) as any);
   });
 
   it('passes released through to the computation', async () => {

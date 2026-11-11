@@ -1,4 +1,9 @@
-import type { Plan, PlanSource, SubscriptionStatus } from '@prisma/client';
+import type {
+  Plan,
+  PlanSource,
+  Prisma,
+  SubscriptionStatus,
+} from '@prisma/client';
 import { env } from '@/env.mjs';
 import { removeDomainAndVariantFromVercelProject } from '@/lib/domains';
 import { PLAN_LIMITS } from '@/lib/entitlements';
@@ -153,13 +158,29 @@ export function computeSitePlans(
  * orphaned Vercel domain is the lesser harm.
  */
 export async function downgradeSiteToFree(
-  site: {
-    id: string;
-    customDomain: string | null;
-    storageAllowanceBytes: bigint | null;
-  },
+  site: DowngradeSite,
   expected: { plan: Plan; planSource: PlanSource | null },
   opts: { coveredByAccountPlan?: boolean } = {},
+): Promise<boolean> {
+  const written = await writeSiteDowngrade(prisma, site, expected, opts);
+  if (written && site.customDomain) {
+    await removeDowngradedDomain(site.id, site.customDomain);
+  }
+  return written;
+}
+
+type DowngradeSite = {
+  id: string;
+  customDomain: string | null;
+  storageAllowanceBytes: bigint | null;
+};
+
+// The DB half of downgradeSiteToFree, so it can run inside a transaction.
+async function writeSiteDowngrade(
+  db: Prisma.TransactionClient,
+  site: DowngradeSite,
+  expected: { plan: Plan; planSource: PlanSource | null },
+  opts: { coveredByAccountPlan?: boolean },
 ): Promise<boolean> {
   const totalBytes = await getSiteStorageBytes(site.id);
   let storageAllowanceBytes: bigint | undefined;
@@ -169,7 +190,7 @@ export async function downgradeSiteToFree(
     storageAllowanceBytes = needed > existing ? needed : existing;
   }
 
-  const { count } = await prisma.site.updateMany({
+  const { count } = await db.site.updateMany({
     where: {
       id: site.id,
       plan: expected.plan,
@@ -185,20 +206,23 @@ export async function downgradeSiteToFree(
       ...(storageAllowanceBytes !== undefined && { storageAllowanceBytes }),
     },
   });
-  if (count !== 1) return false;
+  return count === 1;
+}
 
-  if (site.customDomain && env.NEXT_PUBLIC_VERCEL_ENV === 'production') {
-    try {
-      await removeDomainAndVariantFromVercelProject(site.customDomain);
-    } catch (error) {
-      log('Vercel domain removal on downgrade failed', SeverityNumber.ERROR, {
-        siteId: site.id,
-        domain: site.customDomain,
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
+async function removeDowngradedDomain(
+  siteId: string,
+  domain: string,
+): Promise<void> {
+  if (env.NEXT_PUBLIC_VERCEL_ENV !== 'production') return;
+  try {
+    await removeDomainAndVariantFromVercelProject(domain);
+  } catch (error) {
+    log('Vercel domain removal on downgrade failed', SeverityNumber.ERROR, {
+      siteId,
+      domain,
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
-  return true;
 }
 
 /**
@@ -209,6 +233,10 @@ export async function downgradeSiteToFree(
  * admin grant or a second webhook wins the race; a lost race is skipped (the
  * winner's reconcile, or the admin, decides that site). PREMIUM to FREE goes
  * through downgradeSiteToFree, which makes the same conditional write.
+ *
+ * The read and the writes run in one transaction holding the account row lock
+ * that setSiteCovered also takes, so a cover and a reconcile cannot both fill
+ * the last Pro slot. Vercel domains are removed after commit.
  */
 export async function reconcileUserSitePlans(
   userId: string,
@@ -217,30 +245,52 @@ export async function reconcileUserSitePlans(
     released?: string[];
   } = {},
 ): Promise<{ changed: SitePlanTarget[] }> {
-  const [sites, account] = await Promise.all([
-    prisma.site.findMany({
-      where: { userId, isTemporary: false },
-      select: {
-        id: true,
-        plan: true,
-        planSource: true,
-        coveredByAccountPlan: true,
-        createdAt: true,
-        customDomain: true,
-        storageAllowanceBytes: true,
-        subscription: { select: { status: true } },
-        publishes: {
-          select: { startedAt: true },
-          orderBy: { startedAt: 'desc' },
-          take: 1,
-        },
+  const removedDomains: { siteId: string; domain: string }[] = [];
+  const changed = await prisma.$transaction(
+    async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "AccountSubscription" WHERE user_id = ${userId} FOR UPDATE`;
+      return reconcileLocked(tx, userId, opts, removedDomains);
+    },
+    { timeout: 15_000 },
+  );
+  for (const { siteId, domain } of removedDomains) {
+    await removeDowngradedDomain(siteId, domain);
+  }
+  return { changed };
+}
+
+async function reconcileLocked(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  opts: {
+    autoFill?: 'all' | 'none' | { siteId: string };
+    released?: string[];
+  },
+  removedDomains: { siteId: string; domain: string }[],
+): Promise<SitePlanTarget[]> {
+  // Sequential: an interactive transaction has one connection.
+  const sites = await tx.site.findMany({
+    where: { userId, isTemporary: false },
+    select: {
+      id: true,
+      plan: true,
+      planSource: true,
+      coveredByAccountPlan: true,
+      createdAt: true,
+      customDomain: true,
+      storageAllowanceBytes: true,
+      subscription: { select: { status: true } },
+      publishes: {
+        select: { startedAt: true },
+        orderBy: { startedAt: 'desc' },
+        take: 1,
       },
-    }),
-    prisma.accountSubscription.findUnique({
-      where: { userId },
-      select: { status: true, siteAllowance: true },
-    }),
-  ]);
+    },
+  });
+  const account = await tx.accountSubscription.findUnique({
+    where: { userId },
+    select: { status: true, siteAllowance: true },
+  });
 
   const targets = computeSitePlans(
     sites.map((s) => ({
@@ -269,11 +319,14 @@ export async function reconcileUserSitePlans(
     const expected = { plan: site.plan, planSource: site.planSource };
     let written: boolean;
     if (site.plan === 'PREMIUM' && target.plan === 'FREE') {
-      written = await downgradeSiteToFree(site, expected, {
+      written = await writeSiteDowngrade(tx, site, expected, {
         coveredByAccountPlan: target.coveredByAccountPlan,
       });
+      if (written && site.customDomain) {
+        removedDomains.push({ siteId: site.id, domain: site.customDomain });
+      }
     } else {
-      const { count } = await prisma.site.updateMany({
+      const { count } = await tx.site.updateMany({
         where: { id: site.id, ...expected },
         data: {
           plan: target.plan,
@@ -285,7 +338,7 @@ export async function reconcileUserSitePlans(
     }
     if (written) changed.push(target);
   }
-  return { changed };
+  return changed;
 }
 
 /**
