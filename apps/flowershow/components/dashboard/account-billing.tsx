@@ -2,8 +2,8 @@
 
 import { Radio, RadioGroup } from '@headlessui/react';
 import type { inferRouterOutputs } from '@trpc/server';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { toast } from 'sonner';
 
 import { isManualSite } from '@/lib/account-plans';
@@ -42,6 +42,33 @@ const PLAN_NAME: Record<Plan, string> = {
   UNLIMITED: 'Unlimited',
 };
 
+// After checkout Stripe can redirect before the webhook lands; refresh until
+// the plan shows up rather than offering the buy cards again.
+const ACTIVATING_POLL_MS = 2000;
+const ACTIVATING_MAX_POLLS = 15;
+
+type Site = AccountPlanData['sites'][number];
+
+// Both changes are hard to undo, so ask first. Returns the question, or null
+// when the click needs no confirmation. `consolidates`: the plan is active or
+// trialing, so covering a site cancels its own subscription now.
+export function coverConfirmation(
+  site: Site,
+  covered: boolean,
+  consolidates: boolean,
+): string | null {
+  // A covered site still on its own subscription stays Premium when uncovered.
+  if (!covered && site.covered && site.planSource !== 'SITE') {
+    return site.hasCustomDomain
+      ? `Remove ${site.projectName} from your plan? It goes back to Free and its custom domain is removed. Covering it again will not restore the domain.`
+      : `Remove ${site.projectName} from your plan? It goes back to Free.`;
+  }
+  if (covered && site.hasSiteSubscription && consolidates) {
+    return `Cover ${site.projectName} with your plan? Its own subscription is cancelled now, and the unused time is credited to your account.`;
+  }
+  return null;
+}
+
 export default function AccountBilling({ data }: { data: AccountPlanData }) {
   const router = useRouter();
   const [frequency, setFrequency] = useState<(typeof frequencies)[number]>(
@@ -49,6 +76,31 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
   );
   const [loading, setLoading] = useState(false);
   const [pendingSiteId, setPendingSiteId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
+  // Read once: the param is dropped from the URL below, so a reload, Back or a
+  // bookmark later never shows a stale activating state.
+  const [returnedFromCheckout] = useState(
+    () => searchParams?.get('upgrade_success') === 'true',
+  );
+  const activating = returnedFromCheckout && !data.live;
+  const [polls, setPolls] = useState(0);
+  const stillActivating = activating && polls < ACTIVATING_MAX_POLLS;
+
+  useEffect(() => {
+    if (!returnedFromCheckout) return;
+    const url = new URL(window.location.href);
+    url.searchParams.delete('upgrade_success');
+    window.history.replaceState(window.history.state, '', url);
+  }, [returnedFromCheckout]);
+
+  useEffect(() => {
+    if (!stillActivating) return;
+    const timer = setTimeout(() => {
+      setPolls((n) => n + 1);
+      router.refresh();
+    }, ACTIVATING_POLL_MS);
+    return () => clearTimeout(timer);
+  }, [stillActivating, polls, router]);
 
   const onRedirect = ({ url }: { url: string | null }) => {
     if (url) {
@@ -112,6 +164,16 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
         {!plan || !data.live ? (
           <>
             {creditLine}
+            {activating && (
+              <p
+                role="status"
+                className="text-sm font-medium text-stone-700 dark:text-zinc-300"
+              >
+                {stillActivating
+                  ? 'Payment received. Activating your plan…'
+                  : 'Payment received. Your plan is taking longer than usual to activate. Refresh this page in a minute, or email support@flowershow.app if it still has not appeared.'}
+              </p>
+            )}
             <fieldset aria-label="Payment frequency" className="inline-block">
               <RadioGroup
                 value={frequency}
@@ -156,6 +218,7 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
                     <LoadingButton
                       onClick={() => choose(p)}
                       loading={loading}
+                      disabled={activating}
                       variant="filled"
                     >
                       {`Choose ${PLAN_NAME[p]}`}
@@ -197,15 +260,20 @@ export default function AccountBilling({ data }: { data: AccountPlanData }) {
                           checked={manual || site.covered}
                           disabled={
                             manual ||
-                            pendingSiteId === site.id ||
+                            pendingSiteId !== null ||
                             (!site.covered && atLimit)
                           }
                           onChange={(e) => {
+                            const covered = e.target.checked;
+                            const question = coverConfirmation(
+                              site,
+                              covered,
+                              data.status === 'active' ||
+                                data.status === 'trialing',
+                            );
+                            if (question && !window.confirm(question)) return;
                             setPendingSiteId(site.id);
-                            setCovered.mutate({
-                              siteId: site.id,
-                              covered: e.target.checked,
-                            });
+                            setCovered.mutate({ siteId: site.id, covered });
                           }}
                         />
                         <span className="flex flex-col">

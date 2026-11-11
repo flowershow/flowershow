@@ -13,13 +13,15 @@ vi.mock('@/server/auth', () => ({
 
 // `default` is the client lib/site-plans uses (the same client as ctx.db in
 // production).
-vi.mock('@/server/db', () => ({
-  db: {},
-  default: {
+vi.mock('@/server/db', () => {
+  const db: any = {
+    $queryRaw: vi.fn().mockResolvedValue([]),
     site: { findMany: vi.fn(), updateMany: vi.fn(), update: vi.fn() },
     accountSubscription: { findUnique: vi.fn() },
-  },
-}));
+  };
+  db.$transaction = vi.fn(async (fn: (tx: unknown) => unknown) => fn(db));
+  return { db: {}, default: db };
+});
 
 vi.mock('@/lib/stripe', () => ({ stripe: {} }));
 vi.mock('@/lib/typesense', () => ({

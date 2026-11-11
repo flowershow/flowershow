@@ -54,7 +54,12 @@ export function createFakeBillingDb() {
   const clone = <T>(value: T): T | null =>
     value === undefined ? null : structuredClone(value);
 
-  return {
+  const db = {
+    // Row locks are a no-op here; the callback runs against the same fake.
+    $queryRaw: vi.fn(async () => []),
+    $transaction: vi.fn(
+      async (fn: (tx: any) => unknown): Promise<any> => fn(db),
+    ),
     seed(partial: Partial<FakeBillingState>) {
       state = { ...emptyState(), ...structuredClone(partial) };
     },
@@ -116,6 +121,7 @@ export function createFakeBillingDb() {
       ),
     },
   };
+  return db;
 }
 
 export type FakeBillingDb = ReturnType<typeof createFakeBillingDb>;

@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -6,12 +7,16 @@ import {
   waitFor,
 } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import AccountBilling, { type AccountPlanData } from './account-billing';
+import AccountBilling, {
+  type AccountPlanData,
+  coverConfirmation,
+} from './account-billing';
 
 const refresh = vi.fn();
+let searchParams = new URLSearchParams();
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ refresh }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => searchParams,
 }));
 
 const toastError = vi.fn();
@@ -66,6 +71,7 @@ const site = (
   plan: 'FREE',
   planSource: null,
   covered: false,
+  hasCustomDomain: false,
   hasSiteSubscription: false,
   ...over,
 });
@@ -87,10 +93,14 @@ const base: AccountPlanData = {
 
 beforeEach(() => {
   coverOptions = {};
+  searchParams = new URLSearchParams();
+  vi.spyOn(window, 'confirm').mockReturnValue(true);
 });
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+  vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 describe('AccountBilling without a plan', () => {
@@ -126,6 +136,121 @@ describe('AccountBilling without a plan', () => {
       plan: 'UNLIMITED',
       interval: 'month',
     });
+  });
+});
+
+describe('AccountBilling right after checkout', () => {
+  it('shows activating, disables the buy buttons and refreshes until the plan lands', () => {
+    vi.useFakeTimers();
+    searchParams = new URLSearchParams('upgrade_success=true');
+    render(<AccountBilling data={base} />);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'Payment received. Activating your plan…',
+    );
+    expect(screen.getByRole('button', { name: 'Choose Pro' })).toBeDisabled();
+    expect(
+      screen.getByRole('button', { name: 'Choose Unlimited' }),
+    ).toBeDisabled();
+    act(() => {
+      vi.advanceTimersByTime(2000);
+    });
+    expect(refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it('drops upgrade_success from the URL so a later reload is not stuck', () => {
+    window.history.replaceState(
+      null,
+      '',
+      '/settings/billing?upgrade_success=true',
+    );
+    searchParams = new URLSearchParams('upgrade_success=true');
+    render(<AccountBilling data={base} />);
+    expect(window.location.search).toBe('');
+  });
+
+  it('stops refreshing after the cap and points to support, buttons still disabled', () => {
+    vi.useFakeTimers();
+    searchParams = new URLSearchParams('upgrade_success=true');
+    render(<AccountBilling data={base} />);
+    for (let i = 0; i < 20; i++) {
+      act(() => {
+        vi.advanceTimersByTime(2000);
+      });
+    }
+    expect(refresh).toHaveBeenCalledTimes(15);
+    expect(screen.getByRole('status')).toHaveTextContent(
+      'support@flowershow.app',
+    );
+    expect(screen.getByRole('button', { name: 'Choose Pro' })).toBeDisabled();
+  });
+
+  it('shows nothing extra once the plan is live', () => {
+    searchParams = new URLSearchParams('upgrade_success=true');
+    render(
+      <AccountBilling
+        data={{
+          ...base,
+          plan: 'UNLIMITED',
+          interval: 'year',
+          status: 'active',
+          live: true,
+        }}
+      />,
+    );
+    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  });
+});
+
+describe('coverConfirmation', () => {
+  it('warns about the domain when uncovering a site that has one', () => {
+    expect(
+      coverConfirmation(
+        site('a', { covered: true, hasCustomDomain: true }),
+        false,
+        true,
+      ),
+    ).toBe(
+      'Remove Site a from your plan? It goes back to Free and its custom domain is removed. Covering it again will not restore the domain.',
+    );
+  });
+
+  it('asks plainly when uncovering a site without a domain', () => {
+    expect(coverConfirmation(site('a', { covered: true }), false, true)).toBe(
+      'Remove Site a from your plan? It goes back to Free.',
+    );
+  });
+
+  it('needs no confirmation to uncover a site still on its own subscription', () => {
+    expect(
+      coverConfirmation(
+        site('s', {
+          covered: true,
+          planSource: 'SITE',
+          hasSiteSubscription: true,
+          hasCustomDomain: true,
+        }),
+        false,
+        false,
+      ),
+    ).toBeNull();
+  });
+
+  it('does not promise a cancellation when the plan will not consolidate', () => {
+    expect(
+      coverConfirmation(site('s', { hasSiteSubscription: true }), true, false),
+    ).toBeNull();
+  });
+
+  it('warns that covering cancels the site subscription', () => {
+    expect(
+      coverConfirmation(site('s', { hasSiteSubscription: true }), true, true),
+    ).toBe(
+      'Cover Site s with your plan? Its own subscription is cancelled now, and the unused time is credited to your account.',
+    );
+  });
+
+  it('needs no confirmation to cover a plain Free site', () => {
+    expect(coverConfirmation(site('f'), true, true)).toBeNull();
   });
 });
 
@@ -194,10 +319,27 @@ describe('AccountBilling with Pro', () => {
     ).toBeInTheDocument();
   });
 
-  it('calls setSiteCovered when toggled', () => {
+  it('calls setSiteCovered when the owner confirms', () => {
     render(<AccountBilling data={pro} />);
     fireEvent.click(screen.getByRole('checkbox', { name: /Site a/ }));
+    expect(window.confirm).toHaveBeenCalledWith(
+      'Remove Site a from your plan? It goes back to Free.',
+    );
     expect(coverMutate).toHaveBeenCalledWith({ siteId: 'a', covered: false });
+  });
+
+  it('does nothing when the owner cancels the confirmation', () => {
+    vi.mocked(window.confirm).mockReturnValue(false);
+    render(<AccountBilling data={pro} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: /Site a/ }));
+    expect(coverMutate).not.toHaveBeenCalled();
+    expect(screen.getByRole('checkbox', { name: /Site a/ })).toBeChecked();
+  });
+
+  it('disables every checkbox while one change is saving', () => {
+    render(<AccountBilling data={pro} />);
+    fireEvent.click(screen.getByRole('checkbox', { name: /Site a/ }));
+    expect(screen.getByRole('checkbox', { name: /Site b/ })).toBeDisabled();
   });
 
   it('surfaces the server error message', async () => {

@@ -355,7 +355,9 @@ function makeCoverDb(
     stripeCustomerId?: string | null;
   } = {},
 ) {
-  return {
+  const db: any = {
+    $queryRaw: vi.fn().mockResolvedValue([]),
+    $transaction: vi.fn(async (fn: (tx: unknown) => unknown) => fn(db)),
     site: {
       findUnique: vi.fn().mockResolvedValue(opts.site ?? coverSite()),
       findMany: vi.fn().mockResolvedValue(opts.sites ?? []),
@@ -374,6 +376,7 @@ function makeCoverDb(
       }),
     },
   };
+  return db;
 }
 
 describe('stripe.setSiteCovered', () => {
@@ -457,6 +460,30 @@ describe('stripe.setSiteCovered', () => {
     });
     expect(reconcileUserSitePlans).toHaveBeenCalledWith('user-1');
     expect(consolidateSiteSubscriptions).not.toHaveBeenCalled();
+  });
+
+  it('locks the account row before counting and writing, in one transaction', async () => {
+    const db = makeCoverDb({ coveredCount: 4 });
+    const order: string[] = [];
+    db.$queryRaw.mockImplementation(async () => {
+      order.push('lock');
+      return [];
+    });
+    db.site.count.mockImplementation(async () => {
+      order.push('count');
+      return 4;
+    });
+    db.site.update.mockImplementation(async () => {
+      order.push('update');
+      return {};
+    });
+    await createCaller(db).stripe.setSiteCovered({
+      siteId: 'site-1',
+      covered: true,
+    });
+    expect(db.$transaction).toHaveBeenCalledTimes(1);
+    expect(order).toEqual(['lock', 'count', 'update']);
+    expect(db.$queryRaw.mock.calls[0][0].join('')).toMatch(/FOR UPDATE/);
   });
 
   it('consolidates when the covered site has a live per-site subscription', async () => {
@@ -602,10 +629,12 @@ describe('stripe.getAccountPlan', () => {
           plan: 'PREMIUM',
           planSource: 'SITE',
           subscription: { status: 'active' },
+          customDomain: 'notes.example.com',
         }),
       ],
     });
     const result = await createCaller(db).stripe.getAccountPlan();
+    expect(result.sites.map((s) => s.hasCustomDomain)).toEqual([false, true]);
     expect(result).toMatchObject({
       enabled: false,
       plan: null,
