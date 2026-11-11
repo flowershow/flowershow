@@ -8,6 +8,7 @@ import { AnonSiteNotice } from '@/components/public/anon-site-notice';
 import BuiltWithFloatingButton from '@/components/public/built-with-floating-button';
 import { CustomHead } from '@/components/public/custom-head';
 import Footer from '@/components/public/footer';
+import { FlowershowAnalytics } from '@/components/public/flowershow-analytics';
 import { ChromeErrorBoundary } from '@/components/public/chrome-error-boundary';
 import Nav, { CustomNavbar } from '@/components/public/nav';
 import { SiteProvider } from '@/components/public/site-context';
@@ -314,6 +315,7 @@ export default async function PublicLayout(props: {
             data-website-id={siteConfig.umami.websiteId}
           />
         )}
+        <FlowershowAnalytics site={site} />
         {/* User-configured custom head HTML — Premium-only, rendered on the public site only. */}
         {isFeatureEnabled(Feature.CustomHead, site) && siteConfig?.head && (
           <CustomHead html={siteConfig.head} />
