@@ -25,7 +25,7 @@ import {
 } from './account-plans';
 import { getSubscriptionKind } from './stripe';
 
-// The shipped table is all null; tests fill the (mutable at runtime) test table.
+// Tests overwrite the (mutable at runtime) test table with placeholder ids.
 const table = ACCOUNT_PRICE_IDS.test as any;
 function setIds() {
   table.PRO = { month: 'price_pro_month_test', year: 'price_pro_year_test' };
