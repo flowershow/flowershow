@@ -3,7 +3,14 @@ import Star from '@/components/icons/star';
 import { env } from '@/env.mjs';
 import type { DashboardSite } from '@/server/api/routers/user';
 
-export default function SiteCard({ data: site }: { data: DashboardSite }) {
+export default function SiteCard({
+  data: site,
+  people,
+}: {
+  data: DashboardSite;
+  /** People in the last 30 days; undefined shows no line. */
+  people?: number;
+}) {
   let url: string;
 
   const isSecure =
@@ -62,6 +69,16 @@ export default function SiteCard({ data: site }: { data: DashboardSite }) {
             </h3>
             {ownerLine}
           </div>
+        </Link>
+      )}
+      {!site.lapsed && people !== undefined && (
+        <Link
+          href={`/site/${site.id}/analytics`}
+          className="block px-4 pb-2 text-sm text-stone-500 hover:text-stone-700 dark:text-zinc-400 dark:hover:text-zinc-200"
+        >
+          {people === 0
+            ? 'No readers yet'
+            : `${people.toLocaleString('en-US')} ${people === 1 ? 'person' : 'people'} in the last 30 days`}
         </Link>
       )}
       <div className="absolute bottom-4 flex w-full justify-between space-x-4 px-4">

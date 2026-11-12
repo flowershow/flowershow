@@ -13,7 +13,7 @@ import {
 import { generatePatToken, hashToken } from '@/lib/cli-auth';
 import { listConnectedApps, revokeUserGrant } from '@/lib/oauth/grants';
 import { TRPCError } from '@trpc/server';
-import type { Plan } from '@prisma/client';
+import type { Plan, PrivacyMode } from '@prisma/client';
 import { isSiteOwner } from '@/lib/site-authz';
 
 export type DashboardSite = {
@@ -25,6 +25,7 @@ export type DashboardSite = {
   role: 'owner' | 'editor';
   lapsed: boolean;
   ownerUsername: string;
+  privacyMode: PrivacyMode;
 };
 
 export const userRouter = createTRPCRouter({
@@ -81,6 +82,7 @@ export const userRouter = createTRPCRouter({
           subdomain: true,
           customDomain: true,
           plan: true,
+          privacyMode: true,
           userId: true,
           user: { select: { username: true } },
         },
@@ -97,6 +99,7 @@ export const userRouter = createTRPCRouter({
           role: owned ? 'owner' : 'editor',
           lapsed: !owned && row.plan !== 'PREMIUM',
           ownerUsername: row.user.username,
+          privacyMode: row.privacyMode,
         };
       });
       // Owned first, then shared; each group by name.

@@ -7,16 +7,22 @@ interface SiteTabsProps {
   siteId: string;
   /** Open annotations, shown as a count on the Annotations tab. */
   openAnnotations?: number;
+  /** Show the Analytics tab (only when analytics is available). */
+  showAnalytics?: boolean;
 }
 
 export default function SiteTabs({
   siteId,
   openAnnotations = 0,
+  showAnalytics = false,
 }: SiteTabsProps) {
   const pathname = usePathname();
   const base = `/site/${siteId}`;
   const tabs = [
     { href: `${base}/settings`, label: 'Settings' },
+    ...(showAnalytics
+      ? [{ href: `${base}/analytics`, label: 'Analytics' }]
+      : []),
     { href: `${base}/history`, label: 'History' },
     {
       href: `${base}/annotations`,
