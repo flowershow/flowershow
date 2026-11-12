@@ -53,7 +53,11 @@ vi.mock('@/lib/account-plans', async (orig) => ({
 
 // ── Imports ───────────────────────────────────────────────────────
 
-import { ACCOUNT_PRICE_IDS, accountPlansEnabled } from '@/lib/account-plans';
+import {
+  ACCOUNT_PORTAL_CONFIG_IDS,
+  ACCOUNT_PRICE_IDS,
+  accountPlansEnabled,
+} from '@/lib/account-plans';
 import {
   consolidateSiteSubscriptions,
   getOrCreateStripeCustomer,
@@ -737,5 +741,8 @@ describe('stripe.getAccountBillingPortal', () => {
       .calls[0]![0] as any;
     expect(args.customer).toBe('cus_1');
     expect(args.return_url).toMatch(/\/settings\/billing$/);
+    // The account-plans portal, never the default (which offers Premium).
+    expect(args.configuration).toBe(ACCOUNT_PORTAL_CONFIG_IDS.test);
+    expect(args.configuration).toMatch(/^bpc_/);
   });
 });

@@ -9,6 +9,7 @@ import {
 } from '@/lib/account-billing';
 import {
   ACCOUNT_PLAN_SITE_ALLOWANCE,
+  ACCOUNT_PORTAL_CONFIG_IDS,
   accountPlansEnabled,
   accountPriceId,
   type BillingInterval,
@@ -16,6 +17,7 @@ import {
   isLiveSiteStatus,
   isManualSite,
   premiumPriceIds,
+  stripeMode,
 } from '@/lib/account-plans';
 import { log, SeverityNumber } from '@/lib/otel-logger';
 import { reconcileUserSitePlans } from '@/lib/site-plans';
@@ -505,9 +507,11 @@ export const stripeRouter = createTRPCRouter({
         message: 'No billing account found',
       });
     }
+    const configuration = ACCOUNT_PORTAL_CONFIG_IDS[stripeMode()];
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
       return_url: `${cloudBase}/settings/billing`,
+      ...(configuration && { configuration }),
     });
     return { url: portalSession.url };
   }),

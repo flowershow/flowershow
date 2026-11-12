@@ -17,8 +17,9 @@ export const ACCOUNT_PLAN_SITE_ALLOWANCE: Readonly<
 
 export type BillingInterval = 'month' | 'year';
 
-// Price ids are code constants (not env vars, not amounts). All null until the
-// Stripe products exist; phase 3 fills them in a commit.
+// Price ids are code constants (not env vars, not amounts). Test ids come from
+// the setup script in flowershow/product (scripts/stripe-account-plans-setup.mjs);
+// live stays null until the live products exist.
 export const ACCOUNT_PRICE_IDS: Readonly<
   Record<
     'test' | 'live',
@@ -26,13 +27,28 @@ export const ACCOUNT_PRICE_IDS: Readonly<
   >
 > = {
   test: {
-    PRO: { month: null, year: null },
-    UNLIMITED: { month: null, year: null },
+    PRO: {
+      month: 'price_1Ub07FFoOGQY9BQ4RThA2KQl',
+      year: 'price_1Ub07GFoOGQY9BQ4fWecf1AL',
+    },
+    UNLIMITED: {
+      month: 'price_1Ub07JFoOGQY9BQ4NetfNMkJ',
+      year: 'price_1Ub07KFoOGQY9BQ4a1Vb46i4',
+    },
   },
   live: {
     PRO: { month: null, year: null },
     UNLIMITED: { month: null, year: null },
   },
+};
+
+// A portal of its own, so account customers can switch only between account
+// plans (never to per-site Premium). Null falls back to the default portal.
+export const ACCOUNT_PORTAL_CONFIG_IDS: Readonly<
+  Record<'test' | 'live', string | null>
+> = {
+  test: 'bpc_1Ub07MFoOGQY9BQ4HQe2n0fk',
+  live: null,
 };
 
 export function stripeMode(): 'test' | 'live' {
