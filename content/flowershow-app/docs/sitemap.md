@@ -96,6 +96,6 @@ An index of all documentation pages. Fetch this file to discover available docs 
 
 - [Publishing HTML](/docs/agents/html) — How to publish HTML pages and sites with Flowershow, standalone or inside Markdown pages. Written for AI agents and the people using them.
 - [Markdown access](/docs/agents/markdown-access) — Every Markdown page on a Flowershow site is also served as raw markdown. Append .md to its URL to get clean, agent-readable content.
-- [Publish from Claude and ChatGPT](/docs/agents/mcp) — Add Flowershow as a connector in Claude or ChatGPT, sign in, and ask it to publish what you've made to your account. Or try it without an account and get a live link.
+- [Publish from Claude and ChatGPT](/docs/agents/mcp) — Add Flowershow as a connector in Claude or ChatGPT and ask it to publish what you've made. Try it without an account, and sign in when you want to keep your sites.
 - [Skills](/docs/agents/skills) — Install the Flowershow skill so your AI assistant can publish and manage Flowershow sites — via the fl CLI, a GitHub repository, or the Obsidian plugin.
 - [Supported agents](/docs/agents/supported-agents) — Which AI agents can use the Flowershow skill, how to install it in each (one file, no Node.js needed), and what each agent can do.
