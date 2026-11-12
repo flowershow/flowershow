@@ -121,6 +121,7 @@ function buildConfigShape(mode: Mode) {
     contentInclude: z.array(z.string()),
     contentExclude: z.array(z.string()),
     contentHide: z.array(z.string()),
+    layout: enumOrString(['docs', 'reading']),
     showSidebar: z.boolean(),
     sidebar: sidebarSchema,
     showToc: z.boolean(),

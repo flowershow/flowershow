@@ -131,6 +131,19 @@ describe('validateConfigPatch — rejects bad shapes', () => {
     expect(() => validateConfigPatch({ syntaxMode: 'xml' })).toThrow();
   });
 
+  it('accepts known layouts and rejects unknown ones on the write path', () => {
+    expect(() => validateConfigPatch({ layout: 'docs' })).not.toThrow();
+    expect(() => validateConfigPatch({ layout: 'reading' })).not.toThrow();
+    expect(() => validateConfigPatch({ layout: 'journal' })).toThrow();
+  });
+
+  it('keeps an unknown layout on the read path', () => {
+    expect(sanitizeSiteConfig({ layout: 'journal' })).toEqual({
+      layout: 'journal',
+    });
+    expect(sanitizeSiteConfig({ layout: 'wide' })).toEqual({ layout: 'wide' });
+  });
+
   it('rejects a flat list of links in footer.navigation', () => {
     // The exact shape that 500'd portais-cyan-quoisee.flowershow.me.
     expect(() =>
