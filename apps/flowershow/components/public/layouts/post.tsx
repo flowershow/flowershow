@@ -257,13 +257,16 @@ export function PostLayout({
 export function PostNav({
   previous,
   next,
+  label = 'Previous and next posts',
 }: {
   previous: Pick<ListingItem, 'url' | 'title'> | null;
   next: Pick<ListingItem, 'url' | 'title'> | null;
+  /** The nav's accessible name */
+  label?: string;
 }) {
   if (!previous && !next) return null;
   return (
-    <nav className="post-nav" aria-label="Previous and next posts">
+    <nav className="post-nav" aria-label={label}>
       {previous ? (
         <Link
           className="post-nav-link post-nav-link--prev"

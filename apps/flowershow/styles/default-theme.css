@@ -1682,13 +1682,16 @@
   }
 
   .toc-rail[data-side="left"] {
+    /* The menu button sits above the left rail, so both stop 3rem sooner */
     .toc-rail-ticks {
       align-items: flex-start;
+      max-height: calc(100vh - var(--navbar-height) - 7rem);
     }
 
     .toc-rail-outline {
       right: auto;
       left: 100%;
+      max-height: calc(100vh - var(--navbar-height) - 7rem);
     }
   }
 

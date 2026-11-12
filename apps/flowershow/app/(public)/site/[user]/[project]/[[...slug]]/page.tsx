@@ -19,9 +19,13 @@ import Hero from '@/components/public/hero';
 import { PageActions } from '@/components/public/page-actions';
 import { PageChromeMarker } from '@/components/public/page-chrome-marker';
 import { BlogLayout } from '@/components/public/layouts/blog';
-import { PostLayout } from '@/components/public/layouts/post';
+import { PostLayout, PostNav } from '@/components/public/layouts/post';
 import { PostFooterSection } from '@/components/public/layouts/post-footer';
-import { SidebarDesktop, SidebarMobileNav } from '@/components/public/sidebar';
+import {
+  SidebarDesktop,
+  SidebarMobileNav,
+  SiteContentsMenu,
+} from '@/components/public/sidebar';
 import TableOfContents from '@/components/public/table-of-contents';
 import TocInline from '@/components/public/toc-inline';
 import TocRail from '@/components/public/toc-rail';
@@ -103,7 +107,9 @@ import { resolveConfigRedirect } from '@/lib/config-redirect';
 import { buildPageTitle, resolveSiteName } from '@/lib/site-config';
 import { ensureLeadingSlash, frontmatterText } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
-import { resolveTocStyle, type TocStyle } from '@/lib/toc-style';
+import { resolveTocStyle, styleOf } from '@/lib/toc-style';
+import { pageLayout, resolveLayout } from '@/lib/layout';
+import { adjacentPages } from '@/lib/page-sequence';
 import { api } from '@/trpc/server';
 import BacklinksPanel from './_components/backlinks-panel';
 import GraphMiniPanel from './_components/graph-view';
@@ -796,7 +802,7 @@ export default async function SitePage(props: {
         pagePath.startsWith(path.endsWith('/') ? path : path + '/'),
     );
   })();
-  const showSidebar = (() => {
+  const sidebarEnabled = (() => {
     const enabled = metadata?.showSidebar ?? siteConfig?.showSidebar;
     if (!enabled) return false;
     const paths = siteConfig?.sidebar?.paths;
@@ -815,22 +821,32 @@ export default async function SitePage(props: {
     !isChangelogTimeline &&
     !emptyListingToc &&
     (metadata?.showToc ?? siteConfig?.showToc);
-  const showKnowledgeGraph =
-    metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false;
-  const tocStyle = resolveTocStyle(metadata?.toc, siteConfig?.toc);
+  // Where the sidebar, contents and graph go (docs/plans/2026-11-09-site-layouts-design.md).
   // Decided on the server: a rail with too few headings would be empty, so
   // there's no rail column at all then (nothing jumps once headings are read)
-  const useRail =
-    !!showToc &&
-    tocStyle === 'rail' &&
-    countTocHeadings(pageContent ?? '') >= 3;
-  // With the graph on, the rail sits under it in the usual 240px column
-  const railColumn = useRail && !showKnowledgeGraph;
-  // The inline block shows below the right column's breakpoint
-  const inlineStyle: TocStyle = railColumn ? 'rail' : 'panel';
-  const showPanel = !!showToc && tocStyle === 'panel';
-  // A rail style without enough headings gets no ToC column (nor a panel)
-  const showRightColumn = showPanel || useRail || showKnowledgeGraph;
+  const layout = pageLayout(metadata?.layout, siteConfig?.layout);
+  const resolved = resolveLayout({
+    layout,
+    sidebarEnabled,
+    pageShowsSidebar: metadata?.showSidebar,
+    showToc: !!showToc,
+    tocStyle: resolveTocStyle(metadata?.toc, siteConfig?.toc),
+    pageTocStyle: styleOf(metadata?.toc),
+    tocHeadings: countTocHeadings(pageContent ?? ''),
+    showGraph:
+      metadata?.showKnowledgeGraph ?? siteConfig?.showKnowledgeGraph ?? false,
+    pageShowsGraph: metadata?.showKnowledgeGraph,
+  });
+  // The page has site contents: a sidebar column, or the page menu's drawer
+  const showSidebar = resolved.sidebar !== 'none';
+  const sidebarColumn = resolved.sidebar === 'column';
+  const showRightColumn = resolved.toc !== 'none' || resolved.showGraph;
+  // Reading without a sidebar column: menu button and left rail, text centred
+  const readingGrid = layout === 'reading' && !sidebarColumn;
+  // Previous and next pages stand in for the sidebar on plain pages
+  // (posts, changelogs and listings have their own navigation)
+  const showPageNav =
+    resolved.pageNav && !changelog && !isPost && !pageLevelRoute;
   const heroConfig = resolveHeroConfig(
     metadata && {
       ...metadata,
@@ -946,15 +962,34 @@ export default async function SitePage(props: {
       <div
         className={clsx(
           'layout-inner',
-          showSidebar && showRightColumn && 'has-sidebar-and-toc',
-          !showSidebar && showRightColumn && 'has-toc',
-          showSidebar && !showRightColumn && 'has-sidebar',
-          railColumn && 'is-toc-rail',
+          readingGrid
+            ? ['layout-reading', showRightColumn && 'has-right-panel']
+            : [
+                sidebarColumn && showRightColumn && 'has-sidebar-and-toc',
+                !sidebarColumn && showRightColumn && 'has-toc',
+                sidebarColumn && !showRightColumn && 'has-sidebar',
+                resolved.railColumn && 'is-toc-rail',
+              ],
         )}
       >
-        {showSidebar && (
+        {sidebarColumn && (
           <div className="layout-inner-left">
             <SidebarDesktop items={sidebarItems} />
+          </div>
+        )}
+        {/* Always present under reading: the centre is the grid's second column */}
+        {readingGrid && (
+          <div className="layout-inner-left">
+            <div className="reading-rail">
+              {resolved.sidebar === 'drawer' && (
+                <SiteContentsMenu items={sidebarItems} />
+              )}
+              {resolved.toc === 'rail-left' && (
+                <aside className="page-toc-container is-rail is-left">
+                  <TocRail side="left" />
+                </aside>
+              )}
+            </div>
           </div>
         )}
 
@@ -1055,7 +1090,7 @@ export default async function SitePage(props: {
                   )
                 }
               >
-                {showToc && <TocInline tocStyle={inlineStyle} />}
+                {showToc && <TocInline tocStyle={resolved.inlineTocStyle} />}
                 <div className="rendered-mdx" id="mdxpage">
                   {compiledContent}
                 </div>
@@ -1074,7 +1109,7 @@ export default async function SitePage(props: {
               </ListingPage>
             ) : (
               <BlogLayout {...pageHeaderProps} actions={pageActions}>
-                {showToc && <TocInline tocStyle={inlineStyle} />}
+                {showToc && <TocInline tocStyle={resolved.inlineTocStyle} />}
                 <div className="rendered-mdx" id="mdxpage">
                   {compiledContent}
                 </div>
@@ -1082,6 +1117,13 @@ export default async function SitePage(props: {
               </BlogLayout>
             )}
           </main>
+
+          {showPageNav && (
+            <PostNav
+              {...adjacentPages(sidebarItems, blob.path)}
+              label="Previous and next pages"
+            />
+          )}
 
           {(showEditLink || showRawLink) && (
             <div className="page-edit-button-container">
@@ -1127,15 +1169,15 @@ export default async function SitePage(props: {
 
         {showRightColumn && (
           <div className="layout-inner-right">
-            {showKnowledgeGraph && (
+            {resolved.showGraph && (
               <GraphMiniPanel siteId={site.id} currentBlobId={blob.id} />
             )}
-            {useRail && (
+            {resolved.toc === 'rail-right' && (
               <aside className="page-toc-container is-rail">
                 <TocRail />
               </aside>
             )}
-            {showPanel && (
+            {resolved.toc === 'panel' && (
               <aside className="page-toc-container">
                 <TableOfContents />
               </aside>

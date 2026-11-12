@@ -18,17 +18,21 @@ function SidebarDrawer({
   open,
   onClose,
   className,
+  label,
 }: {
   items: Node[];
   open: boolean;
   onClose: () => void;
   className?: string;
+  /** The dialog's accessible name */
+  label?: string;
 }) {
   return (
     <Dialog
       open={open}
       onClose={onClose}
       className={clsx('sidebar-drawer', className)}
+      aria-label={label}
     >
       <DialogBackdrop className="sidebar-drawer-backdrop" />
       <DialogPanel className="sidebar-drawer-panel">
@@ -74,6 +78,7 @@ export function SiteContentsMenu({ items }: { items: Node[] }) {
         className="site-contents-menu-button"
         onClick={() => setDrawerOpen(true)}
         aria-label="Site contents"
+        aria-haspopup="dialog"
       >
         <MenuIcon className="site-contents-menu-icon" aria-hidden="true" />
       </button>
@@ -83,6 +88,7 @@ export function SiteContentsMenu({ items }: { items: Node[] }) {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         className="is-page-menu"
+        label="Site contents"
       />
     </>
   );
