@@ -67,28 +67,34 @@ export function createHttpUmamiClient(opts: {
     tag: w.tag,
   });
 
+  // Umami returns some counts as strings (bigint columns, e.g. pageviews
+  // in /metrics/expanded), so coerce every count.
+  type Count = number | string;
+
   return {
     async stats(w) {
-      const r = await get<{ pageviews: number; visitors: number }>(
+      const r = await get<{ pageviews: Count; visitors: Count }>(
         '/stats',
         win(w),
       );
-      return { pageviews: r.pageviews, visitors: r.visitors };
+      return { pageviews: Number(r.pageviews), visitors: Number(r.visitors) };
     },
 
     async pageviewsByDay(w) {
-      const r = await get<{ pageviews: Array<{ x: string; y: number }> }>(
+      const r = await get<{ pageviews: Array<{ x: string; y: Count }> }>(
         '/pageviews',
         { ...win(w), unit: 'day', timezone: 'UTC' },
       );
       return r.pageviews.map((p) => ({
         date: p.x.slice(0, 10),
-        pageviews: p.y,
+        pageviews: Number(p.y),
       }));
     },
 
     async metrics(w) {
-      const rows = await get<UmamiRow[]>('/metrics/expanded', {
+      const rows = await get<
+        Array<{ name: string; pageviews: Count; visitors: Count }>
+      >('/metrics/expanded', {
         ...win(w),
         type: w.type,
         limit: w.limit,
@@ -96,8 +102,8 @@ export function createHttpUmamiClient(opts: {
       });
       return rows.map(({ name, pageviews, visitors }) => ({
         name,
-        pageviews,
-        visitors,
+        pageviews: Number(pageviews),
+        visitors: Number(visitors),
       }));
     },
   };
