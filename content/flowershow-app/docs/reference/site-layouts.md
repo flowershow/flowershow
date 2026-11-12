@@ -1,6 +1,6 @@
 ---
 title: Site layouts
-description: Choose what sits beside your text. Keep the site contents beside the page for docs, or set "layout": "reading" for a centred column with the page contents on the left, for essays, papers and courses.
+description: 'Choose what sits beside your text. Keep the site contents beside the page for docs, or set "layout": "reading" for a centred column with the page contents on the left, for essays, papers and courses.'
 ---
 
 > [!tip] Using an AI assistant?
@@ -77,6 +77,8 @@ showSidebar: true
 ---
 ```
 
+With `showSidebar: true` the page contents show as a rail on the right; add `toc: { style: panel }` for the panel.
+
 ### A blog or magazine
 
 A layout for blogs and magazines is coming later. Posts already get a reading column of their own, with previous and next links; see [[post-pages|Post pages]].
@@ -134,7 +136,7 @@ The site-wide `toc.style` and `showKnowledgeGraph` settings do not apply under `
 
 ## The dashboard's Show Sidebar setting
 
-**Settings → Content → Show Sidebar** still decides whether readers get the site contents at all. Off removes them everywhere, under both layouts. On means permanent under `docs` and in the drawer under `reading`. See [[sidebar|Sidebar configuration]].
+**Settings → Content → Show Sidebar** still decides whether readers get the site contents at all. Off removes them on every page that doesn't set `showSidebar: true`, under both layouts. On means permanent under `docs` and in the drawer under `reading`. See [[sidebar|Sidebar configuration]].
 
 ## Troubleshooting
 
