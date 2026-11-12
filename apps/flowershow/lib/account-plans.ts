@@ -7,8 +7,19 @@ import type {
 import { env } from '@/env.mjs';
 
 // Account plans stay dark until phase 3 (`flowershow-a7k`) flips this in code
-// and fills in ACCOUNT_PRICE_IDS below.
-export const ACCOUNT_PLANS_LIVE = false;
+// and fills in the live ACCOUNT_PRICE_IDS below. Local `next dev` turns them
+// on so they can be tried (scripts/test-env); Vercel sets VERCEL=1 on every
+// build and runtime, so no deployment can.
+export function accountPlansLiveIn(runtime: {
+  nodeEnv?: string;
+  vercel?: string;
+}): boolean {
+  return runtime.nodeEnv === 'development' && !runtime.vercel;
+}
+export const ACCOUNT_PLANS_LIVE = accountPlansLiveIn({
+  nodeEnv: process.env.NODE_ENV,
+  vercel: process.env.VERCEL,
+});
 
 // Sites an account plan covers; null = unlimited.
 export const ACCOUNT_PLAN_SITE_ALLOWANCE: Readonly<
