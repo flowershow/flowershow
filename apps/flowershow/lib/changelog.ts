@@ -1,4 +1,5 @@
 import { isDraft, normalizeAuthors } from '@flowershow/core';
+import { isSiteLayout } from '@/lib/layout';
 import { displayDescription } from '@/lib/page-description';
 import { ensureLeadingSlash, safeDate } from '@/lib/utils';
 import type { PageMetadata } from '@/server/api/types';
@@ -105,7 +106,7 @@ export function isChangelogDir(
 ): boolean {
   const layout = folderIndexMetadata?.layout;
   if (layout === 'changelog') return true;
-  if (layout) return false;
+  if (layout && !isSiteLayout(layout)) return false;
   return isChangelogDirName(dir);
 }
 

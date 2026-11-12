@@ -147,6 +147,18 @@ describe('single-file changelogs', () => {
       }),
     ).toEqual({ kind: 'file', dir: '' });
   });
+  it('docs and reading layouts keep CHANGELOG.md a changelog file', async () => {
+    for (const layout of ['docs', 'reading']) {
+      expect(
+        await resolveChangelogContext({
+          slug: '/CHANGELOG',
+          blob: { path: 'CHANGELOG.md', metadata: { layout } },
+          siteFilePaths: [],
+          getFolderIndexMetadata: none,
+        }),
+      ).toEqual({ kind: 'file', dir: '' });
+    }
+  });
   it('another explicit layout opts CHANGELOG.md out', async () => {
     expect(
       await resolveChangelogContext({

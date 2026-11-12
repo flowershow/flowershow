@@ -130,6 +130,10 @@ describe('mayBePost', () => {
     expect(mayBePost({ layout: 'page' })).toBe(false);
     expect(mayBePost({ layout: 'list' })).toBe(false);
   });
+  it('docs and reading only change page structure, so they still may be posts', () => {
+    expect(mayBePost({ layout: 'docs' })).toBe(true);
+    expect(mayBePost({ layout: 'reading' })).toBe(true);
+  });
 });
 
 describe('hasPostDate', () => {
@@ -209,6 +213,41 @@ describe('resolvePostRoute: configured subfolders stop the walk up', () => {
   });
   it('any other configured index (layout: plain) inside blog/ stops it too', () => {
     expect(route('blog/plain/x.md')).toEqual({ kind: 'none' });
+  });
+});
+
+describe('resolvePostRoute: docs and reading layouts', () => {
+  it('a dated page with layout: reading in a zero-config blog is still a post', () => {
+    expect(
+      route('blog/2026-01-01-x.md', { layout: 'reading', date: '2026-01-01' }),
+    ).toMatchObject({ kind: 'post', collection: { dir: 'blog' } });
+  });
+  it('a folder host with layout: reading or docs does not stop the walk', () => {
+    const f = postFiles(['/blog/sub/README.md', '/blog/sub/2026-01-01-x.md']);
+    for (const layout of ['reading', 'docs']) {
+      expect(
+        resolvePostRoute({
+          pagePath: 'blog/sub/2026-01-01-x.md',
+          metadata: dated,
+          files: f,
+          hosts: { 'blog/sub/README.md': { layout } },
+        }),
+      ).toMatchObject({ kind: 'post', collection: { dir: 'blog' } });
+    }
+  });
+  it('a blog index with layout: reading is still the blog collection host', () => {
+    const f = postFiles(['/blog/README.md', '/blog/a.md']);
+    expect(
+      resolvePostRoute({
+        pagePath: 'blog/a.md',
+        metadata: dated,
+        files: f,
+        hosts: { 'blog/README.md': { layout: 'reading' } },
+      }),
+    ).toMatchObject({
+      kind: 'post',
+      collection: { dir: 'blog', source: 'auto' },
+    });
   });
 });
 

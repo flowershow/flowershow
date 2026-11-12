@@ -66,6 +66,11 @@ describe('detection', () => {
   it('layout: changelog opts any folder in', () => {
     expect(isChangelogDir('releases', { layout: 'changelog' })).toBe(true);
   });
+  it('docs and reading layouts do not opt a changelog folder out', () => {
+    expect(isChangelogDir('changelog', { layout: 'docs' })).toBe(true);
+    expect(isChangelogDir('changelog', { layout: 'reading' })).toBe(true);
+    expect(isChangelogDir('releases', { layout: 'docs' })).toBe(false);
+  });
   it('any other explicit layout opts a changelog folder out', () => {
     expect(isChangelogDir('changelog', { layout: 'default' })).toBe(false);
     expect(isChangelogDir('changelog', { layout: 'plain' })).toBe(false);

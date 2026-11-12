@@ -20,6 +20,7 @@ import { encodeSlug, filePathToSlug } from '@flowershow/core';
 import { type Breadcrumb, findBreadcrumbs } from '@/lib/breadcrumbs';
 import { isDir, type Node } from '@/lib/build-site-tree';
 import { dirOf, entryDateFromPath, isFolderIndexPath } from '@/lib/changelog';
+import { isSiteLayout } from '@/lib/layout';
 import { resolveFolderCase } from '@/lib/listing/items';
 import { isAutoListingDirName } from '@/lib/listing/route';
 import { parseListingSpec } from '@/lib/listing/spec';
@@ -56,9 +57,13 @@ const POST_LAYOUTS = new Set(['post', 'blog']);
 /** Dates that make a page in a zero-config blog folder a post (not `created`, which tools stamp on every note). */
 const POST_DATE_KEYS = ['date', 'publishDate', 'pubDate', 'published'];
 
-/** A layout other than `post` (or the legacy `blog`) keeps the page as it is (cheap pre-check, no queries). */
+/** The `layout` that changes how a page is treated: `docs` and `reading` only shape the page, so they count as none. */
+const ownLayout = (m: Meta) =>
+  isSiteLayout(m?.layout) ? undefined : m?.layout;
+
+/** A layout other than `post` (or the legacy `blog`) keeps the page as it is (cheap pre-check, no queries). `docs` and `reading` don't. */
 export function mayBePost(metadata: Meta): boolean {
-  const layout = metadata?.layout;
+  const layout = ownLayout(metadata);
   return layout == null || layout === '' || isPostLayout(layout);
 }
 const isPostLayout = (layout: unknown) =>
@@ -115,7 +120,7 @@ export function postHostPaths(pagePath: string, files: PostFiles): string[] {
 
 /** Does a folder's host configure it (so the walk stops here, one way or the other)? */
 const configures = (m: Meta) =>
-  isSet(m?.layout) || isSet(m?.list) || isSet(m?.postLayout);
+  isSet(ownLayout(m)) || isSet(m?.list) || isSet(m?.postLayout);
 
 /** An explicit `sort: date…` (or `sortBy: date`) in a `list:` map. */
 function sortsByDateExplicitly(options: unknown): boolean {
@@ -235,7 +240,7 @@ function walk(
       if (
         meta?.list === false ||
         meta?.list === 'false' ||
-        (isSet(meta?.layout) && meta?.layout !== 'list')
+        (isSet(ownLayout(meta)) && meta?.layout !== 'list')
       )
         return null;
       return { dir, options: meta?.list, source: 'auto', hostPath: primary };

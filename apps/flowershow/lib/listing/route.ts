@@ -4,6 +4,7 @@ import type { Code, Heading, Html, Root, Text } from 'mdast';
 import remarkParse from 'remark-parse';
 import { unified } from 'unified';
 import { visit } from 'unist-util-visit';
+import { isSiteLayout } from '@/lib/layout';
 import remarkObsidianComments from '@/lib/remark-obsidian-comments';
 import {
   dirOf,
@@ -244,7 +245,7 @@ export function autoListingFor({
   if (dir === null || !isAutoListingDirName(dir)) return null;
   // A folder of attachments only would render the "no folder with pages" card on a published page
   if (!folderHasPages(dir, siteFilePaths)) return null;
-  if (metadata?.layout) return null;
+  if (metadata?.layout && !isSiteLayout(metadata.layout)) return null;
   if (metadata?.list === false || metadata?.list === 'false') return null;
   if (hasExplicitListing(content, { mdx: rendersAsMdx(path, renderMode) }))
     return null;
