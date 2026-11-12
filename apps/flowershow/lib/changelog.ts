@@ -99,7 +99,7 @@ export function isChangelogDirName(dir: string): boolean {
   return last.toLowerCase() === CHANGELOG_DIR_NAME;
 }
 
-/** Folder README/index `layout` wins: `changelog` opts in, anything else opts out. */
+/** Folder README/index `layout` wins: `changelog` opts in, anything else except `docs` or `reading` opts out. */
 export function isChangelogDir(
   dir: string,
   folderIndexMetadata?: { layout?: string } | null,

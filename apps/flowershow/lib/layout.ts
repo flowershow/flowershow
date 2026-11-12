@@ -34,7 +34,7 @@ export type ResolvedLayout = {
   sidebar: 'column' | 'drawer' | 'none';
   toc: 'none' | 'panel' | 'rail-right' | 'rail-left';
   showGraph: boolean;
-  /** The menu button that opens the drawer */
+  /** Previous/next page links show (site contents live in the drawer) */
   pageNav: boolean;
   /** The rail has its own column (not tucked under the graph) */
   railColumn: boolean;

@@ -122,7 +122,7 @@ describe('postHostPaths', () => {
 });
 
 describe('mayBePost', () => {
-  it('is false only for pages with a layout other than post (or blog)', () => {
+  it('is false only for pages with a layout other than post, blog, docs or reading', () => {
     expect(mayBePost({})).toBe(true);
     expect(mayBePost(null)).toBe(true);
     expect(mayBePost({ layout: 'post' })).toBe(true);

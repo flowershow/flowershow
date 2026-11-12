@@ -10,7 +10,7 @@
  *   dated); any other `layout: list` folder (a catalogue, a team) stops the walk;
  * - a zero-config `blog`/`posts` folder, whose pages are posts only when they
  *   have a date;
- * - `postLayout: false` (or `list: false`, or another `layout`) on a folder's
+ * - `postLayout: false` (or `list: false`, or another `layout`, not `docs` or `reading`) on a folder's
  *   index stops the walk: its pages are never posts.
  *
  * Pure: the route reads the host pages' frontmatter (postHostPaths) and the

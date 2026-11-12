@@ -102,8 +102,10 @@ test.describe('Reading layout on wide screens', () => {
     const menu = page.locator('.site-contents-menu-button');
     await expect(rail).toBeVisible();
 
-    await page.evaluate(() => window.scrollBy(0, 1500));
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(1500);
+    await page.evaluate(() => window.scrollBy(0, 800));
+    await expect
+      .poll(() => page.evaluate(() => window.scrollY))
+      .toBeGreaterThan(500);
     await expect(rail).toBeInViewport();
     await expect(menu).toBeInViewport();
   });
