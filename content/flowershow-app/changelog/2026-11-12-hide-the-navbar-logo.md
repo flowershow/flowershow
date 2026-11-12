@@ -11,6 +11,6 @@ You can now show no logo at all in your navbar, not even the Flowershow logo tha
 
 **Fixes**
 
-- Logos uploaded in the dashboard keep their shape. They used to be cropped to a thin strip and stretched into a square, so they looked zoomed in.
-- Replacing a logo, favicon or social image in the dashboard shows the new image right away. The old one used to keep showing for up to an hour.
-- Adding a custom domain no longer takes your site offline while you set up DNS. Your site stays on its Flowershow address until the domain works, then redirects to it.
+- Logos uploaded in the dashboard keep their shape. They used to be cropped to a thin strip and stretched into a square, so they looked zoomed in. If you uploaded your logo before today, upload it again.
+- Replacing a logo, favicon or social image in the dashboard shows the new image right away, instead of the old one for a while.
+- Adding a custom domain no longer sends visitors of a public site to it before the domain works. Your pages stay reachable on the Flowershow address until your DNS is set up, then redirect to your domain.

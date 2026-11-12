@@ -13,11 +13,17 @@ const isDomainServed = unstable_cache(
       getDomainResponse(domain),
       getConfigResponse(domain),
     ]);
-    return (
-      !domainJson.error &&
-      domainJson.verified === true &&
-      configJson.misconfigured === false
-    );
+    const configError = 'error' in configJson ? configJson.error : undefined;
+    if (domainJson.error || configError) {
+      // Serving the subdomain is the safe outcome, but log it: an expired
+      // token or rate limit would otherwise silently stop every redirect.
+      console.warn(
+        `[custom-domain] Vercel domain check failed for ${domain}`,
+        domainJson.error ?? configError,
+      );
+      return false;
+    }
+    return domainJson.verified === true && configJson.misconfigured === false;
   },
   ['custom-domain-served'],
   { revalidate: 300 },
