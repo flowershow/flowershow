@@ -1,6 +1,6 @@
 # Site layouts: design
 
-Status: draft, 2026-11-09. Rufus has approved the approach (named layouts built on the left rail, no slots). Nothing gets built until the open questions below are settled. Bead: flowershow-otm.
+Status: approved, 2026-11-12. Rufus approved the approach and left the open questions to the agent's judgement ("go with your judgement, and we'll see"). Bead: flowershow-otm.
 
 **TL;DR:** add one setting, `layout`, with two values: `docs` (today) and `reading` (no site contents beside the text, page rail on the left). A page can override it in frontmatter. Themes keep doing the look.
 
@@ -47,6 +47,19 @@ LessWrong shows site contents on its home page and hides them on posts. This nee
 
 Limits that stay as they are today: a `layout: plain` home page has no site contents, a listing with no `README` page has no sidebar, and `sidebar.paths` still decides where site contents appear. The course limits its sidebar to `/course`, so its `/` page has none.
 
+### Documenting it by result
+
+Rufus, 2026-11-12: users want "some result very easily", and an AI wants "a straightforward way to achieve something by default". So the docs start from the experience a site wants, not from the setting. One docs page, "Site layouts", opens with a short list of recipes. Each recipe has a screenshot, one sentence on who it suits, and the exact lines to copy:
+
+| Recipe | Config | Frontmatter |
+|---|---|---|
+| Docs or knowledge base | none (the default) | none |
+| Essays, papers or a course | `"layout": "reading"` | none |
+| Front page with site contents, reading pages behind it (the LessWrong pattern) | `"layout": "reading"` | `layout: docs` on the home or section page |
+| Blog or magazine | Later, under flowershow-9xp | |
+
+The setting reference (the two rules, what a page key overrides) comes after the recipes. The recipes are written so an agent can follow them without the reference. Users don't see a new concept: these are still called layouts, and each recipe names the layout it uses.
+
 ## Behaviour
 
 **The two rules.**
@@ -88,7 +101,7 @@ Limits that stay as they are today: a `layout: plain` home page has no site cont
 
 **Dashboard toggles.** "Show sidebar" off still removes site contents everywhere. On means "permanent under `docs`, in the drawer under `reading`". The dashboard needs a layout picker, or at least a note.
 
-**Moving to the next page.** `reading` takes away the sidebar, which is how a reader reaches the next chapter. Posts already have previous and next links. Other pages don't. See the first open question.
+**Moving to the next page.** `reading` takes away the sidebar, which is how a reader reaches the next chapter. Posts already have previous and next links. Other pages don't, so `reading` adds them (decision 1).
 
 ## Risk to existing sites
 
@@ -104,7 +117,8 @@ Not a plan yet; the plan follows approval.
 - Site schema gets `layout` through `enumOrString`, so an unknown value means `docs`.
 - `page.tsx` uses `resolveLayout()` in place of the current sidebar and contents logic.
 - CSS: a `layout-reading` grid (`3rem minmax(0, 1fr) 3rem`) with a sticky rail, so nothing is positioned by script. Theme class reference regenerated.
-- Docs page, changelog, e2e fixtures for each layout and the rule cases.
+- Previous and next links from the site tree, on pages whose site contents are in the drawer.
+- Docs page led by recipes, changelog, e2e fixtures for each layout and the rule cases.
 
 ## Not in this
 
@@ -114,11 +128,11 @@ Not a plan yet; the plan follows approval.
 - Moving the site contents to the right. No surveyed site does this.
 - Ticks spaced by section length, as LessWrong does. Worth trying on the rail separately.
 
-## Open questions for Rufus
+## Decisions (left to the agent, 2026-11-12)
 
-1. **Add previous and next links to `reading` pages in the first version?** Recommended: yes, using the site tree's order, shown when the sidebar is hidden. Without them a course reader has to open the menu for every chapter.
-2. **Keep site contents behind a menu button under `reading`, or remove them altogether?** Recommended: keep the button. LessWrong does exactly this, it takes almost no space, and without it a reader has no way to browse the site.
-3. **Which layout should the course use?** Recommended: stay on `docs` with the right rail (bead flowershow-6e1.9) now, and try `reading` with `layout: docs` on `/course` once previous and next links exist.
+1. **Previous and next links on `reading` pages: yes, in the first version.** They follow the site tree's order and appear on any page whose site contents are in the drawer. Without them a course reader opens the menu for every chapter.
+2. **Site contents stay behind a menu button under `reading`.** LessWrong does exactly this, it takes almost no space, and without it a reader can't browse the site.
+3. **The course stays on `docs` with the right rail for now** (bead flowershow-6e1.9), and tries `reading` with `layout: docs` on `/course` once the links ship.
 
 ## Evidence
 
