@@ -301,7 +301,11 @@ export function createFlowershowMcpServer(
             }),
           ),
         },
-        annotations: { readOnlyHint: true, openWorldHint: false },
+        annotations: {
+          readOnlyHint: true,
+          destructiveHint: false,
+          openWorldHint: false,
+        },
         _meta: SIGNED_IN_ONLY,
       },
       async () => {
@@ -355,6 +359,7 @@ export function createFlowershowMcpServer(
         annotations: {
           title: 'List the files on a Flowershow site',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: false,
         },
         _meta: SIGNED_IN_ONLY,
@@ -412,6 +417,7 @@ export function createFlowershowMcpServer(
         annotations: {
           title: 'Read a file on a Flowershow site',
           readOnlyHint: true,
+          destructiveHint: false,
           openWorldHint: false,
         },
         _meta: SIGNED_IN_ONLY,
