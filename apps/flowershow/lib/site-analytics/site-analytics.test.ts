@@ -35,8 +35,8 @@ describe('rangeWindow', () => {
       new Date('2026-11-15T12:00:00Z'),
       new Date('2026-01-01T00:00:00Z'),
     );
-    expect(w.chartStart).toBe('2026-11-11');
-    expect(w.countingSince).toBe('2026-11-11');
+    expect(w.chartStart).toBe('2026-11-12');
+    expect(w.countingSince).toBe('2026-11-12');
   });
   it('keeps countingSince fixed for an old site 60 days after launch', () => {
     const later = new Date('2027-01-10T12:00:00Z');
@@ -45,8 +45,8 @@ describe('rangeWindow', () => {
     const w7 = rangeWindow(7, later, created);
     expect(w30.chartStart).toBe('2026-12-12');
     expect(w7.chartStart).toBe('2027-01-04');
-    expect(w30.countingSince).toBe('2026-11-11');
-    expect(w7.countingSince).toBe('2026-11-11');
+    expect(w30.countingSince).toBe('2026-11-12');
+    expect(w7.countingSince).toBe('2026-11-12');
   });
 });
 

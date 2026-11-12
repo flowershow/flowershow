@@ -1,14 +1,11 @@
 ---
 title: See who reads your site
-date: 2026-11-11
+date: 2026-11-12
 description: Every site now has built-in analytics: people, views, top pages and where readers came from, with no setup.
 authors:
   - rufuspollock
-draft: true
 showToc: false
 ---
-
-<!-- Held back until launch. At launch (connect bead flowershow-9bu.11), in one step: remove `draft: true` AND set `date` to the launch day. -->
 
 Every Flowershow site now has built-in analytics, on for every plan with nothing to set up. Open your site in the dashboard and choose the **Analytics** tab.
 

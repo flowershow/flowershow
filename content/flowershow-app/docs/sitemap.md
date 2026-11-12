@@ -39,7 +39,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 
 ## Reference
 
-- [Analytics](/docs/reference/analytics) — Configure analytics for your Flowershow site using Google Analytics 4 or Umami.
+- [Analytics](/docs/reference/analytics) — See how many people read your Flowershow site with built-in analytics, and add Google Analytics 4 or Umami if you want your own.
 - [Annotations](/docs/reference/annotations) — Let colleagues select text on your published pages and leave notes, with no account. Then give the open notes to your AI agent with fl annotations pull.
 - [Apply a theme](/docs/reference/apply-a-theme) — Apply one of Flowershow's themes from the dashboard or config.json, and customize it further.
 - [Backlinks](/docs/reference/backlinks) — Show a list of pages that link to the current page.

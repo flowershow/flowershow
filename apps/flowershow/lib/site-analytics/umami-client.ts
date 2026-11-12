@@ -21,9 +21,10 @@ export interface UmamiClient {
   ): Promise<UmamiRow[]>;
 }
 
-// Self-hosted Umami v3 accepts one of these; the connect bead pins which.
+// Our self-hosted Umami takes the API key as a Bearer token
+// (x-umami-api-key is Umami Cloud only and gets a 401).
 function authHeaders(apiKey: string): Record<string, string> {
-  return { 'x-umami-api-key': apiKey, Authorization: `Bearer ${apiKey}` };
+  return { Authorization: `Bearer ${apiKey}` };
 }
 
 export function createHttpUmamiClient(opts: {
