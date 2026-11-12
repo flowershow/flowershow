@@ -14,6 +14,7 @@ import { env } from '@/env.mjs';
 import {
   ACCOUNT_PLAN_SITE_ALLOWANCE,
   ACCOUNT_PRICE_IDS,
+  accountPlansLiveIn,
   accountPlanForPriceId,
   accountBillingUrl,
   accountPlansEnabled,
@@ -56,8 +57,20 @@ describe('account plans', () => {
     expect(accountPlanForPriceId('price_monthly')).toBeNull();
   });
 
-  it('is disabled while ACCOUNT_PLANS_LIVE is false, even with all ids set', () => {
-    expect(accountPlansEnabled()).toBe(false);
+  it('is disabled while the live flag is false, even with all ids set', () => {
+    expect(accountPlansEnabled(false)).toBe(false);
+  });
+
+  it('is live only under local next dev, never on Vercel or in production', () => {
+    expect(accountPlansLiveIn({ nodeEnv: 'development' })).toBe(true);
+    expect(accountPlansLiveIn({ nodeEnv: 'development', vercel: '1' })).toBe(
+      false,
+    );
+    expect(accountPlansLiveIn({ nodeEnv: 'production' })).toBe(false);
+    expect(accountPlansLiveIn({ nodeEnv: 'production', vercel: '1' })).toBe(
+      false,
+    );
+    expect(accountPlansLiveIn({ nodeEnv: 'test' })).toBe(false);
   });
 
   it('is enabled when live and all four ids are set', () => {
