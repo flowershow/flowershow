@@ -107,6 +107,18 @@ describe('Flowershow MCP server', () => {
       const tool = tools.find((t) => t.name === name);
       expect(tool?.annotations?.readOnlyHint).toBe(true);
     }
+    // OpenAI's plugin directory requires all three hints as explicit booleans.
+    for (const tool of tools) {
+      for (const hint of [
+        'readOnlyHint',
+        'destructiveHint',
+        'openWorldHint',
+      ] as const) {
+        expect(typeof tool.annotations?.[hint], `${tool.name}.${hint}`).toBe(
+          'boolean',
+        );
+      }
+    }
     const publish = tools.find((t) => t.name === 'publish');
     expect(publish?.description).toMatch(/account/);
     expect(publish?.description).not.toMatch(/expires in 7 days/);
