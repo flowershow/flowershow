@@ -1079,6 +1079,40 @@
         grid-template-columns: var(--width-sidebar, 16rem) minmax(0, 1fr) 3rem;
       }
     }
+
+    /* --- Reading layout: no site sidebar; the menu button and the ToC rail
+       sit in a narrow left column from 1024px, balanced by an empty (or
+       panel) column on the right. One column below 1024px, as has-toc. */
+
+    &.layout-reading {
+      grid-template-columns: minmax(0, 1fr);
+      column-gap: 4rem;
+    }
+
+    @media (min-width: 1024px) {
+      &.layout-reading {
+        grid-template-columns: 3rem minmax(0, 1fr) 3rem;
+        column-gap: 4rem;
+        max-width: 80rem;
+      }
+    }
+
+    @media (min-width: 1280px) {
+      /* xl: the page brought back the panel or the graph */
+      &.layout-reading.has-right-panel {
+        grid-template-columns: 3rem minmax(0, 1fr) 240px;
+      }
+    }
+  }
+
+  /* Reading layout: the centre column is not capped; its children are, as on
+     posts, so grid and magazine listings keep their own widths. */
+  :where(.layout-reading .layout-inner-center:not(.listing-layout))
+  > :not(main),
+  :where(.layout-reading .layout-inner-center:not(.listing-layout) > main) > * {
+    width: 100%;
+    max-width: var(--post-max-width, var(--list-max-width, 44rem));
+    margin-inline: auto;
   }
   .layout-inner-left {
     display: none;
@@ -1108,6 +1142,45 @@
     padding-right: 1rem;
     padding-bottom: 2rem;
     font-family: var(--font-heading);
+  }
+
+  /* Reading layout: one sticky box in the left column, the site contents
+     menu button above the ToC rail. */
+  .reading-rail {
+    position: sticky;
+    top: calc(var(--navbar-height) + 2rem);
+    align-self: start;
+    /* The sticky box traps the rail outline's z-index; lift it above page content */
+    z-index: 30;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .site-contents-menu-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.25rem;
+    border-radius: var(--radius);
+    color: var(--color-foreground-500);
+    cursor: pointer;
+    transition: color 150ms;
+
+    &:hover {
+      color: var(--color-foreground-900);
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+  }
+
+  .site-contents-menu-icon {
+    width: 1.25rem;
+    height: 1.25rem;
   }
 
   /* ────────────────────────────────────────────────────
@@ -1190,6 +1263,21 @@
   :root:has(.site-layout.no-nav) .sidebar-drawer-backdrop,
   :root:has(.site-layout.no-nav) .sidebar-drawer-panel {
     top: var(--subnav-height);
+  }
+
+  /* Opened from the page's menu button (reading layout): no subnav above it */
+  .sidebar-drawer.is-page-menu .sidebar-drawer-backdrop,
+  .sidebar-drawer.is-page-menu .sidebar-drawer-panel {
+    top: var(--navbar-height);
+  }
+
+  :root:has(.site-layout.no-nav)
+    .sidebar-drawer.is-page-menu
+    .sidebar-drawer-backdrop,
+  :root:has(.site-layout.no-nav)
+    .sidebar-drawer.is-page-menu
+    .sidebar-drawer-panel {
+    top: 0;
   }
 
   .sidebar-drawer-header {
@@ -1582,6 +1670,25 @@
     li[data-current] > a {
       font-weight: var(--font-weight-medium);
       color: var(--color-accent);
+    }
+  }
+
+  /* Left rail (reading layout): the sticky .reading-rail holds it, so its
+     container is not sticky too; ticks hug the page edge and the outline
+     hangs to the right, over the text. */
+  .page-toc-container.is-rail.is-left {
+    position: static;
+    z-index: auto;
+  }
+
+  .toc-rail[data-side="left"] {
+    .toc-rail-ticks {
+      align-items: flex-start;
+    }
+
+    .toc-rail-outline {
+      right: auto;
+      left: 100%;
     }
   }
 

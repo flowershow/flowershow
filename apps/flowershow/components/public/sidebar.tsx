@@ -1,6 +1,7 @@
 'use client';
 
 import { Dialog, DialogBackdrop, DialogPanel } from '@headlessui/react';
+import clsx from 'clsx';
 import { ChevronRightIcon, MenuIcon } from 'lucide-react';
 import { useState } from 'react';
 import SiteTree from '@/components/public/site-tree';
@@ -9,6 +10,32 @@ import type { Node } from '@/lib/build-site-tree';
 interface SidebarProps {
   items: Node[];
   prefix: string;
+}
+
+/** The site contents drawer, shared by the phone subnav and the page menu button. */
+function SidebarDrawer({
+  items,
+  open,
+  onClose,
+  className,
+}: {
+  items: Node[];
+  open: boolean;
+  onClose: () => void;
+  className?: string;
+}) {
+  return (
+    <Dialog
+      open={open}
+      onClose={onClose}
+      className={clsx('sidebar-drawer', className)}
+    >
+      <DialogBackdrop className="sidebar-drawer-backdrop" />
+      <DialogPanel className="sidebar-drawer-panel">
+        <SiteTree items={items} />
+      </DialogPanel>
+    </Dialog>
+  );
 }
 
 export function SidebarMobileNav({ items }: SidebarProps) {
@@ -27,16 +54,36 @@ export function SidebarMobileNav({ items }: SidebarProps) {
         </button>
       </div>
 
-      <Dialog
+      <SidebarDrawer
+        items={items}
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        className="sidebar-drawer"
+      />
+    </>
+  );
+}
+
+/** Page-owned button that opens the site contents drawer (reading layout). */
+export function SiteContentsMenu({ items }: { items: Node[] }) {
+  const [drawerOpen, setDrawerOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        className="site-contents-menu-button"
+        onClick={() => setDrawerOpen(true)}
+        aria-label="Site contents"
       >
-        <DialogBackdrop className="sidebar-drawer-backdrop" />
-        <DialogPanel className="sidebar-drawer-panel">
-          <SiteTree items={items} />
-        </DialogPanel>
-      </Dialog>
+        <MenuIcon className="site-contents-menu-icon" aria-hidden="true" />
+      </button>
+
+      <SidebarDrawer
+        items={items}
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        className="is-page-menu"
+      />
     </>
   );
 }

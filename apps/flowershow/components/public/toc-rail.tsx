@@ -46,9 +46,12 @@ export function railCurrentId(
 export function TocRailView({
   items,
   currentId,
+  side = 'right',
 }: {
   items: RailItem[];
   currentId: string | null;
+  /** Which side of the text the rail sits on; the outline opens towards the text */
+  side?: 'left' | 'right';
 }) {
   const [open, setOpen] = useState(false);
   const navRef = useRef<HTMLElement>(null);
@@ -127,6 +130,7 @@ export function TocRailView({
       className="toc-rail"
       aria-label="Contents"
       data-open={open ? 'true' : 'false'}
+      data-side={side}
       onPointerEnter={(e) => {
         if (e.pointerType === 'touch') return;
         cancelClose();
@@ -209,11 +213,15 @@ export function TocRailView({
   );
 }
 
-export default function TocRail() {
+export default function TocRail({
+  side = 'right',
+}: {
+  side?: 'left' | 'right';
+} = {}) {
   const sections = useTocHeadings();
   const currentSection = useTableOfContents(sections);
   const items = useMemo(() => flattenToc(sections), [sections]);
   const currentId = railCurrentId(sections, currentSection);
 
-  return <TocRailView items={items} currentId={currentId} />;
+  return <TocRailView items={items} currentId={currentId} side={side} />;
 }
