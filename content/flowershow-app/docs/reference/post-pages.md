@@ -78,7 +78,7 @@ If your blog's README lists posts its own way (a ```` ```blog ```` block or `<Li
 
 ## Turning it off
 
-- **One page:** give it any other `layout`, such as `layout: default`.
+- **One page:** give it any other `layout`, such as `layout: default`. The [[site-layouts|site layouts]] `docs` and `reading` don't count: a post keeps its header and footer under either.
 - **A whole folder:** add `postLayout: false` to the folder's `README.md`/`index.md` (or folder note). Its pages (and its subfolders' pages) keep the normal layout, and the folder's listing is unchanged.
 - **Opt a folder in:** `postLayout: true` on a `layout: list` folder whose pages are not mostly dated.
 - **A blog folder entirely:** `list: false` on its README turns off the automatic listing and the post layout.

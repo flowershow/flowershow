@@ -15,7 +15,7 @@ A folder named `blog` or `posts` (any case, at any depth, so `/notes/posts` coun
 
 ![A blog/ folder with no README: a generated, paginated blog index](/assets/docs-listings-zero-config-blog.webp)
 
-Pages that already decide for themselves are left as they are: any page with a `layout`, and any page that already has a list block, an Obsidian Bases block or embed (`![[Posts.base]]`), a `<List />` component or an `<ObsidianBasesViews />` component.
+Pages that already decide for themselves are left as they are: any page with a `layout` (other than the [[site-layouts|site layouts]] `docs` and `reading`), and any page that already has a list block, an Obsidian Bases block or embed (`![[Posts.base]]`), a `<List />` component or an `<ObsidianBasesViews />` component.
 
 If your `blog/README.md` links to its posts by hand and you don't want a second list under it, add `list: false` to its frontmatter:
 

@@ -82,6 +82,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [RSS Feed](/docs/reference/rss-feed) — Enable an RSS feed for your site so readers can subscribe to your content.
 - [SEO and social media metadata](/docs/reference/seo-social-metadata) — Configure SEO titles, descriptions, and social media images for better search and sharing.
 - [Sidebar Configuration](/docs/reference/sidebar) — Enable sidebar navigation that displays your site's structure.
+- [Site layouts](/docs/reference/site-layouts) — Choose what sits beside your text: site contents beside the page for docs, or a centred reading column with the page contents on the left for essays, papers and courses.
 - [Social links](/docs/reference/social-links) — Add social media icons to your site's navbar and footer.
 - [Supported file types](/docs/reference/supported-file-types) — Which files Flowershow renders as themed pages, which it serves as-is, the URL each one gets, and the limits on a publish.
 - [Syntax Mode Configuration](/docs/reference/syntax-mode) — Configure whether your content is parsed as Markdown or MDX, globally or per page.

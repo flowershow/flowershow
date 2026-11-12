@@ -33,6 +33,8 @@ On the rail, the current section's tick is longer and in the accent colour. Tick
 
 The rail shows from 1024px wide, on pages with 3 or more `h2` and `h3` headings.
 
+Under the `reading` layout the rail sits at the far left of the page and its outline opens to the right. See [[site-layouts|Site layouts]].
+
 The rail is opt-in for now. It may become the default later. It is not in the dashboard settings yet, so set it in `config.json` or in page frontmatter.
 
 In `config.json`:
