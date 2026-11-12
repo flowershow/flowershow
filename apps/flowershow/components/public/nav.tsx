@@ -36,7 +36,8 @@ import { isEmoji } from '@/lib/is-emoji';
 import ThemeSwitch from './theme-switch';
 
 export interface Props {
-  logo: string;
+  /** Omitted when the site hides its logo (`showLogo: false`). */
+  logo?: string;
   url: string;
   title?: string;
   links?: NavItem[];
@@ -88,7 +89,7 @@ const Nav = ({
           {/* Desktop Navigation */}
           <div className="site-navbar-inner">
             <Link href={url} className="site-navbar-site-title">
-              {isEmoji(logo) ? (
+              {!logo ? null : isEmoji(logo) ? (
                 <span
                   className="site-navbar-site-logo"
                   aria-label="Logo"

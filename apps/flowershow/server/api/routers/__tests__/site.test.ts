@@ -2277,6 +2277,23 @@ describe('site router: editor allow and deny', () => {
     expect((db.site as any).update).toHaveBeenCalledTimes(2);
   });
 
+  it('getAssetUploadUrl returns a new URL for every upload, so a replaced image is never served from cache', async () => {
+    const db = createMockDb({ site: sharedSite() });
+    const c = createCallerAs(db, 'editor-1');
+    const upload = () =>
+      c.site.getAssetUploadUrl({
+        siteId: 'site-1',
+        field: 'logo',
+        contentType: 'image/webp',
+      });
+    const first = await upload();
+    const second = await upload();
+    expect(first.publicUrl).toMatch(
+      /\/site-1\/assets\/logo-[0-9a-f]{8}\.webp$/,
+    );
+    expect(second.publicUrl).not.toBe(first.publicUrl);
+  });
+
   it('getPublishHistory exposes the publisher username', async () => {
     const db = createMockDb({ site: sharedSite() });
     (db.publish as any).findMany = vi.fn(async () => [

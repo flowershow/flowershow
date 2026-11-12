@@ -76,6 +76,8 @@ export interface SiteConfig {
   locale?: string;
   image?: string;
   logo?: string;
+  /** `false` hides the navbar logo, including the default Flowershow logo. */
+  showLogo?: boolean;
   favicon?: string;
   nav?: NavConfig;
   footer?: FooterConfig;

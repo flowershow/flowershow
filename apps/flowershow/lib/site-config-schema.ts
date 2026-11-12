@@ -110,6 +110,7 @@ function buildConfigShape(mode: Mode) {
     locale: z.string(),
     image: z.string(),
     logo: z.string(),
+    showLogo: z.boolean(),
     favicon: z.string(),
     nav: navConfigSchema,
     footer: footerConfigSchema,

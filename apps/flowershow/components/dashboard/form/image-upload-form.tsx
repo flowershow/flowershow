@@ -6,36 +6,28 @@ import { useParams, useRouter } from 'next/navigation';
 import { type ReactNode, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { isEmoji } from '@/lib/is-emoji';
+import { type ImageField, planImageResize } from '@/lib/image-resize';
 import { api } from '@/trpc/react';
 
-type Field = 'image' | 'favicon' | 'logo';
-
-const DIMENSIONS: Record<Field, [number, number]> = {
-  image: [1200, 630],
-  favicon: [128, 128],
-  logo: [400, 100],
-};
-
-function processImage(file: File, field: Field): Promise<Blob> {
+function processImage(file: File, field: ImageField): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new window.Image();
     img.onload = () => {
-      const [w, h] = DIMENSIONS[field];
+      const { sx, sy, sw, sh, width, height } = planImageResize(
+        field,
+        img.width,
+        img.height,
+      );
       const canvas = document.createElement('canvas');
-      canvas.width = w;
-      canvas.height = h;
+      canvas.width = width;
+      canvas.height = height;
       const ctx = canvas.getContext('2d');
       if (!ctx) {
         URL.revokeObjectURL(img.src);
         reject(new Error('Canvas not available'));
         return;
       }
-      const scale = Math.max(w / img.width, h / img.height);
-      const sw = w / scale;
-      const sh = h / scale;
-      const sx = (img.width - sw) / 2;
-      const sy = (img.height - sh) / 2;
-      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, w, h);
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, width, height);
       canvas.toBlob(
         (blob) => {
           URL.revokeObjectURL(img.src);
@@ -67,7 +59,7 @@ export default function ImageUploadForm({
   title: string;
   description: string;
   helpText?: ReactNode;
-  field: Field;
+  field: ImageField;
   configKey: string;
   parentKey?: string;
   currentValue: string | null;
@@ -192,7 +184,7 @@ export default function ImageUploadForm({
                 src={displayValue}
                 fill
                 alt={title}
-                className="object-cover"
+                className={isSocial ? 'object-cover' : 'object-contain'}
               />
             ) : null}
 

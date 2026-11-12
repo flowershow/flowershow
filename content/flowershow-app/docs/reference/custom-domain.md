@@ -67,6 +67,8 @@ The process is the same as adding TXT records: go to DNS management, add a new r
 
 DNS changes can take up to 24 hours to propagate fully (depending on the previous TTL values). The dashboard status updates automatically as Flowershow detects your configuration.
 
+Until then, your site stays available at its Flowershow address. Once your custom domain works, visitors to the Flowershow address are redirected to it (this can take a few more minutes to kick in).
+
 ## Domain status
 
 - 🟡 **Pending Verification** — Add TXT record to verify ownership
