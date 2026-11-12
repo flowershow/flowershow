@@ -101,6 +101,7 @@ function makeSite(overrides: Partial<Record<string, unknown>> = {}) {
     ghRepository: 'user/repo',
     ghBranch: 'main',
     customDomain: null,
+    customDomainLiveAt: null,
     rootDir: null,
     plan: 'FREE',
     enableComments: false,
@@ -2213,6 +2214,29 @@ describe('site.update key classification', () => {
       value: 'example.com',
     });
     expect((db.site as any).update).toHaveBeenCalled();
+  });
+
+  it.each([
+    ['a new domain waits until it works', 'new.example.com', true],
+    ['re-saving the same domain keeps redirecting', 'old.example.com', false],
+  ])('customDomain: %s', async (_, value, resets) => {
+    const live = makeSite({
+      plan: 'PREMIUM',
+      customDomain: 'old.example.com',
+      customDomainLiveAt: new Date('2026-01-01T00:00:00Z'),
+    });
+    const db = createMockDb({ site: live });
+    (db.site as any).update = vi.fn(async () => live);
+    await createAuthenticatedCaller(db).site.update({
+      id: 'site-1',
+      key: SiteUpdateKey.customDomain,
+      value,
+    });
+    const { data } = (db.site as any).update.mock.calls[0][0];
+    expect(data.customDomain).toBe(value);
+    expect(
+      'customDomainLiveAt' in data && data.customDomainLiveAt === null,
+    ).toBe(resets);
   });
 });
 

@@ -21,7 +21,10 @@ import {
   isFeatureEnabled,
   isSocialCardsEnabled,
 } from '@/lib/feature-flags';
-import { customDomainRedirect } from '@/lib/custom-domain-redirect';
+import {
+  customDomainRedirect,
+  markCustomDomainLive,
+} from '@/lib/custom-domain-redirect';
 import { getSiteUrl } from '@/lib/get-site-url';
 import {
   buildSocialMetadata,
@@ -160,9 +163,15 @@ export default async function PublicLayout(props: {
     notFound();
   }
 
-  const customDomainUrl = await customDomainRedirect(username, site);
+  const customDomainUrl = customDomainRedirect(username, site);
   if (customDomainUrl) {
     return redirect(customDomainUrl);
+  }
+  if (username === '_domain') {
+    // This request came in through the custom domain, so its DNS works.
+    await markCustomDomainLive(site).catch((error) =>
+      console.error('[custom-domain] Failed to mark domain live', error),
+    );
   }
 
   const sitePrefix = '';

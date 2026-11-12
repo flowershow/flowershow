@@ -30,7 +30,7 @@ export async function getSite(
   }
 
   // Redirect to the custom domain once it works (see customDomainRedirect).
-  const customDomainUrl = await customDomainRedirect(user, site);
+  const customDomainUrl = customDomainRedirect(user, site);
   if (customDomainUrl) {
     return redirect(customDomainUrl);
   }
