@@ -102,6 +102,35 @@ describe('createHttpUmamiClient', () => {
     expect(u.searchParams.get('offset')).toBe('0');
   });
 
+  // Our Umami returns pageviews as a string in /metrics/expanded (seen live).
+  it('turns string counts into numbers', async () => {
+    const fetchImpl = vi.fn(async (..._args: any[]) =>
+      json([{ name: 'site-a', pageviews: '1234', visitors: '7' }]),
+    );
+    const out = await make(fetchImpl).metrics({
+      startAt: 1,
+      endAt: 2,
+      type: 'tag',
+      limit: 500,
+    });
+    expect(out).toEqual([{ name: 'site-a', pageviews: 1234, visitors: 7 }]);
+
+    const statsFetch = vi.fn(async (..._args: any[]) =>
+      json({ pageviews: '12', visitors: '5' }),
+    );
+    expect(await make(statsFetch).stats({ startAt: 1, endAt: 2 })).toEqual({
+      pageviews: 12,
+      visitors: 5,
+    });
+
+    const dayFetch = vi.fn(async (..._args: any[]) =>
+      json({ pageviews: [{ x: '2026-11-12 00:00:00', y: '3' }] }),
+    );
+    expect(
+      await make(dayFetch).pageviewsByDay({ startAt: 1, endAt: 2 }),
+    ).toEqual([{ date: '2026-11-12', pageviews: 3 }]);
+  });
+
   it('rejects on a non-2xx response', async () => {
     const fetchImpl = vi.fn(async (..._args: any[]) =>
       json({}, { status: 500 }),
