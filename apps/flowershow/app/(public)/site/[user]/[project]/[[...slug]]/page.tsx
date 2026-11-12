@@ -840,7 +840,11 @@ export default async function SitePage(props: {
   // The page has site contents: a sidebar column, or the page menu's drawer
   const showSidebar = resolved.sidebar !== 'none';
   const sidebarColumn = resolved.sidebar === 'column';
-  const showRightColumn = resolved.toc !== 'none' || resolved.showGraph;
+  // The right column holds only the panel, the right rail and the graph
+  const showRightColumn =
+    resolved.showGraph ||
+    resolved.toc === 'panel' ||
+    resolved.toc === 'rail-right';
   // Reading without a sidebar column: menu button and left rail, text centred
   const readingGrid = layout === 'reading' && !sidebarColumn;
   // Previous and next pages stand in for the sidebar on plain pages

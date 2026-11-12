@@ -74,7 +74,8 @@ test.describe('Reading layout on wide screens', () => {
     await menu.click();
 
     const drawer = page.getByRole('dialog', { name: 'Site contents' });
-    await expect(drawer).toBeVisible();
+    // The dialog root has no box of its own; its panel is position: fixed
+    await expect(drawer.locator('.sidebar-drawer-panel')).toBeVisible();
     await expect(
       drawer.locator('.site-tree a', { hasText: 'Getting Started' }),
     ).toBeVisible();
