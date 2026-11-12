@@ -402,13 +402,9 @@ export const siteRouter = createTRPCRouter({
 
             await ctx.db.site.update({
               where: { id },
-              data: {
-                customDomain: newDomain,
-                // A new domain only gets redirected to once it works.
-                ...(newDomain !== site.customDomain && {
-                  customDomainLiveAt: null,
-                }),
-              },
+              // Redirect to the domain only once a request comes through it.
+              // Re-saving resets it too, so an owner can undo a stuck redirect.
+              data: { customDomain: newDomain, customDomainLiveAt: null },
               select: fullSiteSelect,
             });
 
@@ -427,12 +423,7 @@ export const siteRouter = createTRPCRouter({
             // Non-production: only update DB
             await ctx.db.site.update({
               where: { id },
-              data: {
-                customDomain: value,
-                ...(value !== site.customDomain && {
-                  customDomainLiveAt: null,
-                }),
-              },
+              data: { customDomain: value, customDomainLiveAt: null },
             });
           }
         }
