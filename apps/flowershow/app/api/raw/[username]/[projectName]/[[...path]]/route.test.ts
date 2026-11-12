@@ -280,6 +280,7 @@ describe('GET /api/raw — HTML is bound to the site own host', () => {
     userId: 'owner-1',
     subdomain: 'notes-victim',
     customDomain: 'docs.example.com',
+    customDomainLiveAt: new Date('2026-01-01T00:00:00Z'),
   };
   const fetchFileMock = fetchFile as ReturnType<typeof vi.fn>;
 
@@ -463,6 +464,7 @@ describe('GET /api/raw/_domain — HTML is bound to the site own host', () => {
     userId: 'owner-2',
     subdomain: 'blog-other',
     customDomain: 'other.example.net',
+    customDomainLiveAt: new Date('2026-01-01T00:00:00Z'),
   };
   const fetchFileMock = fetchFile as ReturnType<typeof vi.fn>;
 

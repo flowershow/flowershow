@@ -25,6 +25,7 @@ const rawSiteSelect = {
   expiresAt: true,
   subdomain: true,
   customDomain: true,
+  customDomainLiveAt: true,
 } as const;
 
 const IMAGE_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'svg', 'webp']);

@@ -48,6 +48,7 @@ export async function GET(
       projectName: true,
       subdomain: true,
       customDomain: true,
+      customDomainLiveAt: true,
       configJson: true,
       isTemporary: true,
       expiresAt: true,

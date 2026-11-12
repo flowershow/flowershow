@@ -57,11 +57,15 @@ export function isSiteOwnHost(
 
 /**
  * The site's canonical own origin (`<protocol>://<host>`): its custom domain
- * if usable, otherwise its subdomain host. `null` when the site has no usable
- * own host.
+ * once it is live (see customDomainRedirect), otherwise its subdomain host.
+ * `null` when the site has no usable own host.
  */
-export function getSiteOwnOrigin(site: SiteHostFields): string | null {
-  const host = usableCustomDomain(site) ?? subdomainHost(site);
+export function getSiteOwnOrigin(
+  site: SiteHostFields & { customDomainLiveAt: Date | null },
+): string | null {
+  const host =
+    (site.customDomainLiveAt && usableCustomDomain(site)) ||
+    subdomainHost(site);
   if (!host) return null;
   const isSecure =
     env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
@@ -75,7 +79,7 @@ export function getSiteOwnOrigin(site: SiteHostFields): string | null {
  * the site has no usable own host. The content itself is never served.
  */
 export function redirectToSiteOwnHost(
-  site: SiteHostFields,
+  site: SiteHostFields & { customDomainLiveAt: Date | null },
   pathAndQuery: string,
 ): Response {
   const origin = getSiteOwnOrigin(site);

@@ -73,6 +73,7 @@ export async function GET(
       id: true,
       subdomain: true,
       customDomain: true,
+      customDomainLiveAt: true,
       ...siteAuthzSelect(userId),
     },
   });
