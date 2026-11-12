@@ -8,7 +8,7 @@ const GROUPS = [
     id: 'layout',
     title: 'Site layout and page shell',
     description: 'Top-level site grid, responsive rails, and shell variants.',
-    dom: `.site-layout[.no-nav]\n├─ .site-navbar (optional)\n├─ .site-body (structural wrapper)\n│  ├─ .site-subnav (optional)\n│  ├─ .page-hero-container (optional)\n│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc][.is-toc-rail]\n│     ├─ .layout-inner-left\n│     ├─ .layout-inner-center (structural wrapper)\n│     │  └─ main.page-main (structural wrapper)\n│     └─ .layout-inner-right\n└─ .site-footer`,
+    dom: `.site-layout[.no-nav]\n├─ .site-navbar (optional)\n├─ .site-body (structural wrapper)\n│  ├─ .site-subnav (optional)\n│  ├─ .page-hero-container (optional)\n│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc][.is-toc-rail] | .layout-inner.layout-reading[.has-right-panel]\n│     ├─ .layout-inner-left\n│     ├─ .layout-inner-center (structural wrapper)\n│     │  └─ main.page-main (structural wrapper)\n│     └─ .layout-inner-right\n└─ .site-footer`,
   },
   {
     id: 'navigation',
@@ -21,8 +21,8 @@ const GROUPS = [
     id: 'sidebar',
     title: 'Subnavigation, sidebar, and site tree',
     description:
-      'Breadcrumbs, desktop site tree, and the small-screen sidebar drawer.',
-    dom: `.site-subnav\n├─ .site-subnav-breadcrumbs\n└─ .site-subnav-menu-button\n.layout-inner-left\n└─ .site-sidebar\n   └─ .site-tree\nbody (dialog portal)\n└─ .sidebar-drawer-panel\n   └─ .site-tree`,
+      "Breadcrumbs, desktop site tree, the small-screen sidebar drawer, and the reading layout's site contents menu button.",
+    dom: `.site-subnav\n├─ .site-subnav-breadcrumbs\n└─ .site-subnav-menu-button\n.layout-inner-left\n└─ .site-sidebar\n   └─ .site-tree\n.layout-reading .layout-inner-left\n└─ .reading-rail\n   ├─ button.site-contents-menu-button > .site-contents-menu-icon\n   └─ .page-toc-container.is-rail.is-left > nav.toc-rail[data-side="left"]\nbody (dialog portal)\n└─ .sidebar-drawer[.is-page-menu]\n   └─ .sidebar-drawer-panel\n      └─ .site-tree`,
   },
   {
     id: 'content',
@@ -43,7 +43,7 @@ const GROUPS = [
     title: 'Table of contents',
     description:
       'The page ToC panel or tick rail, its nested items, and the inline Contents block.',
-    dom: `.page-toc-container\n└─ .toc\n   ├─ .toc-title\n   └─ .toc-item\n      ├─ .toc-item-self\n      └─ .toc-item-children\n.page-toc-container.is-rail (toc.style: rail)\n└─ nav.toc-rail[data-open]\n   ├─ button.toc-rail-button > .toc-rail-ticks > .toc-rail-tick[data-depth][data-current][data-read]\n   └─ .toc-rail-outline > ol > li[data-depth][data-current] > a\ndetails.toc-inline[data-toc-style] (narrow screens, before .rendered-mdx#mdxpage)\n├─ summary\n└─ ol > li[data-depth] > a`,
+    dom: `.page-toc-container\n└─ .toc\n   ├─ .toc-title\n   └─ .toc-item\n      ├─ .toc-item-self\n      └─ .toc-item-children\n.page-toc-container.is-rail (toc.style: rail)\n└─ nav.toc-rail[data-open][data-side="left" | "right"]\n   ├─ button.toc-rail-button > .toc-rail-ticks > .toc-rail-tick[data-depth][data-current][data-read]\n   └─ .toc-rail-outline > ol > li[data-depth][data-current] > a\ndetails.toc-inline[data-toc-style] (narrow screens, before .rendered-mdx#mdxpage)\n├─ summary\n└─ ol > li[data-depth] > a`,
   },
   {
     id: 'listings',
@@ -124,6 +124,9 @@ const STATE_OWNERS = {
   'has-sidebar-and-toc': '.layout-inner',
   'has-toc': '.layout-inner',
   'is-toc-rail': '.layout-inner',
+  'has-right-panel': '.layout-inner.layout-reading',
+  'is-left': '.page-toc-container.is-rail',
+  'is-page-menu': '.sidebar-drawer',
   'is-rail': '.page-toc-container',
   'is-disabled': '.list-component-pagination-button',
   'is-collapsible': '.site-tree-item-self / .mobile-nav-tree-item-self',
@@ -153,7 +156,11 @@ export function classifyClassName(name) {
   if (/^(site-layout|site-body|layout-)/.test(name)) return 'layout';
   if (/^(site-navbar|mobile-nav|theme-switch|visitor-logout)/.test(name))
     return 'navigation';
-  if (/^(site-subnav|site-tree|site-sidebar|sidebar-drawer)/.test(name))
+  if (
+    /^(site-subnav|site-tree|site-sidebar|sidebar-drawer|site-contents-menu|reading-rail)/.test(
+      name,
+    )
+  )
     return 'sidebar';
   if (/^(page-toc|toc(?:-|$))/.test(name)) return 'toc';
   if (/^list-component|^listing-page(?:$|-)|^listing-layout$/.test(name))

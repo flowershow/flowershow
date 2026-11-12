@@ -201,6 +201,18 @@ describe('autoListingFor (cases 2 and 3)', () => {
       })?.options,
     ).toEqual({ view: 'grid' });
   });
+  it('docs and reading layouts do not turn the zero-config listing off', () => {
+    for (const layout of ['docs', 'reading']) {
+      expect(
+        autoListingFor({
+          blobPath: 'blog/README.md',
+          metadata: { layout },
+          content: prose,
+          siteFilePaths: files,
+        }),
+      ).toEqual({ options: undefined, defaultFrom: 'blog' });
+    }
+  });
   it('back-compat: any layout, list: false, an existing listing, other folders, other pages are untouched', () => {
     const none = (
       blobPath: string,

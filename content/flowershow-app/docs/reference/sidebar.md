@@ -8,6 +8,8 @@ Configure the sidebar from the **Flowershow dashboard** under **Site Settings �
 > [!note]
 > The sidebar is enabled by default and automatically generates navigation based on your content directory structure.
 
+Under the `reading` layout the sidebar moves behind a menu button at the top left of the page and opens as a drawer. See [[site-layouts|Site layouts]].
+
 ## Showing and hiding the sidebar
 
 Go to **Settings → Content → Show Sidebar** and set it to `true` or `false`.

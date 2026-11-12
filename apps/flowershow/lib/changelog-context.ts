@@ -6,6 +6,7 @@ import {
   isFolderIndexPath,
   normalizeDir,
 } from '@/lib/changelog';
+import { isSiteLayout } from '@/lib/layout';
 
 export type ChangelogContext = {
   kind: 'index' | 'entry' | 'file';
@@ -50,6 +51,7 @@ export async function resolveChangelogContext({
   // Single-file changelog: CHANGELOG.md (any case), or any page opting in
   const layout = blob.metadata?.layout;
   if (layout === 'changelog') return { kind: 'file', dir };
-  if (!layout && isChangelogFileName(blob.path)) return { kind: 'file', dir };
+  if ((!layout || isSiteLayout(layout)) && isChangelogFileName(blob.path))
+    return { kind: 'file', dir };
   return null;
 }

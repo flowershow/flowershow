@@ -254,6 +254,11 @@
     grid-template-columns: minmax(0, 1fr);
     padding-left: 3rem;
   }
+  /* Reading layout: the left rail stays and the text takes the remaining
+     width; a right panel or graph column is hidden, so drop it */
+  html.fs-comments-open .layout-inner.layout-reading.has-right-panel {
+    grid-template-columns: 3rem minmax(0, 1fr) 3rem;
+  }
 }
 
 .fs-annotations-header {

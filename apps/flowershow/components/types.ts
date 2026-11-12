@@ -88,6 +88,7 @@ export interface SiteConfig {
   contentInclude?: string[];
   contentExclude?: string[];
   contentHide?: string[];
+  layout?: 'docs' | 'reading';
   showSidebar?: boolean;
   sidebar?: {
     orderBy?: 'title' | 'path';

@@ -73,6 +73,18 @@ describe('TocRailView', () => {
     ).toEqual(['0', '1', '0']);
   });
 
+  it('renders data-side, defaulting to right', () => {
+    const { nav } = renderRail();
+    expect(nav.dataset.side).toBe('right');
+    cleanup();
+    const { container } = render(
+      <TocRailView items={ITEMS} currentId={null} side="left" />,
+    );
+    expect(
+      (container.querySelector('nav.toc-rail') as HTMLElement).dataset.side,
+    ).toBe('left');
+  });
+
   it('is closed at rest and opens on pointer enter', () => {
     const { nav, button, outline } = renderRail();
     expectClosed(button, outline);

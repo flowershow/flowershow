@@ -180,6 +180,19 @@ Where `FooterNavigationGroup` is `{ title: string, links: Array<{ name: string, 
 
 ---
 
+### `layout`
+
+**Type:** `"docs" | "reading"`  
+**Default:** `"docs"`
+
+Choose the page layout for the whole site: `docs` (default) or `reading`. Can also be set per page in frontmatter. [[site-layouts|Learn more →]]
+
+```json
+"layout": "reading"
+```
+
+---
+
 ### `showSidebar`
 
 **Type:** `boolean`  

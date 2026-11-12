@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **366 styled class selectors**:
-**364 stable semantic hooks** and **2 non-contract
+and currently documents **375 styled class selectors**:
+**373 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -63,7 +63,7 @@ Top-level site grid, responsive rails, and shell variants.
 ├─ .site-body (structural wrapper)
 │  ├─ .site-subnav (optional)
 │  ├─ .page-hero-container (optional)
-│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc][.is-toc-rail]
+│  └─ .layout-inner[.has-sidebar | .has-toc | .has-sidebar-and-toc][.is-toc-rail] | .layout-inner.layout-reading[.has-right-panel]
 │     ├─ .layout-inner-left
 │     ├─ .layout-inner-center (structural wrapper)
 │     │  └─ main.page-main (structural wrapper)
@@ -74,8 +74,10 @@ Top-level site grid, responsive rails, and shell variants.
 | Class | Kind |
 | --- | --- |
 | <code>.layout-inner</code> | Hook |
+| <code>.layout-inner-center</code> | Hook |
 | <code>.layout-inner-left</code> | Hook |
 | <code>.layout-inner-right</code> | Hook |
+| <code>.layout-reading</code> | Hook |
 | <code>.site-body</code> | Hook |
 | <code>.site-layout</code> | Hook |
 
@@ -147,7 +149,7 @@ Desktop navbar, dropdowns, mobile navigation, theme switch, and visitor controls
 
 ## Subnavigation, sidebar, and site tree
 
-Breadcrumbs, desktop site tree, and the small-screen sidebar drawer.
+Breadcrumbs, desktop site tree, the small-screen sidebar drawer, and the reading layout's site contents menu button.
 
 **DOM shape**
 
@@ -158,18 +160,27 @@ Breadcrumbs, desktop site tree, and the small-screen sidebar drawer.
 .layout-inner-left
 └─ .site-sidebar
    └─ .site-tree
+.layout-reading .layout-inner-left
+└─ .reading-rail
+   ├─ button.site-contents-menu-button > .site-contents-menu-icon
+   └─ .page-toc-container.is-rail.is-left > nav.toc-rail[data-side="left"]
 body (dialog portal)
-└─ .sidebar-drawer-panel
-   └─ .site-tree
+└─ .sidebar-drawer[.is-page-menu]
+   └─ .sidebar-drawer-panel
+      └─ .site-tree
 ```
 
 | Class | Kind |
 | --- | --- |
+| <code>.reading-rail</code> | Hook |
+| <code>.sidebar-drawer</code> | Hook |
 | <code>.sidebar-drawer-backdrop</code> | Hook |
 | <code>.sidebar-drawer-close</code> | Hook |
 | <code>.sidebar-drawer-close-icon</code> | Hook |
 | <code>.sidebar-drawer-header</code> | Hook |
 | <code>.sidebar-drawer-panel</code> | Hook |
+| <code>.site-contents-menu-button</code> | Hook |
+| <code>.site-contents-menu-icon</code> | Hook |
 | <code>.site-sidebar</code> | Hook |
 | <code>.site-subnav</code> | Hook |
 | <code>.site-subnav-menu-button</code> | Hook |
@@ -319,7 +330,7 @@ The page ToC panel or tick rail, its nested items, and the inline Contents block
       ├─ .toc-item-self
       └─ .toc-item-children
 .page-toc-container.is-rail (toc.style: rail)
-└─ nav.toc-rail[data-open]
+└─ nav.toc-rail[data-open][data-side="left" | "right"]
    ├─ button.toc-rail-button > .toc-rail-ticks > .toc-rail-tick[data-depth][data-current][data-read]
    └─ .toc-rail-outline > ol > li[data-depth][data-current] > a
 details.toc-inline[data-toc-style] (narrow screens, before .rendered-mdx#mdxpage)
@@ -756,6 +767,7 @@ Owning semantic hook
 | Class | Kind | Owner |
 | --- | --- | --- |
 | <code>.has-image</code> | State | .page-hero |
+| <code>.has-right-panel</code> | State | .layout-inner.layout-reading |
 | <code>.has-sidebar</code> | State | .layout-inner |
 | <code>.has-sidebar-and-toc</code> | State | .layout-inner |
 | <code>.has-toc</code> | State | .layout-inner |
@@ -764,7 +776,9 @@ Owning semantic hook
 | <code>.is-collapsible</code> | State | .site-tree-item-self / .mobile-nav-tree-item-self |
 | <code>.is-current</code> | State | .site-tree-item-self / .mobile-nav-tree-item-self |
 | <code>.is-disabled</code> | State | .list-component-pagination-button |
+| <code>.is-left</code> | State | .page-toc-container.is-rail |
 | <code>.is-open</code> | State | navigation dropdowns and collapsible tree items |
+| <code>.is-page-menu</code> | State | .sidebar-drawer |
 | <code>.is-plain</code> | State | .rendered-mdx |
 | <code>.is-rail</code> | State | .page-toc-container |
 | <code>.is-scrolled</code> | State | .site-navbar |
