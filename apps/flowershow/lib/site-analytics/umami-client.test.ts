@@ -51,8 +51,7 @@ describe('createHttpUmamiClient', () => {
     expect(u.searchParams.get('startAt')).toBe('1000');
     expect(u.searchParams.get('endAt')).toBe('2000');
     expect(u.searchParams.get('tag')).toBe('site:abc');
-    expect(init.headers['x-umami-api-key']).toBe('k');
-    expect(init.headers.Authorization).toBe('Bearer k');
+    expect(init.headers).toEqual({ Authorization: 'Bearer k' });
   });
 
   it('omits tag when not given', async () => {
