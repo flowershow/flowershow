@@ -12,8 +12,11 @@ Configure your site's navigation bar from the **Flowershow dashboard**, or using
 
 Go to **Settings → Navigation** and set:
 
-- **Logo** — upload an image file
+- **Logo** — upload an image file. It is scaled to fit the navbar and keeps its shape.
+- **Show Logo** — turn off to show no logo at all
 - **Nav Title** — the text shown next to the logo in the navbar
+
+If you don't upload a logo, the Flowershow logo is shown. To show no logo, not even the Flowershow one, turn off **Show Logo** (or set `"showLogo": false` in `config.json`).
 
 If you don't set a nav title, your site name (from **Settings → General → Name**) is shown next to the logo by default — unless you've uploaded your own logo, in which case the logo stands alone. Set a nav title to override this with different text.
 
@@ -106,6 +109,7 @@ If you want to version-control your configuration, or have your editor's AI agen
 ```
 
 - `logo`: Path to your logo file (relative to site root), external URL, or an emoji character (root-level key)
+- `showLogo`: Set to `false` to show no logo at all (root-level key)
 - `social`: Array of social link objects (root-level key, shared with footer) — see [[social-links]]
 - `nav.title`: Text displayed as your site title
 - `nav.links`: Array of navigation link objects (same format as the dashboard JSON editor)

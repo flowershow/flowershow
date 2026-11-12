@@ -134,6 +134,8 @@ model Site {
   ghBranch                String?        @map("gh_branch")
   subdomain               String        @unique
   customDomain            String?       @unique @map("custom_domain")
+  /// First request served through customDomain, i.e. its DNS works. Until set, the subdomain doesn't redirect to it. Reset when the domain changes.
+  customDomainLiveAt      DateTime?     @map("custom_domain_live_at")
   rootDir                 String?       @map("root_dir")
   projectName             String        @map("project_name")
   createdAt               DateTime      @default(now()) @map("created_at")

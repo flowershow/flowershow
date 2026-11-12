@@ -63,10 +63,23 @@ Path (relative to your content root) or external URL for the default social shar
 **Type:** `string`  
 **Default:** —
 
-Path to a logo image shown in the navbar. Relative to your content root.
+Path to a logo image shown in the navbar. Relative to your content root. If you don't set one, the Flowershow logo is shown; use [`showLogo`](#showlogo) to hide it.
 
 ```json
 "logo": "logo.png"
+```
+
+---
+
+### `showLogo`
+
+**Type:** `boolean`  
+**Default:** `true`
+
+Set to `false` to show no logo in the navbar, not even the default Flowershow logo. The navbar then shows your nav title or site name on its own.
+
+```json
+"showLogo": false
 ```
 
 ---

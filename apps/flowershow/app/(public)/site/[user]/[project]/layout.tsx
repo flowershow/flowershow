@@ -22,6 +22,10 @@ import {
   isFeatureEnabled,
   isSocialCardsEnabled,
 } from '@/lib/feature-flags';
+import {
+  customDomainRedirect,
+  markCustomDomainLive,
+} from '@/lib/custom-domain-redirect';
 import { getSiteUrl } from '@/lib/get-site-url';
 import {
   buildSocialMetadata,
@@ -32,7 +36,7 @@ import {
 import type { SiteConfig } from '@/components/types';
 import { loadProtectedCardSource } from '@/lib/protected-card-source';
 import { getThemeUrl } from '@/lib/get-theme';
-import { resolveSiteName } from '@/lib/site-config';
+import { resolveNavBrand, resolveSiteName } from '@/lib/site-config';
 import { loadCustomFooter, loadCustomNavbar } from '@/lib/site-chrome';
 import { fontBody, fontBrand, fontHeading } from '@/styles/fonts-public';
 import { TRPCReactProvider } from '@/trpc/react';
@@ -160,9 +164,15 @@ export default async function PublicLayout(props: {
     notFound();
   }
 
-  // Redirect to custom domain if it exists
-  if (username !== '_domain' && username !== 'anon' && site.customDomain) {
-    return redirect(`https://${site.customDomain}`);
+  const customDomainUrl = customDomainRedirect(username, site);
+  if (customDomainUrl) {
+    return redirect(customDomainUrl);
+  }
+  if (username === '_domain') {
+    // This request came in through the custom domain, so its DNS works.
+    await markCustomDomainLive(site).catch((error) =>
+      console.error('[custom-domain] Failed to mark domain live', error),
+    );
   }
 
   const sitePrefix = '';
@@ -214,10 +224,12 @@ export default async function PublicLayout(props: {
     }
   }
 
-  const userLogo = siteConfig?.logo ?? siteConfig?.nav?.logo;
-  const logo = userLogo ?? appConfig.logo;
   const siteName = resolveSiteName(siteConfig, site.projectName);
-  const navTitle = siteConfig?.nav?.title ?? (userLogo ? undefined : siteName);
+  const { logo, title: navTitle } = resolveNavBrand(
+    siteConfig,
+    siteName,
+    appConfig.logo,
+  );
   const links = siteConfig?.nav?.links;
   const social = siteConfig?.social || siteConfig?.nav?.social;
   const canHideBuiltWith = isFeatureEnabled(Feature.NoBranding, site);

@@ -34,6 +34,7 @@ const SITE = {
   userId: 'owner-1',
   subdomain: 'notes-alice',
   customDomain: null as string | null,
+  customDomainLiveAt: null as Date | null,
   plan: 'FREE' as 'FREE' | 'PREMIUM',
   members: [] as { userId: string }[],
 };
@@ -72,11 +73,23 @@ describe('GET owner/authorize (cloud)', () => {
     expect(createCode).toHaveBeenCalledWith('site-1', 'owner-1');
   });
 
-  it('uses the custom domain when the site has one', async () => {
-    siteFind.mockResolvedValue({ ...SITE, customDomain: 'notes.example.com' });
+  it('uses the custom domain once it is live', async () => {
+    siteFind.mockResolvedValue({
+      ...SITE,
+      customDomain: 'notes.example.com',
+      customDomainLiveAt: new Date('2026-01-01T00:00:00Z'),
+    });
     const res = await authorize(get(CLOUD, path), params());
     expect(res.headers.get('location')).toMatch(
       /^http:\/\/notes\.example\.com\/_flowershow\/owner\/callback\?/,
+    );
+  });
+
+  it('uses the site host while the custom domain is pending', async () => {
+    siteFind.mockResolvedValue({ ...SITE, customDomain: 'notes.example.com' });
+    const res = await authorize(get(CLOUD, path), params());
+    expect(res.headers.get('location')).toMatch(
+      new RegExp(`^http://${SITE_HOST}/_flowershow/owner/callback\\?`),
     );
   });
 

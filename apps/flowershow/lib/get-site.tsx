@@ -1,4 +1,5 @@
 import { notFound, redirect } from 'next/navigation';
+import { customDomainRedirect } from '@/lib/custom-domain-redirect';
 import { SiteLookupResult } from '@/server/api/types';
 import { api } from '@/trpc/server';
 
@@ -28,9 +29,10 @@ export async function getSite(
     notFound();
   }
 
-  // Redirect to custom domain if it exists (anonymous sites don't have custom domains)
-  if (user !== '_domain' && user !== 'anon' && site.customDomain) {
-    return redirect(`https://${site.customDomain}`);
+  // Redirect to the custom domain once it works (see customDomainRedirect).
+  const customDomainUrl = customDomainRedirect(user, site);
+  if (customDomainUrl) {
+    return redirect(customDomainUrl);
   }
 
   return site;

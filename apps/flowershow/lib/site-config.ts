@@ -181,6 +181,26 @@ export function resolveSiteName(
 }
 
 /**
+ * The navbar's logo and title. Without a logo of its own the site shows
+ * `defaultLogo` (the Flowershow logo), unless `showLogo: false` hides the logo
+ * altogether. The site name is shown as the title unless the site's own logo
+ * is shown alone; `nav.title` always wins.
+ */
+export function resolveNavBrand(
+  siteConfig: SiteConfig | null | undefined,
+  siteName: string,
+  defaultLogo: string,
+): { logo?: string; title?: string } {
+  const userLogo = siteConfig?.logo ?? siteConfig?.nav?.logo;
+  const showLogo = siteConfig?.showLogo !== false;
+  const showsUserLogo = showLogo && !!userLogo;
+  return {
+    logo: showLogo ? (userLogo ?? defaultLogo) : undefined,
+    title: siteConfig?.nav?.title ?? (showsUserLogo ? undefined : siteName),
+  };
+}
+
+/**
  * Builds a page's `<title>` from the page title and the resolved brand.
  */
 export function buildPageTitle(pageTitle: unknown, siteName: string): string {

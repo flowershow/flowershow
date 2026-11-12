@@ -5,6 +5,7 @@ import {
   SITE_CHROME_FILES,
   tagIdentity,
 } from '@flowershow/core';
+import { randomUUID } from 'node:crypto';
 import { Blob, Prisma, PrismaClient } from '@prisma/client';
 import { TRPCError } from '@trpc/server';
 import bcrypt from 'bcryptjs';
@@ -379,7 +380,7 @@ export const siteRouter = createTRPCRouter({
         if (!newDomain) {
           await ctx.db.site.update({
             where: { id },
-            data: { customDomain: null },
+            data: { customDomain: null, customDomainLiveAt: null },
             select: fullSiteSelect,
           });
 
@@ -401,7 +402,9 @@ export const siteRouter = createTRPCRouter({
 
             await ctx.db.site.update({
               where: { id },
-              data: { customDomain: newDomain },
+              // Redirect to the domain only once a request comes through it.
+              // Re-saving resets it too, so an owner can undo a stuck redirect.
+              data: { customDomain: newDomain, customDomainLiveAt: null },
               select: fullSiteSelect,
             });
 
@@ -420,7 +423,7 @@ export const siteRouter = createTRPCRouter({
             // Non-production: only update DB
             await ctx.db.site.update({
               where: { id },
-              data: { customDomain: value },
+              data: { customDomain: value, customDomainLiveAt: null },
             });
           }
         }
@@ -728,7 +731,9 @@ export const siteRouter = createTRPCRouter({
       const ext = (input.contentType.split('/')[1] ?? 'webp')
         .replace('x-icon', 'ico')
         .replace('svg+xml', 'svg');
-      const key = `${input.siteId}/assets/${input.field}.${ext}`;
+      // A new key per upload: the public URL changes, so the image optimizer
+      // and CDN can't keep serving the image this one replaces.
+      const key = `${input.siteId}/assets/${input.field}-${randomUUID().slice(0, 8)}.${ext}`;
       const uploadUrl = await generatePresignedUploadUrl(
         key,
         3600,

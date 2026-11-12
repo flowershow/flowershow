@@ -499,6 +499,25 @@ export default async function SiteSettingsPage(props: {
             currentValue={siteConfig?.logo ?? null}
           />
           <Form
+            title="Show Logo"
+            description="Show a logo in the navigation bar. Without a logo of your own, the Flowershow logo is shown."
+            helpText={
+              <a
+                className="underline"
+                href="https://flowershow.app/docs/reference/navbar"
+              >
+                Learn more
+                <ExternalLinkIcon className="inline h-4" />
+              </a>
+            }
+            inputAttrs={{
+              name: 'showLogo',
+              type: 'text',
+              defaultValue: (siteConfig?.showLogo !== false).toString(),
+            }}
+            handleSubmit={updateDbConfig}
+          />
+          <Form
             title="Nav Title"
             description="The title shown in the site navigation bar."
             helpText={

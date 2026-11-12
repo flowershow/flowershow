@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildPageTitle,
+  resolveNavBrand,
   resolveSiteConfig,
   resolveSiteName,
   validateConfigPatch,
@@ -240,5 +241,46 @@ describe('validateConfigPatch', () => {
         footer: { navigation: { title: 'Docs', links: [] } },
       }),
     ).toThrow();
+  });
+});
+
+describe('resolveNavBrand', () => {
+  const DEFAULT = '/flowershow-logo.svg';
+
+  it('shows the Flowershow logo and the site name when the site has no logo', () => {
+    expect(resolveNavBrand({}, 'Garden', DEFAULT)).toEqual({
+      logo: DEFAULT,
+      title: 'Garden',
+    });
+  });
+
+  it("shows the site's own logo alone", () => {
+    expect(resolveNavBrand({ logo: '/me.png' }, 'Garden', DEFAULT)).toEqual({
+      logo: '/me.png',
+      title: undefined,
+    });
+    expect(
+      resolveNavBrand({ nav: { logo: '/nav.png' } }, 'Garden', DEFAULT).logo,
+    ).toBe('/nav.png');
+  });
+
+  it('showLogo: false hides every logo and falls back to the site name', () => {
+    expect(resolveNavBrand({ showLogo: false }, 'Garden', DEFAULT)).toEqual({
+      logo: undefined,
+      title: 'Garden',
+    });
+    expect(
+      resolveNavBrand({ showLogo: false, logo: '/me.png' }, 'Garden', DEFAULT),
+    ).toEqual({ logo: undefined, title: 'Garden' });
+  });
+
+  it('nav.title always wins', () => {
+    expect(
+      resolveNavBrand(
+        { logo: '/me.png', nav: { title: 'Notes' } },
+        'Garden',
+        DEFAULT,
+      ).title,
+    ).toBe('Notes');
   });
 });

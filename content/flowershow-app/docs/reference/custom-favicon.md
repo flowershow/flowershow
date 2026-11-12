@@ -6,7 +6,7 @@ description: Set a custom favicon for your site using an image file or an emoji.
 Configure a custom favicon from the **Flowershow dashboard** under **Site Settings → General**, or using `config.json` if you prefer to version-control your settings or manage them via an automated workflow.
 
 > [!note]
-> Custom favicons are a premium feature. See [pricing](/pricing) for details.
+> Custom favicons are a premium feature. See [pricing](/pricing) for details. On the free plan, a `favicon` set in `config.json` is ignored and the default icon is shown.
 
 ## Favicon
 

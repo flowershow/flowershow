@@ -101,6 +101,7 @@ function makeSite(overrides: Partial<Record<string, unknown>> = {}) {
     ghRepository: 'user/repo',
     ghBranch: 'main',
     customDomain: null,
+    customDomainLiveAt: null,
     rootDir: null,
     plan: 'FREE',
     enableComments: false,
@@ -2214,6 +2215,32 @@ describe('site.update key classification', () => {
     });
     expect((db.site as any).update).toHaveBeenCalled();
   });
+
+  it.each([
+    ['a new domain', 'new.example.com', 'new.example.com'],
+    ['the same domain again', 'old.example.com', 'old.example.com'],
+    ['an empty value (removing the domain)', '', null],
+  ])(
+    'saving %s stops redirecting until a request comes through it',
+    async (_, value, saved) => {
+      const live = makeSite({
+        plan: 'PREMIUM',
+        customDomain: 'old.example.com',
+        customDomainLiveAt: new Date('2026-01-01T00:00:00Z'),
+      });
+      const db = createMockDb({ site: live });
+      (db.site as any).update = vi.fn(async () => live);
+      await createAuthenticatedCaller(db).site.update({
+        id: 'site-1',
+        key: SiteUpdateKey.customDomain,
+        value,
+      });
+      expect((db.site as any).update.mock.calls[0][0].data).toEqual({
+        customDomain: saved,
+        customDomainLiveAt: null,
+      });
+    },
+  );
 });
 
 describe('site router: editor allow and deny', () => {
@@ -2275,6 +2302,23 @@ describe('site router: editor allow and deny', () => {
       }),
     ).resolves.toMatchObject({ uploadUrl: 'https://upload.test/x' });
     expect((db.site as any).update).toHaveBeenCalledTimes(2);
+  });
+
+  it('getAssetUploadUrl returns a new URL for every upload, so a replaced image is never served from cache', async () => {
+    const db = createMockDb({ site: sharedSite() });
+    const c = createCallerAs(db, 'editor-1');
+    const upload = () =>
+      c.site.getAssetUploadUrl({
+        siteId: 'site-1',
+        field: 'logo',
+        contentType: 'image/webp',
+      });
+    const first = await upload();
+    const second = await upload();
+    expect(first.publicUrl).toMatch(
+      /\/site-1\/assets\/logo-[0-9a-f]{8}\.webp$/,
+    );
+    expect(second.publicUrl).not.toBe(first.publicUrl);
   });
 
   it('getPublishHistory exposes the publisher username', async () => {

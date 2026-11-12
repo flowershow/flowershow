@@ -10,7 +10,11 @@ import {
 
 // Test env (vitest.setup.ts): SITE_DOMAIN = ROOT_DOMAIN = HOME_DOMAIN =
 // test.localhost, CLOUD_DOMAIN = cloud.test.localhost.
-const site = { subdomain: 'notes-alice', customDomain: 'docs.example.com' };
+const site = {
+  subdomain: 'notes-alice',
+  customDomain: 'docs.example.com',
+  customDomainLiveAt: new Date('2026-01-01T00:00:00Z'),
+};
 const mutableEnv = env as unknown as Record<string, string>;
 const originalEnv = { ...mutableEnv };
 
@@ -122,6 +126,12 @@ describe('getSiteOwnOrigin', () => {
     );
   });
 
+  it('uses the subdomain host while the custom domain is pending', () => {
+    expect(getSiteOwnOrigin({ ...site, customDomainLiveAt: null })).toBe(
+      'http://notes-alice.test.localhost',
+    );
+  });
+
   it('uses a custom domain on a Flowershow domain (own sites)', () => {
     expect(
       getSiteOwnOrigin({ ...site, customDomain: 'product.test.localhost' }),
@@ -134,9 +144,13 @@ describe('getSiteOwnOrigin', () => {
   });
 
   it('returns null when the site has no usable own host', () => {
-    expect(getSiteOwnOrigin({ subdomain: 'cloud', customDomain: null })).toBe(
-      null,
-    );
+    expect(
+      getSiteOwnOrigin({
+        subdomain: 'cloud',
+        customDomain: null,
+        customDomainLiveAt: null,
+      }),
+    ).toBe(null);
   });
 });
 
@@ -151,7 +165,7 @@ describe('redirectToSiteOwnHost', () => {
 
   it('404s when there is no usable own host', () => {
     const res = redirectToSiteOwnHost(
-      { subdomain: 'cloud', customDomain: null },
+      { subdomain: 'cloud', customDomain: null, customDomainLiveAt: null },
       '/x.html',
     );
     expect(res.status).toBe(404);

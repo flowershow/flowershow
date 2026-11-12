@@ -329,6 +329,8 @@
     justify-content: center;
     font-size: 1.5rem;
     line-height: 1;
+    /* Fit non-square logos inside the box instead of stretching them. */
+    object-fit: contain;
   }
   .site-navbar-site-name {
     color: var(--color-foreground-900);

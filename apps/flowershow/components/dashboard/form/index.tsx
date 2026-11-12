@@ -68,6 +68,7 @@ export default function Form({
     'showBacklinks',
     'showKnowledgeGraph',
     'showTags',
+    'showLogo',
     'annotations',
   ].includes(inputAttrs.name);
 

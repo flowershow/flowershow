@@ -202,7 +202,10 @@ async function writeSiteDowngrade(
       ...(opts.coveredByAccountPlan !== undefined && {
         coveredByAccountPlan: opts.coveredByAccountPlan,
       }),
-      ...(site.customDomain && { customDomain: null }),
+      ...(site.customDomain && {
+        customDomain: null,
+        customDomainLiveAt: null,
+      }),
       ...(storageAllowanceBytes !== undefined && { storageAllowanceBytes }),
     },
   });
