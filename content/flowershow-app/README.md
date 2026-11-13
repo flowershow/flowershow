@@ -382,11 +382,11 @@ showComments: false
           </div>
           <div className="wf-card">
             <span className="wf-ico" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19h8" /><path d="m4 17 6-6-6-6" /></svg>
             </span>
-            <h3>Claude &amp; ChatGPT</h3>
-            <p>Connect Flowershow and ask it to publish. Come back in a new chat and the same site grows.</p>
-            <a className="wf-learn" href="/publish-with-ai"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <h3>CLI</h3>
+            <p>Publish straight from the terminal.</p>
+            <a className="wf-learn" href="/cli"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
           </div>
         </div>
       </div>
