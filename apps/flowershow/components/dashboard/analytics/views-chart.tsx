@@ -2,9 +2,10 @@ import { formatDay, formatNumber } from './format';
 
 type Point = { date: string; views: number };
 
-/** Round up to 1, 2 or 5 × 10ⁿ so the scale reads cleanly. */
+/** Round up to 1, 2 or 5 × 10ⁿ (at least 4, never 5) so half is whole. */
 export function niceMax(n: number): number {
   if (n <= 4) return 4;
+  if (n <= 10) return 10;
   const mag = 10 ** Math.floor(Math.log10(n));
   const step = [1, 2, 5, 10].find((s) => s * mag >= n)!;
   return step * mag;
@@ -32,10 +33,20 @@ export default function ViewsChart({ series }: { series: Point[] }) {
   const labels = labelIndexes(series.length);
   // Fewer labels on phones so dates don't run into each other.
   const narrowLabels = labelIndexes(series.length, 4);
-  const muted = 'text-xs tabular-nums text-stone-400 dark:text-zinc-500';
+  const muted = 'text-xs tabular-nums text-stone-500 dark:text-zinc-400';
 
   return (
     <figure role="img" aria-label={label} className="flex gap-2">
+      <table className="sr-only">
+        <tbody>
+          {series.map((p) => (
+            <tr key={p.date}>
+              <td>{formatDay(p.date)}</td>
+              <td>{formatNumber(p.views)} views</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
       <div className={`relative h-40 w-8 shrink-0 ${muted}`} aria-hidden>
         {[max, max / 2, 0].map((v, i) => (
           <span
@@ -61,18 +72,30 @@ export default function ViewsChart({ series }: { series: Point[] }) {
             />
           ))}
           <div className="absolute inset-0 flex items-end gap-[2px] sm:gap-1">
-            {series.map((p) => (
+            {series.map((p, i) => (
               <div
                 key={p.date}
+                title={`${formatDay(p.date)}: ${formatNumber(p.views)} views`}
                 className="group relative flex h-full flex-1 items-end"
               >
                 <div
                   className="w-full rounded-t-sm bg-stone-600 transition-colors group-hover:bg-stone-900 dark:bg-zinc-400 dark:group-hover:bg-zinc-100"
                   style={{
-                    height: p.views === 0 ? 0 : `${(p.views / max) * 100}%`,
+                    // A floor so a day with a few views isn't lost on a big scale.
+                    height:
+                      p.views === 0 ? 0 : `max(2px, ${(p.views / max) * 100}%)`,
                   }}
                 />
-                <span className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-1 hidden -translate-x-1/2 whitespace-nowrap rounded bg-stone-900 px-2 py-1 text-xs text-white shadow group-hover:block dark:bg-zinc-100 dark:text-zinc-900">
+                <span
+                  className={`pointer-events-none absolute bottom-full z-10 mb-1 hidden whitespace-nowrap ${
+                    // Keep the tooltip inside the card at either edge.
+                    i < series.length / 3
+                      ? 'left-0'
+                      : i >= (series.length * 2) / 3
+                        ? 'right-0'
+                        : 'left-1/2 -translate-x-1/2'
+                  } rounded bg-stone-900 px-2 py-1 text-xs text-white shadow group-hover:block dark:bg-zinc-100 dark:text-zinc-900`}
+                >
                   {formatDay(p.date)}: {formatNumber(p.views)} views
                 </span>
               </div>
@@ -80,23 +103,31 @@ export default function ViewsChart({ series }: { series: Point[] }) {
           </div>
         </div>
         <div className={`mt-2 flex gap-[2px] sm:gap-1 ${muted}`}>
-          {series.map((p, i) => (
-            <div key={p.date} className="relative h-4 flex-1">
-              {labels.has(i) && (
-                <span
-                  className={`absolute top-0 whitespace-nowrap ${
-                    narrowLabels.has(i) ? '' : 'hidden sm:inline'
-                  } ${
-                    i === series.length - 1
-                      ? 'right-0'
-                      : 'left-1/2 -translate-x-1/2'
-                  }`}
-                >
-                  {formatDay(p.date)}
-                </span>
-              )}
-            </div>
-          ))}
+          {series.map((p, i) => {
+            const wide = labels.has(i);
+            const narrow = narrowLabels.has(i);
+            return (
+              <div key={p.date} className="relative h-4 flex-1">
+                {(wide || narrow) && (
+                  <span
+                    className={`absolute top-0 whitespace-nowrap ${
+                      wide && narrow
+                        ? ''
+                        : narrow
+                          ? 'sm:hidden'
+                          : 'hidden sm:inline'
+                    } ${
+                      i === series.length - 1
+                        ? 'right-0'
+                        : 'left-1/2 -translate-x-1/2'
+                    }`}
+                  >
+                    {formatDay(p.date)}
+                  </span>
+                )}
+              </div>
+            );
+          })}
         </div>
       </div>
     </figure>

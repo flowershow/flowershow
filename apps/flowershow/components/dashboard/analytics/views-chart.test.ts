@@ -3,8 +3,8 @@ import { labelIndexes, niceMax } from './views-chart';
 
 describe('niceMax', () => {
   it('rounds up to 1, 2 or 5 × 10ⁿ, at least 4', () => {
-    expect([0, 3, 7, 12, 88, 100, 101, 450].map(niceMax)).toEqual([
-      4, 4, 10, 20, 100, 100, 200, 500,
+    expect([0, 3, 5, 7, 12, 88, 100, 101, 450].map(niceMax)).toEqual([
+      4, 4, 10, 10, 20, 100, 100, 200, 500,
     ]);
   });
 });

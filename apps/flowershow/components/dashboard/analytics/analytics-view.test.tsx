@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type {
   PageRow,
@@ -86,9 +92,11 @@ describe('AnalyticsView', () => {
   it('shows 10 pages then all', () => {
     const pages = Array.from({ length: 25 }, (_, i) => page(i));
     view(ok({ pages, referrers: [] }));
-    expect(screen.getAllByRole('row')).toHaveLength(11);
+    const pagesRows = () =>
+      within(screen.getByText('Pages').closest('section')!).getAllByRole('row');
+    expect(pagesRows()).toHaveLength(11);
     fireEvent.click(screen.getByRole('button', { name: 'Show all 25 pages' }));
-    expect(screen.getAllByRole('row')).toHaveLength(26);
+    expect(pagesRows()).toHaveLength(26);
     expect(screen.queryByRole('button', { name: /Show all/ })).toBeNull();
   });
 
