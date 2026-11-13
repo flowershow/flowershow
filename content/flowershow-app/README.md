@@ -1,19 +1,19 @@
 ---
-title: Publish Markdown as a Website — Blogs, Docs & Knowledge Bases
-description: Turn Markdown and HTML files into a real website in seconds. Obsidian vaults, blogs, docs, knowledge bases or a single page. Free, no coding required.
+title: "The CMS is over — Publish Markdown and HTML as a Website"
+description: "Publishing for the AI age. You and your AI work in files now. Ask Claude, ChatGPT or your coding agent to publish them, and Flowershow turns your Markdown and HTML into a site on your domain, at the same URL every update. Free to start, open source."
 layout: plain
 showToc: false
 showEditLink: false
 showComments: false
 ---
 
-<div className="fs-root">
+<div className="fs-root lp-home">
   <div id="top">
     <section className="hero">
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
-          <h1>The simpler way to publish Markdown and HTML as a website.</h1>
-          <p className="lede">Digital gardens, wikis, blogs, docs, a one-page report: turn your files into a beautiful hosted site. No build step.</p>
+          <h1>The CMS is over.</h1>
+          <p className="lede">You and your AI work in files now. Ask Claude, ChatGPT or your coding agent to publish them, and Flowershow turns your Markdown and HTML into a site on your domain, at the same URL every update. No database, no admin panel, no plugins.</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
             <a className="btn btn-secondary btn-google" href="https://cloud.flowershow.app/login?provider=google">
@@ -25,15 +25,71 @@ showComments: false
               </svg>
               Sign up with Google
             </a>
-            <a className="btn btn-secondary" href="#demo-b">Watch demo <span className="arw">→</span></a>
+            <a className="btn btn-secondary btn-ai" href="/publish-with-ai">Connect your AI <span className="arw">→</span></a>
           </div>
-          <p className="microcopy"><b>Free forever</b>, no credit card required</p>
+          <p className="microcopy"><b>Free to start</b> · about $5/month for your own domain · open source</p>
         </div>
-        <div className="hero-media reveal">
-          <img className="hero-slide" src="/assets/home/blog.png" alt="A blog published with Flowershow" fetchPriority="high" decoding="async" />
-          <img className="hero-slide" src="/assets/home/wiki.png" alt="A wiki published with Flowershow" loading="lazy" fetchPriority="low" decoding="async" />
-          <img className="hero-slide" src="/assets/home/docs.png" alt="A documentation site published with Flowershow" loading="lazy" fetchPriority="low" decoding="async" />
-          <img className="hero-slide" src="/assets/home/garden.png" alt="A digital garden published with Flowershow — sidebar navigation and an interactive backlinks graph" loading="lazy" fetchPriority="low" decoding="async"/>
+        <div className="hero-media-next reveal">
+          <div className="hm-chat" aria-label="A chat in Claude publishing a team offsite site">
+            <div className="hm-bar">
+              <span className="hm-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span className="hm-chat-title">Team offsite</span>
+            </div>
+            <div className="hm-chat-body">
+              <p className="hm-user">Publish our offsite folder as a website.</p>
+              <div className="hm-ai">
+                <span className="hm-spark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 3v6M12 15v6M3 12h6M15 12h6M5.6 5.6l4.2 4.2M14.2 14.2l4.2 4.2M18.4 5.6l-4.2 4.2M9.8 14.2l-4.2 4.2" /></svg></span>
+                <div className="hm-ai-body">
+                  <span className="hm-tool"><span className="hm-tool-name">Flowershow</span> publish · 6 pages <span className="hm-ok" aria-hidden="true">✓</span></span>
+                  <p>Your site is live at <span className="hm-link">team-offsite-maya.flowershow.me</span></p>
+                </div>
+              </div>
+              <p className="hm-user">I booked the team dinner. Add the details to the site.</p>
+              <div className="hm-ai">
+                <span className="hm-spark" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round"><path d="M12 3v6M12 15v6M3 12h6M15 12h6M5.6 5.6l4.2 4.2M14.2 14.2l4.2 4.2M18.4 5.6l-4.2 4.2M9.8 14.2l-4.2 4.2" /></svg></span>
+                <div className="hm-ai-body">
+                  <span className="hm-tool"><span className="hm-tool-name">Flowershow</span> publish · 1 page <span className="hm-ok" aria-hidden="true">✓</span></span>
+                  <p>Added <b>Team dinner</b>. Same link, nothing else touched.</p>
+                </div>
+              </div>
+            </div>
+            <div className="hm-input" aria-hidden="true"><span>Reply to Claude…</span><i></i></div>
+          </div>
+          <figure className="hm-site">
+            <div className="hm-bar">
+              <span className="hm-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span className="hm-url"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><rect x="3" y="11" width="18" height="11" rx="2" /><path d="M7 11V7a5 5 0 0 1 10 0v4" /></svg><span className="hm-url-text">team-offsite-maya.flowershow.me</span></span>
+            </div>
+            <img src="/assets/home/team-offsite.webp" alt="A team offsite site published with Flowershow in the LessFlowery theme: agenda, travel, workshops and a new Team dinner page" width="1280" height="800" loading="eager" decoding="async" />
+          </figure>
+        </div>
+      </div>
+    </section>
+    <section className="section proof" id="proof">
+      <div className="wrap">
+        <div className="proof-grid reveal">
+          <div className="proof-item">
+            <h3>Nothing to convert</h3>
+            <p>Markdown, HTML, whole Obsidian vaults with wiki-links, Bases and Canvas. Publish the files you already have.</p>
+          </div>
+          <div className="proof-item">
+            <h3>Same URL every time</h3>
+            <p>Each publish updates the site in place. A site that grows, not a pile of links.</p>
+          </div>
+          <div className="proof-item">
+            <h3>From wherever you work</h3>
+            <p>Claude, ChatGPT, Claude Code, Cursor, Obsidian, GitHub. Free to start, about $5/month, open source.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section className="section section-soft" id="thesis">
+      <div className="wrap">
+        <div className="thesis reveal">
+          <span className="eyebrow">Why now</span>
+          <h2>Vercel made deploy a command. Flowershow makes publish one.</h2>
+          <p>Publishing never got that, because publishing was a place: a CMS you log into, type into boxes and maintain. In 1985 PageMaker and the LaserWriter moved typesetting from the shop to the desk. The CMS is the web's typesetting shop: your words move into its database, behind its login.</p>
+          <p className="thesis-punch">Your files are already the finished format. Skip the shop.</p>
         </div>
       </div>
     </section>
@@ -78,19 +134,27 @@ showComments: false
           <p>Mix them in one folder and publish. You get a real website, not a file link.</p>
         </div>
         <div className="ftypes-grid reveal">
-          <div className="panel vis-tree ftypes-tree">
+          <div className="ftree" role="img" aria-label="An example site folder: Markdown pages, an Obsidian canvas, an HTML report with its CSS, JavaScript and CSV data, and an images folder">
+            <div className="ftree-row ftree-root t-dir">my-site</div>
             <ul>
-              <li className="dir">my-site/</li>
-              <li className="f l1">index.md</li>
-              <li className="f l1">notes.md</li>
-              <li className="f l1">roadmap.canvas</li>
-              <li className="dir l1">report/</li>
-              <li className="f l2">index.html</li>
-              <li className="f l2">style.css</li>
-              <li className="f l2">chart.js</li>
-              <li className="f l2">sales.csv</li>
-              <li className="dir l1">images/</li>
-              <li className="f l2">cover.png</li>
+              <li className="ftree-row t-md">index<span className="ext">.md</span></li>
+              <li className="ftree-row t-md">notes<span className="ext">.md</span></li>
+              <li className="ftree-row t-canvas">roadmap<span className="ext">.canvas</span></li>
+              <li>
+                <span className="ftree-row t-dir">report</span>
+                <ul>
+                  <li className="ftree-row t-code">index<span className="ext">.html</span></li>
+                  <li className="ftree-row t-code">style<span className="ext">.css</span></li>
+                  <li className="ftree-row t-code">chart<span className="ext">.js</span></li>
+                  <li className="ftree-row t-data">sales<span className="ext">.csv</span></li>
+                </ul>
+              </li>
+              <li>
+                <span className="ftree-row t-dir">images</span>
+                <ul>
+                  <li className="ftree-row t-img">cover<span className="ext">.png</span></li>
+                </ul>
+              </li>
             </ul>
           </div>
           <div className="feature-row ftypes-row">
@@ -224,16 +288,16 @@ showComments: false
           <div className="feature-tile">
             <dt className="ft-head">
               <span className="ft-ico" aria-hidden="true"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.5l1.7 4.6 4.6 1.7-4.6 1.7L12 15.1l-1.7-4.6-4.6-1.7 4.6-1.7L12 2.5z" /><path d="M18.5 13.5l.9 2.4 2.4.9-2.4.9-.9 2.4-.9-2.4-2.4-.9 2.4-.9.9-2.4z" /></svg></span>
-              Works with AI agents
+              Works with your AI
             </dt>
-            <dd className="ft-desc">The Flowershow skill lets agents publish, configure, and style your site — through your CLI, GitHub, or Obsidian workflow.</dd>
+            <dd className="ft-desc">Connect Flowershow to Claude or ChatGPT, or add the skill to your coding agent. Then ask it to publish, add pages or update your site.</dd>
             <a className="ft-learn" href="/publish-with-ai"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-agent">
                 <div className="chat">
                   <div className="msg user">Publish my <code>notes/</code> folder with the "prose" theme.</div>
                   <div className="msg bot">
-                    <span className="bot-head">💐 flowershow skill</span>
+                    <span className="bot-head">💐 Flowershow</span>
                     <span className="step">✓ Created site from 42 markdown files</span>
                     <span className="step">✓ Applied theme <b>prose</b> · enabled search</span>
                     <span className="step">→ Live at <b>notes.flowershow.me</b></span>
@@ -274,7 +338,7 @@ showComments: false
       <div className="wrap publish-grid">
         <div className="publish-copy reveal">
           <span className="eyebrow">Ways to publish</span>
-          <h2>Publish the way you already work.</h2>
+          <h2>Publish from wherever you work.</h2>
           <div className="publish-cta">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           </div>
@@ -285,10 +349,10 @@ showComments: false
                 <svg className="ag-codex" viewBox="0 0 24 24" fill="#000000" role="img" aria-label="Codex" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M8.086.457a6.105 6.105 0 013.046-.415c1.333.153 2.521.72 3.564 1.7a.117.117 0 00.107.029c1.408-.346 2.762-.224 4.061.366l.063.03.154.076c1.357.703 2.33 1.77 2.918 3.198.278.679.418 1.388.421 2.126a5.655 5.655 0 01-.18 1.631.167.167 0 00.04.155 5.982 5.982 0 011.578 2.891c.385 1.901-.01 3.615-1.183 5.14l-.182.22a6.063 6.063 0 01-2.934 1.851.162.162 0 00-.108.102c-.255.736-.511 1.364-.987 1.992-1.199 1.582-2.962 2.462-4.948 2.451-1.583-.008-2.986-.587-4.21-1.736a.145.145 0 00-.14-.032c-.518.167-1.04.191-1.604.185a5.924 5.924 0 01-2.595-.622 6.058 6.058 0 01-2.146-1.781c-.203-.269-.404-.522-.551-.821a7.74 7.74 0 01-.495-1.283 6.11 6.11 0 01-.017-3.064.166.166 0 00.008-.074.115.115 0 00-.037-.064 5.958 5.958 0 01-1.38-2.202 5.196 5.196 0 01-.333-1.589 6.915 6.915 0 01.188-2.132c.45-1.484 1.309-2.648 2.577-3.493.282-.188.55-.334.802-.438.286-.12.573-.22.861-.304a.129.129 0 00.087-.087A6.016 6.016 0 015.635 2.31C6.315 1.464 7.132.846 8.086.457zm-.804 7.85a.848.848 0 00-1.473.842l1.694 2.965-1.688 2.848a.849.849 0 001.46.864l1.94-3.272a.849.849 0 00.007-.854l-1.94-3.393zm5.446 6.24a.849.849 0 000 1.695h4.848a.849.849 0 000-1.696h-4.848z" /></svg>
                 <svg className="ag-cursor" viewBox="0 0 24 24" fill="#000000" role="img" aria-label="Cursor" xmlns="http://www.w3.org/2000/svg"><path d="M11.503.131 1.891 5.678a.84.84 0 0 0-.42.726v11.188c0 .3.162.575.42.724l9.609 5.55a1 1 0 0 0 .998 0l9.61-5.55a.84.84 0 0 0 .42-.724V6.404a.84.84 0 0 0-.42-.726L12.497.131a1.01 1.01 0 0 0-.996 0M2.657 6.338h18.55c.263 0 .43.287.297.515L12.23 22.918c-.062.107-.229.064-.229-.06V12.335a.59.59 0 0 0-.295-.51l-9.11-5.257c-.109-.063-.064-.23.061-.23" /></svg>
               </span>
-              Using an AI agent?
+              Using a coding agent?
             </span>
-            <p className="pa-copy">Just ask it to publish. One page or a whole site.</p>
-            <a className="textlink" href="/docs/agents/skills"><span className="lm-txt">Instructions for your agent</span> <span className="arw">→</span></a>
+            <p className="pa-copy">Ask Claude Code, Codex or Cursor to install the Flowershow skill, then ask it to publish. One page or a whole site, same URL on every update.</p>
+            <a className="textlink" href="/publish-with-ai"><span className="lm-txt">Publish from your AI</span> <span className="arw">→</span></a>
           </div>
         </div>
         <div className="wf-grid reveal">
@@ -297,7 +361,7 @@ showComments: false
               <svg viewBox="0 0 24 24" fill="currentColor"><path d="M19.355 18.538a68.967 68.959 0 0 0 1.858-2.954.81.81 0 0 0-.062-.9c-.516-.685-1.504-2.075-2.042-3.362-.553-1.321-.636-3.375-.64-4.377a1.707 1.707 0 0 0-.358-1.05l-3.198-4.064a3.744 3.744 0 0 1-.076.543c-.106.503-.307 1.004-.536 1.5-.134.29-.29.6-.446.914l-.31.626c-.516 1.068-.997 2.227-1.132 3.59-.124 1.26.046 2.73.815 4.481.128.011.257.025.386.044a6.363 6.363 0 0 1 3.326 1.505c.916.79 1.744 1.922 2.415 3.5zM8.199 22.569c.073.012.146.02.22.02.78.024 2.095.092 3.16.29.87.16 2.593.64 4.01 1.055 1.083.316 2.198-.548 2.355-1.664.114-.814.33-1.735.725-2.58l-.01.005c-.67-1.87-1.522-3.078-2.416-3.849a5.295 5.295 0 0 0-2.778-1.257c-1.54-.216-2.952.19-3.84.45.532 2.218.368 4.829-1.425 7.531zM5.533 9.938c-.023.1-.056.197-.098.29L2.82 16.059a1.602 1.602 0 0 0 .313 1.772l4.116 4.24c2.103-3.101 1.796-6.02.836-8.3-.728-1.73-1.832-3.081-2.55-3.831zM9.32 14.01c.615-.183 1.606-.465 2.745-.534-.683-1.725-.848-3.233-.716-4.577.154-1.552.7-2.847 1.235-3.95.113-.235.223-.454.328-.664.149-.297.288-.577.419-.86.217-.47.379-.885.46-1.27.08-.38.08-.72-.014-1.043-.095-.325-.297-.675-.68-1.06a1.6 1.6 0 0 0-1.475.36l-4.95 4.452a1.602 1.602 0 0 0-.513.952l-.427 2.83c.672.59 2.328 2.316 3.335 4.711.09.21.175.43.253.653z" /></svg>
             </span>
             <h3>Obsidian</h3>
-            <p>Publish your vault — wikilinks and graph included.</p>
+            <p>Your vault is already the finished format. Wiki-links, graph, Bases and Canvas included.</p>
             <a className="wf-learn" href="/publish-obsidian"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
           </div>
           <div className="wf-card">
@@ -318,11 +382,11 @@ showComments: false
           </div>
           <div className="wf-card">
             <span className="wf-ico" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M12 19h8" /><path d="m4 17 6-6-6-6" /></svg>
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
             </span>
-            <h3>CLI</h3>
-            <p>Publish straight from the terminal.</p>
-            <a className="wf-learn" href="/cli"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <h3>Claude &amp; ChatGPT</h3>
+            <p>Connect Flowershow and ask it to publish. Come back in a new chat and the same site grows.</p>
+            <a className="wf-learn" href="/publish-with-ai"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
           </div>
         </div>
       </div>
@@ -421,6 +485,10 @@ showComments: false
         </div>
         <div className="faq-grid">
           <div className="faq-item reveal">
+            <h3>Is this only for AI-made content?</h3>
+            <p>No. The files can be yours, your AI's, or written together. Flowershow publishes files, wherever they came from. If you already publish from Obsidian or GitHub, nothing changes for you.</p>
+          </div>
+          <div className="faq-item reveal">
             <h3>Is it really free?</h3>
             <p>Yes. The free plan lets you publish one site on a flowershow.app subdomain — no time limit, no credit card, just a small "Built with Flowershow" footer. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a className="textlink" href="/pricing"><span className="lm-txt">See pricing</span> <span className="arw">→</span></a></p>
           </div>
@@ -468,7 +536,7 @@ showComments: false
         <div className="final-card reveal">
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
-          <h2>Files to URL. Instantly. Free.</h2>
+          <h2>Publish is a command now.</h2>
           <p>Join the writers, researchers and teams behind 2,300+ sites.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>

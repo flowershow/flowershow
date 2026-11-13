@@ -239,30 +239,6 @@
 }
 .fs-root .hero-img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
 
-/* Hero slideshow — 4 use-case screenshots crossfading in a loop.
-   Each slide is a full-quality static image; opacity is animated with a shared
-   keyframe, staggered per slide. No JS needed (MDX can't run <script>). */
-.fs-root .hero-slide {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; object-position: left top;
-  opacity: 0; animation: heroSlide 24s linear infinite;
-}
-.fs-root .hero-slide:nth-child(1) { animation-delay: 0s; }
-.fs-root .hero-slide:nth-child(2) { animation-delay: 6s; }
-.fs-root .hero-slide:nth-child(3) { animation-delay: 12s; }
-.fs-root .hero-slide:nth-child(4) { animation-delay: 18s; }
-@keyframes heroSlide {
-  0%   { opacity: 0; }
-  4%   { opacity: 1; }
-  25%  { opacity: 1; }
-  29%  { opacity: 0; }
-  100% { opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .fs-root .hero-slide { animation: none; }
-  .fs-root .hero-slide:first-child { opacity: 1; }
-}
-
 /* ---------- Demo video — framed 16/9 embed near the foot of the page ---------- */
 .fs-root .demo-media {
   max-width: 900px; margin: 0 auto; position: relative;
@@ -429,11 +405,10 @@
 .fs-root .vis-tree .l1 { padding-left: 18px; } .fs-root .vis-tree .l2 { padding-left: 36px; }
 
 /* ---------- File types ("Not just Markdown") — one mixed folder beside what each
-   file type becomes. Reuses the file-tree vis and the feature-mini cards; the
-   tree sits in normal flow here (not inside a masked .ft-vis). ---------- */
+   file type becomes. The folder is the home page's icon tree (.ftree, below in
+   the Home section) beside the feature-mini cards. ---------- */
 .fs-root .ftypes-grid { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 2fr);
   gap: 16px; align-items: stretch; }
-.fs-root .ftypes-tree { font-size: 13px; padding: 24px; }
 .fs-root .ftypes-row { grid-template-columns: repeat(2, 1fr); margin: 0; }
 .fs-root .ftypes-row code { font-family: var(--mono); font-size: .85em; color: var(--ink);
   background: var(--canvas); border-radius: 5px; padding: 1px 6px; }
@@ -1531,31 +1506,93 @@
 }
 
 /* ==========================================================================
-   Home (next) — /home-next preview of the "Publishing for the AI age" homepage
+   Home — / ("Publishing for the AI age")
    --------------------------------------------------------------------------
-   Reuses the home page kit. Hero visual stacks the /cli terminal (.term) over
-   the agent chat (.vis-agent). Adds a three-up proof row and a thesis block.
+   Reuses the home page kit. Hero visual is two app windows across the full
+   width: a Claude chat (.hm-chat) and the site it published (.hm-site, a capture
+   of a demo team-offsite site in the LessFlowery theme). Adds a three-up proof
+   row, a thesis block and the icon file tree (.ftree).
    ========================================================================== */
-.fs-root.lp-home-next .hero-copy .eyebrow { display: inline-block; margin-bottom: 18px; }
-.fs-root.lp-home-next .hero-copy h1 { font-size: clamp(2.6rem, 6vw, 4.4rem); }
-.fs-root.lp-home-next code, .fs-root.lp-home-next .proof-item code {
+.fs-root.lp-home .hero-copy h1 { font-size: clamp(2.6rem, 6vw, 4.4rem); }
+/* "Connect your AI" fills with the page's card yellow (the Ways-to-publish cards) on hover;
+   the border keeps the standard .btn-secondary hover colour */
+.fs-root .btn-ai { transition: background .15s ease, border-color .15s ease, color .15s ease, transform .15s ease; }
+.fs-root .btn-ai:hover { background: var(--card-yellow); color: var(--card-ink); }
+.fs-root.lp-home code {
   font-family: var(--mono); font-size: .88em; color: var(--berry-ink);
   background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
 }
-.fs-root .hero-media-next { width: 100%; max-width: 520px; justify-self: center; display: flex; flex-direction: column; gap: 16px; }
-.fs-root .hero-media-next .vis-agent { box-shadow: 0 1px 2px rgba(17,13,15,.06), 0 30px 70px -28px rgba(17,13,15,.25); }
-.fs-root .hero-media-next .msg { font-size: 14px; }
-.fs-root .hero-media-next .term-body .ln { overflow-wrap: anywhere; }
-.fs-root .proof-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; max-width: 1040px; margin: 0 auto; }
-.fs-root .proof-item h3 { margin-bottom: 8px; }
-.fs-root .proof-item p { color: var(--body); }
+.fs-root .hero-media-next { width: 100%; display: grid; grid-template-columns: 1fr; gap: 20px; }
+.fs-root .hm-chat, .fs-root .hm-site {
+  margin: 0; display: flex; flex-direction: column; overflow: hidden; text-align: left;
+  background: var(--canvas); border: 1px solid var(--hairline-strong); border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(17,13,15,.05), 0 28px 64px -32px rgba(17,13,15,.32);
+}
+.fs-root .hm-bar { flex: none; display: flex; align-items: center; gap: 14px; height: 42px; padding: 0 14px; background: var(--surface-soft); border-bottom: 1px solid var(--hairline); }
+.fs-root .hm-dots { display: flex; gap: 6px; flex: none; }
+.fs-root .hm-dots i { width: 10px; height: 10px; border-radius: 50%; background: var(--hairline-strong); }
+.fs-root .hm-chat-title { font-size: 12.5px; font-weight: 500; color: var(--muted); }
+.fs-root .hm-url {
+  flex: 1; min-width: 0; display: flex; align-items: center; justify-content: center; gap: 6px;
+  height: 26px; padding: 0 12px; background: var(--canvas); border: 1px solid var(--hairline); border-radius: 7px;
+  font-size: 12.5px; color: var(--body); white-space: nowrap; overflow: hidden;
+}
+.fs-root .hm-url svg { width: 11px; height: 11px; flex: none; color: var(--muted); }
+.fs-root .hm-url-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 520px) { .fs-root .hm-site .hm-dots { display: none; } }
+.fs-root .hm-chat-body { flex: 1; display: flex; flex-direction: column; gap: 16px; padding: 22px 22px 8px; font-size: 14px; line-height: 1.5; color: var(--body); }
+.fs-root .hm-chat-body p { margin: 0; font-size: inherit; line-height: inherit; }
+.fs-root .hm-user { align-self: flex-end; max-width: 85%; padding: 9px 14px; border-radius: 14px; background: var(--surface-card); color: var(--ink); }
+.fs-root .hm-ai { display: flex; align-items: flex-start; gap: 10px; }
+.fs-root .hm-spark { flex: none; width: 20px; height: 20px; margin-top: 2px; color: #d97757; }
+.fs-root .hm-spark svg { width: 100%; height: 100%; display: block; }
+.fs-root .hm-ai-body { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+.fs-root .hm-tool { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border: 1px solid var(--hairline); border-radius: 8px; font-size: 12px; color: var(--muted); }
+.fs-root .hm-tool-name { font-weight: 600; color: var(--ink); }
+.fs-root .hm-ok { color: var(--fern-ink); font-weight: 700; }
+.fs-root .hm-link { color: var(--berry-ink); text-decoration: underline; text-underline-offset: 2px; overflow-wrap: anywhere; }
+.fs-root .hm-input { flex: none; display: flex; align-items: center; justify-content: space-between; margin: 12px 16px 16px; padding: 8px 8px 8px 14px; border: 1px solid var(--hairline-strong); border-radius: 12px; font-size: 13.5px; color: var(--muted-soft); }
+.fs-root .hm-input i { width: 26px; height: 26px; border-radius: 8px; background: var(--surface-card); }
+.fs-root .hm-site img { display: block; width: 100%; flex: 1 1 auto; min-height: 0; object-fit: cover; object-position: top left; }
+/* Proof row — three slogan-sized statements with a berry full stop, split by hairlines */
+.fs-root .section.proof { padding: clamp(48px, 7vw, 88px) 0; }
+.fs-root .proof-grid { display: grid; grid-template-columns: repeat(3, 1fr); max-width: 1132px; margin: 0 auto; }
+.fs-root .proof-item { padding: 4px 36px; }
+.fs-root .proof-item:first-child { padding-left: 0; }
+.fs-root .proof-item + .proof-item { border-left: 1px solid var(--hairline-strong); }
+.fs-root .proof-item h3 { margin-bottom: 16px; font-size: clamp(1.7rem, 2.6vw, 2.2rem); font-weight: 800; line-height: 1.08; letter-spacing: -0.035em; }
+.fs-root .proof-item h3::after { content: "."; color: var(--berry); }
+.fs-root .proof-item p { color: var(--muted); font-size: 16.5px; line-height: 1.55; }
 .fs-root .thesis { max-width: 720px; margin: 0 auto; text-align: center; }
 .fs-root .thesis h2 { margin: 12px 0 22px; }
 .fs-root .thesis p { color: var(--body); font-size: 1.1rem; line-height: 1.65; }
 .fs-root .thesis .thesis-punch { margin-top: 18px; color: var(--ink); font-weight: 600; }
-.fs-root .proof-close { max-width: 720px; margin: 36px auto 0; text-align: center; color: var(--ink); font-weight: 600; font-size: 1.1rem; }
-@media (max-width: 760px) { .fs-root .proof-grid { grid-template-columns: 1fr; } }
+/* File types — example folder as a soft card in the page sans (not a mono TUI tree):
+   line icons per file type, muted extensions, hairline guides for nesting. */
+.fs-root .ftree { background: var(--surface-soft); border-radius: 16px; padding: 24px 24px 22px; font-family: var(--sans); font-size: 16px; font-weight: 500; color: var(--ink); }
+.fs-root .ftree ul { list-style: none; margin: 0; padding: 0; }
+.fs-root .ftree ul ul { margin: 2px 0 4px 8px; padding-left: 16px; border-left: 1px solid var(--hairline-strong); }
+.fs-root .ftree-row { display: flex; align-items: center; padding: 5px 0; line-height: 1.3; white-space: nowrap; }
+.fs-root .ftree-row::before {
+  content: ""; flex: none; width: 17px; height: 17px; margin-right: 10px; background: var(--muted);
+  -webkit-mask: var(--ic) center / contain no-repeat; mask: var(--ic) center / contain no-repeat;
+}
+.fs-root .ftree .t-dir { font-weight: 700; }
+.fs-root .ftree .t-dir::before { background: var(--berry); }
+.fs-root .ftree .ext { color: var(--muted-soft); }
+.fs-root .ftree-root { font-size: 1.15rem; letter-spacing: -0.02em; padding-bottom: 12px; margin-bottom: 8px; border-bottom: 1px solid var(--hairline); }
+.fs-root .ftree .t-dir { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M20 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.9a2 2 0 0 1-1.69-.9L9.6 3.9A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2Z'/%3E%3C/svg%3E"); }
+.fs-root .ftree .t-md { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3Cpath d='M16 13H8'/%3E%3Cpath d='M16 17H8'/%3E%3Cpath d='M10 9H8'/%3E%3C/svg%3E"); }
+.fs-root .ftree .t-code { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3Cpath d='m10 13-2 2 2 2'/%3E%3Cpath d='m14 17 2-2-2-2'/%3E%3C/svg%3E"); }
+.fs-root .ftree .t-data { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3Cpath d='M8 13h2'/%3E%3Cpath d='M14 13h2'/%3E%3Cpath d='M8 17h2'/%3E%3Cpath d='M14 17h2'/%3E%3C/svg%3E"); }
+.fs-root .ftree .t-img { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='9' cy='9' r='2'/%3E%3Cpath d='m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21'/%3E%3C/svg%3E"); }
+.fs-root .ftree .t-canvas { --ic: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='8' height='8' rx='2'/%3E%3Cpath d='M7 11v4a2 2 0 0 0 2 2h4'/%3E%3Crect x='13' y='13' width='8' height='8' rx='2'/%3E%3C/svg%3E"); }
+@media (max-width: 760px) {
+  .fs-root .proof-grid { grid-template-columns: 1fr; }
+  .fs-root .proof-item { padding: 28px 0; }
+  .fs-root .proof-item:first-child { padding-top: 0; }
+  .fs-root .proof-item + .proof-item { border-left: 0; border-top: 1px solid var(--hairline-strong); }
+}
 @media (min-width: 900px) {
-  .fs-root .hero-media-next { max-width: 980px; flex-direction: row; align-items: center; }
-  .fs-root .hero-media-next > * { flex: 1 1 0; min-width: 0; }
+  .fs-root .hero-media-next { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; }
 }
