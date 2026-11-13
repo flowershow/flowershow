@@ -24,7 +24,7 @@ export type SiteAnalytics =
   | {
       status: 'ok';
       range: AnalyticsRange;
-      /** First day of the chart (YYYY-MM-DD). */
+      /** First counted day in the range (YYYY-MM-DD); the chart spans the whole range. */
       chartStart: string;
       /** First day this site was counted at all (YYYY-MM-DD). */
       countingSince: string;
@@ -198,8 +198,10 @@ export async function getSiteAnalytics(
       }),
     ]);
     const views = new Map(byDay.map((d) => [d.date, d.pageviews]));
+    // The chart always spans the whole range; days before counting are 0.
     const series: Array<{ date: string; views: number }> = [];
-    for (let t = startAt; t <= utcDay(now); t += DAY_MS) {
+    const today = utcDay(now);
+    for (let t = today - (range - 1) * DAY_MS; t <= today; t += DAY_MS) {
       const date = dayString(t);
       series.push({ date, views: views.get(date) ?? 0 });
     }

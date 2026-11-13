@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from '@testing-library/react';
 import { afterEach, describe, expect, it } from 'vitest';
 import type {
   PageRow,
@@ -60,11 +66,12 @@ describe('AnalyticsView', () => {
     view(ok());
     expect(screen.getByText('412')).toBeInTheDocument();
     expect(screen.getByText('1,380')).toBeInTheDocument();
-    expect(screen.getByText('people')).toHaveAttribute(
-      'title',
-      'An estimate based on device and browser, not a head count.',
-    );
-    expect(screen.getByText('views')).toBeInTheDocument();
+    expect(
+      screen.getByTitle(
+        'An estimate based on device and browser, not a head count.',
+      ),
+    ).toHaveTextContent('People');
+    expect(screen.getAllByText('Views').length).toBeGreaterThan(0);
     const l30 = screen.getByRole('link', { name: '30 days' });
     expect(l30).toHaveAttribute('href', '/site/s1/analytics?range=30');
     expect(l30).toHaveAttribute('aria-current', 'page');
@@ -82,13 +89,15 @@ describe('AnalyticsView', () => {
     ).toBeInTheDocument();
   });
 
-  it('shows 20 pages then all', () => {
+  it('shows 10 pages then all', () => {
     const pages = Array.from({ length: 25 }, (_, i) => page(i));
-    view(ok({ pages }));
-    expect(screen.getAllByRole('row')).toHaveLength(21);
-    fireEvent.click(screen.getByRole('button', { name: 'Show all pages' }));
-    expect(screen.getAllByRole('row')).toHaveLength(26);
-    expect(screen.queryByRole('button', { name: 'Show all pages' })).toBeNull();
+    view(ok({ pages, referrers: [] }));
+    const pagesRows = () =>
+      within(screen.getByText('Pages').closest('section')!).getAllByRole('row');
+    expect(pagesRows()).toHaveLength(11);
+    fireEvent.click(screen.getByRole('button', { name: 'Show all 25 pages' }));
+    expect(pagesRows()).toHaveLength(26);
+    expect(screen.queryByRole('button', { name: /Show all/ })).toBeNull();
   });
 
   it('renders a page with no href as plain text', () => {
@@ -103,22 +112,19 @@ describe('AnalyticsView', () => {
       people: 10 - i,
     }));
     const { unmount } = view(ok({ referrers }));
-    expect(screen.getByText('Readers came from')).toBeInTheDocument();
-    expect(screen.getByText(/d4\.com/)).toBeInTheDocument();
-    expect(screen.queryByText(/d5\.com/)).toBeNull();
+    expect(screen.getByText('Sources')).toBeInTheDocument();
+    expect(screen.getByText('d4.com')).toBeInTheDocument();
+    expect(screen.queryByText('d5.com')).toBeNull();
     unmount();
     view(ok({ referrers: [] }));
-    expect(screen.queryByText('Readers came from')).toBeNull();
+    expect(screen.queryByText('Sources')).toBeNull();
   });
 
   it('shows the footer', () => {
     view(ok());
     expect(
-      screen.getByText(
-        'Counted without cookies since 12 Nov. Includes your own visits.',
-      ),
+      screen.getByText('Includes your own visits. Updated 6 minutes ago.'),
     ).toBeInTheDocument();
-    expect(screen.getByText('Updated 6 minutes ago.')).toBeInTheDocument();
   });
 
   it('shows the empty state with the site link and a copy button', () => {
@@ -133,15 +139,6 @@ describe('AnalyticsView', () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole('button', { name: 'Copy link' }),
-    ).toBeInTheDocument();
-  });
-
-  it('footer uses countingSince, not the chart start', () => {
-    view(ok({ chartStart: '2026-12-01', countingSince: '2026-11-12' }));
-    expect(
-      screen.getByText(
-        'Counted without cookies since 12 Nov. Includes your own visits.',
-      ),
     ).toBeInTheDocument();
   });
 
