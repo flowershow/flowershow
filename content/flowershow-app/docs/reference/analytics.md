@@ -15,8 +15,9 @@ Open your site in the Flowershow dashboard and choose the **Analytics** tab. Sit
 You see:
 
 - **People** and **Views** over the last 7 or 30 days.
-- **Top pages**: the pages your readers open most.
-- **Came from**: the top 5 sites that linked readers to you. Direct visits (typed or bookmarked) aren't listed.
+- **A daily chart** of views. Hover over a day to see its number.
+- **Pages**: the pages your readers open most, with people and views for each.
+- **Sources**: the top 5 sites that linked readers to you. Direct visits (typed or bookmarked) aren't listed.
 
 Numbers update every 10 minutes.
 

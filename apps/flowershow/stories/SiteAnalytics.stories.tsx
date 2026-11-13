@@ -15,13 +15,28 @@ const base = {
   countability: { kind: 'counted' as const, hasRawHtml: false },
 };
 
-const pages: PageRow[] = Array.from({ length: 25 }, (_, i) => ({
-  path: `/page-${i}`,
-  title: i % 7 === 3 ? null : `Why I use markdown, part ${i + 1}`,
-  href: i % 7 === 3 ? null : `https://rufus.flowershow.me/page-${i}`,
-  people: 180 - i * 6,
-  views: 260 - i * 8,
-}));
+const titles = [
+  'Home',
+  'Why I write in public',
+  'Notes on the commons',
+  null,
+  'Reading list 2026',
+  'How this site is made',
+  'On open data',
+  'Weekly notes: November',
+  'Projects',
+  'A short guide to Markdown',
+];
+const pages: PageRow[] = Array.from({ length: 25 }, (_, i) => {
+  const title = i < titles.length ? titles[i]! : `Weekly notes ${i}`;
+  return {
+    path: `/page-${i}`,
+    title,
+    href: title ? `https://rufus.flowershow.me/page-${i}` : null,
+    people: Math.round(180 / (1 + i * 0.35)),
+    views: Math.round(260 / (1 + i * 0.35)),
+  };
+});
 
 const series = Array.from({ length: 30 }, (_, i) => ({
   date: new Date(Date.UTC(2026, 9, 22 + i)).toISOString().slice(0, 10),
@@ -50,7 +65,7 @@ const meta: Meta<typeof AnalyticsView> = {
   args: { ...base, data: ok },
   decorators: [
     (Story) => (
-      <div className="max-w-2xl p-4">
+      <div className="max-w-5xl p-4">
         <Story />
       </div>
     ),
@@ -61,7 +76,25 @@ type Story = StoryObj<typeof AnalyticsView>;
 
 export const WithNumbers: Story = {};
 export const SevenDays: Story = {
-  args: { range: 7, data: { ...ok, range: 7 } as SiteAnalytics },
+  args: {
+    range: 7,
+    data: { ...ok, range: 7, series: series.slice(-7) } as SiteAnalytics,
+  },
+};
+// Counting began two days ago: the chart still spans the whole 30 days.
+export const JustStarted: Story = {
+  args: {
+    data: {
+      ...ok,
+      chartStart: '2026-11-19',
+      countingSince: '2026-11-19',
+      totals: { people: 75, views: 138 },
+      series: series.map((p, i) => ({
+        ...p,
+        views: i === 28 ? 88 : i === 29 ? 50 : 0,
+      })),
+    } as SiteAnalytics,
+  },
 };
 export const NoReferrers: Story = {
   args: { data: { ...ok, referrers: [] } as SiteAnalytics },

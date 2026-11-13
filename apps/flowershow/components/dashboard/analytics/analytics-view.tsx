@@ -9,6 +9,7 @@ import type {
 import CopyButton from './copy-button';
 import { formatDay, formatNumber, formatUpdated } from './format';
 import PagesTable from './pages-table';
+import { ShareTable } from './share-table';
 import ViewsChart from './views-chart';
 
 export type AnalyticsViewProps = {
@@ -22,6 +23,29 @@ export type AnalyticsViewProps = {
 };
 
 const note = 'text-sm text-stone-500 dark:text-zinc-400';
+const card =
+  'rounded-lg border border-stone-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900';
+
+function Card({
+  title,
+  className = '',
+  children,
+}: {
+  title?: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`${card} ${className}`}>
+      {title && (
+        <h3 className="mb-3 text-base font-semibold text-stone-800 dark:text-zinc-100">
+          {title}
+        </h3>
+      )}
+      {children}
+    </section>
+  );
+}
 
 function RangeToggle({
   range,
@@ -57,15 +81,15 @@ function Stat({
   title?: string;
 }) {
   return (
-    <div>
-      <div className="text-4xl font-semibold tabular-nums text-stone-900 dark:text-zinc-100">
-        {formatNumber(value)}
-      </div>
+    <div className={card}>
       <div
         title={title}
-        className={`${note} ${title ? 'cursor-help underline decoration-dotted' : ''}`}
+        className={`text-sm font-medium text-stone-600 dark:text-zinc-300 ${title ? 'cursor-help underline decoration-dotted underline-offset-4' : ''}`}
       >
         {label}
+      </div>
+      <div className="mt-2 text-3xl font-semibold tabular-nums text-stone-900 dark:text-zinc-100">
+        {formatNumber(value)}
       </div>
     </div>
   );
@@ -118,36 +142,45 @@ export default function AnalyticsView({
           </div>
         </div>
       ) : (
-        <div className="space-y-8">
-          <div className="grid grid-cols-2 gap-6 sm:flex sm:gap-12">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-4 sm:max-w-md">
             <Stat
               value={data.totals.people}
-              label="people"
+              label="People"
               title="An estimate based on device and browser, not a head count."
             />
-            <Stat value={data.totals.views} label="views" />
+            <Stat value={data.totals.views} label="Views" />
           </div>
-          <ViewsChart series={data.series} />
-          <PagesTable pages={data.pages} />
-          {referrers.length > 0 && (
-            <div>
-              <h3 className="text-sm font-medium text-stone-800 dark:text-zinc-100">
-                Readers came from
-              </h3>
-              <p className={note}>
-                {referrers
-                  .map((r) => `${r.domain} ${formatNumber(r.people)}`)
-                  .join(' · ')}
-              </p>
-            </div>
-          )}
+          <Card>
+            <ViewsChart series={data.series} />
+          </Card>
+          <div className="grid gap-4 lg:grid-cols-2">
+            <Card
+              title="Pages"
+              className={referrers.length > 0 ? '' : 'lg:col-span-2'}
+            >
+              <PagesTable pages={data.pages} totalPeople={data.totals.people} />
+            </Card>
+            {referrers.length > 0 && (
+              <Card title="Sources" className="self-start">
+                <ShareTable
+                  heading="Referrer"
+                  total={data.totals.people}
+                  rows={referrers.map((r) => ({
+                    key: r.domain,
+                    label: r.domain,
+                    people: r.people,
+                  }))}
+                />
+              </Card>
+            )}
+          </div>
         </div>
       );
     footer = (
-      <div className={`mt-8 space-y-1 ${note}`}>
-        <p>Counted without cookies since {since}. Includes your own visits.</p>
-        <p>{formatUpdated(data.fetchedAt, now)}</p>
-      </div>
+      <p className={`mt-6 ${note}`}>
+        Includes your own visits. {formatUpdated(data.fetchedAt, now)}
+      </p>
     );
   }
 

@@ -138,12 +138,14 @@ describe('getSiteAnalytics', () => {
     if (r.status !== 'ok') throw new Error('expected ok');
     expect(r.chartStart).toBe('2026-12-18');
     expect(r.countingSince).toBe('2026-12-18');
-    expect(r.series.map((s) => s.date)).toEqual([
+    expect(r.series).toHaveLength(30);
+    expect(r.series[0]!.date).toBe('2026-11-21');
+    expect(r.series.slice(-3).map((s) => s.date)).toEqual([
       '2026-12-18',
       '2026-12-19',
       '2026-12-20',
     ]);
-    expect(r.series.map((s) => s.views)).toEqual([0, 9, 0]);
+    expect(r.series.slice(-3).map((s) => s.views)).toEqual([0, 9, 0]);
     expect(r.totals).toEqual({ people: 4, views: 9 });
     expect(r.referrers).toHaveLength(5);
     expect(r.referrers.every((x) => x.domain !== '')).toBe(true);

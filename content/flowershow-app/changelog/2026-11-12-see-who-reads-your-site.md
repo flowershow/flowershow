@@ -23,4 +23,8 @@ The screenshot above uses sample numbers.
 - Raw `.html` pages and password-protected sites aren't counted yet.
 - If you already use Google Analytics or Umami, it keeps working alongside.
 
+**Fixes**
+
+- The daily chart now always covers the full 7 or 30 days, with dates and a scale, so a few days of data no longer stretch across the whole width. Pages and sources sit side by side.
+
 More in [[analytics|Analytics]].
