@@ -118,6 +118,15 @@ describe('Flowershow MCP server', () => {
           'boolean',
         );
       }
+      // ChatGPT shows these as the tool's status line; the Apps SDK caps them at 64.
+      for (const key of [
+        'openai/toolInvocation/invoking',
+        'openai/toolInvocation/invoked',
+      ]) {
+        const text = tool._meta?.[key];
+        expect(typeof text, `${tool.name} ${key}`).toBe('string');
+        expect((text as string).length).toBeLessThanOrEqual(64);
+      }
     }
     const publish = tools.find((t) => t.name === 'publish');
     expect(publish?.description).toMatch(/account/);

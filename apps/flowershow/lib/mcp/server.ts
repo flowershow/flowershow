@@ -92,6 +92,15 @@ const SIGNED_IN_ONLY = {
   securitySchemes: [{ type: 'oauth2', scopes: [SCOPE_SITES_WRITE] }],
 };
 
+// Status line ChatGPT shows while each tool runs and after it finishes
+// (Apps SDK `_meta["openai/toolInvocation/*"]`, at most 64 characters each).
+function toolStatus(invoking: string, invoked: string) {
+  return {
+    'openai/toolInvocation/invoking': invoking,
+    'openai/toolInvocation/invoked': invoked,
+  };
+}
+
 // How updates work, shared by both publish descriptions.
 const UPDATE_RULES =
   'To remove pages or files, list their paths in delete (files can then be empty). Only when the user explicitly asks to start the site over, set replaceWholeSite to true: the files you send become the whole site and every other file is removed. If that would remove existing files, the call is refused and tells you how many and which; ask the user, then call again with confirmDeleteCount set to that number.';
@@ -254,7 +263,10 @@ export function createFlowershowMcpServer(
         }),
       },
       outputSchema: publishOutput,
-      _meta: PUBLIC_OR_SIGNED_IN,
+      _meta: {
+        ...PUBLIC_OR_SIGNED_IN,
+        ...toolStatus('Publishing to Flowershow…', 'Published to Flowershow'),
+      },
       annotations: {
         title: 'Publish to Flowershow',
         readOnlyHint: false,
@@ -306,7 +318,10 @@ export function createFlowershowMcpServer(
           destructiveHint: false,
           openWorldHint: false,
         },
-        _meta: SIGNED_IN_ONLY,
+        _meta: {
+          ...SIGNED_IN_ONLY,
+          ...toolStatus('Listing your sites…', 'Listed your sites'),
+        },
       },
       async () => {
         if (mode.kind !== 'user') return signInRequired(mode);
@@ -362,7 +377,10 @@ export function createFlowershowMcpServer(
           destructiveHint: false,
           openWorldHint: false,
         },
-        _meta: SIGNED_IN_ONLY,
+        _meta: {
+          ...SIGNED_IN_ONLY,
+          ...toolStatus("Listing the site's files…", "Listed the site's files"),
+        },
       },
       async ({ siteId, folder }) => {
         if (mode.kind !== 'user') return signInRequired(mode);
@@ -420,7 +438,10 @@ export function createFlowershowMcpServer(
           destructiveHint: false,
           openWorldHint: false,
         },
-        _meta: SIGNED_IN_ONLY,
+        _meta: {
+          ...SIGNED_IN_ONLY,
+          ...toolStatus('Reading the page…', 'Read the page'),
+        },
       },
       async ({ siteId, path }) => {
         if (mode.kind !== 'user') return signInRequired(mode);
@@ -463,7 +484,13 @@ export function createFlowershowMcpServer(
           idempotentHint: true,
           openWorldHint: false,
         },
-        _meta: SIGNED_IN_ONLY,
+        _meta: {
+          ...SIGNED_IN_ONLY,
+          ...toolStatus(
+            'Saving the site to your account…',
+            'Site saved to your account',
+          ),
+        },
       },
       async ({ siteId, claimToken }) => {
         if (mode.kind !== 'user') return signInRequired(mode);
