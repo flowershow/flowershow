@@ -108,4 +108,4 @@ With a token, the connector works as if you were signed in. In local agents with
 | `list-sites` | Signed in: lists your sites, and sites shared with you as an editor, with their `siteId`, URL, `role` (`owner` or `editor`) and `owner` username. |
 | `list-files` | Signed in: lists the files on one of your sites or a site shared with you (`siteId`) with their size and last change. Returns up to 1,000 paths; `folder` lists one folder. |
 | `read-file` | Signed in: returns the current text of one file (`siteId`, `path`), so the AI can change a page without losing what's on it. Text files only (Markdown, HTML, CSS, JSON, …), up to 256 KB. |
-| `claim-site` | Signed in: moves a site published without an account earlier in the conversation (`siteId` and `claimToken`) into your account, so it no longer expires. |
+| `claim-site` | Signed in: moves a site published without an account earlier in the conversation (`siteId` and `claimToken`) into your account, so it no longer expires. The site is named after its home page's title or first heading; its URL stays the same. |

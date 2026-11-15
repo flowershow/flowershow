@@ -1,9 +1,12 @@
+import { Prisma } from '@prisma/client';
+import { revalidateTag } from 'next/cache';
 import { NextResponse } from 'next/server';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, type Mock, vi } from 'vitest';
 
 const mockEnv = vi.hoisted(() => ({
   env: {
     ANONYMOUS_JWT_SECRET: 'test-secret',
+    NEXT_PUBLIC_SITE_DOMAIN: 'flowershow.me',
     NEXT_PUBLIC_HOME_DOMAIN: 'flowershow.app',
     NEXT_PUBLIC_VERCEL_ENV: 'production',
     MCP_ANON_HOURLY_LIMIT: undefined as string | undefined,
@@ -15,9 +18,10 @@ vi.mock('@/app/api/sites/id/[siteId]/sync/route', () => ({ POST: vi.fn() }));
 vi.mock('@/app/api/sites/id/[siteId]/status/route', () => ({ GET: vi.fn() }));
 vi.mock('@/app/api/sites/route', () => ({ POST: vi.fn() }));
 vi.mock('@/lib/claim-anon-site', () => ({ claimAnonSite: vi.fn() }));
+vi.mock('next/cache', () => ({ revalidateTag: vi.fn() }));
 vi.mock('@/server/db', () => ({
   default: {
-    site: { findUnique: vi.fn(), findMany: vi.fn() },
+    site: { findUnique: vi.fn(), findMany: vi.fn(), updateMany: vi.fn() },
     blob: { findMany: vi.fn() },
     publishFile: { findMany: vi.fn() },
   },
@@ -242,8 +246,31 @@ describe('realMcpDeps', () => {
   });
 
   describe('claimSite', () => {
-    const claim = claimAnonSite as ReturnType<typeof vi.fn>;
-    const findUnique = prisma.site.findUnique as ReturnType<typeof vi.fn>;
+    const claim = claimAnonSite as unknown as Mock;
+    const findUnique = prisma.site.findUnique as unknown as Mock;
+    const updateMany = prisma.site.updateMany as unknown as Mock;
+    const findBlobs = prisma.blob.findMany as unknown as Mock;
+    const fetch = fetchFile as unknown as Mock;
+    const claimed = () => {
+      claim.mockResolvedValue({
+        ok: true,
+        site: { id: 'site-1', projectName: 'qjgzkm9g', userId: 'u1' },
+        method: 'link',
+      });
+      findUnique.mockResolvedValue({
+        id: 'site-1',
+        projectName: 'Sweet Crumbs Bakery',
+        customDomain: null,
+        subdomain: 'qjgzkm9g-anon',
+        user: { username: 'alice' },
+      });
+      return generateSiteClaimToken('site-1', 'anon-1');
+    };
+
+    beforeEach(() => {
+      findBlobs.mockResolvedValue([]);
+      updateMany.mockResolvedValue({ count: 1 });
+    });
 
     it('refuses a claim token for another site without touching the database', async () => {
       const token = generateSiteClaimToken('site-other', 'anon-1');
@@ -285,6 +312,72 @@ describe('realMcpDeps', () => {
         status: 409,
         message: expect.stringMatching(/already/),
       });
+    });
+
+    it("renames the claimed site after its home page's title, keeping its URL", async () => {
+      const token = claimed();
+      findBlobs.mockResolvedValue([
+        { path: 'README.md', size: 20 },
+        { path: 'index.html', size: 200 },
+      ]);
+      fetch.mockResolvedValue(
+        '<html><head><title>Sweet Crumbs Bakery</title></head><body><h1>Welcome</h1></body></html>',
+      );
+      const site = await realMcpDeps().claimSite('u1', 'site-1', token);
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledWith({
+        projectId: 'site-1',
+        path: 'index.html',
+      });
+      // Only the name changes: the subdomain (and so the URL) is untouched.
+      expect(updateMany).toHaveBeenCalledExactlyOnceWith({
+        where: { id: 'site-1', userId: 'u1' },
+        data: { projectName: 'Sweet Crumbs Bakery' },
+      });
+      expect(revalidateTag).toHaveBeenCalledWith('site-1');
+      expect(site).toEqual({
+        siteId: 'site-1',
+        name: 'Sweet Crumbs Bakery',
+        url: 'https://qjgzkm9g-anon.flowershow.me',
+      });
+    });
+
+    it('adds a suffix when the account already has a site with that name', async () => {
+      const token = claimed();
+      findBlobs.mockResolvedValue([{ path: 'index.md', size: 20 }]);
+      fetch.mockResolvedValue('# Sweet Crumbs Bakery\n');
+      updateMany.mockRejectedValueOnce(
+        new Prisma.PrismaClientKnownRequestError('dup', {
+          code: 'P2002',
+          clientVersion: 'x',
+        }),
+      );
+      await realMcpDeps().claimSite('u1', 'site-1', token);
+      expect(updateMany.mock.calls.map(([a]) => a.data.projectName)).toEqual([
+        'Sweet Crumbs Bakery',
+        'Sweet Crumbs Bakery-2',
+      ]);
+    });
+
+    it('keeps the name when the home page has no heading', async () => {
+      const token = claimed();
+      findBlobs.mockResolvedValue([{ path: 'index.html', size: 20 }]);
+      fetch.mockResolvedValue('<p>hello</p>');
+      await realMcpDeps().claimSite('u1', 'site-1', token);
+      expect(updateMany).not.toHaveBeenCalled();
+    });
+
+    it('still claims the site when renaming fails', async () => {
+      const token = claimed();
+      findBlobs.mockResolvedValue([{ path: 'index.md', size: 20 }]);
+      fetch.mockResolvedValue('# Bakery\n');
+      updateMany.mockRejectedValue(new Error('db down'));
+      const error = vi.spyOn(console, 'error').mockImplementation(() => {});
+      await expect(
+        realMcpDeps().claimSite('u1', 'site-1', token),
+      ).resolves.toMatchObject({ siteId: 'site-1' });
+      expect(error).toHaveBeenCalled();
+      error.mockRestore();
     });
   });
 
