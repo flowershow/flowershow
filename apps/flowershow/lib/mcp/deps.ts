@@ -1,4 +1,6 @@
 import type { CreateSiteResponse } from '@flowershow/api-contract';
+import { Prisma } from '@prisma/client';
+import { revalidateTag } from 'next/cache';
 import { NextRequest } from 'next/server';
 import { GET as statusGET } from '@/app/api/sites/id/[siteId]/status/route';
 import { POST as syncPOST } from '@/app/api/sites/id/[siteId]/sync/route';
@@ -29,7 +31,12 @@ import {
   reportGlobalLimitReached,
   signInHint,
 } from './limits';
-import { ApiError, type PublishCredential, PublishError } from './publish';
+import {
+  ApiError,
+  type PublishCredential,
+  PublishError,
+  pageName,
+} from './publish';
 import { type McpDeps, READ_FILE_MAX_BYTES } from './server';
 
 /**
@@ -108,6 +115,59 @@ async function assertCanManage(userId: string, siteId: string) {
   }
 }
 
+/** Site name to try on the nth attempt after a clash: "name", "name-2", ... "name-5", then a random suffix. */
+function nthName(name: string, attempt: number): string {
+  if (attempt === 1) return name;
+  if (attempt < 6) return `${name}-${attempt}`;
+  return `${name}-${Math.random().toString(36).slice(2, 6)}`;
+}
+
+/** Pages a site's name is taken from, in order of preference. */
+const HOME_PAGES = ['index.md', 'index.html', 'index.htm', 'README.md'];
+
+/**
+ * Rename a just-claimed anonymous site (random name, e.g. "qjgzkm9g") after
+ * its home page's first heading or title, as `publish` names new account
+ * sites, so list-sites shows it under a readable name. Only the name changes:
+ * the URL comes from the subdomain, which is frozen at creation (ADR-0011).
+ * On a name clash in the account, tries "name-2", "name-3", ...; with no
+ * usable heading the site keeps its name.
+ */
+async function nameAfterHomePage(userId: string, siteId: string) {
+  const pages = await prisma.blob.findMany({
+    where: { siteId, path: { in: HOME_PAGES } },
+    select: { path: true, size: true },
+  });
+  pages.sort((a, b) => HOME_PAGES.indexOf(a.path) - HOME_PAGES.indexOf(b.path));
+  let name: string | null = null;
+  for (const page of pages) {
+    if (page.size > READ_FILE_MAX_BYTES) continue;
+    const text = await fetchFile({ projectId: siteId, path: page.path });
+    name = text === null ? null : pageName(page.path, text);
+    if (name) break;
+  }
+  if (!name) return;
+  for (let attempt = 1; attempt <= 6; attempt++) {
+    try {
+      await prisma.site.updateMany({
+        where: { id: siteId, userId },
+        data: { projectName: nthName(name, attempt) },
+      });
+    } catch (err) {
+      if (
+        err instanceof Prisma.PrismaClientKnownRequestError &&
+        err.code === 'P2002'
+      ) {
+        continue;
+      }
+      throw err;
+    }
+    // The name is the site title's fallback (resolveSiteName); same tag as renameSite.
+    revalidateTag(siteId);
+    return;
+  }
+}
+
 /** Content types read-file returns as text (Markdown, HTML, CSS, JSON, YAML, SVG, ...). */
 const TEXT_CONTENT_TYPE = /^text\/|[/+](json|xml|yaml|toml|x-ndjson|x-subrip)$/;
 
@@ -159,14 +219,13 @@ export function realMcpDeps(caller?: AnonCaller): McpDeps {
     async createUserSite(userId, name) {
       // Never overwrite: on a name clash, try "name-2", "name-3", ...
       for (let attempt = 1; attempt <= 6; attempt++) {
-        const projectName =
-          attempt === 1
-            ? name
-            : attempt < 6
-              ? `${name}-${attempt}`
-              : `${name}-${Math.random().toString(36).slice(2, 6)}`;
         const res = await createSitePOST(
-          internalRequest('POST', '/api/sites', { userId }, { projectName }),
+          internalRequest(
+            'POST',
+            '/api/sites',
+            { userId },
+            { projectName: nthName(name, attempt) },
+          ),
         );
         if (res.status === 409) continue;
         const { site } = await json<CreateSiteResponse>(res);
@@ -351,6 +410,10 @@ export function realMcpDeps(caller?: AnonCaller): McpDeps {
         properties: { site_id: siteId, claim_method: 'mcp' },
       });
       await posthog.shutdown();
+      // A failed rename must not fail the claim: the site is already the user's.
+      await nameAfterHomePage(userId, siteId).catch((err) =>
+        console.error('Naming the claimed site failed:', err),
+      );
       const site = await prisma.site.findUnique({
         where: { id: siteId },
         select: {

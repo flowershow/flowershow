@@ -573,6 +573,15 @@ function firstHeading(path: string, text: string): string | null {
 }
 
 /**
+ * Site name from one page's first heading (or title), or null if it has none
+ * that makes a valid site name.
+ */
+export function pageName(path: string, text: string): string | null {
+  const heading = firstHeading(path.toLowerCase(), text);
+  return heading && cleanName(heading);
+}
+
+/**
  * Name for a new account site: the given name, else the home page's first
  * heading (or title), else "site-" plus a random suffix.
  */
@@ -591,11 +600,7 @@ export function siteNameFor(
     ...files.filter((f) => /\.(md|html?)$/i.test(f.path)),
   ];
   for (const f of ordered) {
-    const heading = firstHeading(
-      f.path.toLowerCase(),
-      new TextDecoder().decode(f.bytes),
-    );
-    const name = heading && cleanName(heading);
+    const name = pageName(f.path, new TextDecoder().decode(f.bytes));
     if (name) return name;
   }
   return `site-${random()}`;
