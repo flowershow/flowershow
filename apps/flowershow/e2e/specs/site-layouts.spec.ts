@@ -48,7 +48,7 @@ test.describe('Reading layout on wide screens', () => {
     await expectTextCentred(page);
   });
 
-  test('essay: hovering the rail opens the outline to the right', async ({
+  test('essay: hovering the rail opens the outline into the margin', async ({
     page,
     basePath,
   }) => {
@@ -62,6 +62,8 @@ test.describe('Reading layout on wide screens', () => {
     const outlineBox = await box(outline);
     const railBox = await box(rail);
     expect(outlineBox.x).toBeGreaterThan(railBox.x);
+    const textBox = await box(page.locator('#mdxpage'));
+    expect(outlineBox.x + outlineBox.width).toBeLessThanOrEqual(textBox.x);
   });
 
   test('essay: the menu button opens the site contents', async ({

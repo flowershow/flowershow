@@ -1675,7 +1675,7 @@
 
   /* Left rail (reading layout): the sticky .reading-rail holds it, so its
      container is not sticky too; ticks hug the page edge and the outline
-     hangs to the right, over the text. */
+     opens to the right, into the margin. */
   .page-toc-container.is-rail.is-left {
     position: static;
     z-index: auto;
@@ -1688,9 +1688,20 @@
       max-height: calc(100vh - var(--navbar-height) - 7rem);
     }
 
+    /* Fit the outline into the margin left of the text: half the 80rem frame,
+       less half the text, the 3rem padding, the ticks and a gap. On screens
+       under ~1280px the margin is too narrow and it overlaps the text. */
     .toc-rail-outline {
       right: auto;
       left: 100%;
+      width: clamp(
+        11rem,
+        calc(
+          min(50vw, 40rem) - var(--post-max-width, var(--list-max-width, 44rem)) /
+            2 - 6rem
+        ),
+        17rem
+      );
       max-height: calc(100vh - var(--navbar-height) - 7rem);
     }
   }
