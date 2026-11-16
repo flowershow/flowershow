@@ -65,6 +65,6 @@ Once a republish has finished processing, a reload shows the new version of thes
 
 ## Limits
 
-When you publish with the [CLI](/docs/reference/cli), the Obsidian plugin or a dashboard upload, one publish can include up to 1,000 files, up to 100 MB per file and 500 MB in total. Storage per site depends on your [plan](/pricing).
+Files can be up to 100 MB each. One [CLI](/docs/reference/cli) publish or dashboard upload can upload up to 1,000 files and 500 MB in total; the CLI only counts files that changed since your last publish. The Obsidian plugin splits bigger publishes into batches for you. Storage per site depends on your [plan](/pricing).
 
 Files that aren't listed on this page are uploaded, but may not be reachable at their own URL. Use one of the types above for anything readers or scripts need to load.

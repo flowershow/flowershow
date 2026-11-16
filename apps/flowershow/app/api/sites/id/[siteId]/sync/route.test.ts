@@ -919,6 +919,83 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
     });
   });
 
+  describe('upload limits', () => {
+    const MBYTES = 1_048_576;
+    const manifest = (n: number, size = 10) =>
+      Array.from({ length: n }, (_, i) => ({
+        path: `notes/${i}.md`,
+        size,
+        sha: `sha-${i}`,
+      }));
+    const published = (files: ReturnType<typeof manifest>) =>
+      files.map((f) => ({ ...f, updatedAt: new Date() }));
+
+    it('accepts a large site where only a few files changed', async () => {
+      // 7000 files, 0.5 MB each (3.5 GB declared), 5 edited
+      const site = manifest(7000, MBYTES / 2);
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(
+        published(site) as any,
+      );
+      const local = site.map((f, i) => (i < 5 ? { ...f, sha: 'edited' } : f));
+
+      const res = await POST(
+        makeRequest({ files: local }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      const body = await res.json();
+      expect(body.toUpdate).toHaveLength(5);
+      expect(body.toUpload).toHaveLength(0);
+      expect(body.unchanged).toHaveLength(6995);
+    });
+
+    it('returns the full plan on a dry run however many files would upload', async () => {
+      const res = await POST(
+        makeRequest({ files: manifest(1500) }, { searchParams: 'dryRun=true' }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      expect((await res.json()).toUpload).toHaveLength(1500);
+    });
+
+    it('allows 1000 uploads when the rest of the manifest is unchanged', async () => {
+      vi.mocked(prisma.blob.findMany).mockResolvedValueOnce(
+        published(manifest(1)) as any,
+      );
+
+      const res = await POST(
+        makeRequest({ files: manifest(1001) }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(200);
+      expect((await res.json()).toUpload).toHaveLength(1000);
+    });
+
+    it('rejects a real sync that would upload more than 1000 files', async () => {
+      const res = await POST(
+        makeRequest({ files: manifest(1001) }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(413);
+      expect((await res.json()).error).toBe('payload_too_large');
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+
+    it('rejects a real sync that would upload more than 500 MB', async () => {
+      const res = await POST(
+        makeRequest({ files: manifest(6, 90 * MBYTES) }),
+        makeParams(SITE_ID),
+      );
+
+      expect(res.status).toBe(413);
+      expect(prisma.publish.create).not.toHaveBeenCalled();
+    });
+  });
+
   describe('when there are no changes', () => {
     it('does not create a publish record', async () => {
       vi.mocked(prisma.blob.findMany).mockResolvedValueOnce([
