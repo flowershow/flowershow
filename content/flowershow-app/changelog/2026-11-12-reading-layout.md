@@ -4,6 +4,7 @@ date: 2026-11-12
 description: 'Set "layout": "reading" to centre the text, put the page contents on the left as a rail and move the site contents behind a menu button.'
 authors:
   - rufuspollock
+image: "[[assets/docs-site-layouts-reading.webp]]"
 showToc: false
 ---
 

@@ -23,6 +23,8 @@ Start from the result you want. Each recipe below has the exact lines to copy. T
 
 For documentation, wikis and notes, where readers move between many pages and want to see where they are. This is the `docs` layout and the default: site contents on the left, text in the middle, page contents on the right.
 
+![The docs layout: the site contents on the left, the page title and text in the middle, and an On this page list of headings on the right](/assets/docs-site-layouts-docs.webp)
+
 There is nothing to add. If your site has `"layout": "reading"` and you want this back, remove that line or set `"layout": "docs"`.
 
 ### Essays, papers or a course
@@ -41,8 +43,10 @@ On screens 1024px and wider, readers now see:
 
 - The text centred in a reading column, the same width as a blog post (44rem, unless your theme or `custom.css` sets `--post-max-width`; see [[post-pages#styling|Post pages]]).
 - A menu button at the top left of the page. It opens the site contents in a drawer.
-- The page contents as a rail of ticks at the far left, one tick per heading. Hover over the rail, or tab to it, to open the outline. The rail appears on pages with three or more headings, as it does on the right in `docs`.
+- The page contents as a rail of ticks at the far left, one tick per heading. Hover over the rail, or tab to it, to open the outline in the margin beside the text (on screens narrower than about 1280px it overlaps the text). The rail appears on pages with three or more headings, as it does on the right in `docs`.
 - Previous and next links at the bottom of each page, in the order of the site contents. Posts, listing pages and changelog pages keep their own navigation.
+
+![The reading layout: the text centred in a reading column; at the far left a menu button above a rail of ticks, with the page's outline open beside it in the margin](/assets/docs-site-layouts-reading.webp)
 
 Phones look the same as before: the Contents block under the title, and the site contents in a drawer opened from the bar at the top.
 
@@ -51,6 +55,8 @@ Phones look the same as before: the Contents block under the title, and the site
 For a site whose home page or section page is a map of what is inside, while the pages behind it are for reading. Readers get the whole site tree on the front page and a clear reading column everywhere else. LessWrong works this way.
 
 Set the site to `reading`, then set the front page to `docs`.
+
+![A front page in the docs layout: the site contents on the left and a short introduction with links to three essays](/assets/docs-site-layouts-front-page.webp)
 
 In `config.json`:
 
