@@ -20,20 +20,13 @@ export function clientTypeToPublishSource(
   return PublishSource.dashboard_upload;
 }
 
-export function validatePublishFiles(
+/**
+ * Per-file checks: shape, a finite non-negative size, and the per-file size
+ * cap. Safe on a full sync manifest, where most files are unchanged.
+ */
+export function validateFileMetadata(
   files: FileMetadata[],
 ): NextResponse | null {
-  if (files.length > MAX_FILES) {
-    return NextResponse.json(
-      {
-        error: 'payload_too_large',
-        message: `Maximum ${MAX_FILES} files per request`,
-      },
-      { status: 413 },
-    );
-  }
-
-  let totalSize = 0;
   for (const file of files) {
     if (!file.path || typeof file.size !== 'number' || !file.sha) {
       return NextResponse.json(
@@ -64,9 +57,28 @@ export function validatePublishFiles(
         { status: 413 },
       );
     }
-    totalSize += file.size;
   }
+  return null;
+}
 
+/**
+ * Per-request caps on what one request hands out upload URLs for. Apply to
+ * the files actually being uploaded, never to unchanged files in a manifest:
+ * that would cap the size of a site rather than the size of a publish.
+ */
+export function validateUploadLimits(
+  files: FileMetadata[],
+): NextResponse | null {
+  if (files.length > MAX_FILES) {
+    return NextResponse.json(
+      {
+        error: 'payload_too_large',
+        message: `Maximum ${MAX_FILES} files to upload per request`,
+      },
+      { status: 413 },
+    );
+  }
+  const totalSize = files.reduce((sum, f) => sum + f.size, 0);
   if (totalSize > MAX_TOTAL_SIZE) {
     return NextResponse.json(
       {
@@ -76,8 +88,14 @@ export function validatePublishFiles(
       { status: 413 },
     );
   }
-
   return null;
+}
+
+/** Every file in the request is uploaded (e.g. POST /files). */
+export function validatePublishFiles(
+  files: FileMetadata[],
+): NextResponse | null {
+  return validateFileMetadata(files) ?? validateUploadLimits(files);
 }
 
 export const ANON_MAX_FILES = 200;

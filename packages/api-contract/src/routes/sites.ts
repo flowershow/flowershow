@@ -287,7 +287,7 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
       },
       '413': {
         description:
-          'Payload too large (claim-token publishes: max 200 files, 50 MB total)',
+          'Payload too large: a file over 100 MB, or more than 1000 new/changed files or 500 MB of them in one non-dry-run request (unchanged files in the manifest do not count); claim-token publishes: max 200 files, 50 MB total',
         content: { 'application/json': { schema: ErrorResponse } },
       },
       '500': {

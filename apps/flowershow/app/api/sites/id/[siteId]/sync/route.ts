@@ -22,7 +22,8 @@ import {
   type FileMetadata,
   PRESIGNED_URL_TTL,
   validateAnonPublishFiles,
-  validatePublishFiles,
+  validateFileMetadata,
+  validateUploadLimits,
 } from '@/lib/publish-limits';
 import PostHogClient from '@/lib/server-posthog';
 import { authorizeSiteRequest } from '@/lib/site-auth';
@@ -42,8 +43,13 @@ import prisma from '@/server/db';
  *   or only the paths listed in `delete` (mode "merge")
  * - Identifies unchanged files
  *
+ * `files` is the whole manifest, so its size is not capped (beyond the request
+ * body limit); the per-request upload caps apply to new and changed files.
+ *
  * Query parameters:
  * - dryRun: If true, only returns what would happen without making any changes
+ *   (upload caps are skipped: nothing is uploaded, and callers such as the
+ *   Obsidian plugin use the plan to upload in batches via /files)
  */
 export async function POST(
   request: NextRequest,
@@ -111,10 +117,11 @@ export async function POST(
       );
     }
 
+    // Anonymous limits are whole-site caps, so they apply to the manifest.
     const validationError =
       access.kind === 'anon'
         ? validateAnonPublishFiles(files)
-        : validatePublishFiles(files);
+        : validateFileMetadata(files);
     if (validationError) return validationError;
 
     const { existingBlobs, inFlightPaths, inFlightAdds } =
@@ -192,6 +199,11 @@ export async function POST(
         ]);
         if (siteError) return siteError;
       }
+    }
+
+    if (!dryRun) {
+      const uploadError = validateUploadLimits([...toUpload, ...toUpdate]);
+      if (uploadError) return uploadError;
     }
 
     // Storage limits are advisory (signed-in publishes only; anonymous sites
