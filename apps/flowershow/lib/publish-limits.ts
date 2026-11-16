@@ -21,8 +21,8 @@ export function clientTypeToPublishSource(
 }
 
 /**
- * Per-file checks: shape, a finite non-negative size, and the per-file size
- * cap. Safe on a full sync manifest, where most files are unchanged.
+ * Shape checks: path, sha and a finite non-negative size. Safe on a full sync
+ * manifest, where most files are unchanged and never uploaded.
  */
 export function validateFileMetadata(
   files: FileMetadata[],
@@ -48,27 +48,29 @@ export function validateFileMetadata(
         { status: 400 },
       );
     }
-    if (file.size > MAX_FILE_SIZE) {
-      return NextResponse.json(
-        {
-          error: 'file_too_large',
-          message: `File ${file.path} exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
-        },
-        { status: 413 },
-      );
-    }
   }
   return null;
 }
 
 /**
- * Per-request caps on what one request hands out upload URLs for. Apply to
- * the files actually being uploaded, never to unchanged files in a manifest:
- * that would cap the size of a site rather than the size of a publish.
+ * Caps on what one request hands out upload URLs for: per-file size, file
+ * count and total bytes. Apply to the files actually being uploaded, never to
+ * unchanged files in a manifest: that would cap the size of a site rather
+ * than the size of a publish.
  */
 export function validateUploadLimits(
   files: FileMetadata[],
 ): NextResponse | null {
+  const tooLarge = files.find((f) => f.size > MAX_FILE_SIZE);
+  if (tooLarge) {
+    return NextResponse.json(
+      {
+        error: 'file_too_large',
+        message: `File ${tooLarge.path} exceeds maximum size of ${MAX_FILE_SIZE / 1024 / 1024}MB`,
+      },
+      { status: 413 },
+    );
+  }
   if (files.length > MAX_FILES) {
     return NextResponse.json(
       {

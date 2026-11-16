@@ -994,6 +994,24 @@ describe('POST /api/sites/id/[siteId]/sync', () => {
       expect(res.status).toBe(413);
       expect(prisma.publish.create).not.toHaveBeenCalled();
     });
+
+    it('reports a file over 100 MB on a dry run, rejects uploading it', async () => {
+      const files = [
+        ...manifest(2),
+        { path: 'video.mp4', size: 150 * MBYTES, sha: 'v' },
+      ];
+
+      const dry = await POST(
+        makeRequest({ files }, { searchParams: 'dryRun=true' }),
+        makeParams(SITE_ID),
+      );
+      expect(dry.status).toBe(200);
+      expect((await dry.json()).toUpload).toHaveLength(3);
+
+      const res = await POST(makeRequest({ files }), makeParams(SITE_ID));
+      expect(res.status).toBe(413);
+      expect((await res.json()).error).toBe('file_too_large');
+    });
   });
 
   describe('when there are no changes', () => {
