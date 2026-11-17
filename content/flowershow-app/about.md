@@ -1,64 +1,16 @@
 ---
 title: About Flowershow
-description: Why we built Flowershow, why publishing matters, and the bigger story behind it.
+description: Who makes Flowershow, why we make it, and how we keep it going.
 showToc: false
 showEditLink: false
 showComments: false
 ---
 
-## What we built
+## Who we are
 
-Flowershow is a markdown publishing platform. Drop your files — or connect a GitHub repo, use the CLI, or publish from Obsidian — and get a live, hosted website in seconds. No build pipelines, no CMS configuration, no deploy scripts. Just content and a URL.
+We're Rufus and Ola, plus a few friends, and we make Flowershow. It turns a Markdown or HTML file, a folder, or a whole Obsidian vault into a real website.
 
-The core promise is speed and simplicity. From file to URL in seconds, beautiful by default, zero configuration required. Your content stays in plain markdown files you own — no lock-in, Git-integrable, durable. Flowershow is infrastructure, not a silo.
-
-We started building it because we needed it ourselves. We've been building content and data-driven websites for over a decade, and markdown had become our preferred medium for almost everything — internal notes, client work, research, documentation. But publishing that markdown was always painful. Too many steps, too much configuration, too much to maintain. Every project meant reinventing the same pipeline.
-
-So we built the tool we wished existed. Flowershow started as an internal scaffold for markdown-driven sites, absorbed the features we kept wanting — Obsidian wiki links, mermaid diagrams, LaTeX, graph views — and eventually became something we thought a wider community could benefit from. So we opened it up.
-
----
-
-## Why now
-
-Content is moving faster than ever. AI writes drafts in seconds. Research accumulates in tools like Obsidian overnight. Teams produce more in a day than they used to in a week.
-
-Publishing infrastructure hasn't kept up. Setting up a website still means choosing a framework, configuring a build pipeline, picking a CMS, wiring up a deploy script — and that's before you've written a word. The tools we use to share ideas were designed for a world that no longer exists.
-
-Flowershow is what you'd build if you started from scratch today. The whole workflow is: drop your content, get a URL. Fast because it should be. Simple because complexity is our problem, not yours.
-
-And increasingly, the person publishing isn't a person at all — it's an agent, a script, a pipeline. Flowershow works for that too. The same simplicity that makes it fast for humans makes it easy to automate.
-
-We think of this as publishing rebuilt for the AI age. Not because AI is a feature, but because the speed and volume of content creation today demands infrastructure that can keep up.
-
----
-
-## The bigger picture
-
-### Why publishing tools matter
-
-Tools matter. Not in a abstract, obvious way — in a specific, consequential way.
-
-The ability to publish and share ideas quickly, easily, and reliably shapes what gets shared and what doesn't. It shapes whose voice carries and whose gets lost to friction. It shapes whether knowledge compounds across people and time, or stays locked in private notes and internal drives.
-
-We believe that better publishing tools are part of better collective sensemaking — our shared ability to understand reality, process complexity, and build on each other's thinking.
-
-This might sound like a large claim for a markdown publisher. But the connection is direct: you can't build on ideas that aren't shared. You can't share ideas that are painful to publish. Reduce the friction, and more gets out. More gets read. More gets built on.
-
-### The markdown foundation
-
-Markdown is the right foundation for this. Not because it's the most sophisticated format — it isn't — but because it's composable, durable, and human-readable. History of computing shows that simple, open formats outlast sophisticated, proprietary ones. Markdown will still be here in twenty years. The notes you write today in Obsidian or a plain text editor will be readable by any tool that exists then.
-
-That durability matters. When you publish with Flowershow, your content isn't locked into a database or a proprietary CMS format. It's files. Yours. Forever.
-
-### Open over walled
-
-We believe the web works better as an open ecosystem than a collection of walled platforms. Publishing on your own URL — even a free flowershow.app subdomain — is meaningfully different from posting to a platform that can change its algorithm, lock you out, or disappear. It's a small act of digital independence, and it adds up.
-
-This connects to the broader mission: Flowershow is one part of what a healthy, open publishing infrastructure looks like. We're building it because we think it matters, and because nobody else was building it quite the way we wanted it to exist.
-
----
-
-## The team
+We've spent twenty years on open tools, and we are hopelessly fond of Markdown. We publish our own work with Flowershow every day, including this page.
 
 ```list
 from: people
@@ -72,10 +24,40 @@ See [everyone who builds and writes for Flowershow](/people).
 
 ---
 
-## Why the name?
+## Why we make Flowershow
 
-A flower show is where you exhibit your garden to the world — the carefully cultivated things you've grown, put on display for others to see and appreciate. Flowershow does that for your ideas. Your notes, your research, your writing: we give them a venue.
+We love Markdown. There, we've said it. A text file you can open in anything, that will still open in thirty years, that an AI writes fluently and a human can fix on a phone. Most of what we know lives in files like that. So does most of what you know, if you use Obsidian, or a coding agent, or a folder called notes.
+
+The odd thing is how hard it still is to put those files on the web as a proper site. Developers got their moment a decade ago, when Vercel turned deploying an app into one command. Content mostly didn't. You either moved your words into a CMS, a database behind a login that you type into and patch forever, or you built your own site and made fifty decisions you didn't care about. Which framework. Which Markdown processor. How maths renders. Where to host. Then you kept it all working.
+
+We made those fifty decisions, and we keep them working. That's Flowershow. A file or a folder goes in, and a real website comes out, with navigation, search, backlinks and your domain. Publish from Obsidian, from GitHub, from a terminal, or by saying "publish this" to Claude.
+
+We've been at this a while. Rufus has been publishing Markdown as websites for about twenty years. We built the first internal version of Flowershow around 2020, for our own sites, and opened it up in 2022. The longer argument is in our manifesto, [The CMS is over](/the-cms-is-over).
 
 ---
 
-_[Start publishing — free forever →](https://cloud.flowershow.app/)_
+## What we're really after
+
+Behind the product is the thing we actually care about. We want better places to put knowledge online: a wiki that's a pleasure to read, a research library you can find your way around, an essay that looks like it was worth writing. More of that, from more people, is the dream. Good thinking needs good venues.
+
+The ability to publish quickly, easily and well shapes what gets shared. It decides whether knowledge builds up across people and time, or stays stuck in private notes and internal drives. You can't build on ideas that aren't shared, and people don't share what is painful to publish. That's why we think better publishing tools are part of better collective sense-making.
+
+Markdown is the right foundation for it. It isn't the most sophisticated format, but it's simple, open and readable by people and machines alike, and simple open formats outlast clever closed ones. Your site is your folder: plain Markdown and HTML, in Git if you like, readable by any tool in 2046.
+
+We also think the web works better open than walled. Publishing on your own address, even a free flowershow.me one, is different from posting into a platform that owns the page. It's a small act of independence, and it adds up.
+
+---
+
+## How we keep it going
+
+There's no venture capitalist in this story. We've built Flowershow with our own money and our own time since 2022, because we're passionate about knowledge sharing and collaboration. When you pay for [Premium](/pricing) or back us as a supporter, you help us keep going and do more. We're in this for the long run.
+
+---
+
+## Why the name?
+
+A flower show is where you put your garden on show. Your notes are a garden. Flowershow is the show.
+
+---
+
+_[Publish for free →](https://cloud.flowershow.app/login)_

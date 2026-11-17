@@ -13,7 +13,7 @@ showEditLink: false
       <div className="section-head reveal">
         <span className="eyebrow">Pricing</span>
         <h2>Simple, transparent pricing.</h2>
-        <p>Start free on a flowershow.me subdomain. Upgrade for a custom domain, search, and more — no credit card to begin.</p>
+        <p>Start free on a flowershow.me subdomain. Upgrade for a custom domain, search, and more. No credit card to begin.</p>
       </div>
       <div className="price-grid reveal">
         <div className="price-card">
@@ -54,7 +54,7 @@ showEditLink: false
             <span><span className="price-amount">$5</span><span className="price-unit">/month/site</span></span>
             <span className="price-alt"><span className="price-amount">$50</span><span className="price-unit">/year/site</span></span>
           </div>
-          <p className="price-desc">For businesses and creators who need advanced features and customization capabilities.</p>
+          <p className="price-desc">Your own domain, search across every page, and no “Built with Flowershow” badge. It’s also what keeps Flowershow independent.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
           <ul className="price-feats">
             <li>
@@ -158,8 +158,8 @@ showEditLink: false
   <section className="final">
     <div className="wrap">
       <div className="final-card reveal">
-        <h2>Empower Flowershow development.</h2>
-        <p>Join us in making digital gardens bloom. Your contribution helps us build better tools for knowledge sharing.</p>
+        <h2>Like it? Help us make more of it.</h2>
+        <p>We’ve built Flowershow with our own money and our own time since 2022, and we have no investors. Premium plans and supporters keep us going and let us do more. We’re in this for the long run.</p>
         <a className="btn btn-primary" href="https://buy.stripe.com/8wM9BeckD0vKfLi6ox">❤️ Become a supporter <span className="arw">→</span></a>
       </div>
     </div>

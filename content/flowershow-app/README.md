@@ -1,6 +1,6 @@
 ---
-title: "The CMS is over — Publish Markdown and HTML as a Website"
-description: "Publishing for the AI age. You and your AI work in files now. Ask Claude, ChatGPT or your coding agent to publish them, and Flowershow turns your Markdown and HTML into a site on your domain, at the same URL every update. Free to start, open source."
+title: "Say publish, get a website. Publish Markdown, HTML and Obsidian vaults"
+description: "Say publish, get a website. Flowershow turns a Markdown or HTML file, a folder, or a whole Obsidian vault into a real website, with navigation, search and your domain. Publish from Obsidian, GitHub, the terminal or Claude. Free to start, open source."
 layout: plain
 showToc: false
 showEditLink: false
@@ -12,10 +12,11 @@ showComments: false
     <section className="hero">
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
-          <h1>The CMS is over.</h1>
-          <p className="lede">You and your AI work in files now. Ask Claude, ChatGPT or your coding agent to publish them, and Flowershow turns your Markdown and HTML into a site on your domain, at the same URL every update. No database, no admin panel, no plugins.</p>
+          <span className="eyebrow hero-eyebrow">Publishing for the AI age · <a href="/the-cms-is-over">The CMS is over</a></span>
+          <h1>Say “publish”. Get a website.</h1>
+          <p className="lede">Flowershow turns a Markdown or HTML file, a folder, or a whole Obsidian vault into a real website, with navigation, search and your domain. Publish from Obsidian, GitHub, the terminal or Claude.</p>
           <div className="cta-row">
-            <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
+            <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Publish for free <span className="arw">→</span></a>
             <a className="btn btn-secondary btn-google" href="https://cloud.flowershow.app/login?provider=google">
               <svg className="g-ico" aria-hidden="true" viewBox="0 0 24 24">
                 <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
@@ -27,6 +28,7 @@ showComments: false
             </a>
             <a className="btn btn-secondary btn-ai" href="/publish-with-ai">Connect your AI <span className="arw">→</span></a>
           </div>
+          <p className="hero-aside">One-click deploys for notes, docs, wikis and websites.</p>
           <p className="microcopy"><b>Free to start</b> · about $5/month for your own domain · open source</p>
         </div>
         <div className="hero-media-next reveal">
@@ -69,13 +71,14 @@ showComments: false
       <div className="wrap">
         <div className="proof-grid reveal">
           <div className="proof-item">
+            <h3>We made the fifty decisions</h3>
+            <p>Framework, rendering, maths, diagrams, search, hosting. Decided for you and kept working, so you just publish.</p>
+          </div>
+          <div className="proof-item">
             <h3>Nothing to convert</h3>
             <p>Markdown, HTML, whole Obsidian vaults with wiki-links, Bases and Canvas. Publish the files you already have.</p>
           </div>
-          <div className="proof-item">
-            <h3>Same URL every time</h3>
-            <p>Each publish updates the site in place. A site that grows, not a pile of links.</p>
-          </div>
+
           <div className="proof-item">
             <h3>From wherever you work</h3>
             <p>Claude, ChatGPT, Claude Code, Cursor, Obsidian, GitHub. Free to start, about $5/month, open source.</p>
@@ -90,6 +93,7 @@ showComments: false
           <h2>Vercel made deploy a command. Flowershow makes publish one.</h2>
           <p>Publishing never got that, because publishing was a place: a CMS you log into, type into boxes and maintain. In 1985 PageMaker and the LaserWriter moved typesetting from the shop to the desk. The CMS is the web's typesetting shop: your words move into its database, behind its login.</p>
           <p className="thesis-punch">Your files are already the finished format. Skip the shop.</p>
+          <p className="thesis-more"><a href="/the-cms-is-over">Read our manifesto: The CMS is over <span className="arw">→</span></a></p>
         </div>
       </div>
     </section>
@@ -490,7 +494,7 @@ showComments: false
           </div>
           <div className="faq-item reveal">
             <h3>Is it really free?</h3>
-            <p>Yes. The free plan lets you publish one site on a flowershow.app subdomain — no time limit, no credit card, just a small "Built with Flowershow" footer. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a className="textlink" href="/pricing"><span className="lm-txt">See pricing</span> <span className="arw">→</span></a></p>
+            <p>Yes. The free plan lets you publish one site on a flowershow.me subdomain. No time limit, no credit card, just a small "Built with Flowershow" footer. Premium plans start at $5/month and unlock custom domains, full-text search, and more. <a className="textlink" href="/pricing"><span className="lm-txt">See pricing</span> <span className="arw">→</span></a></p>
           </div>
           <div className="faq-item reveal">
             <h3>What can I publish?</h3>

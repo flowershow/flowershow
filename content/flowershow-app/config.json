@@ -75,6 +75,10 @@
         "name": "Pricing"
       },
       {
+        "href": "/about",
+        "name": "About"
+      },
+      {
         "href": "https://demo.flowershow.me/",
         "name": "Demo"
       },

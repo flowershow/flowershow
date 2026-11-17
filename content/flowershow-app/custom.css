@@ -1596,3 +1596,12 @@
 @media (min-width: 900px) {
   .fs-root .hero-media-next { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 24px; }
 }
+
+/* Homepage hero eyebrow, aside and manifesto link (brand 2026-11-17) */
+.fs-root.lp-home .hero-eyebrow { display: inline-block; margin-bottom: 18px; }
+.fs-root.lp-home .hero-eyebrow a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.fs-root.lp-home .hero-eyebrow a:hover { color: var(--plum-deep); }
+.fs-root.lp-home .hero-aside { margin: 22px 0 6px; color: var(--ink); font-weight: 600; font-size: 1.02rem; }
+.fs-root .thesis .thesis-more { margin-top: 20px; font-weight: 600; }
+.fs-root .thesis .thesis-more a { color: var(--berry-ink); text-decoration: none; }
+.fs-root .thesis .thesis-more a:hover { text-decoration: underline; }
