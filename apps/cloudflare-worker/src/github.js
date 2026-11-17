@@ -173,8 +173,46 @@ export async function computeGitBlobSha(content) {
   const combined = new Uint8Array(header.length + content.length);
   combined.set(header);
   combined.set(content, header.length);
-  const hashBuffer = await crypto.subtle.digest('SHA-1', combined);
-  return Array.from(new Uint8Array(hashBuffer))
+  return toHex(await crypto.subtle.digest('SHA-1', combined));
+}
+
+/**
+ * Git blob SHA-1 of a stream of `size` bytes, hashed chunk by chunk so memory
+ * stays flat whatever the file size. Also returns the first `headBytes` bytes.
+ */
+export async function hashGitBlobStream(stream, size, headBytes = 0) {
+  const digest = new crypto.DigestStream('SHA-1');
+  const writer = digest.getWriter();
+  await writer.write(new TextEncoder().encode(`blob ${size}\0`));
+  const headChunks = [];
+  let headLength = 0;
+  let total = 0;
+  const reader = stream.getReader();
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (headLength < headBytes) {
+      const part = value.slice(0, headBytes - headLength);
+      headChunks.push(part);
+      headLength += part.length;
+    }
+    total += value.length;
+    await writer.write(value);
+  }
+  await writer.close();
+  if (total !== size) throw new Error(`Read ${total} of ${size} bytes`);
+
+  const head = new Uint8Array(headLength);
+  let offset = 0;
+  for (const part of headChunks) {
+    head.set(part, offset);
+    offset += part.length;
+  }
+  return { sha: toHex(await digest.digest), head };
+}
+
+function toHex(buffer) {
+  return Array.from(new Uint8Array(buffer))
     .map((b) => b.toString(16).padStart(2, '0'))
     .join('');
 }

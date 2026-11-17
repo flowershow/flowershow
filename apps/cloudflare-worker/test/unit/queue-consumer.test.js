@@ -15,6 +15,7 @@ import {
   safeExtractDescription,
   syncTags,
 } from '../../src/queue-consumer.js';
+import { computeGitBlobSha } from '../../src/github.js';
 
 const TINY_PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO7Zx9QAAAAASUVORK5CYII=';
@@ -640,16 +641,27 @@ function createRecordingSql() {
   return { sql, queries };
 }
 
-function createR2Storage(content) {
-  const bytes = new TextEncoder().encode(content);
+function createR2Storage(content, chunkSize = 64 * 1024) {
+  const bytes =
+    typeof content === 'string' ? new TextEncoder().encode(content) : content;
   return {
     type: 'r2',
     client: {
       head: async () => ({ customMetadata: {} }),
-      get: async () => ({
-        size: bytes.length,
-        arrayBuffer: async () => bytes.buffer,
-      }),
+      get: async () => {
+        let offset = 0;
+        return {
+          size: bytes.length,
+          arrayBuffer: async () => bytes.buffer,
+          body: new ReadableStream({
+            pull(controller) {
+              if (offset >= bytes.length) return controller.close();
+              controller.enqueue(bytes.slice(offset, offset + chunkSize));
+              offset += chunkSize;
+            },
+          }),
+        };
+      },
     },
   };
 }
@@ -729,6 +741,47 @@ test('handleMessage - a root _footer.md is an ordinary indexed page', async () =
   );
   expect(calls.upsert).toBe(1);
   expect(calls.deleted).toEqual([]);
+});
+
+// Non-markdown files are hashed as a stream, so files over the 10 MiB the
+// worker can buffer are stored, with the same git blob sha clients compute.
+test('handleMessage - a file over 10 MiB is stored with its git sha and size', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense } = createTypesenseMock();
+  const bytes = new Uint8Array(12 * 1024 * 1024).map((_, i) => i % 251);
+  const msg = putMessage('video.mp4');
+
+  await handleMessage({
+    msg,
+    storage: createR2Storage(bytes),
+    sql,
+    typesense,
+    env: {},
+  });
+
+  expect(msg.ack).toHaveBeenCalled();
+  const insert = queries.find((q) => q.text.startsWith('INSERT INTO "Blob"'));
+  expect(insert.values[5]).toBe(await computeGitBlobSha(bytes));
+  expect(insert.values[6]).toBe(bytes.length);
+});
+
+test('handleMessage - image dimensions survive a stream split mid-header', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense } = createTypesenseMock();
+  const png = Uint8Array.from(atob(TINY_PNG_BASE64), (c) => c.charCodeAt(0));
+  const msg = putMessage('tiny.png');
+
+  await handleMessage({
+    msg,
+    storage: createR2Storage(png, 7),
+    sql,
+    typesense,
+    env: {},
+  });
+
+  const insert = queries.find((q) => q.text.startsWith('INSERT INTO "Blob"'));
+  expect(insert.values[5]).toBe(await computeGitBlobSha(png));
+  expect([insert.values[9], insert.values[10]]).toEqual([1, 1]);
 });
 
 test('handleMessage - a draft page is stored and tagged but not searchable', async () => {

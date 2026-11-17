@@ -12,10 +12,12 @@ import {
 } from '@flowershow/core';
 import matter from 'gray-matter';
 import { imageSize, types as supportedImageTypes } from 'image-size';
-import { computeGitBlobSha } from './github.js';
+import { computeGitBlobSha, hashGitBlobStream } from './github.js';
 import {
   deleteFile,
   getPublishIdFromMetadata,
+  MAX_BUFFERED_BYTES,
+  openFileStream,
   readFileBytes,
 } from './storage.js';
 import { captureError, generateId } from './utils.js';
@@ -314,15 +316,20 @@ async function processNonMarkdownFile({
   const key = `${siteId}/${branch}/raw/${path}`;
 
   try {
-    const contentBytes = await readFileBytes(storage, key);
-    const sha = await computeGitBlobSha(contentBytes);
-    const size = contentBytes.length;
+    const { size, stream } = await openFileStream(storage, key);
+    const isImage = isSupportedImagePath(path);
+    // Images over MAX_BUFFERED_BYTES get dimensions from their start only.
+    const { sha, head } = await hashGitBlobStream(
+      stream,
+      size,
+      isImage ? MAX_BUFFERED_BYTES : 0,
+    );
 
     let width = null;
     let height = null;
-    if (isSupportedImagePath(path)) {
+    if (isImage) {
       try {
-        const dimensions = extractImageDimensions(path, contentBytes);
+        const dimensions = extractImageDimensions(path, head);
         width = dimensions.width;
         height = dimensions.height;
       } catch (dimError) {

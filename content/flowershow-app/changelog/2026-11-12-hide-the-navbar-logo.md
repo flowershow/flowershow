@@ -15,3 +15,4 @@ You can now show no logo at all in your navbar, not even the Flowershow logo tha
 - Replacing a logo, favicon or social image in the dashboard shows the new image right away, instead of the old one for a while.
 - Adding a custom domain no longer sends visitors of a public site to it before the domain works. Your pages stay reachable on the Flowershow address until your DNS is set up, then redirect to your domain.
 - Sites with more than 1,000 files work with the Obsidian plugin and CLI again. The plugin listed every file as "New" once a vault passed 1,000 files, and the CLI refused to republish such a folder even when only a few files had changed. Only new and changed files now count towards the 1,000-files-per-publish limit. Update the Obsidian plugin to publish more than 1,000 files in one go.
+- Files between 10 MB and 100 MB, such as videos and large PDFs, now publish. They used to upload, then fail with "File too large".
