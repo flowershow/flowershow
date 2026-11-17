@@ -7,7 +7,7 @@ import {
 import { GitHubSyncWorkflow } from './github-sync-workflow.js';
 import { PublishFinalizerWorkflow } from './publish-finalizer-workflow.js';
 import { handleMessage } from './queue-consumer.js';
-import { deleteSiteStorage } from './storage.js';
+import { deleteStoragePrefix } from './storage.js';
 import { captureError, generateId } from './utils.js';
 
 export { GitHubSyncWorkflow, PublishFinalizerWorkflow };
@@ -254,7 +254,7 @@ async function cleanupExpiredSites({ sql, storage, typesense }) {
   for (const site of expiredSites) {
     try {
       await sql`DELETE FROM "Site" WHERE id = ${site.id}`;
-      await deleteSiteStorage(storage, site.id);
+      await deleteStoragePrefix(storage, `${site.id}/`);
       if (typesense) {
         try {
           await typesense.deleteCollection(`${site.id}`);

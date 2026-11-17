@@ -1,18 +1,34 @@
 import { WorkflowEntrypoint } from 'cloudflare:workers';
+import { NonRetryableError } from 'cloudflare:workflows';
 import { getPostgresClient, getStorageClient } from './clients.js';
 import {
   fetchGitHubConfig,
-  fetchGitHubFileRaw,
+  fetchGitHubFileStream,
   fetchGitHubRepoTree,
   getGitHubInstallationToken,
 } from './github.js';
-import { deleteFile, uploadFile } from './storage.js';
+import {
+  deleteFile,
+  deleteStoragePrefix,
+  readFileBytes,
+  uploadFile,
+} from './storage.js';
 import { captureError, generateId } from './utils.js';
 
 const BATCH_SIZE = 20;
+// Same per-file cap as the publish API (MAX_FILE_SIZE in
+// apps/flowershow/lib/publish-limits.ts).
+const MAX_FILE_BYTES = 100 * 1024 * 1024;
 // Storage key segment for site content: `{siteId}/main/raw/{path}`. It is NOT
 // the git branch: the app reads every site from `main` regardless of ghBranch.
 const STORAGE_BRANCH = 'main';
+// The sync plan (files to upsert and delete) lives in storage, not in step
+// outputs: a step output is capped at 1 MiB, about 5k files. Its keys are
+// `{siteId}/_github-sync/raw/{publishId}/…`, a non-main prefix that the queue
+// consumer ignores and site deletion removes.
+const PLAN_BRANCH = '_github-sync';
+// Batches per stored plan page: 1000 files, about 200 KB of JSON.
+const PLAN_PAGE_BATCHES = 50;
 
 export class GitHubSyncWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
@@ -27,6 +43,9 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       gitCommitMessage = null,
     } = event.payload;
 
+    const storage = getStorageClient(this.env);
+    const plan = createPlanStore(storage, siteId, publishId);
+
     try {
       // Generate a fresh token on every run (outside any step so retries don't reuse
       // a cached expired value — GitHub App installation tokens expire in 1h).
@@ -36,7 +55,6 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       );
 
       const sql = getPostgresClient(this.env);
-      const storage = getStorageClient(this.env);
 
       // Verify site exists
       await step.do('fetch-site', async () => {
@@ -63,109 +81,101 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
           );
         });
 
-      // Fetch GitHub repo tree — strip to only the fields used downstream (path,
-      // type, sha) to stay within the Workflows 1 MiB step-output limit.
-      const gitHubTree = await step.do('fetch-github-tree', async () => {
-        const full = await fetchGitHubRepoTree(
+      const normalizedRoot = normalizeRootDir(rootDir);
+
+      // Work out which files to upsert and delete, store the batches, and
+      // return only their counts.
+      const counts = await step.do('plan-sync', async () => {
+        const gitHubTree = await fetchGitHubRepoTree(
           ghRepository,
           ghBranch,
           accessToken,
         );
+        // GitHub cuts the list at 100,000 entries or 7 MB. Every file missing
+        // from a cut list would be deleted from the site.
+        if (gitHubTree.truncated) {
+          throw new NonRetryableError(
+            `GitHub returned only part of the file list of ${ghRepository} (over 100,000 entries or 7 MB). Sync stopped so that no files are deleted from the site.`,
+          );
+        }
+        const existingBlobs = await sql`
+          SELECT path, sha FROM "Blob" WHERE site_id = ${siteId}
+        `;
+        const toUpsert = computeFilesToUpsert(
+          existingBlobs,
+          gitHubTree,
+          normalizedRoot,
+          includes,
+          excludes,
+        ).map(({ ghTreeItem, filePath, changeType }) => ({
+          ghSha: ghTreeItem.sha,
+          size: ghTreeItem.size,
+          filePath,
+          changeType,
+        }));
+        const toDelete = computeFilesToDelete(
+          existingBlobs,
+          gitHubTree,
+          normalizedRoot,
+          includes,
+          excludes,
+        ).map((blob) => blob.path);
+
+        const upsertBatches = createBatches(toUpsert, BATCH_SIZE);
+        const deleteBatches = createBatches(toDelete, BATCH_SIZE);
+        await plan.write('upsert', upsertBatches);
+        await plan.write('delete', deleteBatches);
         return {
-          tree: full.tree.map(({ path, type, sha }) => ({ path, type, sha })),
+          upsertBatches: upsertBatches.length,
+          deleteBatches: deleteBatches.length,
         };
       });
 
-      const normalizedRoot = normalizeRootDir(rootDir);
-
-      // Determine which files need to be upserted — store only the fields used
-      // during processing (ghPath/ghSha for download, filePath/changeType for DB)
-      // to keep step output small.
-      const fileBatchesToUpsert = await step.do(
-        'get-file-batches-to-upsert',
-        async () => {
-          const existingBlobs = await sql`
-          SELECT path, sha FROM "Blob" WHERE site_id = ${siteId}
-        `;
-          const items = computeFilesToUpsert(
-            existingBlobs,
-            gitHubTree,
-            normalizedRoot,
-            includes,
-            excludes,
-          );
-          return createBatches(
-            items.map(({ ghTreeItem, filePath, changeType }) => ({
-              ghPath: ghTreeItem.path,
-              ghSha: ghTreeItem.sha,
-              filePath,
-              changeType,
-            })),
-            BATCH_SIZE,
-          );
-        },
-      );
-
-      // Determine which files should be deleted
-      const fileBatchesToDelete = await step.do(
-        'get-file-batches-to-delete',
-        async () => {
-          const existingBlobs = await sql`
-          SELECT path FROM "Blob" WHERE site_id = ${siteId}
-        `;
-          const toDelete = computeFilesToDelete(
-            existingBlobs,
-            gitHubTree,
-            normalizedRoot,
-            includes,
-            excludes,
-          );
-          return createBatches(toDelete, BATCH_SIZE);
-        },
-      );
-
-      // Create PublishFile rows for all files to upsert
-      await step.do('create-publish-files-for-upsert', async () => {
-        const allItems = fileBatchesToUpsert.flat();
-        if (allItems.length === 0) return;
-        for (const { filePath, changeType } of allItems) {
-          await sql`
-          INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
-          VALUES (${generateId()}, ${publishId}, ${filePath}, ${changeType}, 'uploading')
-        `;
-        }
-      });
+      // Create PublishFile rows for all files to upsert, one step per plan page
+      const upsertPages = Math.ceil(counts.upsertBatches / PLAN_PAGE_BATCHES);
+      for (let page = 0; page < upsertPages; page++) {
+        await step.do(`create-publish-files-${page}`, async () => {
+          const batches = await plan.readPage('upsert', page);
+          for (const { filePath, changeType } of batches.flat()) {
+            await sql`
+            INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
+            VALUES (${generateId()}, ${publishId}, ${filePath}, ${changeType}, 'uploading')
+          `;
+          }
+        });
+      }
 
       // Delete file batches from R2; create terminal PublishFile rows for each deletion.
       // Worker handles Blob/Typesense cleanup via DeleteObject events.
       await Promise.all(
-        fileBatchesToDelete.map((batch, index) =>
+        Array.from({ length: counts.deleteBatches }, (_, index) =>
           step.do(`delete-files-batch-${index}`, async () => {
+            const batch = await plan.readBatch('delete', index);
             const deletedPaths = [];
 
             await Promise.all(
-              batch.map(async (blob) => {
+              batch.map(async (path) => {
                 try {
-                  await deleteFile(storage, siteId, STORAGE_BRANCH, blob.path);
-                  deletedPaths.push(blob.path);
+                  await deleteFile(storage, siteId, STORAGE_BRANCH, path);
+                  deletedPaths.push(path);
                 } catch (err) {
                   console.error(
-                    `Storage deletion failed ${siteId}/${blob.path}: ${err.message}`,
+                    `Storage deletion failed ${siteId}/${path}: ${err.message}`,
                   );
                 }
               }),
             );
 
             const deletedSet = new Set(deletedPaths);
-            for (const blob of batch) {
+            for (const path of batch) {
               await sql`
               INSERT INTO "PublishFile" (id, publish_id, path, change_type, status)
               VALUES (
                 ${generateId()},
                 ${publishId},
-                ${blob.path},
+                ${path},
                 'deleted',
-                ${deletedSet.has(blob.path) ? 'success' : 'error'}
+                ${deletedSet.has(path) ? 'success' : 'error'}
               )
             `;
             }
@@ -186,20 +196,20 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         });
       });
 
-      // Download from GitHub and upload to R2 in batches.
-      // Batches run sequentially (not via Promise.all) so at most BATCH_SIZE
-      // file buffers are resident in memory at once — fanning out all batches
-      // concurrently loaded every file into the isolate simultaneously and blew
-      // past the 128 MiB Worker memory limit on large/media-heavy repos.
-      // Files within a batch are still fetched/uploaded in parallel.
-      for (let index = 0; index < fileBatchesToUpsert.length; index++) {
-        const batch = fileBatchesToUpsert[index];
+      // Stream each file from GitHub into R2, so no file is held whole in
+      // memory. Batches run one after another, files within a batch in parallel.
+      for (let index = 0; index < counts.upsertBatches; index++) {
         await step.do(`process-files-to-upsert-batch-${index}`, async () => {
+          const batch = await plan.readBatch('upsert', index);
           await Promise.all(
-            batch.map(async ({ ghPath, ghSha, filePath }) => {
+            batch.map(async ({ ghSha, size, filePath }) => {
               try {
-                const extension = ghPath.split('.').pop() || '';
-                const fileBuffer = await fetchGitHubFileRaw(
+                if (size > MAX_FILE_BYTES) {
+                  throw new Error(
+                    `File ${filePath} exceeds maximum size of ${MAX_FILE_BYTES / 1024 / 1024}MB`,
+                  );
+                }
+                const stream = await fetchGitHubFileStream(
                   ghRepository,
                   ghSha,
                   accessToken,
@@ -209,8 +219,9 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
                   siteId,
                   STORAGE_BRANCH,
                   filePath,
-                  fileBuffer,
-                  extension,
+                  stream,
+                  size,
+                  filePath.split('.').pop() || '',
                   publishId,
                 );
               } catch (error) {
@@ -232,7 +243,10 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
           );
         });
       }
+
+      await step.do('delete-sync-plan', () => plan.delete());
     } catch (err) {
+      await plan.delete().catch(() => {});
       await captureError(this.env, {
         source: 'workflow_github_sync',
         siteId,
@@ -256,6 +270,47 @@ function createBatches(items, batchSize) {
     batches.push(items.slice(i, i + batchSize));
   }
   return batches;
+}
+
+/** Sync plan batches, stored as pages of PLAN_PAGE_BATCHES batches. */
+function createPlanStore(storage, siteId, publishId) {
+  const pagePath = (kind, page) => `${publishId}/${kind}-${page}.json`;
+  const readPage = async (kind, page) => {
+    const bytes = await readFileBytes(
+      storage,
+      `${siteId}/${PLAN_BRANCH}/raw/${pagePath(kind, page)}`,
+    );
+    return JSON.parse(new TextDecoder().decode(bytes));
+  };
+  return {
+    async write(kind, batches) {
+      for (let page = 0; page * PLAN_PAGE_BATCHES < batches.length; page++) {
+        const start = page * PLAN_PAGE_BATCHES;
+        const bytes = new TextEncoder().encode(
+          JSON.stringify(batches.slice(start, start + PLAN_PAGE_BATCHES)),
+        );
+        await uploadFile(
+          storage,
+          siteId,
+          PLAN_BRANCH,
+          pagePath(kind, page),
+          new Blob([bytes]).stream(),
+          bytes.length,
+          'json',
+        );
+      }
+    },
+    readPage,
+    async readBatch(kind, index) {
+      const page = await readPage(kind, Math.floor(index / PLAN_PAGE_BATCHES));
+      return page[index % PLAN_PAGE_BATCHES];
+    },
+    delete: () =>
+      deleteStoragePrefix(
+        storage,
+        `${siteId}/${PLAN_BRANCH}/raw/${publishId}/`,
+      ),
+  };
 }
 
 /**
