@@ -8,7 +8,12 @@ import {
 } from '@aws-sdk/client-s3';
 import { getContentType } from '@flowershow/core';
 
-const MAX_FILE_BYTES = 10 * 1024 * 1024;
+/**
+ * Most bytes the worker holds in memory for one file. Markdown is read whole
+ * (it is parsed); other files are streamed, keeping at most this much of their
+ * start (for image dimensions). The worker has 128 MB for up to 10 files at once.
+ */
+export const MAX_BUFFERED_BYTES = 10 * 1024 * 1024;
 
 export async function getPublishIdFromMetadata(storage, key) {
   try {
@@ -31,13 +36,31 @@ export async function readFileBytes(storage, key) {
       new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
     );
     const length = resp.ContentLength;
-    if (length > MAX_FILE_BYTES) throw new Error(`File too large: ${length}`);
+    if (length > MAX_BUFFERED_BYTES)
+      throw new Error(`File too large: ${length}`);
     return new Uint8Array(await resp.Body.transformToByteArray());
   }
   const obj = await storage.client.get(key);
   if (!obj) throw new Error(`Object not found: ${key}`);
-  if (obj.size > MAX_FILE_BYTES) throw new Error(`File too large: ${obj.size}`);
+  if (obj.size > MAX_BUFFERED_BYTES)
+    throw new Error(`File too large: ${obj.size}`);
   return new Uint8Array(await obj.arrayBuffer());
+}
+
+/** The stored file as a stream, with its stored size. */
+export async function openFileStream(storage, key) {
+  if (storage.type === 's3') {
+    const resp = await storage.client.send(
+      new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
+    );
+    return {
+      size: resp.ContentLength,
+      stream: resp.Body.transformToWebStream(),
+    };
+  }
+  const obj = await storage.client.get(key);
+  if (!obj) throw new Error(`Object not found: ${key}`);
+  return { size: obj.size, stream: obj.body };
 }
 
 export async function uploadFile(

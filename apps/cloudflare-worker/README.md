@@ -288,7 +288,7 @@ A file with `publish: false` in its frontmatter is deleted from R2, which fires 
 ## Known Limitations and Gotchas
 
 - **Workflow step limit**: Cloudflare Workflows cap at ~1024 steps per instance. At the current `BATCH_SIZE` of 20 in `github-sync-workflow.js`, this handles up to ~20k files per GitHub sync. Do not reduce `BATCH_SIZE` without rechecking this cap.
-- **File size limit**: The queue consumer rejects files larger than 5 MB.
+- **File size limit**: The queue consumer reads markdown files whole and rejects ones over 10 MiB. Other files are streamed, so their size is limited only by the API's upload cap; images over 10 MiB get their dimensions from their first 10 MiB.
 - **Dev Workflow workaround**: `env.PUBLISH_WORKFLOW.get()` does not resolve correctly in Miniflare (local dev). In `dev` mode, the queue consumer's completion check finalizes the `Publish` record directly rather than sending a `publish-complete` event to the Workflow.
 - **At-least-once delivery**: Cloudflare Queues deliver messages at least once. The atomic completion `UPDATE` and the `Blob` upsert (`INSERT ... ON CONFLICT DO UPDATE`) are both idempotent, so redelivery is safe.
 - **GitHub App private keys**: GitHub generates PKCS#1 keys; Web Crypto only accepts PKCS#8. `github.js` handles the conversion at runtime — no pre-processing of the key is needed beyond base64-encoding.
