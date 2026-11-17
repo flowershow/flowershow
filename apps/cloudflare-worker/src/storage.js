@@ -63,12 +63,18 @@ export async function openFileStream(storage, key) {
   return { size: obj.size, stream: obj.body };
 }
 
+/**
+ * Store `size` bytes read from `stream`. R2 needs the length up front: the
+ * stream goes through a FixedLengthStream, which also fails the upload when the
+ * stream ends early or runs long.
+ */
 export async function uploadFile(
   storage,
   siteId,
   branch,
   filePath,
-  content,
+  stream,
+  size,
   extension,
   publishId,
 ) {
@@ -81,21 +87,26 @@ export async function uploadFile(
   const cacheControl = `max-age=${isMedia ? 300 : 0}, must-revalidate`;
 
   if (storage.type === 's3') {
+    // Local dev (MinIO) only, so buffering the file is fine here.
     await storage.client.send(
       new PutObjectCommand({
         Bucket: storage.bucket,
         Key: key,
-        Body: new Uint8Array(content),
+        Body: new Uint8Array(await new Response(stream).arrayBuffer()),
         ContentType: contentType,
         CacheControl: cacheControl,
         ...(publishId && { Metadata: { 'publish-id': publishId } }),
       }),
     );
   } else {
-    await storage.client.put(key, content, {
-      httpMetadata: { contentType, cacheControl },
-      ...(publishId && { customMetadata: { 'publish-id': publishId } }),
-    });
+    const { readable, writable } = new FixedLengthStream(size);
+    await Promise.all([
+      stream.pipeTo(writable),
+      storage.client.put(key, readable, {
+        httpMetadata: { contentType, cacheControl },
+        ...(publishId && { customMetadata: { 'publish-id': publishId } }),
+      }),
+    ]);
   }
 }
 
@@ -110,8 +121,8 @@ export async function deleteFile(storage, siteId, branch, filePath) {
   }
 }
 
-export async function deleteSiteStorage(storage, siteId) {
-  const prefix = `${siteId}/`;
+/** Delete every object whose key starts with `prefix`. */
+export async function deleteStoragePrefix(storage, prefix) {
   if (storage.type === 's3') {
     let truncated = true;
     while (truncated) {

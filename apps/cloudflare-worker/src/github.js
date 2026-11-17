@@ -58,13 +58,14 @@ export async function fetchGitHubConfig(
   }
 }
 
-export async function fetchGitHubFileRaw(ghRepository, fileSha, token) {
+/** The blob's raw bytes as a stream, so large files are never held in memory. */
+export async function fetchGitHubFileStream(ghRepository, fileSha, token) {
   const resp = await githubFetch(
     `/repos/${ghRepository}/git/blobs/${fileSha}`,
     token,
     'application/vnd.github.raw+json',
   );
-  return resp.arrayBuffer();
+  return resp.body;
 }
 
 function derLength(len) {
