@@ -5,6 +5,7 @@ date: 2026-11-17
 authors:
   - rufuspollock
   - olayway
+image: /assets/covers/hiroshige-morning-glories-and-bird.webp
 showToc: false
 showEditLink: false
 showComments: false
