@@ -798,8 +798,8 @@ export default function HomePage() {
               </dt>
               <dd className="mt-4 lg:col-span-7 lg:mt-0">
                 <p className="text-base/7 text-gray-600 dark:text-zinc-300">
-                  Markdown (.md) and MDX (.mdx) files, plus images and assets.
-                  Up to 5 files without an account.
+                  Markdown (.md), MDX (.mdx) and Word (.docx) files, plus images
+                  and assets. Up to 5 files without an account.
                 </p>
               </dd>
             </div>

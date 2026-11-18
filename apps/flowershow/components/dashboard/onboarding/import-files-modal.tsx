@@ -41,7 +41,8 @@ export default function ImportFilesOnboardingModal({
     return (
       file.name.endsWith('.md') ||
       file.name.endsWith('.mdx') ||
-      file.name.endsWith('.html')
+      file.name.endsWith('.html') ||
+      file.name.toLowerCase().endsWith('.docx')
     );
   };
 
@@ -54,7 +55,8 @@ export default function ImportFilesOnboardingModal({
     if (!files.some(isContentFile))
       return {
         valid: false,
-        error: 'At least one content file (.md, .mdx, or .html) is required',
+        error:
+          'At least one content file (.md, .mdx, .html or .docx) is required',
       };
     return { valid: true, error: null };
   };

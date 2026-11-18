@@ -74,7 +74,8 @@ const SUMMARY_FALLBACKS: Record<string, string[]> = {
 const AUTHOR_FALLBACKS: Record<string, string[]> = {
   authors: ['authors', 'author'],
 };
-const MARKDOWN_RE = /\.mdx?$/i;
+/** Pages with a Markdown body: md, mdx and converted Word documents. */
+const MARKDOWN_RE = /\.(?:mdx?|docx)$/i;
 const IMAGE_EXT_RE = /\.(png|jpe?g|gif|webp|avif|svg)$/i;
 const collator = new Intl.Collator('en', {
   sensitivity: 'base',

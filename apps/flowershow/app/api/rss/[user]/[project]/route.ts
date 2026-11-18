@@ -43,7 +43,11 @@ export async function GET(
       user: true,
       blobs: {
         where: {
-          OR: [{ path: { endsWith: '.md' } }, { path: { endsWith: '.mdx' } }],
+          OR: [
+            { path: { endsWith: '.md' } },
+            { path: { endsWith: '.mdx' } },
+            { path: { endsWith: '.docx', mode: 'insensitive' } },
+          ],
           metadata: {
             not: Prisma.AnyNull,
           },

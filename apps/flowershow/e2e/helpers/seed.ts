@@ -7,11 +7,15 @@ import {
   S3Client,
 } from '@aws-sdk/client-s3';
 import {
+  derivedAssetKey,
+  derivedMarkdownKey,
   encodeSlug,
   extractInlineTags,
   frontmatterTags,
   getContentType,
+  isConvertiblePath,
   mergePageTags,
+  pageSlugFromPath,
   tagIdentity,
 } from '@flowershow/core';
 import { LinkType, Plan, PrismaClient } from '@prisma/client';
@@ -23,6 +27,10 @@ import { extractImageDimensions, parseMarkdown } from './processing-utils';
 
 const TEST_SITE_DIR = path.resolve(__dirname, '../fixtures/test-site');
 const LISTINGS_SITE_DIR = path.resolve(__dirname, '../fixtures/listings-demo');
+// Pre-converted output for convertible files (e.g. .docx), generated once with
+// the worker's converter. Mirrors the site layout: derived/<path>/index.md plus
+// images. Lives outside test-site so it is not seeded as site content.
+const DERIVED_DIR = path.resolve(__dirname, '../fixtures/derived');
 
 export const TEST_USER = {
   id: 'e2e-test-user-id',
@@ -130,6 +138,64 @@ function listFiles(dir: string, base = ''): string[] {
   return files;
 }
 
+/** Git blob SHA-1 (what the worker stores as Blob.sha and keys derived files by). */
+function gitBlobSha(content: Buffer): string {
+  return crypto
+    .createHash('sha1')
+    .update(`blob ${content.length}\0`)
+    .update(content)
+    .digest('hex');
+}
+
+/**
+ * Upload the pre-converted Markdown and images for a convertible file (as the
+ * worker would) and return the parsed metadata. Fails loudly if the fixture's
+ * image URLs reference a different sha than the docx being seeded.
+ */
+async function uploadDerivedFixture(
+  siteId: string,
+  filePath: string,
+  sha: string,
+  s3: S3Client,
+): Promise<Awaited<ReturnType<typeof parseMarkdown>>> {
+  const derivedDir = path.join(DERIVED_DIR, filePath);
+  if (!fs.existsSync(path.join(derivedDir, 'index.md'))) {
+    throw new Error(`Missing derived fixture for ${filePath} in ${derivedDir}`);
+  }
+  const markdown = fs.readFileSync(path.join(derivedDir, 'index.md'), 'utf8');
+  for (const m of markdown.matchAll(
+    /\/_derived\/[^)\s]*?\/([0-9a-f]{40})\//g,
+  )) {
+    if (m[1] !== sha) {
+      throw new Error(
+        `Derived fixture for ${filePath} references sha ${m[1]} but the seeded ` +
+          `docx has sha ${sha}. Regenerate ${derivedDir} with the converter.`,
+      );
+    }
+  }
+
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: derivedMarkdownKey(siteId, filePath, sha),
+      Body: markdown,
+      ContentType: getContentType('md'),
+    }),
+  );
+  for (const name of fs.readdirSync(derivedDir)) {
+    if (name === 'index.md') continue;
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: BUCKET,
+        Key: derivedAssetKey(siteId, filePath, sha, name),
+        Body: fs.readFileSync(path.join(derivedDir, name)),
+        ContentType: getContentType(path.extname(name).slice(1)),
+      }),
+    );
+  }
+  return parseMarkdown({ markdown, path: filePath });
+}
+
 // --- Preflight checks ---
 
 async function checkPostgres(db: PrismaClient): Promise<void> {
@@ -195,11 +261,14 @@ async function uploadFixturesForSite(
     // apps/cloudflare-worker/src/queue-consumer.js); only the listings site uses
     // it, so the other sites' specs (e.g. `docs/some graph.canvas`) are untouched.
     const slug = filePathToSlug(filePath);
-    const appPath = ['md', 'mdx', 'canvas'].includes(ext)
-      ? opts.encodeAppPath
-        ? encodeSlug(slug)
-        : slug
-      : null;
+    const convertible = isConvertiblePath(filePath);
+    const appPath = convertible
+      ? pageSlugFromPath(filePath)
+      : ['md', 'mdx', 'canvas'].includes(ext)
+        ? opts.encodeAppPath
+          ? encodeSlug(slug)
+          : slug
+        : null;
     let metadata: Record<string, unknown> = {};
     let permalink: string | null = null;
     let shouldPublish = true;
@@ -221,6 +290,17 @@ async function uploadFixturesForSite(
       continue;
     }
 
+    const sha = convertible
+      ? gitBlobSha(content)
+      : crypto.createHash('sha1').update(content).digest('hex');
+
+    if (convertible) {
+      const parsed = await uploadDerivedFixture(siteId, filePath, sha, s3);
+      metadata = parsed.metadata;
+      permalink = parsed.permalink;
+      body = parsed.body;
+    }
+
     // Upload to S3/MinIO
     await s3.send(
       new PutObjectCommand({
@@ -232,7 +312,6 @@ async function uploadFixturesForSite(
     );
 
     // Create Blob record
-    const sha = crypto.createHash('sha1').update(content).digest('hex');
     const dimensions = extractImageDimensions(filePath, content);
 
     const blob = await db.blob.upsert({
@@ -269,7 +348,7 @@ async function uploadFixturesForSite(
     // Seed Tag rows faithfully — the union of frontmatter + inline body #tags,
     // exactly as the Cloudflare worker's syncTags does at publish time. This
     // powers /tags navigation and the unified Bases tag reads.
-    if (['md', 'mdx'].includes(ext)) {
+    if (['md', 'mdx'].includes(ext) || convertible) {
       const tags = mergePageTags(
         frontmatterTags(metadata),
         extractInlineTags(body),

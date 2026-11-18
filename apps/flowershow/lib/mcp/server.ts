@@ -113,7 +113,7 @@ const CHECK_RULES =
 // What the model sees: phrased around what users actually ask for.
 const PUBLISH_DESCRIPTION = `Publish files as a live website on Flowershow and get a shareable URL. Use when the user says "publish this", "put this online", "make this a website", "share this as a page" or "host this".
 
-Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, served as-is) and supporting files such as CSS, JS, JSON and images: one page or a small site, up to ${MAX_FILES} files and ${MAX_TOTAL_BYTES / 1024 / 1024} MB per call. Name the home page index.md or index.html.
+Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, served as-is), Word documents (.docx as contentBase64, converted to a page) and supporting files such as CSS, JS, JSON and images: one page or a small site, up to ${MAX_FILES} files and ${MAX_TOTAL_BYTES / 1024 / 1024} MB per call. Name the home page index.md or index.html.
 
 ${CHECK_RULES}
 
@@ -130,7 +130,7 @@ const SIGN_IN_NOTE =
 
 const ACCOUNT_PUBLISH_DESCRIPTION = `Publish files as a live website in the user's Flowershow account and get a shareable URL. Use when the user says "publish this", "put this online", "make this a website", "share this as a page", "host this" or "update my site".
 
-Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, served as-is) and supporting files such as CSS, JS, JSON and images: one page or a small site, up to ${MAX_FILES} files and ${MAX_TOTAL_BYTES / 1024 / 1024} MB per call. Name the home page index.md or index.html.
+Accepts Markdown (.md, rendered as a styled page with navigation), HTML (.html, served as-is), Word documents (.docx as contentBase64, converted to a page) and supporting files such as CSS, JS, JSON and images: one page or a small site, up to ${MAX_FILES} files and ${MAX_TOTAL_BYTES / 1024 / 1024} MB per call. Name the home page index.md or index.html.
 
 ${CHECK_RULES}
 
@@ -144,7 +144,7 @@ const fileShape = z.object({
   contentBase64: z
     .string()
     .optional()
-    .describe('Binary content, base64-encoded (images etc.)'),
+    .describe('Binary content, base64-encoded (images, .docx etc.)'),
 });
 
 const publishOutput = {

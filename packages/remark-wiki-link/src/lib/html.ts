@@ -82,6 +82,7 @@ function html(opts: Options = {}): HtmlExtension {
     const url = urlResolver({
       filePath: matchingFilePath ?? targetPath,
       heading,
+      target: targetPath,
       isEmbed: token.type === 'embed',
     });
 

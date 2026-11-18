@@ -1,13 +1,13 @@
 import {
-  encodeSlug,
+  derivedPrefix,
   extractDescription,
   extractInlineTags,
-  filePathToSlug,
   frontmatterTags,
+  isConvertiblePath,
   isDraft,
   mergePageTags,
   normalizeAuthors,
-  PAGE_FILE_EXTENSIONS,
+  pageSlugFromPath,
   tagIdentity,
 } from '@flowershow/core';
 import matter from 'gray-matter';
@@ -15,6 +15,7 @@ import { imageSize, types as supportedImageTypes } from 'image-size';
 import { computeGitBlobSha, hashGitBlobStream } from './github.js';
 import {
   deleteFile,
+  deleteStoragePrefix,
   getPublishIdFromMetadata,
   MAX_BUFFERED_BYTES,
   openFileStream,
@@ -22,8 +23,13 @@ import {
 } from './storage.js';
 import { captureError, generateId } from './utils.js';
 
+// Converted Markdown and extracted images (written by DocConversionWorkflow).
+// They are not Blobs, so their own R2 events are ignored.
+const DERIVED_KEY = /^[^/]+\/main\/derived\//;
+
 export async function handleMessage({ msg, storage, sql, typesense, env }) {
   const rawKey = msg.body.object.key;
+  if (DERIVED_KEY.test(rawKey)) return msg.ack();
   const { siteId, branch, path } = parseObjectKey(rawKey);
 
   // The app serves content only from `{siteId}/main/raw/`. Ignore other
@@ -33,6 +39,14 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
   if (branch !== 'main') return msg.ack();
 
   if (msg.body.action === 'DeleteObject') {
+    if (isConvertiblePath(path)) {
+      // Also when no Blob row exists: a conversion may have written derived
+      // objects before (or without) creating one.
+      await deleteStoragePrefix(
+        storage,
+        `${siteId}/main/${derivedPrefix(path)}`,
+      );
+    }
     const deleted = await sql`
       DELETE FROM "Blob"
       WHERE site_id = ${siteId} AND path = ${path}
@@ -52,6 +66,21 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
   try {
     const key = `${siteId}/${branch}/raw/${path}`;
     const publishId = await getPublishIdFromMetadata(storage, key);
+
+    if (isConvertiblePath(path)) {
+      // Converted in its own workflow (not in this shared batch isolate); the
+      // workflow upserts the Blob, flips the PublishFile and revalidates.
+      await startDocConversion({
+        storage,
+        sql,
+        env,
+        siteId,
+        path,
+        key,
+        publishId,
+      });
+      return msg.ack();
+    }
 
     if (!isMarkdownPage(path)) {
       try {
@@ -123,6 +152,63 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
   }
 }
 
+/**
+ * Start a DocConversionWorkflow for the stored file. The instance id is derived
+ * from (siteId, path, sha, publishId), so a redelivered queue message for the
+ * same upload finds the instance already there and is treated as done, while
+ * publishing the same bytes again starts a new one that settles its own
+ * PublishFile. When the workflow cannot be started, the PublishFile gets an
+ * error (so it never stays `uploading`) and the message is retried.
+ */
+async function startDocConversion({
+  storage,
+  sql,
+  env,
+  siteId,
+  path,
+  key,
+  publishId,
+}) {
+  let opened;
+  try {
+    opened = await openFileStream(storage, key);
+  } catch (err) {
+    // Deleted before we got to it: its DeleteObject event cleans up.
+    if (err?.code === 'NOT_FOUND') return;
+    throw err;
+  }
+  const { size, stream } = opened;
+  const { sha } = await hashGitBlobStream(stream, size, 0);
+  const id = await sha1Hex(`${siteId}:${path}:${sha}:${publishId ?? ''}`);
+  try {
+    await env.DOC_CONVERSION_WORKFLOW.create({
+      id,
+      params: { siteId, path, sha, size, publishId },
+    });
+  } catch (err) {
+    if (/already[ _]exists|duplicate/i.test(String(err?.message))) return;
+    await updatePublishFile(
+      sql,
+      publishId,
+      path,
+      'error',
+      'Could not start converting this Word document.',
+    );
+    await revalidateIfPublishDone({ sql, env, siteId, publishId });
+    throw err;
+  }
+}
+
+async function sha1Hex(text) {
+  const digest = await crypto.subtle.digest(
+    'SHA-1',
+    new TextEncoder().encode(text),
+  );
+  return [...new Uint8Array(digest)]
+    .map((b) => b.toString(16).padStart(2, '0'))
+    .join('');
+}
+
 const REVALIDATE_TIMEOUT_MS = 3000;
 
 /**
@@ -143,6 +229,20 @@ export async function revalidateIfPublishDone({ sql, env, siteId, publishId }) {
       WHERE publish_id = ${publishId} AND status = 'uploading'
     `;
     if (Number(count) !== 0) return;
+  } catch (err) {
+    console.error(`Revalidate error for site ${siteId}: ${err.message}`);
+    return;
+  }
+  await revalidateSite({ env, siteId });
+}
+
+/**
+ * Purge the app's cached data for a site (its site-id tag) now. Never throws,
+ * including on timeout.
+ */
+export async function revalidateSite({ env, siteId }) {
+  if (!env?.NEXTJS_APP_URL || !env?.INTERNAL_API_SECRET) return;
+  try {
     const resp = await fetch(`${env.NEXTJS_APP_URL}/api/internal/revalidate`, {
       method: 'POST',
       headers: {
@@ -173,22 +273,28 @@ export function isMarkdownPage(path) {
   return /\.(md|mdx)$/i.test(path);
 }
 
-/** URL path for a blob, or null when the file is not a routable page. */
+/**
+ * URL path for a blob, or null when the file is not a routable page. Word
+ * documents (convertible files) get a page slug too.
+ */
 export function computeAppPath(path) {
-  const extension = path.split('.').pop()?.toLowerCase() ?? '';
-  return PAGE_FILE_EXTENSIONS.has(extension)
-    ? encodeSlug(filePathToSlug(path))
-    : null;
+  return pageSlugFromPath(path);
 }
 
-async function upsertBlob(
+/**
+ * Insert or update the Blob row for `path`. `appPath` defaults to
+ * computeAppPath(path); pass null to store a page-like file as a plain asset
+ * (e.g. a Word document that could not be converted).
+ */
+export async function upsertBlob(
   sql,
   siteId,
   path,
-  { sha, size, metadata, permalink, width, height },
+  { sha, size, metadata, permalink, width, height, appPath: appPathOverride },
 ) {
   const extension = path.split('.').pop()?.toLowerCase() ?? '';
-  const appPath = computeAppPath(path);
+  const appPath =
+    appPathOverride === undefined ? computeAppPath(path) : appPathOverride;
   const rows = await sql`
     INSERT INTO "Blob" (id, site_id, path, app_path, extension, sha, size, metadata, permalink, width, height, updated_at)
     VALUES (
@@ -211,7 +317,13 @@ async function upsertBlob(
   return rows[0].id;
 }
 
-async function updatePublishFile(sql, publishId, path, status, errorMsg) {
+export async function updatePublishFile(
+  sql,
+  publishId,
+  path,
+  status,
+  errorMsg,
+) {
   if (!publishId) return;
   if (status === 'error') {
     await sql`
@@ -246,51 +358,19 @@ async function processMarkdownFile({
     const sha = await computeGitBlobSha(contentBytes);
     const size = contentBytes.length;
 
-    const { metadata, body, permalink, shouldPublish, frontmatterError } =
-      await parseMarkdown({
-        markdown,
-        path,
-      });
-
-    if (!shouldPublish) {
-      // Delete from R2; the resulting DeleteObject event drives Blob/Typesense cleanup.
-      try {
-        await deleteFile(storage, siteId, branch, path);
-      } catch (deleteError) {
-        console.error('Error deleting from storage:', deleteError.message);
-      }
-      await updatePublishFile(sql, publishId, path, 'success');
-      return;
-    }
-
-    const blobId = await upsertBlob(sql, siteId, path, {
+    const { fileError } = await indexMarkdownPage({
+      storage,
+      sql,
+      typesense,
+      env,
+      siteId,
+      branch,
+      path,
+      markdown,
       sha,
       size,
-      metadata,
-      permalink,
+      publishId,
     });
-    await syncLinks(sql, siteId, blobId, markdown);
-    const tags = extractTags(body, metadata);
-    await syncTags(sql, siteId, blobId, tags);
-    let searchError = null;
-    if (isDraft(metadata)) {
-      // A draft is reachable by URL but never in search: drop any earlier document
-      await removeFromTypesense({ typesense, env, siteId, blobId, path });
-    } else {
-      searchError = await indexInTypesense({
-        typesense,
-        env,
-        siteId,
-        blobId,
-        path,
-        body,
-        metadata,
-        tags,
-      });
-    }
-    // The page is live, but bad frontmatter or a document search rejected is
-    // still an error the author must see (fl output, dashboard publish history).
-    const fileError = frontmatterError ?? searchError;
     if (fileError) {
       await updatePublishFile(sql, publishId, path, 'error', fileError);
     } else {
@@ -303,6 +383,81 @@ async function processMarkdownFile({
     await updatePublishFile(sql, publishId, path, 'error', e.message);
     throw e;
   }
+}
+
+/**
+ * Index `markdown` as the page for `path`: parse frontmatter, upsert the Blob
+ * (with the given sha/size, which for a converted Word file are the Word
+ * file's), sync links and tags, and update search. `publish: false` deletes
+ * the stored source file instead (its DeleteObject event cleans up the rest).
+ *
+ * The caller sets the PublishFile status: `fileError` is an author-facing
+ * problem with a live page (bad frontmatter, a document search rejected);
+ * `blobId` is null when the page was not published.
+ *
+ * @returns {Promise<{ blobId: string|null, fileError: string|null }>}
+ */
+export async function indexMarkdownPage({
+  storage,
+  sql,
+  typesense,
+  env,
+  siteId,
+  branch = 'main',
+  path,
+  markdown,
+  sha,
+  size,
+  extraMetadata,
+}) {
+  const { metadata, body, permalink, shouldPublish, frontmatterError } =
+    await parseMarkdown({
+      markdown,
+      path,
+    });
+
+  if (!shouldPublish) {
+    // Delete from R2; the resulting DeleteObject event drives Blob/Typesense cleanup.
+    try {
+      await deleteFile(storage, siteId, branch, path);
+    } catch (deleteError) {
+      console.error('Error deleting from storage:', deleteError.message);
+    }
+    return { blobId: null, fileError: null };
+  }
+
+  const pageMetadata = extraMetadata
+    ? { ...metadata, ...extraMetadata }
+    : metadata;
+  const blobId = await upsertBlob(sql, siteId, path, {
+    sha,
+    size,
+    metadata: pageMetadata,
+    permalink,
+  });
+  await syncLinks(sql, siteId, blobId, markdown);
+  const tags = extractTags(body, metadata);
+  await syncTags(sql, siteId, blobId, tags);
+  let searchError = null;
+  if (isDraft(metadata)) {
+    // A draft is reachable by URL but never in search: drop any earlier
+    // document.
+    await removeFromTypesense({ typesense, env, siteId, blobId, path });
+  } else {
+    searchError = await indexInTypesense({
+      typesense,
+      env,
+      siteId,
+      blobId,
+      path,
+      body,
+      metadata,
+      tags,
+    });
+  }
+  // The page is live, but bad frontmatter or a document search rejected is
+  // still an error the author must see (fl output, dashboard publish history).
+  return { blobId, fileError: frontmatterError ?? searchError };
 }
 
 async function processNonMarkdownFile({
@@ -479,13 +634,7 @@ export async function parseMarkdown({ markdown, path }) {
 
     let title = frontmatter.title;
     if (!title) {
-      title =
-        (await extractTitle(body)) ||
-        path
-          .split('/')
-          .pop()
-          ?.replace(/\.(mdx|md)$/, '') ||
-        '';
+      title = (await extractTitle(body)) || titleFromFileName(path);
       computed.push('title');
     }
 
@@ -532,6 +681,21 @@ export async function parseMarkdown({ markdown, path }) {
   };
 }
 
+/**
+ * Fallback page title. Markdown keeps its file name as is (`my-page`); a
+ * converted Word file's name is humanised (`Q3_report-final` → "Q3 report final").
+ */
+function titleFromFileName(path) {
+  const name = path.split('/').pop() ?? '';
+  if (isConvertiblePath(path)) {
+    return name
+      .replace(/\.[^.]+$/, '')
+      .replace(/[_-]+/g, ' ')
+      .trim();
+  }
+  return name.replace(/\.(mdx|md)$/, '');
+}
+
 export const extractTitle = async (source) => {
   const heading = source.trim().match(/^#{1}[ ]+(.*)/);
   if (heading?.[1]) {
@@ -548,6 +712,10 @@ export const extractTitle = async (source) => {
 
 export function extractLinks(markdown) {
   const links = [];
+  // Converted Word documents' images live under /_derived/: never vault files.
+  const push = (link) => {
+    if (!link.targetPath.startsWith('/_derived/')) links.push(link);
+  };
 
   // Strip fenced code blocks to avoid matching links inside them
   const stripped = markdown
@@ -564,7 +732,7 @@ export function extractLinks(markdown) {
     const ext =
       dotIndex !== -1 ? target.slice(dotIndex + 1).toLowerCase() : null;
     if (ext && ext !== 'md') continue;
-    links.push({ targetPath: target, linkType: 'embed' });
+    push({ targetPath: target, linkType: 'embed' });
   }
 
   // Wiki links: [[target]] or [[target|alias]] or [[target#heading]]
@@ -572,7 +740,7 @@ export function extractLinks(markdown) {
   const wikilinkRe = /(?<!!)(?<!\[)\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/g;
   for (const m of stripped.matchAll(wikilinkRe)) {
     const target = m[1].trim().replace(/\\$/, '');
-    if (target) links.push({ targetPath: target, linkType: 'wikilink' });
+    if (target) push({ targetPath: target, linkType: 'wikilink' });
   }
 
   // CommonMark links: [text](href) — internal only; negative lookbehind excludes image embeds ![alt](src)
@@ -590,7 +758,7 @@ export function extractLinks(markdown) {
     ) {
       // Strip fragment
       const target = href.split('#')[0];
-      if (target) links.push({ targetPath: target, linkType: 'commonmark' });
+      if (target) push({ targetPath: target, linkType: 'commonmark' });
     }
   }
 
@@ -706,6 +874,23 @@ async function reportSearchError(env, source, { siteId, path, error }) {
     http_status: error?.httpStatus ?? null,
     source,
   });
+}
+
+/**
+ * Drop a file's page data (links, tags and search document), for a Word file
+ * kept as a plain download.
+ */
+export async function clearPageData({
+  sql,
+  typesense,
+  env,
+  siteId,
+  blobId,
+  path,
+}) {
+  await syncLinks(sql, siteId, blobId, '');
+  await syncTags(sql, siteId, blobId, []);
+  await removeFromTypesense({ typesense, env, siteId, blobId, path });
 }
 
 /**

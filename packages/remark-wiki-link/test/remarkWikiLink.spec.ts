@@ -163,6 +163,27 @@ describe('remark-wiki-link', () => {
         });
       });
 
+      test('urlResolver receives the raw link target', () => {
+        const seen: Array<{ filePath: string; target?: string }> = [];
+        const urlResolver = (o: {
+          filePath: string;
+          isEmbed: boolean;
+          heading: string;
+          target?: string;
+        }) => {
+          seen.push({ filePath: o.filePath, target: o.target });
+          return o.filePath;
+        };
+        const processor = unified()
+          .use(markdown)
+          .use(wikiLinkPlugin, { files: ['/report.docx'], urlResolver });
+        processor.parse('[[report]] and [[report.docx#Intro]]');
+        expect(seen).toEqual([
+          { filePath: '/report.docx', target: 'report' },
+          { filePath: '/report.docx', target: 'report.docx' },
+        ]);
+      });
+
       test('custom urlResolver', () => {
         const urlResolver = ({
           filePath,

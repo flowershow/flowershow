@@ -1,3 +1,4 @@
+import { MARKDOWN_LIKE_EXTENSIONS } from '@flowershow/core';
 import { unstable_cache } from 'next/cache';
 import prisma from '@/server/db';
 import {
@@ -41,7 +42,7 @@ export async function fetchFolderRows(
     where: {
       siteId,
       appPath: { not: null },
-      extension: { in: ['md', 'mdx'] },
+      extension: { in: [...MARKDOWN_LIKE_EXTENSIONS] },
       ...(folder ? { path: { startsWith: `${folder}/` } } : {}),
     },
     select: {

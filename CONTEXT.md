@@ -11,11 +11,19 @@ The URL path derived from a Page File's vault path. Always has a leading `/`. Sp
 _Avoid_: URL path, encoded path, app path (appPath is the DB column name, not the concept)
 
 **Page File**:
-A vault file that the app renders inside the site layout. Current types: `.md`, `.mdx`, `.canvas`. Page files produce a URL slug (the file path with extension stripped and index/README normalised to `/`).
+A vault file that the app renders inside the site layout. Current types: `.md`, `.mdx`, `.canvas`, plus Converted Documents (`.docx`), whose Blob is the Word file itself while the page is rendered from its Derived Content. Page files produce a URL slug (the file path with extension stripped and index/README normalised to `/`).
 _Avoid_: Markdown file (canvas is not markdown), renderable file
 
+**Converted Document**:
+A vault file in a convertible format (currently `.docx`) that Flowershow turns into a page at publish time. The Word file stays the Page File and stays downloadable at its own `.docx` URL; the page is rendered from its Derived Content. If a `.md` or `.mdx` Page File has the same URL, it wins. Links that name the `.docx` explicitly stay downloads.
+_Avoid_: Word page, imported document, docx page
+
+**Derived Content**:
+Markdown and images generated from a Converted Document, stored under `{siteId}/main/derived/{path}/{sha}/` outside the vault, keyed by the sha of the source file and served publicly under `/_derived/`. Never part of the vault, never synced back, and replaced or deleted with its source. `_derived/` is a reserved top-level folder name.
+_Avoid_: Generated file, sibling markdown, cache
+
 **Raw Asset**:
-Any vault file that is not a Page File (e.g. `.html`, `.jpg`, `.pdf`, everything else). Raw assets are served directly via `/api/raw/...` and produce a full absolute URL, not a slug.
+Any vault file that is not a Page File (e.g. `.html`, `.jpg`, `.pdf`, everything else). A `.docx` is both a Page File (via conversion) and a downloadable raw file at its own URL. Raw assets are served directly via `/api/raw/...` and produce a full absolute URL, not a slug.
 _Avoid_: Asset (overloaded with the Blob term above), media file
 
 ### Sites and Content

@@ -1,7 +1,9 @@
 import {
   encodeSlug,
   filePathToSlug,
+  isConvertiblePath,
   PAGE_FILE_EXTENSIONS,
+  pageSlugFromPath,
 } from '@flowershow/core';
 import { slug } from 'github-slugger';
 import * as path from 'path';
@@ -27,6 +29,12 @@ export function resolveToAbsolutePath(
   if (pathPart.startsWith('/')) return pathPart;
   return path.resolve(path.dirname(origin), pathPart);
 }
+
+const assetProtocol = () =>
+  env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+  env.NEXT_PUBLIC_VERCEL_ENV === 'preview'
+    ? 'https'
+    : 'http';
 
 /**
  * Resolve a render-time link target (href or src) to a URL path or full asset URL.
@@ -57,6 +65,13 @@ export const resolveContentLink = ({
     return target;
   }
 
+  // Images of a converted Word document: the converter writes them already
+  // URL-encoded (derivedAssetUrlPath), so make them absolute without encoding
+  // them a second time (`%2B` must not become `%252B`).
+  if (target.startsWith('/_derived/')) {
+    return `${assetProtocol()}://${siteHostname}${target}`;
+  }
+
   const [, , heading = ''] = target.match(/^(.*?)(?:#(.*))?$/u) || [];
   const headingId = heading ? `#${slug(heading)}` : '';
 
@@ -71,18 +86,54 @@ export const resolveContentLink = ({
   const isPageFile = PAGE_FILE_EXTENSIONS.has(ext) || !ext;
 
   if (!isPageFile) {
-    const isSecure =
-      env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
-      env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
     const encoded = resolvedPath
       .split('/')
       .map((p) => encodeURIComponent(p))
       .join('/');
-    return `${isSecure ? 'https' : 'http'}://${siteHostname}${encoded}`;
+    return `${assetProtocol()}://${siteHostname}${encoded}`;
   }
 
   // Page file — compute URL slug
   const permalink = permalinks?.[resolvedPath];
   const urlPath = permalink ?? encodeSlug(filePathToSlug(resolvedPath));
   return `${urlPath}${headingId}`;
+};
+
+/**
+ * URL for a wiki link once remark-wiki-link has matched it to `filePath`.
+ * A Word file matched by its name without extension (`[[report]]`) links to
+ * its converted page; with the extension (`[[report.docx]]`) it stays a link
+ * to the file itself, like `[x](report.docx)`.
+ */
+export const resolveWikiLinkUrl = ({
+  filePath,
+  heading,
+  target,
+  siteHostname,
+}: {
+  filePath: string;
+  heading?: string;
+  target?: string;
+  siteHostname?: string;
+}) => {
+  if (isConvertiblePath(filePath) && !isConvertiblePath(target ?? filePath)) {
+    const urlPath = pageSlugFromPath(ensureLeadingSlash(filePath));
+    if (urlPath) return `${urlPath}${heading ? `#${slug(heading)}` : ''}`;
+  }
+  return resolveContentLink({
+    target: `${filePath}${heading ? `#${heading}` : ''}`,
+    siteHostname,
+  });
+};
+
+/**
+ * URL for a search hit's `path` (the indexed file path). A Word document's
+ * hit links to its converted page, not to the file itself.
+ */
+export const searchHitUrl = (filePath: string) => {
+  if (isConvertiblePath(filePath)) {
+    const urlPath = pageSlugFromPath(ensureLeadingSlash(filePath));
+    if (urlPath) return urlPath;
+  }
+  return resolveContentLink({ target: filePath });
 };

@@ -21,7 +21,9 @@ describe('shortestPossible format (default)', () => {
   });
 
   test('matches partial path suffix', () => {
-    expect(matchLinkTarget('guide/post', files)?.path).toBe('/blog/guide/post.mdx');
+    expect(matchLinkTarget('guide/post', files)?.path).toBe(
+      '/blog/guide/post.mdx',
+    );
   });
 
   test('returns undefined for no match', () => {
@@ -49,7 +51,9 @@ describe('shortestPossible format (default)', () => {
 
 describe('exact format', () => {
   test('finds exact match', () => {
-    expect(matchLinkTarget('/about', files, { format: 'exact' })?.path).toBe('/about.md');
+    expect(matchLinkTarget('/about', files, { format: 'exact' })?.path).toBe(
+      '/about.md',
+    );
   });
 
   test('does not match by suffix in exact format', () => {
@@ -57,7 +61,9 @@ describe('exact format', () => {
   });
 
   test('returns undefined for no match', () => {
-    expect(matchLinkTarget('/nonexistent', files, { format: 'exact' })).toBeUndefined();
+    expect(
+      matchLinkTarget('/nonexistent', files, { format: 'exact' }),
+    ).toBeUndefined();
   });
 });
 
@@ -73,19 +79,94 @@ describe('case sensitivity', () => {
   });
 
   test('matches case-insensitively in exact format', () => {
-    expect(matchLinkTarget('/blog/about', mixedFiles, { format: 'exact' })?.path).toBe('/Blog/About.mdx');
+    expect(
+      matchLinkTarget('/blog/about', mixedFiles, { format: 'exact' })?.path,
+    ).toBe('/Blog/About.mdx');
   });
 
   test('matches mixed-case target', () => {
-    expect(matchLinkTarget('guide/POST', mixedFiles)?.path).toBe('/Blog/Guide/Post.mdx');
+    expect(matchLinkTarget('guide/POST', mixedFiles)?.path).toBe(
+      '/Blog/Guide/Post.mdx',
+    );
   });
 
   test('returns undefined with case-sensitive option and wrong case', () => {
-    expect(matchLinkTarget('readme', mixedFiles, { caseInsensitive: false })).toBeUndefined();
+    expect(
+      matchLinkTarget('readme', mixedFiles, { caseInsensitive: false }),
+    ).toBeUndefined();
   });
 
   test('finds exact case match when case-sensitive', () => {
-    expect(matchLinkTarget('README', mixedFiles, { caseInsensitive: false })?.path).toBe('/README.mdx');
+    expect(
+      matchLinkTarget('README', mixedFiles, { caseInsensitive: false })?.path,
+    ).toBe('/README.mdx');
+  });
+});
+
+describe('docx targets', () => {
+  test('resolves a docx file', () => {
+    expect(matchLinkTarget('report', [{ path: 'report.docx' }])).toEqual({
+      path: 'report.docx',
+    });
+  });
+
+  test('prefers md over docx on equal stripped path', () => {
+    expect(
+      matchLinkTarget('report', [
+        { path: 'report.docx' },
+        { path: 'report.md' },
+      ])?.path,
+    ).toBe('report.md');
+  });
+
+  test('an explicit .docx target prefers the docx on equal stripped path', () => {
+    expect(
+      matchLinkTarget('report.docx', [
+        { path: 'report.md' },
+        { path: 'report.docx' },
+      ])?.path,
+    ).toBe('report.docx');
+  });
+
+  test('a deeper md beats a shorter-path docx', () => {
+    expect(
+      matchLinkTarget('report', [
+        { path: '/notes/report.md' },
+        { path: '/report.docx' },
+      ])?.path,
+    ).toBe('/notes/report.md');
+  });
+
+  test('a lone docx still resolves by suffix', () => {
+    expect(matchLinkTarget('report', [{ path: '/a/report.docx' }])?.path).toBe(
+      '/a/report.docx',
+    );
+  });
+
+  test('an explicit .docx target prefers a deeper docx over a shorter md', () => {
+    expect(
+      matchLinkTarget('report.docx', [
+        { path: '/report.md' },
+        { path: '/notes/report.docx' },
+      ])?.path,
+    ).toBe('/notes/report.docx');
+  });
+
+  test('exact format prefers md over docx', () => {
+    expect(
+      matchLinkTarget(
+        'report',
+        [{ path: 'report.docx' }, { path: 'report.md' }],
+        { format: 'exact' },
+      )?.path,
+    ).toBe('report.md');
+    expect(
+      matchLinkTarget(
+        'report.docx',
+        [{ path: 'report.md' }, { path: 'report.docx' }],
+        { format: 'exact' },
+      )?.path,
+    ).toBe('report.docx');
   });
 });
 

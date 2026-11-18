@@ -22,13 +22,24 @@ export function matchLinkTarget<T extends { path: string }>(
 
   if (!target) return undefined;
 
-  const stripExt = (p: string) => p.replace(/\.mdx?$/, '');
+  const stripExt = (p: string) => p.replace(/\.(mdx?|docx)$/i, '');
   const norm = (s: string) => (caseInsensitive ? s.toLowerCase() : s);
 
   const normalizedTarget = norm(stripExt(target));
 
+  const isDocx = (p: string) => /\.docx$/i.test(p);
+  // md/mdx win over docx whenever both match; an explicit `.docx` target
+  // ([[report.docx]]) means the Word file itself, so docx wins instead.
+  const preferred = (candidates: T[]): T[] => {
+    const wantDocx = isDocx(target);
+    const narrowed = candidates.filter((f) => isDocx(f.path) === wantDocx);
+    return narrowed.length > 0 ? narrowed : candidates;
+  };
+
   if (format === 'exact') {
-    return files.find((f) => norm(stripExt(f.path)) === normalizedTarget);
+    return preferred(
+      files.filter((f) => norm(stripExt(f.path)) === normalizedTarget),
+    )[0];
   }
 
   // shortestPossible: suffix match across all files, pick shortest on ties
@@ -38,5 +49,5 @@ export function matchLinkTarget<T extends { path: string }>(
   });
 
   if (matches.length === 0) return undefined;
-  return matches.sort((a, b) => a.path.length - b.path.length)[0];
+  return preferred(matches).sort((a, b) => a.path.length - b.path.length)[0];
 }

@@ -85,7 +85,9 @@ export async function GET(
       ("metadata" IS NOT NULL AND "metadata" <> 'null'::jsonb AND ${notDraftSql()}) AS "listed"
     FROM "Blob"
     WHERE "site_id" = ${site.id}
-      AND ("path" LIKE '%.md' OR "path" LIKE '%.mdx')
+      AND ("path" LIKE '%.md' OR "path" LIKE '%.mdx'
+        -- converted Word documents (unconverted ones have no page URL)
+        OR ("path" ILIKE '%.docx' AND "app_path" IS NOT NULL))
   `;
   const listedRows = rows.filter((r) => r.listed);
   const xmlItems = listedRows.map((blob) => {

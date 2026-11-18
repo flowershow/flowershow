@@ -19,7 +19,8 @@ export const DropZone: React.FC<DropZoneProps> = ({
     return (
       file.name.endsWith('.md') ||
       file.name.endsWith('.mdx') ||
-      file.name.endsWith('.markdown')
+      file.name.endsWith('.markdown') ||
+      file.name.toLowerCase().endsWith('.docx')
     );
   };
 
@@ -43,7 +44,7 @@ export const DropZone: React.FC<DropZoneProps> = ({
     if (!hasMarkdown) {
       return {
         valid: [],
-        error: 'At least one markdown file (.md, .mdx) is required',
+        error: 'At least one page file (.md, .mdx or .docx) is required',
       };
     }
 
@@ -149,6 +150,9 @@ export const DropZone: React.FC<DropZoneProps> = ({
           </span>
           <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
             .mdx
+          </span>
+          <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-600">
+            .docx
           </span>
         </div>
       </div>

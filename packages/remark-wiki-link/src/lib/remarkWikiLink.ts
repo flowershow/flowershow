@@ -19,6 +19,7 @@ export interface Options {
     filePath: string;
     isEmbed: boolean;
     heading: string;
+    target?: string; // the link target as written, without heading (e.g. "report" or "report.docx")
   }) => string; // resolve matched file path to a URL path (applied after matching)
 }
 
