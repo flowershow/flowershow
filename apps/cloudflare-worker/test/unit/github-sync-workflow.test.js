@@ -321,9 +321,17 @@ function createFakeBucket(keys = []) {
 /**
  * Run the workflow against a fake bucket and GitHub. The site has `blobs`;
  * steps fail like Cloudflare's when their output is over 1 MiB. `beforeDownload`
- * runs before each GitHub file download and can throw.
+ * runs before each GitHub file download and can throw. `resetAtStep` makes the
+ * runtime throw into run() once when that step starts, as a code update does;
+ * run() then runs again and finished steps return their stored output.
  */
-async function runSync({ tree, blobs = [], bucketKeys = [], beforeDownload }) {
+async function runSync({
+  tree,
+  blobs = [],
+  bucketKeys = [],
+  beforeDownload,
+  resetAtStep,
+}) {
   vi.resetModules();
   const bucket = createFakeBucket(bucketKeys);
   const queries = [];
@@ -361,28 +369,38 @@ async function runSync({ tree, blobs = [], bucketKeys = [], beforeDownload }) {
   );
   const workflow = new GitHubSyncWorkflow();
   workflow.env = { PUBLISH_FINALIZER_WORKFLOW: { create: vi.fn() } };
+  const stored = new Map();
+  let resetPending = resetAtStep;
   const step = {
     do: async (name, fn) => {
+      if (stored.has(name)) return stored.get(name);
+      if (name === resetPending) {
+        resetPending = undefined;
+        throw new Error('Durable Object reset because its code was updated.');
+      }
       const output = await fn();
       const bytes = JSON.stringify(output ?? null).length;
       if (bytes > 1024 * 1024) throw new Error(`${name} output ${bytes} B`);
+      stored.set(name, output);
       return output;
     },
     sleep: vi.fn(),
   };
-  const run = workflow.run(
-    {
-      payload: {
-        publishId: 'pub1',
-        siteId: 'site1',
-        ghRepository: 'org/repo',
-        ghBranch: 'design-system-site',
-        rootDir: '',
-        githubInstallationId: '1',
-      },
+  const event = {
+    instanceId: 'pub1-github',
+    payload: {
+      publishId: 'pub1',
+      siteId: 'site1',
+      ghRepository: 'org/repo',
+      ghBranch: 'design-system-site',
+      rootDir: '',
+      githubInstallationId: '1',
     },
-    step,
-  );
+  };
+  const run = workflow.run(event, step).catch((err) => {
+    if (!err.message.startsWith('Durable Object reset')) throw err;
+    return workflow.run(event, step);
+  });
   return {
     run,
     bucket,
@@ -472,7 +490,7 @@ describe('GitHubSyncWorkflow', () => {
   // 6,001 files lost 1,003 of them to 403 responses.
   it('waits for the rate-limit reset and fetches the refused files again', async () => {
     let refuse = true;
-    const { run, bucket, queries, downloads, sleep, finalizer } =
+    const { run, bucket, queries, downloads, sleep } =
       await runSync({
         tree: makeTree([makeItem('a.md', 'sha1'), makeItem('b.md', 'sha2')]),
         beforeDownload: async (sha) => {
@@ -496,10 +514,37 @@ describe('GitHubSyncWorkflow', () => {
     expect(queries.some((q) => q.text.includes("SET status = 'error'"))).toBe(
       false,
     );
-    // The finalizer polls for one hour, so it must start after the wait.
-    expect(finalizer.mock.invocationCallOrder[0]).toBeGreaterThan(
-      sleep.mock.invocationCallOrder[0],
+  });
+
+  // Production, 2026-11-18: a worker deploy reset a 10,501-file sync during
+  // batch 519. The catch block deleted the sync plan before the runtime ran
+  // the batch again, so the last 101 files were never uploaded.
+  it('finishes the sync after a runtime reset in the middle of the uploads', async () => {
+    const items = Array.from({ length: 50 }, (_, i) =>
+      makeItem(`p${i}.md`, `s${i}`),
     );
+    const { run, bucket, queries, finalizer } = await runSync({
+      tree: makeTree(items),
+      resetAtStep: 'process-files-to-upsert-batch-1',
+    });
+    await run;
+
+    expect([...bucket.objects.keys()]).toHaveLength(50);
+    expect(planKeys(bucket)).toEqual([]);
+    expect(queries.some((q) => q.text.includes("SET status = 'error'"))).toBe(
+      false,
+    );
+    expect(finalizer).toHaveBeenCalledOnce();
+  });
+
+  it('deletes sync plans left behind by failed syncs of the site', async () => {
+    const { run, bucket } = await runSync({
+      tree: makeTree([makeItem('a.md', 'sha1')]),
+      bucketKeys: ['site1/_github-sync/raw/oldpub/upsert-0.json'],
+    });
+    await run;
+
+    expect(planKeys(bucket)).toEqual([]);
   });
 
   it('marks a file as an error when the rate limit refuses it after every wait', async () => {

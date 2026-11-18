@@ -51,10 +51,6 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
     const storage = getStorageClient(this.env);
     const plan = createPlanStore(storage, siteId, publishId);
 
-    // Set after the PublishFile rows exist; the catch block then starts the
-    // finalizer so that a failed sync still ends its publish.
-    let finalizerDue = false;
-
     try {
       // Generate a fresh token on every run (outside any step so retries don't reuse
       // a cached expired value — GitHub App installation tokens expire in 1h).
@@ -132,6 +128,11 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
 
         const upsertBatches = createBatches(toUpsert, BATCH_SIZE);
         const deleteBatches = createBatches(toDelete, BATCH_SIZE);
+        // A failed sync leaves its plan behind: run() cannot clean up on
+        // failure, because the runtime also throws into run() for errors it
+        // replays, such as a code update. /sync has already stopped any older
+        // sync of this site, so its plans are safe to delete here.
+        await plan.deleteAllForSite();
         await plan.write('upsert', upsertBatches);
         await plan.write('delete', deleteBatches);
         return {
@@ -194,7 +195,16 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         ),
       );
 
-      finalizerDue = true;
+      // Start the finalizer after all PublishFile rows exist. It waits while
+      // this sync is still running (rate-limit waits can take hours), then
+      // polls until all uploading rows reach a terminal state and finalizes
+      // the Publish record. It also handles the zero-files and delete-only cases.
+      await step.do('start-publish-finalizer', async () => {
+        await this.env.PUBLISH_FINALIZER_WORKFLOW.create({
+          id: publishId,
+          params: { publishId, siteId, syncInstanceId: event.instanceId },
+        });
+      });
 
       // Stream each file from GitHub into R2, so no file is held whole in
       // memory. Batches run one after another, files within a batch in parallel.
@@ -283,23 +293,8 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         }
       }
 
-      // Start the finalizer after every upload, not before: it polls for one
-      // hour, and rate-limit waits can make the uploads take longer than that.
-      // It waits for the R2 events of the uploads, then finalizes the Publish
-      // record. It also handles the zero-files and delete-only cases.
-      await step.do('start-publish-finalizer', () =>
-        startFinalizer(this.env, publishId, siteId),
-      );
-      finalizerDue = false;
-
       await step.do('delete-sync-plan', () => plan.delete());
     } catch (err) {
-      await plan.delete().catch(() => {});
-      if (finalizerDue) {
-        await startFinalizer(this.env, publishId, siteId).catch((e) =>
-          console.error(`Finalizer start failed ${publishId}: ${e.message}`),
-        );
-      }
       await captureError(this.env, {
         source: 'workflow_github_sync',
         siteId,
@@ -311,14 +306,6 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       throw err;
     }
   }
-}
-
-/** Returns nothing: a step output must be serializable, an instance is not. */
-async function startFinalizer(env, publishId, siteId) {
-  await env.PUBLISH_FINALIZER_WORKFLOW.create({
-    id: publishId,
-    params: { publishId, siteId },
-  });
 }
 
 function normalizeRootDir(rootDir) {
@@ -371,6 +358,8 @@ function createPlanStore(storage, siteId, publishId) {
         storage,
         `${siteId}/${PLAN_BRANCH}/raw/${publishId}/`,
       ),
+    deleteAllForSite: () =>
+      deleteStoragePrefix(storage, `${siteId}/${PLAN_BRANCH}/raw/`),
   };
 }
 
