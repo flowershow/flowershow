@@ -201,14 +201,14 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       for (let index = 0; index < counts.upsertBatches; index++) {
         // Paths to try again after a rate-limit wait; null means the whole batch.
         let retryPaths = null;
-        for (let wait = 0; ; wait++) {
-          const stepName = `process-files-to-upsert-batch-${index}${wait ? `-retry-${wait}` : ''}`;
-          const limited = await step.do(stepName, async () => {
+        for (let attempt = 0; ; attempt++) {
+          const stepName = `process-files-to-upsert-batch-${index}${attempt ? `-retry-${attempt}` : ''}`;
+          const refused = await step.do(stepName, async () => {
             const batch = await plan.readBatch('upsert', index);
             const files = retryPaths
               ? batch.filter(({ filePath }) => retryPaths.includes(filePath))
               : batch;
-            const limitedPaths = [];
+            const refusedPaths = [];
             let resetAt = 0;
             await Promise.all(
               files.map(async ({ ghSha, size, filePath }) => {
@@ -236,9 +236,9 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
                 } catch (error) {
                   if (
                     error instanceof GitHubRateLimitError &&
-                    wait < MAX_RATE_LIMIT_WAITS
+                    attempt < MAX_RATE_LIMIT_WAITS
                   ) {
-                    limitedPaths.push(filePath);
+                    refusedPaths.push(filePath);
                     resetAt = Math.max(resetAt, error.resetAt);
                     return;
                   }
@@ -259,23 +259,27 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
               }),
             );
             // The wait is worked out inside the step so that a replay sleeps
-            // for the same duration: a sleep's identity includes it.
+            // for the same duration: a sleep's identity includes it. One
+            // extra second covers clock skew with GitHub.
             return {
-              paths: limitedPaths,
+              paths: refusedPaths,
               waitMs: Math.max(0, resetAt - Date.now()) + 1000,
             };
           });
-          if (limited.paths.length === 0) break;
+          if (refused.paths.length === 0) break;
           console.log(
-            `Sync ${siteId}: GitHub rate limit, ${limited.paths.length} files wait ${Math.round(limited.waitMs / 1000)}s`,
+            `Sync ${siteId}: GitHub rate limit, ${refused.paths.length} files wait ${Math.round(refused.waitMs / 1000)}s`,
           );
-          await step.sleep(`rate-limit-wait-${index}-${wait}`, limited.waitMs);
+          await step.sleep(
+            `rate-limit-wait-${index}-${attempt + 1}`,
+            refused.waitMs,
+          );
           // The first token can expire during a long sync.
           accessToken = await getGitHubInstallationToken(
             githubInstallationId,
             this.env,
           );
-          retryPaths = limited.paths;
+          retryPaths = refused.paths;
         }
       }
 
@@ -292,7 +296,9 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
     } catch (err) {
       await plan.delete().catch(() => {});
       if (finalizerDue) {
-        await startFinalizer(this.env, publishId, siteId).catch(() => {});
+        await startFinalizer(this.env, publishId, siteId).catch((e) =>
+          console.error(`Finalizer start failed ${publishId}: ${e.message}`),
+        );
       }
       await captureError(this.env, {
         source: 'workflow_github_sync',

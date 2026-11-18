@@ -1,6 +1,6 @@
 # ADR 009: Replace Inngest with Cloudflare Workflows for the Publish Pipeline
 
-**Status:** Accepted
+**Status:** Accepted; amended 2026-11-18 (GitHub path starts the finalizer after the uploads)
 **Date:** 2026-06-13
 
 ## Context
@@ -175,3 +175,9 @@ The anonymous publish path (`/api/sites/publish-anon`) is updated to follow the 
 2. Introduce `PublishFinalizerWorkflow` for the **presigned paths only**: API routes create `Publish` + `PublishFile` records, start the workflow, return presigned URLs. Delivers explicit publish lifecycle for CLI/Obsidian publishes immediately.
 3. Port GitHub sync into `GitHubSyncWorkflow`: create `Publish` record, diff, create `PublishFile` records, start finalizer, upload to R2. Remove Inngest sync function.
 4. Move remaining Inngest crons to Cloudflare Cron Triggers. Remove Inngest. (Emails are sent directly from the Next.js app.)
+
+## Amendment (2026-11-18): the GitHub path starts the finalizer after the uploads
+
+GitHub gives an app installation about 5,000 API requests per hour, and `GitHubSyncWorkflow` uses one per file. When GitHub refuses files for this rate limit, the workflow now sleeps until the limit resets and fetches them again. A sync of more than about 5,000 files therefore takes more than one hour. `PublishFinalizerWorkflow` polls for one hour, then marks the remaining `uploading` rows `expired`, so it would expire files that are only waiting for the reset.
+
+For this reason, the GitHub path swaps steps 6 and 7 above: it uploads the files first, then starts `PublishFinalizerWorkflow`. If the sync fails after it has created the `PublishFile` rows, it still starts the finalizer, so the publish ends. The presigned paths do not change. Supersession does not depend on the order: `/sync` sets `completedAt` on the publishes it supersedes.

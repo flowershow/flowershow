@@ -38,7 +38,7 @@ Every publish goes through the same lifecycle regardless of how it was triggered
 
 ### Actors
 
-**`GitHubSyncWorkflow`** (`apps/cloudflare-worker`) — GitHub path only. Creates the `Publish` record, diffs the GitHub tree against stored Blobs, creates all `PublishFile` records, starts `PublishFinalizerWorkflow`, then uploads files to R2.
+**`GitHubSyncWorkflow`** (`apps/cloudflare-worker`) — GitHub path only. Creates the `Publish` record, diffs the GitHub tree against stored Blobs, creates all `PublishFile` records, uploads files to R2, then starts `PublishFinalizerWorkflow`.
 
 **`PublishFinalizerWorkflow`** (`apps/cloudflare-worker`) — all paths, `instanceId = publishId`. Polls every 10 seconds until all `PublishFile` rows for the publish reach a terminal state, then sets `Publish.completedAt` and revalidates Next.js cache tags.
 
@@ -49,8 +49,7 @@ Every publish goes through the same lifecycle regardless of how it was triggered
 1. Create `Publish` record.
 2. Create `PublishFile` rows (`uploading`) for files to upsert.
 3. Delete files from R2; create terminal `PublishFile` rows (`success`/`error`) for each deletion.
-4. Start `PublishFinalizerWorkflow`.
-5. Upload files to R2 (GitHub path) or return presigned URLs to client (presigned paths).
+4. Start `PublishFinalizerWorkflow`, then return presigned URLs to the client (presigned paths). The GitHub path swaps the order: it uploads files to R2, then starts the finalizer, because GitHub rate-limit waits can make the uploads last longer than the finalizer's one-hour poll (ADR 0009 amendment).
 
 ### Per-path implementation
 
