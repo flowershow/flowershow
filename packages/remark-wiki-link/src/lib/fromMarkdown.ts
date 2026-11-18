@@ -96,6 +96,7 @@ function fromMarkdown(opts: Options = {}): FromMarkdownExtension {
       url = urlResolver({
         filePath: matchingFilePath ?? targetPath,
         heading,
+        target: targetPath,
         isEmbed: token.type === 'embed',
       });
     }

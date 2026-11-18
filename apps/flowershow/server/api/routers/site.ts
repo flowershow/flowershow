@@ -1,6 +1,8 @@
 import { canManageSite, isSiteOwner, siteAuthzSelect } from '@/lib/site-authz';
 import {
+  isConvertiblePath,
   isSiteChromeFile,
+  MARKDOWN_LIKE_EXTENSIONS,
   matchLinkTarget,
   SITE_CHROME_FILES,
   tagIdentity,
@@ -25,9 +27,11 @@ import { triggerGitHubSyncWorkflow } from '@/lib/cloudflare-worker';
 import {
   type ContentType,
   deleteProject,
+  fetchDerivedMarkdown,
   fetchFile,
   generatePresignedUploadUrl,
 } from '@/lib/content-store';
+import { pickBlobForSlug } from '@/lib/converted-blob';
 import {
   CUSTOM_CSS_PATH,
   customCssVersion,
@@ -55,7 +59,6 @@ import {
   hasMarkdownInDir,
   isChangelogDirName,
   isChangelogFileName,
-  isFolderIndexPath,
   normalizeDir,
   toChangelogEntries,
 } from '@/lib/changelog';
@@ -1242,10 +1245,10 @@ export const siteRouter = createTRPCRouter({
             where: {
               siteId: site.id,
               OR: [
-                // Markdown pages: must be processed (metadata present) and
-                // not explicitly unpublished.
+                // Markdown pages (and converted Word documents): must be
+                // processed (metadata present) and not explicitly unpublished.
                 {
-                  extension: { in: ['md', 'mdx'] },
+                  extension: { in: [...MARKDOWN_LIKE_EXTENSIONS] },
                   metadata: { not: Prisma.AnyNull }, // metadata must exist
                   OR: [
                     { metadata: { path: ['publish'], equals: true } }, // explicitly published
@@ -1346,8 +1349,8 @@ export const siteRouter = createTRPCRouter({
         async (input) => {
           const _dir = input.dir.replace(/^\//, '');
           const dir = _dir && (_dir.endsWith('/') ? _dir : `${_dir}/`);
-          const dirReadmePattern = dir + 'README.md(x)?';
-          const dirIndexPattern = dir + 'index.md(x)?';
+          const dirReadmePattern = dir + 'README.(mdx?|docx)';
+          const dirIndexPattern = dir + 'index.(mdx?|docx)';
 
           const siteHostname =
             site.customDomain ??
@@ -1379,7 +1382,7 @@ export const siteRouter = createTRPCRouter({
                 AND "path" LIKE ${dir + '%'}
                 AND "path" !~ ${dirReadmePattern}
                 AND "path" !~ ${dirIndexPattern}
-                AND "extension" IN ('md', 'mdx')
+                AND "extension" IN ('md', 'mdx', 'docx')
                 AND "app_path" IS NOT NULL
                 AND ("metadata"->>'publish') IS DISTINCT FROM 'false'
                 AND ${notDraftSql()}
@@ -1535,16 +1538,9 @@ export const siteRouter = createTRPCRouter({
                 appPath: input.slug,
               },
             });
-            if (candidates.length === 1) {
-              blob = candidates[0]!;
-            } else if (candidates.length > 1) {
-              // A folder index also beats a same-named file (changelog/README.md
-              // over changelog.md)
-              blob =
-                candidates.find((b) => /(?:^|\/)index\.mdx?$/.test(b.path)) ??
-                candidates.find((b) => isFolderIndexPath(b.path)) ??
-                candidates[0]!;
-            }
+            // A folder index also beats a same-named file (changelog/README.md
+            // over changelog.md); any md/mdx page beats a Word document.
+            blob = pickBlobForSlug(candidates) ?? null;
           }
 
           let siteFilePaths: string[] | undefined;
@@ -1585,13 +1581,15 @@ export const siteRouter = createTRPCRouter({
             });
           }
 
-          // 3. First md/mdx page — sort by appPath, then path as tiebreaker.
-          //    Non-page markdown (no appPath) is skipped.
-          if (!blob && input.slug === '/') {
+          // 3. First md/mdx page, else first converted Word document — sort
+          //    by appPath, then path as tiebreaker. Non-page markdown (no
+          //    appPath) is skipped.
+          for (const extensions of [['md', 'mdx'], ['docx']]) {
+            if (blob || input.slug !== '/') break;
             blob = await ctx.db.blob.findFirst({
               where: {
                 siteId: input.siteId,
-                extension: { in: ['md', 'mdx'] },
+                extension: { in: extensions },
                 appPath: { not: null },
               },
               orderBy: [
@@ -1798,6 +1796,16 @@ export const siteRouter = createTRPCRouter({
             throw new TRPCError({
               code: 'NOT_FOUND',
               message: 'Page not found',
+            });
+          }
+
+          // A Word document's page content is the Markdown converted from it.
+          if (isConvertiblePath(blob.path)) {
+            if (!blob.sha) return null;
+            return await fetchDerivedMarkdown({
+              projectId: blob.site.id,
+              path: blob.path,
+              sha: blob.sha,
             });
           }
 

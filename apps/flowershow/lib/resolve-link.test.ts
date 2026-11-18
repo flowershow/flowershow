@@ -1,3 +1,7 @@
+import { remarkWikiLink } from '@flowershow/remark-wiki-link';
+import remarkParse from 'remark-parse';
+import { unified } from 'unified';
+import { visit } from 'unist-util-visit';
 import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('@/env.mjs', () => ({
@@ -7,7 +11,11 @@ vi.mock('@/env.mjs', () => ({
   },
 }));
 
-import { resolveContentLink, resolveToAbsolutePath } from './resolve-link';
+import {
+  resolveContentLink,
+  resolveToAbsolutePath,
+  resolveWikiLinkUrl,
+} from './resolve-link';
 
 /* example site file tree:
  * /README.md
@@ -407,5 +415,114 @@ describe('resolveToAbsolutePath', () => {
     expect(resolveToAbsolutePath('post-1.md', 'blog/README.md')).toBe(
       '/blog/post-1.md',
     );
+  });
+});
+
+describe('Word documents (convertible files)', () => {
+  const siteHostname = 'site.example.com';
+
+  it('an explicit link to report.docx stays a raw download', () => {
+    expect(resolveContentLink({ target: 'report.docx', siteHostname })).toBe(
+      'http://site.example.com/report.docx',
+    );
+  });
+
+  it('a converted image URL (already encoded) is made absolute, not re-encoded', () => {
+    expect(
+      resolveContentLink({
+        target:
+          '/_derived/My%20Notes/Q3%2BR%C3%A9port%20(final).docx/abc/image1.png',
+        originFilePath: '/My Notes/Q3+Réport (final).docx',
+        siteHostname,
+      }),
+    ).toBe(
+      'http://site.example.com/_derived/My%20Notes/Q3%2BR%C3%A9port%20(final).docx/abc/image1.png',
+    );
+  });
+
+  it('a link without extension goes to the page', () => {
+    expect(resolveContentLink({ target: 'report', siteHostname })).toBe(
+      '/report',
+    );
+  });
+
+  it('[[report]] matched to report.docx links to the page', () => {
+    expect(
+      resolveWikiLinkUrl({
+        filePath: '/notes/My Report.docx',
+        target: 'My Report',
+        heading: 'Intro Part',
+        siteHostname,
+      }),
+    ).toBe('/notes/My+Report#intro-part');
+  });
+
+  it('[[folder/index]] matched to an index.docx links to the folder', () => {
+    expect(
+      resolveWikiLinkUrl({
+        filePath: '/guide/index.docx',
+        target: 'guide/index',
+        heading: '',
+        siteHostname,
+      }),
+    ).toBe('/guide');
+  });
+
+  it('[[report.docx]] (explicit extension) stays a raw download', () => {
+    expect(
+      resolveWikiLinkUrl({
+        filePath: '/report.docx',
+        target: 'report.DOCX',
+        heading: '',
+        siteHostname,
+      }),
+    ).toBe('http://site.example.com/report.docx');
+  });
+
+  it('wiki links through remark-wiki-link: [[report]] is the page, [[report.docx]] the file', () => {
+    const hrefs = (md: string, files: string[]) => {
+      const tree = unified()
+        .use(remarkParse)
+        .use(remarkWikiLink, {
+          files,
+          urlResolver: (o: {
+            filePath: string;
+            heading: string;
+            target?: string;
+          }) => resolveWikiLinkUrl({ ...o, siteHostname }),
+        })
+        .parse(md);
+      const out: string[] = [];
+      visit(tree, 'wikiLink', (n: any) => {
+        out.push(n.data.hProperties.href);
+      });
+      return out;
+    };
+    expect(
+      hrefs('[[report]] [[report.docx]] [[report#Intro]]', ['/report.docx']),
+    ).toEqual([
+      '/report',
+      'http://site.example.com/report.docx',
+      '/report#intro',
+    ]);
+    // A Markdown page with the same name wins for [[report]]; the explicit
+    // extension still links to the Word file.
+    expect(
+      hrefs('[[report]] [[report.docx]]', ['/report.docx', '/report.md']),
+    ).toEqual(['/report', 'http://site.example.com/report.docx']);
+  });
+
+  it('non-convertible files resolve as before', () => {
+    expect(
+      resolveWikiLinkUrl({
+        filePath: '/about.md',
+        target: 'about',
+        heading: '',
+        siteHostname,
+      }),
+    ).toBe('/about');
+    expect(
+      resolveWikiLinkUrl({ filePath: '/a.pdf', heading: '', siteHostname }),
+    ).toBe('http://site.example.com/a.pdf');
   });
 });

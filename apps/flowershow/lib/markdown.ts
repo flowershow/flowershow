@@ -54,7 +54,7 @@ import {
 import remarkListing, { type ListingRenderContext } from './remark-listing';
 import remarkObsidianBases from './remark-obsidian-bases';
 import remarkTags from './remark-tags';
-import { resolveContentLink } from './resolve-link';
+import { resolveWikiLinkUrl } from './resolve-link';
 
 interface MarkdownOptions {
   filePath: string;
@@ -469,13 +469,15 @@ export const getMdxOptions = ({
 };
 
 export const getUrlResolver = (siteHostname: string) => {
-  return ({ filePath, heading }: { filePath: string; heading?: string }) => {
-    // We need to concatenate filePath and heading for use with resolveContentLink
-    return resolveContentLink({
-      target: `${filePath}${heading ? '#' + heading : ''}`,
-      siteHostname,
-    });
-  };
+  return ({
+    filePath,
+    heading,
+    target,
+  }: {
+    filePath: string;
+    heading?: string;
+    target?: string;
+  }) => resolveWikiLinkUrl({ filePath, heading, target, siteHostname });
 };
 
 // Changelog page and entry titles already link to their own anchor

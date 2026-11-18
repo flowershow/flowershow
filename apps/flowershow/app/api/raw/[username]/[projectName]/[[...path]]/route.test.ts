@@ -759,3 +759,93 @@ describe('GET /api/raw — reserved site-chrome files', () => {
     expect(res.status).toBe(302);
   });
 });
+
+// Images extracted from a converted Word document live under
+// `{siteId}/main/derived/{path}/{sha}/` and are linked as `/_derived/...`.
+describe('GET /api/raw — derived (converted document) assets', () => {
+  const publicSite = { ...passwordSite, privacyMode: 'PUBLIC' };
+  const segments = ['_derived', 'My Notes', 'r.docx', 'abc', 'image1.png'];
+  const derivedParams = (path: string[] = segments) => ({
+    params: Promise.resolve({ username: 'victim', projectName: 'notes', path }),
+  });
+
+  it('redirects a public site to the derived key, cached as immutable', async () => {
+    findFirst.mockResolvedValue(publicSite);
+
+    const res = await GET(
+      makeReq('_derived/My%20Notes/r.docx/abc/image1.png'),
+      derivedParams(),
+    );
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get('location')).toBe(
+      'http://s3.test.com/site-1/main/derived/My%20Notes/r.docx/abc/image1.png',
+    );
+    expect(res.headers.get('cache-control')).toBe(
+      'public, max-age=31536000, immutable',
+    );
+    // sha-keyed URLs are immutable: no Blob `?v=` lookup
+    expect(findBlob).not.toHaveBeenCalled();
+  });
+
+  it('serves a password site via a presigned URL of the derived key, not cached', async () => {
+    findFirst.mockResolvedValue(passwordSite);
+
+    const res = await GET(
+      makeReq('_derived/My%20Notes/r.docx/abc/image1.png'),
+      derivedParams(),
+    );
+
+    expect(res.status).toBe(302);
+    expect(generatePresignedGetUrl).toHaveBeenCalledWith(
+      'site-1/main/derived/My Notes/r.docx/abc/image1.png',
+      300,
+    );
+    expect(res.headers.get('cache-control') ?? '').not.toMatch(/immutable/);
+  });
+
+  it('serves only extracted images: the derived Markdown and other files 404', async () => {
+    for (const site of [passwordSite, publicSite]) {
+      findFirst.mockResolvedValue(site);
+      for (const name of ['index.md', 'x.html', 'x.svg']) {
+        const res = await GET(
+          makeReq(`_derived/r.docx/abc/${name}`),
+          derivedParams(['_derived', 'r.docx', 'abc', name]),
+        );
+        expect(res.status).toBe(404);
+      }
+    }
+    expect(fetchFile).not.toHaveBeenCalled();
+    expect(generatePresignedGetUrl).not.toHaveBeenCalled();
+  });
+
+  it('rejects traversal out of the derived folder (404)', async () => {
+    findFirst.mockResolvedValue(publicSite);
+
+    const res = await GET(
+      makeReq('_derived/x.png'),
+      derivedParams(['_derived', '..', 'raw', 'secret.png']),
+    );
+
+    expect(res.status).toBe(404);
+    expect(generatePresignedGetUrl).not.toHaveBeenCalled();
+  });
+
+  it('does not cache the redirect as immutable for an anonymous (expiring) site', async () => {
+    findFirst.mockResolvedValue({
+      ...publicSite,
+      userId: ANONYMOUS_USER_ID,
+      isTemporary: true,
+      expiresAt: null,
+    });
+
+    const res = await GET(
+      makeReq('_derived/r.docx/abc/image1.png'),
+      derivedParams(['_derived', 'r.docx', 'abc', 'image1.png']),
+    );
+
+    expect(res.status).toBe(302);
+    expect(res.headers.get('cache-control')).not.toMatch(/immutable/);
+    expect(res.headers.get('x-robots-tag')).toBe('noindex');
+  });
+});

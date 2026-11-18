@@ -1,4 +1,8 @@
-import { encodeSlug, filePathToSlug } from '@flowershow/core';
+import {
+  encodeSlug,
+  filePathToSlug,
+  isConvertiblePath,
+} from '@flowershow/core';
 import matter from 'gray-matter';
 import type { Code, Heading, Html, Root, Text } from 'mdast';
 import remarkParse from 'remark-parse';
@@ -21,9 +25,10 @@ import {
 } from './spec';
 
 export const AUTO_LISTING_DIR_NAMES = ['blog', 'posts'] as const;
-const MARKDOWN_RE = /\.mdx?$/i;
-/** Ingestion's index rule (packages/core filePathToSlug): exact README/index. */
-const INGESTION_INDEX_RE = /(?:^|\/)(?:README|index)\.mdx?$/;
+/** Pages with a Markdown body: md, mdx and converted Word documents. */
+const MARKDOWN_RE = /\.(?:mdx?|docx)$/i;
+/** Ingestion's index rule (packages/core filePathToSlug, pageSlugFromPath): exact README/index. */
+const INGESTION_INDEX_RE = /(?:^|\/)(?:README|index)\.(?:mdx?|docx)$/;
 const LISTING_LANGS = new Set(['list', 'blog', 'base']);
 /** A listing fence line, for fences MDX parses inside JSX but remark-parse leaves in an html node. */
 const FENCE_IN_HTML_RE =
@@ -214,9 +219,12 @@ export function virtualListingDir(
  * Whether the page body goes through the MDX pipeline, by the same rule as
  * renderPageContent (which calls it): `syntaxMode` (page frontmatter, then
  * site config) `md` is Markdown, `auto` is Markdown for `.md` only, and
- * anything else, including no setting at all, is MDX.
+ * anything else, including no setting at all, is MDX. A converted Word
+ * document is always Markdown.
  */
 export function rendersAsMdx(path: string, renderMode?: string): boolean {
+  // Converted Word documents are always Markdown: their text may hold `{` or `<`.
+  if (isConvertiblePath(path)) return false;
   return !(
     renderMode === 'md' ||
     (renderMode === 'auto' && path.endsWith('.md'))

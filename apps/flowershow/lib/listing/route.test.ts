@@ -256,6 +256,11 @@ describe('autoListingFor (cases 2 and 3)', () => {
     expect(rendersAsMdx('blog/README.mdx', 'auto')).toBe(true);
     expect(rendersAsMdx('blog/README.md', undefined)).toBe(true);
   });
+  it('a converted Word document always renders as Markdown, never MDX', () => {
+    expect(rendersAsMdx('x.docx', 'auto')).toBe(false);
+    expect(rendersAsMdx('x.docx', 'mdx')).toBe(false);
+    expect(rendersAsMdx('x.DOCX', undefined)).toBe(false);
+  });
   it('a folder note beside an attachments-only folder gets no listing (no error card on a published page)', () => {
     expect(
       autoListingFor({

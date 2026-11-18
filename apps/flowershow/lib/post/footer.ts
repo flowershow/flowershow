@@ -7,7 +7,7 @@
  * parallel; then one by-id fetch of at most five rows and one cached author
  * lookup.
  */
-import { tagMatches } from '@flowershow/core';
+import { MARKDOWN_LIKE_EXTENSIONS, tagMatches } from '@flowershow/core';
 import { unstable_cache } from 'next/cache';
 import {
   cachedResolveAuthors,
@@ -45,7 +45,7 @@ export async function folderTags(
       const rows = (await db.blob.findMany({
         where: {
           siteId: sid,
-          extension: { in: ['md', 'mdx'] },
+          extension: { in: [...MARKDOWN_LIKE_EXTENSIONS] },
           path: { startsWith: `${dir}/` },
           tags: { some: {} },
         },

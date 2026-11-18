@@ -1,3 +1,4 @@
+import { isConvertiblePath } from '@flowershow/core';
 import type { Blob } from '@prisma/client';
 import { serialize } from 'next-mdx-remote-client/serialize';
 import ErrorMessage from '@/components/public/error-message';
@@ -42,7 +43,7 @@ export type RenderPageContentOptions = {
 };
 
 /**
- * Compile a markdown, MDX or canvas blob into a React element using the same
+ * Compile a markdown, MDX, canvas or converted Word blob into a React element using the same
  * pipeline as normal site pages. Errors are rendered inline, never thrown.
  */
 export async function renderPageContent({
@@ -61,7 +62,8 @@ export async function renderPageContent({
 }: RenderPageContentOptions): Promise<React.JSX.Element> {
   let compiledContent: React.JSX.Element;
 
-  const isMarkdown = blob.path.endsWith('.md');
+  // A converted Word document's content is its derived Markdown (getBlobContent).
+  const isMarkdown = blob.path.endsWith('.md') || isConvertiblePath(blob.path);
   const isMdx = blob.path.endsWith('.mdx');
   const isCanvas = blob.path.endsWith('.canvas');
 

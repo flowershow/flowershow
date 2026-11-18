@@ -1,5 +1,7 @@
 import {
   frontmatterTags,
+  isConvertiblePath,
+  isMarkdownLikePage,
   isSiteChromeFile,
   normalizeAuthors,
   tagFromHref,
@@ -247,7 +249,7 @@ export async function generateMetadata(props: {
     isChangelogIndex ||
     listingPaginatesByPage(listingRoute) ||
     (!!blob &&
-      /\.mdx?$/i.test(blob.path) &&
+      isMarkdownLikePage(blob.path) &&
       pageFromSearchParam(pageParam) > 1 &&
       hasPaginatingBlock((await loadBody()) ?? ''));
   const noindex = isDraft(metadata as Record<string, unknown> | null);
@@ -564,7 +566,7 @@ export default async function SitePage(props: {
   // the body does. A failed lookup means "not a post", never a guess.
   const postFileIndex = postFiles(siteFilePaths);
   const postInputs =
-    /\.mdx?$/i.test(blob.path) &&
+    isMarkdownLikePage(blob.path) &&
     mayBePost(blob.metadata as Record<string, unknown> | null)
       ? loadPostRouteInputs(
           site.id,
@@ -1146,7 +1148,10 @@ export default async function SitePage(props: {
                   className="page-edit-button"
                   target="_blank"
                 >
-                  View raw markdown <CodeIcon width={16} />
+                  {isConvertiblePath(blob.path)
+                    ? 'Download original'
+                    : 'View raw markdown'}{' '}
+                  <CodeIcon width={16} />
                 </Link>
               )}
             </div>

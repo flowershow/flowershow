@@ -101,10 +101,10 @@ Class name added to nodes for which no matching permalink (passed in `permalinks
 
 ### `urlResolver`
 
-Type: `(name: string) => string`
-Default: `(name: string) => name`
+Type: `(opts: { filePath: string; heading: string; isEmbed: boolean; target?: string }) => string`
+Default: the matched file path, slugified
 
-A function that resolves a wikilink (or embed) target to a URL path. The target is the part in `[[target|alias]]` or `![[target]]`.
+A function that resolves a wikilink (or embed) to a URL path. `filePath` is the matched file (or the target if nothing matched), `target` the link target as written (the part in `[[target|alias]]` or `![[target]]`, without `#heading`), so a resolver can tell `[[report]]` from `[[report.docx]]`.
 
 ### `aliasDivider`
 

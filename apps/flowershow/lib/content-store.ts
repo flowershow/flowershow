@@ -31,7 +31,11 @@ const s3Client = new S3Client({
   forcePathStyle: S3_FORCE_PATH_STYLE,
 });
 
-import { type ContentType, getContentType } from '@flowershow/core';
+import {
+  type ContentType,
+  derivedMarkdownKey,
+  getContentType,
+} from '@flowershow/core';
 
 export type { ContentType };
 
@@ -144,6 +148,30 @@ export const fetchFile = async ({
 }) => {
   try {
     const response = await fetchS3Object(`${projectId}/main/raw/${path}`);
+    return (await response.Body?.transformToString()) || null;
+  } catch (err) {
+    if (err instanceof NoSuchKey) return null;
+    throw err;
+  }
+};
+
+/**
+ * The Markdown converted from a Word document (`path` is the `.docx` path,
+ * `sha` its Blob sha), or null if the conversion has not been stored.
+ */
+export const fetchDerivedMarkdown = async ({
+  projectId,
+  path,
+  sha,
+}: {
+  projectId: string;
+  path: string;
+  sha: string;
+}) => {
+  try {
+    const response = await fetchS3Object(
+      derivedMarkdownKey(projectId, path, sha),
+    );
     return (await response.Body?.transformToString()) || null;
   } catch (err) {
     if (err instanceof NoSuchKey) return null;

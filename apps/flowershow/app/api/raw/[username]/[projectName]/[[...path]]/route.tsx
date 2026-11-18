@@ -9,6 +9,11 @@ import {
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { fetchFile, generatePresignedGetUrl } from '@/lib/content-store';
 import {
+  DERIVED_IMAGE_EXTENSIONS,
+  derivedAssetR2Key,
+  isDerivedRequestPath,
+} from '@/lib/derived-asset';
+import {
   CUSTOM_CSS_PATH,
   customCssCacheControl,
   customCssCdnCacheControl,
@@ -76,6 +81,12 @@ export async function GET(
   // Anonymous sites are never indexed (pages and raw files).
   const robotsHeaders: Record<string, string> =
     site.userId === ANONYMOUS_USER_ID ? { 'X-Robots-Tag': 'noindex' } : {};
+
+  // Images extracted from converted Word documents: `/_derived/...` maps to
+  // `{siteId}/main/derived/...` (a reserved folder, never a raw file).
+  if (isDerivedRequestPath(path)) {
+    return serveDerivedAsset({ site, path, headers: robotsHeaders });
+  }
 
   const rawPath = path.join('/');
   const r2Key = `${site.id}/main/raw/${rawPath}`;
@@ -195,6 +206,67 @@ export async function GET(
   // The redirect must never be cached, or the version key above goes stale.
   res.headers.set('Cache-Control', 'public, max-age=0, must-revalidate');
   for (const [k, v] of Object.entries(robotsHeaders)) res.headers.set(k, v);
+  return res;
+}
+
+/**
+ * A `/_derived/{path}/{sha}/imageN.ext` request. Only extracted image types
+ * are served (images skip the password cookie, as raw images do, so the image
+ * optimizer works). The key is built from the site this route resolved, never
+ * from anything else in the request. The URL is keyed by the Word file's sha,
+ * so its content never changes: no Blob `?v=` lookup, and the public redirect
+ * is cached as immutable (not for expiring anonymous sites).
+ */
+async function serveDerivedAsset({
+  site,
+  path,
+  headers: extraHeaders,
+}: {
+  site: {
+    id: string;
+    userId: string;
+    privacyMode: string;
+    isTemporary: boolean;
+  };
+  path: string[];
+  headers: Record<string, string>;
+}) {
+  const notFound = () =>
+    NextResponse.json(
+      { error: 'Not found' },
+      { status: 404, headers: extraHeaders },
+    );
+  const name = path[path.length - 1] ?? '';
+  const ext = name.slice(name.lastIndexOf('.') + 1).toLowerCase();
+  const key = derivedAssetR2Key(site.id, path);
+  if (!key || !name.includes('.') || !DERIVED_IMAGE_EXTENSIONS.has(ext)) {
+    return notFound();
+  }
+
+  let res: NextResponse;
+  if (site.privacyMode === 'PASSWORD') {
+    res = NextResponse.redirect(await generatePresignedGetUrl(key, 300), 302);
+  } else {
+    const isSecure =
+      env.NEXT_PUBLIC_VERCEL_ENV === 'production' ||
+      env.NEXT_PUBLIC_VERCEL_ENV === 'preview';
+    const encodedKey = key
+      .split('/')
+      .map((segment) => encodeURIComponent(segment))
+      .join('/');
+    res = NextResponse.redirect(
+      `${isSecure ? 'https' : 'http'}://${env.NEXT_PUBLIC_S3_BUCKET_DOMAIN}/${encodedKey}`,
+      302,
+    );
+    const expiring = site.isTemporary || site.userId === ANONYMOUS_USER_ID;
+    res.headers.set(
+      'Cache-Control',
+      expiring
+        ? 'public, max-age=0, must-revalidate'
+        : 'public, max-age=31536000, immutable',
+    );
+  }
+  for (const [k, v] of Object.entries(extraHeaders)) res.headers.set(k, v);
   return res;
 }
 

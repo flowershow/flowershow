@@ -39,10 +39,12 @@ export function matchLinkTarget<T extends { path: string }>(
 
   if (matches.length === 0) return undefined;
   const isDocx = (p: string) => /\.docx$/i.test(p);
+  // An explicit `.docx` target ([[report.docx]]) means the Word file itself.
+  const docxFirst = isDocx(target) ? -1 : 1;
   return matches.sort((a, b) => {
-    // Equal stripped path: prefer md/mdx over docx.
+    // Equal stripped path: prefer md/mdx over docx, unless the target names the docx.
     if (norm(stripExt(a.path)) === norm(stripExt(b.path))) {
-      const d = Number(isDocx(a.path)) - Number(isDocx(b.path));
+      const d = docxFirst * (Number(isDocx(a.path)) - Number(isDocx(b.path)));
       if (d !== 0) return d;
     }
     return a.path.length - b.path.length;

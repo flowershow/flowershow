@@ -1,6 +1,5 @@
+import { isMarkdownLikePage } from '@flowershow/core';
 import type { SiteConfig } from '@/components/types';
-
-const MARKDOWN_PAGE = /\.mdx?$/i;
 
 export type AnnotationGateInput = {
   site: { isTemporary?: boolean | null; anonymousOwnerId?: string | null };
@@ -22,7 +21,7 @@ export function isAnnotationsEnabled({
   pageMetadata,
   pagePath,
 }: AnnotationGateInput): boolean {
-  if (!MARKDOWN_PAGE.test(pagePath)) return false;
+  if (!isMarkdownLikePage(pagePath)) return false;
   // Unclaimed anonymous sites are excluded from Phase 0: nobody could moderate.
   if (site.isTemporary && site.anonymousOwnerId) return false;
   if (siteConfig?.annotations !== true) return false;

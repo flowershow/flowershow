@@ -58,7 +58,7 @@ interface FileUploadInfo {
  *
  * Limitations:
  * - Max 5 files per site
- * - At least one markdown file required
+ * - At least one page file (.md, .mdx or .docx) required
  * - Sites expire in 7 days if not claimed
  */
 export async function POST(request: NextRequest) {
@@ -102,7 +102,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate each file
-    const markdownExtensions = ['md', 'mdx'];
+    // Pages: Markdown, or Word documents (converted to a page on upload).
+    const markdownExtensions = ['md', 'mdx', 'docx'];
     let hasMarkdownFile = false;
 
     for (const file of files) {
@@ -158,7 +159,7 @@ export async function POST(request: NextRequest) {
     // Require at least one markdown file
     if (!hasMarkdownFile) {
       return NextResponse.json(
-        { error: 'At least one markdown file (.md, .mdx) is required' },
+        { error: 'At least one page file (.md, .mdx or .docx) is required' },
         { status: 400 },
       );
     }

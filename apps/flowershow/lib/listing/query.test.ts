@@ -28,7 +28,7 @@ describe('fetchFolderRows', () => {
       where: {
         siteId: 's',
         appPath: { not: null },
-        extension: { in: ['md', 'mdx'] },
+        extension: { in: ['md', 'mdx', 'docx'] },
         path: { startsWith: 'blog/' },
       },
       select: {
