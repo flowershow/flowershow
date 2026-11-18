@@ -1,6 +1,6 @@
 ---
 title: "The CMS is over."
-description: "Publishing was a place you moved your words into. Now you and your AI work in files, so publishing becomes a step: say \"publish\", get a website. Our manifesto, and our launch post."
+description: "Publishing was a place you moved your words into. Now you and your AI work in files, so publishing becomes a step: say \"publish\", get a website."
 date: 2026-11-17
 authors:
   - rufuspollock
@@ -35,23 +35,9 @@ Content watched all this from the next room. You could run a place (WordPress, p
 
 Files did get some love. We're big fans of the static site generators, Jekyll, Hugo and Astro, and of Obsidian Publish. They proved a folder of files can be a website, and we stand on their shoulders. But most of them make you the build engineer: you install, configure, deploy and host it yourself, and search, lists of posts, maths and diagrams are yours to wire up. Obsidian Publish is easy, but it's one app, one vault, and a monthly fee from day one. Nobody made publish a word anyone could say, for free.
 
-So we're not claiming we ended the CMS. It's been ending for years, one static site at a time. What held it back was that writing in files was a chore for most people. Then AI started writing them for us.
+The CMS has been ending for years, one static site at a time. What held it back was that writing in files was a chore for most people. Then AI started helping us write them.
 
 Vercel made deploy a command. Flowershow makes publish one.
-
-## This has happened before
-
-![Compositors setting type by hand at wooden type cases in a printing shop, around 1899](/assets/blog/cms-is-over/typesetting-shop.webp)
-
-*Before desktop publishing: compositors setting type by hand, about 1899.*
-
-Until the mid-1980s, if you wanted something printed, you sent your words to a typesetter. Specialists with their own machines retyped them into their own format and sent back pages. Then in 1985 PageMaker and the LaserWriter put all of that on a desk, and anyone could make pages themselves.
-
-![The original Apple Macintosh, 1984, with a Japanese woodblock print open in MacPaint](/assets/blog/cms-is-over/macintosh-1984.webp)
-
-*The first Macintosh, 1984. A year later, the typesetter was on your desk.*
-
-The CMS is the web's typesetter. You hand your words over, it retypes them into its own posts and blocks, and keeps them behind its login. That made sense when there was no other way to get a page online. Now your words are already in files, ready to go. Skip the middleman.
 
 ## Everyone is a files person now
 
@@ -95,8 +81,6 @@ $ fl publish ./wiki
 A coach asks for a workshop handout, says "publish this", and sends a link instead of an attachment. A lab's agent reads papers overnight, and every morning the wiki is a website, backlinks and all. A small team's agent updates the docs alongside the code, so the docs are never stale.
 
 Could you build this yourself? Yes, and with AI you could build it fast. Then you would keep it working, through every upgrade and every broken build, for a site you only ever wanted to write on. We made the fifty decisions, and we keep them working. That's the product.
-
-Here's what that looks like:
 
 https://www.youtube.com/watch?v=yFggZjCGQfc
 
