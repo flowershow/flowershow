@@ -1458,3 +1458,19 @@
 .fs-root .thesis .thesis-more { margin-top: 20px; font-weight: 600; }
 .fs-root .thesis .thesis-more a { color: var(--berry-ink); text-decoration: none; }
 .fs-root .thesis .thesis-more a:hover { text-decoration: underline; }
+
+/* Who makes this (homepage) */
+.fs-root.lp-home .who-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: clamp(32px, 6vw, 72px); align-items: center; }
+.fs-root.lp-home .who-people { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.fs-root.lp-home .who-person { display: flex; flex-direction: column; gap: 4px; color: var(--ink); text-decoration: none; }
+.fs-root.lp-home .who-person img { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 18px; margin: 0 0 10px; transition: transform .2s ease; }
+.fs-root.lp-home .who-person:hover img { transform: rotate(-1.5deg) scale(1.02); }
+.fs-root.lp-home .who-name { font-weight: 600; font-size: 1.05rem; }
+.fs-root.lp-home .who-role { color: var(--muted); font-size: .95rem; }
+.fs-root.lp-home .who-copy h2 { margin: 10px 0 18px; }
+.fs-root.lp-home .who-copy p { color: var(--muted); font-size: 1.1rem; line-height: 1.6; margin: 0 0 14px; }
+.fs-root.lp-home .who-copy .who-links { display: flex; flex-wrap: wrap; gap: 8px 28px; margin-top: 22px; }
+@media (max-width: 760px) {
+  .fs-root.lp-home .who-grid { grid-template-columns: 1fr; }
+  .fs-root.lp-home .who-people { max-width: 420px; }
+}

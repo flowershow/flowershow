@@ -9,7 +9,7 @@ All the prints are in the public domain. Most come from the [Metropolitan Museum
 
 | Post | Print | Artist | Date | Source |
 | --- | --- | --- | --- | --- |
-| [The CMS is over.](/blog/the-cms-is-over) | [Morning Glories and Bird](https://www.metmuseum.org/art/collection/search/55585) | Utagawa Hiroshige | 1840–50 | The Metropolitan Museum of Art |
+| [The CMS is over.](/blog/cms-is-over) | [Morning Glories and Bird](https://www.metmuseum.org/art/collection/search/55585) | Utagawa Hiroshige | 1840–50 | The Metropolitan Museum of Art |
 | [Show your latest posts anywhere](/blog/show-a-list-of-pages-anywhere) | [Poppies (Large Flowers series)](https://www.rijksmuseum.nl/en/collection/RP-P-2023-32) | Katsushika Hokusai | c. 1832 | Rijksmuseum, Amsterdam |
 | [Build a blog, portfolio or team page](/blog/listing-pages-tutorial) | [Swallow and Wisteria](https://www.metmuseum.org/art/collection/search/36726) | Utagawa Hiroshige | mid-1840s | The Metropolitan Museum of Art |
 | [What you can change in Flowershow theming, and who can](/blog/2026-08-08-whats-actually-changeable-in-theming) | [Swallows and Kingfisher with Rose Mallows](https://www.metmuseum.org/art/collection/search/36721) | Utagawa Hiroshige | ca. 1838 | The Metropolitan Museum of Art |

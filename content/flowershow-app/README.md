@@ -12,7 +12,7 @@ showComments: false
     <section className="hero">
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
-          <span className="eyebrow hero-eyebrow">Publishing for the AI age · <a href="/blog/the-cms-is-over">The CMS is over</a></span>
+          <span className="eyebrow hero-eyebrow">Publishing for the AI age · <a href="/blog/cms-is-over">The CMS is over</a></span>
           <h1>Say “publish”. Get a website.</h1>
           <p className="lede">Flowershow turns a Markdown or HTML file, a folder, or a whole Obsidian vault into a real website, with navigation, search and your domain. Publish from Obsidian, GitHub, the terminal or Claude.</p>
           <div className="cta-row">
@@ -92,7 +92,7 @@ showComments: false
           <h2>Vercel made deploy a command. Flowershow makes publish one.</h2>
           <p>Publishing never got that, because publishing was a place: a CMS you log into, type into boxes and maintain. In 1985 PageMaker and the LaserWriter moved typesetting from the shop to the desk. The CMS is the web's typesetting shop: your words move into its database, behind its login.</p>
           <p className="thesis-punch">Your files are already the finished format. Skip the shop.</p>
-          <p className="thesis-more"><a href="/blog/the-cms-is-over">Read our manifesto: The CMS is over <span className="arw">→</span></a></p>
+          <p className="thesis-more"><a href="/blog/cms-is-over">Read our manifesto: The CMS is over <span className="arw">→</span></a></p>
         </div>
       </div>
     </section>
@@ -510,6 +510,29 @@ showComments: false
         </div>
       </div>
     </section>
+    <section className="section who" id="who">
+      <div className="wrap who-grid reveal">
+        <div className="who-people">
+          <a className="who-person" href="/people/rufuspollock">
+            <img src="/people/rufuspollock.jpeg" alt="Rufus Pollock" width="300" height="300" loading="lazy" decoding="async" />
+            <span className="who-name">Rufus Pollock</span>
+            <span className="who-role">Founder</span>
+          </a>
+          <a className="who-person" href="/people/olayway">
+            <img src="/people/olayway.jpeg" alt="Ola Rubaj" width="300" height="300" loading="lazy" decoding="async" />
+            <span className="who-name">Ola Rubaj</span>
+            <span className="who-role">Product engineer</span>
+          </a>
+        </div>
+        <div className="who-copy">
+          <span className="eyebrow">Who makes this</span>
+          <h2>Hi, we’re Rufus and Ola.</h2>
+          <p>We make Flowershow, with help from a few friends. Rufus has spent twenty years building open tools for sharing knowledge, starting with Open Knowledge and CKAN. Ola built most of what you’ll click on here. We publish our own work with Flowershow every day, this page included.</p>
+          <p>We’ve built it with our own money and our own time since 2022, because we love helping people share what they know. No investors. We’re in this for the long run.</p>
+          <p className="who-links"><a className="textlink" href="/about"><span className="lm-txt">More about us</span> <span className="arw">→</span></a> <a className="textlink" href="https://discord.gg/JChzM5VdFn"><span className="lm-txt">Say hello on Discord</span> <span className="arw">→</span></a></p>
+        </div>
+      </div>
+    </section>
     <section className="section section-soft" id="open-source">
       <div className="wrap os-grid reveal">
         <div className="os-copy">
@@ -539,9 +562,9 @@ showComments: false
         <div className="final-card reveal">
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
-          <h2>Publish is a command now.</h2>
-          <p>Join the writers, researchers and teams behind 2,300+ sites.</p>
-          <a className="btn btn-primary" href="https://cloud.flowershow.app/">Get started <span className="arw">→</span></a>
+          <h2>Who wants to manage content?</h2>
+          <p>Make publishing fast and fun again. Join the writers, researchers and teams behind 2,300+ sites.</p>
+          <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Publish for free <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>
         </div>
       </div>
