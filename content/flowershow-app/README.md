@@ -78,7 +78,6 @@ showComments: false
             <h3>Nothing to convert</h3>
             <p>Markdown, HTML, whole Obsidian vaults with wiki-links, Bases and Canvas. Publish the files you already have.</p>
           </div>
-
           <div className="proof-item">
             <h3>From wherever you work</h3>
             <p>Claude, ChatGPT, Claude Code, Cursor, Obsidian, GitHub. Free to start, about $5/month, open source.</p>
