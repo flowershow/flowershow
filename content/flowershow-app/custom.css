@@ -7,8 +7,8 @@
    Everything here is scoped under `.fs-root` so it applies ONLY to landing
    pages that wrap their body in `<div className="fs-root"> … </div>` and never
    leaks into docs, blog, or changelog. To reuse this design on another landing
-   page (publish-github, publish-obsidian, cli, pricing, …) just wrap that
-   page's JSX body in `<div className="fs-root">`.
+   page (pricing, the use-case pages, …) just wrap that page's JSX body in
+   `<div className="fs-root">`.
 
    Design tokens come from the site DESIGN.md: a monochrome spine with a
    pink / berry / yellow accent palette, system font stack, ruled-grid cards.
@@ -62,10 +62,10 @@
   --gold-eyebrow: #8a6f00;       /* warm dark gold — golden-in-TEXT / accents */
   --lemon: var(--card-yellow);   /* warm yellow fill (back-compat alias) */
   --gold: var(--gold-eyebrow);   /* warm dark gold (back-compat alias) */
-  /* Obsidian — the /publish-obsidian landing accent (brand violet). Two shades:
-     a saturated fill (--obsidian) and a darkened --obsidian-ink that stays
-     legible as TEXT on white, plus a soft --tint-obsidian wash — mirrors the
-     berry/teal triplet. Also used by .wf-ico.brand-obsidian on the home page. */
+  /* Obsidian brand violet. Two shades: a saturated fill (--obsidian) and a
+     darkened --obsidian-ink that stays legible as TEXT on white, plus a soft
+     --tint-obsidian wash — mirrors the berry/teal triplet. Used by
+     .wf-ico.brand-obsidian on the home page and the default .cmp column. */
   --obsidian:      #7c3aed;      /* Obsidian brand violet — icon + fills */
   --obsidian-ink:  #6d28d9;      /* darkened violet — accent text/links on white */
   --tint-obsidian: #f0e9fe;      /* soft violet wash — filled card backgrounds */
@@ -1179,160 +1179,14 @@
 }
 
 /* ==========================================================================
-   CLI landing — /cli
+   Comparison table (.cmp) — shared component, used by /pricing
    --------------------------------------------------------------------------
-   Reuses the shared landing kit (.hero, .section, .section-head, .steps,
-   .concept-grid, .demo-media, .final-card) on a plain white .fs-root page with
-   the default berry accent — so it reads as the same product as the home page.
-   The one bespoke component is the terminal mockup (.term) that stands in for
-   the hero screenshot. Page-scoped overrides under `.lp-cli` re-tint the couple
-   of kit pieces that default to the Gardens fern (the .pill chip, the .step-num
-   index) back to berry, and lay the steps/concepts out two-up.
+   A borderless table with hairline row rules and the Flowershow column washed
+   in a soft tint (its header rounds at the top, its last cell at the bottom)
+   to read as the pick. Defaults to violet; pages re-tint .col-fs. Wrapped in
+   .cmp-wrap so it scrolls horizontally on narrow screens rather than breaking
+   the page's own layout.
    ========================================================================== */
-
-/* Re-tint gardens-default-fern kit pieces to berry on the CLI page */
-.fs-root.lp-cli .pill { color: var(--berry-ink); background: var(--tint-berry); }
-.fs-root.lp-cli .pill:hover { background: color-mix(in srgb, var(--berry-blush) 20%, #fff); }
-.fs-root.lp-cli .step-num { color: var(--berry-ink); background: var(--tint-berry); }
-
-/* Inline code in prose — mono chip in the berry accent */
-.fs-root.lp-cli .concept-card code, .fs-root.lp-cli .section-head code {
-  font-family: var(--mono); font-size: .88em; color: var(--berry-ink);
-  background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
-}
-
-/* Two-up steps and concept cards (the kit defaults to three across) */
-.fs-root.lp-cli .cli-steps { grid-template-columns: repeat(3, 1fr); max-width: 1040px; margin: 0 auto; }
-.fs-root.lp-cli .cli-steps .step { align-items: stretch; }
-.fs-root.lp-cli .cli-steps .cmd-line { margin-top: 16px; overflow-wrap: anywhere; }
-.fs-root.lp-cli .concept-grid { grid-template-columns: repeat(2, 1fr); }
-@media (max-width: 620px) {
-  .fs-root.lp-cli .cli-steps, .fs-root.lp-cli .concept-grid { grid-template-columns: 1fr; }
-}
-
-/* Terminal mockup — dark card with a traffic-light bar and mono body. Stands in
-   for the hero screenshot; also the language the .cmd-line command chips speak. */
-.fs-root .hero-media-term { width: 100%; }
-.fs-root .term {
-  background: var(--surface-dark); border-radius: 14px; overflow: hidden;
-  box-shadow: 0 1px 2px rgba(17,13,15,.06), 0 30px 70px -28px rgba(17,13,15,.45);
-  font-family: var(--mono); text-align: left;
-}
-.fs-root .term-bar {
-  display: flex; align-items: center; gap: 8px;
-  padding: 12px 16px; background: var(--surface-dark-elevated);
-  border-bottom: 1px solid rgba(255,255,255,.06);
-}
-.fs-root .term-bar i { width: 11px; height: 11px; border-radius: 50%; background: #3a352f; }
-.fs-root .term-bar .term-title { margin-left: 6px; font-size: 12px; color: var(--on-dark-soft); letter-spacing: .01em; }
-.fs-root .term-body { padding: 20px 22px 24px; font-size: 13.5px; line-height: 1.85; color: var(--on-dark-soft); }
-.fs-root .term-body .ln { white-space: pre-wrap; }
-.fs-root .term-body .cmd { color: var(--on-dark); }
-.fs-root .term-body .cmd::before { content: "$ "; color: var(--berry); }
-.fs-root .term-body .ok { color: var(--bright-fern); }
-.fs-root .term-body .muted { color: var(--muted-soft); }
-.fs-root .term-body .url { color: var(--on-dark); font-weight: 600; border-bottom: 1px solid rgba(255,255,255,.28); }
-
-/* Command chip — a single dark terminal line for the numbered steps */
-.fs-root .cmd-line {
-  font-family: var(--mono); font-size: 13px; color: var(--on-dark);
-  background: var(--surface-dark); border-radius: 10px; padding: 12px 15px;
-}
-.fs-root .cmd-line::before { content: "$ "; color: var(--berry); }
-
-/* ==========================================================================
-   AI landing — /publish-with-ai
-   --------------------------------------------------------------------------
-   Reuses the shared landing kit (.hero, .section, .steps, .concept-grid,
-   .faq-grid, .final-card) with the default berry accent, like /cli. Borrows
-   the home page's agent chat mockup (.vis-agent / .chat / .msg) as the hero
-   visual and the .cmd-line chip from /cli. Adds a .prompt-line chip (a chat
-   prompt, not a shell command) and the agent icon row.
-   ========================================================================== */
-
-/* Re-tint gardens-default-fern kit pieces to berry */
-.fs-root.lp-ai .pill { color: var(--berry-ink); background: var(--tint-berry); }
-.fs-root.lp-ai .step-num { color: var(--berry-ink); background: var(--tint-berry); }
-
-/* Inline code in prose — mono chip in the berry accent (same as /cli) */
-.fs-root.lp-ai .concept-card code, .fs-root.lp-ai .section-head code, .fs-root.lp-ai .faq-item code {
-  font-family: var(--mono); font-size: .88em; color: var(--berry-ink);
-  background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
-}
-
-/* Hero visual — the agent chat mockup, sized up from its home-page tile */
-.fs-root .hero-media-agent { width: 100%; max-width: 520px; justify-self: center; }
-.fs-root.lp-ai .hero-media-agent .vis-agent { padding: 20px; box-shadow: 0 1px 2px rgba(17,13,15,.06), 0 30px 70px -28px rgba(17,13,15,.25); }
-.fs-root.lp-ai .hero-media-agent .msg { font-size: 14px; }
-.fs-root.lp-ai .hero-media-agent .msg.bot .step { font-size: 12.5px; overflow-wrap: anywhere; }
-
-/* Steps — three across, commands/prompts stretch full width */
-.fs-root.lp-ai .ai-steps { grid-template-columns: repeat(3, 1fr); }
-.fs-root.lp-ai .ai-steps .step { align-items: stretch; }
-.fs-root.lp-ai .ai-steps .cmd-line, .fs-root.lp-ai .ai-steps .prompt-line { margin-top: 16px; overflow-wrap: anywhere; }
-.fs-root.lp-ai .cmd-line.url-line::before { content: none; } /* a URL, not a shell command: no "$ " */
-
-/* Prompt chip — what you say to the agent (light, quoted) vs .cmd-line (dark, shell) */
-.fs-root .prompt-line {
-  font-size: 14px; color: var(--ink); background: var(--canvas);
-  border: 1px solid var(--hairline-strong); border-radius: 10px; padding: 12px 15px;
-}
-.fs-root .prompt-line::before { content: "› "; color: var(--berry); font-weight: 700; }
-
-/* Concept grids — two-up by default, three-up for use cases */
-.fs-root.lp-ai .concept-grid { grid-template-columns: repeat(2, 1fr); }
-.fs-root.lp-ai .concept-grid.ai-uses { grid-template-columns: repeat(3, 1fr); }
-
-/* Agent icon row */
-.fs-root.lp-ai .agent-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 14px; }
-.fs-root.lp-ai .agent-row .pa-icons { display: inline-flex; align-items: center; gap: 14px; }
-.fs-root.lp-ai .agent-row .pa-icons svg { display: block; width: 32px; height: 32px; }
-.fs-root.lp-ai .agent-row .agent-names { color: var(--muted); font-size: 16px; text-align: center; }
-
-@media (max-width: 900px) {
-  .fs-root.lp-ai .ai-steps, .fs-root.lp-ai .concept-grid.ai-uses { grid-template-columns: 1fr; }
-}
-@media (max-width: 620px) {
-  .fs-root.lp-ai .concept-grid { grid-template-columns: 1fr; }
-}
-
-/* ==========================================================================
-   Obsidian landing — /publish-obsidian
-   --------------------------------------------------------------------------
-   Reuses the shared landing kit (.hero, .section, .steps, .concept-grid,
-   .demo-media, .split-grid, .show-grid, .final-card) on a plain white .fs-root
-   page, scoped under `.lp-obsidian` and tinted to the OBSIDIAN violet accent
-   the design tokens reserve for this page (--obsidian / --obsidian-ink /
-   --tint-obsidian). Like the other landing pages it re-tints the kit pieces
-   that default to the Gardens fern (the .pill chip, the .step-num index, the
-   .eyebrow) to violet. The one bespoke component is the .cmp comparison table
-   — this page's "Obsidian Publish alternative" section has no kit equivalent.
-   ========================================================================== */
-
-/* Violet headline accent — obsidian counterpart to .accent-fern / .accent-berry */
-.fs-root .accent-obsidian { color: var(--obsidian-ink); }
-
-/* Re-tint gardens-default-fern kit pieces to violet on the obsidian page */
-.fs-root.lp-obsidian .eyebrow { color: var(--obsidian-ink); }
-.fs-root.lp-obsidian .step-num { color: var(--obsidian-ink); background: var(--tint-obsidian); }
-
-/* Violet in-card link hover — the kit defaults these to berry; here it's violet */
-.fs-root.lp-obsidian .textlink:hover,
-.fs-root.lp-obsidian .show-card:hover .show-link,
-.fs-root.lp-obsidian .show-link:hover { color: var(--obsidian-ink); }
-
-/* Inline code in prose — mono chip in the violet accent */
-.fs-root.lp-obsidian .concept-card code, .fs-root.lp-obsidian .section-head code {
-  font-family: var(--mono); font-size: .88em; color: var(--obsidian-ink);
-  background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
-}
-
-/* ---- Comparison table — Flowershow vs Obsidian Publish vs self-hosted ----
-   No kit equivalent, so a small bespoke component: a borderless table with
-   hairline row rules and the Flowershow column washed in soft violet (its
-   header rounds at the top, its last cell at the bottom) to read as the pick.
-   Wrapped in .cmp-wrap so it scrolls horizontally on narrow screens rather
-   than breaking the page's own layout. */
 .fs-root .cmp-wrap { max-width: 880px; margin: 0 auto; overflow-x: auto; }
 .fs-root .cmp { width: 100%; border-collapse: collapse; font-size: 15px; min-width: 660px; }
 .fs-root .cmp th, .fs-root .cmp td { padding: 14px 18px; text-align: center; vertical-align: middle; }
@@ -1349,7 +1203,6 @@
 .fs-root .cmp .col-fs { background: var(--tint-obsidian); color: var(--obsidian-ink); font-weight: 700; }
 .fs-root .cmp thead th.col-fs { border-radius: 12px 12px 0 0; }
 .fs-root .cmp tbody tr:last-child td.col-fs { border-radius: 0 0 12px 12px; }
-.fs-root .cmp-note { margin: 22px auto 0; max-width: 880px; text-align: center; font-size: 14px; color: var(--muted-soft); }
 
 /* ==========================================================================
    Pricing page — plan cards + feature comparison

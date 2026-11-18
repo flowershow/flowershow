@@ -8,7 +8,7 @@ image: "[[assets/changelog-publish-with-ai.webp]]"
 showToc: false
 ---
 
-Whatever you're working on with Claude, ChatGPT, Codex or Cursor, you can now just ask it to publish: one page or a whole site, live in seconds. See [Publish with AI](/publish-with-ai).
+Whatever you're working on with Claude, ChatGPT, Codex or Cursor, you can now just ask it to publish: one page or a whole site, live in seconds. See [Publish with AI](/docs/agents).
 
 - **Updated Flowershow skill:** your agent installs and logs in to `fl` for you, publishes HTML as-is alongside Markdown, checks for site-name clashes before a first publish, and can convert `.docx`, `.pptx` and `.pdf` files to Markdown before publishing. Update it with `npx skills add flowershow/skills --global`.
 - **Install guides for every agent:** Claude Code, Codex, Cursor, the Claude apps and ChatGPT, with or without Node.js. See [Supported agents](/docs/agents/supported-agents).

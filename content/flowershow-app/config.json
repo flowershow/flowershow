@@ -37,19 +37,19 @@
         "name": "Workflows",
         "links": [
           {
-            "href": "/publish-obsidian",
+            "href": "/docs/getting-started/from-obsidian",
             "name": "Publish from Obsidian"
           },
           {
-            "href": "/publish-github",
+            "href": "/docs/getting-started/from-github",
             "name": "Publish from GitHub"
           },
           {
-            "href": "/cli",
+            "href": "/docs/reference/cli",
             "name": "Publish from terminal (CLI)"
           },
           {
-            "href": "/publish-with-ai",
+            "href": "/docs/agents",
             "name": "Publish with AI"
           },
           {
@@ -114,7 +114,7 @@
             "name": "Changelog"
           },
           {
-            "href": "/publish",
+            "href": "/docs/reference/cli",
             "name": "Publish CLI"
           },
           {
@@ -368,15 +368,31 @@
     },
     {
       "from": "/publish",
-      "to": "/cli"
+      "to": "/docs/reference/cli"
     },
     {
       "from": "/ai",
-      "to": "/publish-with-ai"
+      "to": "/docs/agents"
     },
     {
       "from": "/uses/obsidian",
-      "to": "/publish-obsidian"
+      "to": "/docs/getting-started/from-obsidian"
+    },
+    {
+      "from": "/cli",
+      "to": "/docs/reference/cli"
+    },
+    {
+      "from": "/publish-obsidian",
+      "to": "/docs/getting-started/from-obsidian"
+    },
+    {
+      "from": "/publish-github",
+      "to": "/docs/getting-started/from-github"
+    },
+    {
+      "from": "/publish-with-ai",
+      "to": "/docs/agents"
     },
     {
       "from": "/docs/analytics",

@@ -16,7 +16,7 @@ You can now publish straight from a chat in the Claude and ChatGPT apps. Add `ht
 
 This is a beta. The connector can't sign in to your account yet, so make your changes first, then claim the site. Tell us how it goes on [Discord](https://discord.gg/JChzM5VdFn).
 
-In coding agents such as Claude Code, Codex and Cursor, keep using the [Flowershow skill](/docs/agents/skills). The [Publish with AI](/publish-with-ai) page now shows both paths.
+In coding agents such as Claude Code, Codex and Cursor, keep using the [Flowershow skill](/docs/agents/skills). The [Publish with AI](/docs/agents) page now shows both paths.
 
 **Fixes**
 

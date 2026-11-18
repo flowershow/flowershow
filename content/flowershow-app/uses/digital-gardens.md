@@ -180,7 +180,7 @@ showComments: false
             </span>
             <h3>Obsidian</h3>
             <p>Publish your vault — wikilinks and graph included.</p>
-            <a className="wf-learn" href="/publish-obsidian"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <a className="wf-learn" href="/docs/getting-started/from-obsidian"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
           </div>
           <div className="wf-card">
             <span className="wf-ico brand-github" aria-hidden="true">
@@ -188,7 +188,7 @@ showComments: false
             </span>
             <h3>GitHub</h3>
             <p>Connect a repo; every push republishes automatically.</p>
-            <a className="wf-learn" href="/publish-github"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <a className="wf-learn" href="/docs/getting-started/from-github"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
           </div>
           <div className="wf-card">
             <span className="wf-ico" aria-hidden="true">
@@ -204,7 +204,7 @@ showComments: false
             </span>
             <h3>CLI</h3>
             <p>Publish straight from the terminal.</p>
-            <a className="wf-learn" href="/cli"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <a className="wf-learn" href="/docs/reference/cli"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
           </div>
         </div>
         </div>
