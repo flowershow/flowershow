@@ -59,8 +59,8 @@ Lifecycle:
 `PAGE_FILE_EXTENSIONS` (md, mdx, canvas) stays as it is. A new `CONVERTIBLE_EXTENSIONS = ['docx']` in `@flowershow/core`:
 - `computeAppPath` gives a slug for page extensions **and** convertible ones.
 - `resolveContentLink` does **not** treat `.docx` as a page: `[Download](report.docx)` stays a download. `[[report]]` and `/report` resolve to the page (`matchLinkTarget` learns to strip convertible extensions).
-- A new helper `isMarkdownLikePage(path)` (md, mdx, docx) replaces the ~15 hardcoded `/\.mdx?$/` checks in the app (sidebar tree, home-page fallback, list components, changelog, listings, llms.txt, annotations, page actions, render). A grep test fails if a new hardcoded check appears.
-- Slug collision: when `report.md` and `report.docx` share a slug, the `.md`/`.mdx` wins in `getBlob`'s tie-break, and the publish reports a warning on the docx. `index.docx`/`README.docx` do become the folder index (a home page from a Word file is a feature), subject to the same tie-break.
+- A new helper `isMarkdownLikePage(path)` (md, mdx, docx) replaces the ~15 hardcoded `/\.mdx?$/` checks in the app (sidebar tree, home-page fallback, list components, changelog, listings, llms.txt, annotations, page actions, render).
+- Slug collision: when `report.md` and `report.docx` share a slug, the `.md`/`.mdx` wins: the worker stores the docx as a plain download (no page, no search document) and the publish succeeds. `index.docx`/`README.docx` do become the folder index (a home page from a Word file is a feature), subject to the same tie-break.
 
 ### Conversion pipeline (inside the workflow)
 
@@ -71,7 +71,7 @@ Lifecycle:
 5. Title: first H1 (Title style or Heading 1), else the filename humanised (`Q3_report-final` → "Q3 report final"). `metadata.convertedWith = <converter version>` for future re-conversion.
 6. Run the existing Markdown pipeline on the result for the `report.docx` Blob (parse, links, tags, Typesense).
 
-Author-facing warnings that matter (dropped equations, dropped unsupported images, too large) go in the PublishFile `error` field the way frontmatter errors do: the page is live, the publish says "converted with warnings: …". Every failure goes to PostHog via `captureError` (`source: 'worker_docx_convert'`).
+A Word file must never fail a publish that would have succeeded before this feature (existing sites already have `.docx` attachments, and `fl` exits 1 on any PublishFile `error`). So: conversion warnings (dropped equations, dropped unsupported images) leave the PublishFile `success` and the page live; a failed conversion (too large, not a valid `.docx`, zip limits, retries used up) stores the file as a plain download (or keeps a previously converted page live) with PublishFile `success`; a `.md`/`.mdx` at the same URL does the same. All of these go to PostHog via `captureError` (`source: 'worker_docx_convert'`) and the worker logs. The only PublishFile error is when the workflow cannot be started at all (`Could not start converting this Word document.`), and the message is retried.
 
 ### App changes
 
@@ -96,7 +96,16 @@ Author-facing warnings that matter (dropped equations, dropped unsupported image
 
 ### Rollout
 
-No DB migration, no env var. Deploy the worker to staging, publish the test fixtures, deploy the app preview, verify; then production worker and app in either order (existing `.docx` Blobs keep `appPath = null` until republished, so nothing changes for them). Rollback is a revert and redeploy. Follow-up (bead): a script that re-enqueues Word files whose `convertedWith` is out of date.
+No DB migration, no env var. Deploy the worker to staging, publish the test fixtures, deploy the app preview, verify. Then production in this order: **app first** (merge → Vercel), **then the production worker**. Worker first would make the old app render raw `.docx` bytes for new uploads (the old app treats a Blob with an `app_path` as a Markdown page). Existing `.docx` Blobs keep `appPath = null` until the file changes, so nothing changes for them.
+
+Rollback, in reverse order: revert and redeploy the worker first, then the app. Then turn converted Word files back into downloads:
+
+```sql
+UPDATE "Blob" SET app_path = NULL, metadata = NULL
+WHERE extension = 'docx' AND app_path IS NOT NULL;
+```
+
+and delete those Blobs' Typesense documents (ids are the Blob ids; select them before the update). Follow-up (bead): a script that re-enqueues Word files whose `convertedWith` is out of date.
 
 ## Format survey and order of work
 

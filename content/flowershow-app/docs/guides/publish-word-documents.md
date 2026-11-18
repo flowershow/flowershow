@@ -46,6 +46,8 @@ You should see the first link open the page and the second download the original
 
 Publish the Word file again and the page is replaced. Delete the file and the page is removed. The conversion is one way: edit the Word file, not the page.
 
+Word files that were already on your site before Word pages existed stay downloads until the file changes: publishing again skips unchanged files. Save or edit the file and publish it again to turn it into a page.
+
 ## What is kept and what is left out
 
 | Kept | Left out |
@@ -61,15 +63,17 @@ With track changes, insertions are kept and deletions are dropped, as if all cha
 
 ## Troubleshooting
 
-- **The page shows Markdown content, not my Word file** → if `report.md` and `report.docx` both exist, the Markdown page wins and the Word file is only a download. The publish shows a warning. Rename or remove one.
-- **"Could not convert this Word document: …"** → the file was rejected, for example because it isn't a real `.docx`, is encrypted, or is very large or unusual. It still downloads. Fix the file and publish again. The message appears in `fl` output and in the dashboard's publish history.
-- **"Converted with warnings: …"** → the page is live, but something was left out, such as an unsupported image. Compare the page with the table above.
-- **Word files over 10 MB** → rejected with a message. Shrink the images and publish again.
+A Word file never makes a publish fail. When something goes wrong, the publish still succeeds and the file stays available:
+
+- **The page shows Markdown content, not my Word file** → if `report.md` and `report.docx` both exist, the Markdown page wins and the Word file is only a download. Rename or remove one.
+- **My Word file only downloads, with no page** → it could not be converted, for example because it is over 10 MB, isn't a real `.docx`, is encrypted, or is very unusual. It stays a download (if an earlier version was converted, that page stays up). Fix the file (for a large file, shrink its images) and publish again.
+- **Something is missing from the page** → content Flowershow can't convert, such as equations or SVG images, is left out without a message. Compare the page with the table above.
 - **A folder called `_derived`** → `_derived/` is a reserved top-level folder name, because converted images are stored there. Use another name.
 
 ## Good to know
 
 - Images in converted documents on public sites are cached long-term. Switching a site to password protection does not retract image URLs you already shared, the same as for other files.
+- Word pages appear in the sidebar, sitemap, RSS feed and listings, like Markdown pages. To keep a Word file out of the sidebar and search, add it to [[content-filtering#hide-paths|Content Hide]]: it stays published and downloadable. To not publish it at all, add it to [[content-filtering#exclude-paths|Content Exclude]].
 - Word pages have no "copy as Markdown" or page actions, and are not listed in `llms.txt`.
 
 ## Next steps
