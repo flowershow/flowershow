@@ -1474,3 +1474,12 @@
   .fs-root.lp-home .who-grid { grid-template-columns: 1fr; }
   .fs-root.lp-home .who-people { max-width: 420px; }
 }
+
+/* flowershow.app custom footer (_footer.html): match the default footer on the dark band */
+.site-footer-custom { color: var(--on-dark-soft); }
+.site-footer-custom a { text-decoration: none; }
+.site-footer-custom .site-footer-navigation-list { margin: 0; }
+.site-footer-custom .site-footer-navigation-link { color: #cfc9cd; }
+.site-footer-custom .site-footer-social-link { color: var(--on-dark-soft); }
+.site-footer-custom a:hover { color: var(--on-dark); }
+.site-footer-custom .fs-provenance a { color: var(--on-dark); text-decoration: underline; text-underline-offset: 3px; }
