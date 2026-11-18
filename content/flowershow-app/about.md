@@ -32,7 +32,7 @@ The odd thing is how hard it still is to put those files on the web as a proper 
 
 We made those fifty decisions, and we keep them working. That's Flowershow. A file or a folder goes in, and a real website comes out, with navigation, search, backlinks and your domain. Publish from Obsidian, from GitHub, from a terminal, or by saying "publish this" to Claude.
 
-We've been at this a while. Rufus has been publishing Markdown as websites for about twenty years. We built the first internal version of Flowershow around 2020, for our own sites, and opened it up in 2022. The longer argument is in our manifesto, [The CMS is over](/the-cms-is-over).
+We've been at this a while. Rufus has been publishing Markdown as websites for about twenty years. We built the first internal version of Flowershow around 2020, for our own sites, and opened it up in 2022. The longer argument is in our manifesto, [The CMS is over](/blog/the-cms-is-over).
 
 ---
 

@@ -12,7 +12,7 @@ showComments: false
     <section className="hero">
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
-          <span className="eyebrow hero-eyebrow">Publishing for the AI age · <a href="/the-cms-is-over">The CMS is over</a></span>
+          <span className="eyebrow hero-eyebrow">Publishing for the AI age · <a href="/blog/the-cms-is-over">The CMS is over</a></span>
           <h1>Say “publish”. Get a website.</h1>
           <p className="lede">Flowershow turns a Markdown or HTML file, a folder, or a whole Obsidian vault into a real website, with navigation, search and your domain. Publish from Obsidian, GitHub, the terminal or Claude.</p>
           <div className="cta-row">
@@ -92,7 +92,7 @@ showComments: false
           <h2>Vercel made deploy a command. Flowershow makes publish one.</h2>
           <p>Publishing never got that, because publishing was a place: a CMS you log into, type into boxes and maintain. In 1985 PageMaker and the LaserWriter moved typesetting from the shop to the desk. The CMS is the web's typesetting shop: your words move into its database, behind its login.</p>
           <p className="thesis-punch">Your files are already the finished format. Skip the shop.</p>
-          <p className="thesis-more"><a href="/the-cms-is-over">Read our manifesto: The CMS is over <span className="arw">→</span></a></p>
+          <p className="thesis-more"><a href="/blog/the-cms-is-over">Read our manifesto: The CMS is over <span className="arw">→</span></a></p>
         </div>
       </div>
     </section>
