@@ -22,7 +22,7 @@ export function matchLinkTarget<T extends { path: string }>(
 
   if (!target) return undefined;
 
-  const stripExt = (p: string) => p.replace(/\.mdx?$/, '');
+  const stripExt = (p: string) => p.replace(/\.(mdx?|docx)$/i, '');
   const norm = (s: string) => (caseInsensitive ? s.toLowerCase() : s);
 
   const normalizedTarget = norm(stripExt(target));
@@ -38,5 +38,13 @@ export function matchLinkTarget<T extends { path: string }>(
   });
 
   if (matches.length === 0) return undefined;
-  return matches.sort((a, b) => a.path.length - b.path.length)[0];
+  const isDocx = (p: string) => /\.docx$/i.test(p);
+  return matches.sort((a, b) => {
+    // Equal stripped path: prefer md/mdx over docx.
+    if (norm(stripExt(a.path)) === norm(stripExt(b.path))) {
+      const d = Number(isDocx(a.path)) - Number(isDocx(b.path));
+      if (d !== 0) return d;
+    }
+    return a.path.length - b.path.length;
+  })[0];
 }

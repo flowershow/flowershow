@@ -1,4 +1,16 @@
 export { normalizeAuthors } from './authors';
+export {
+  CONVERTIBLE_EXTENSIONS,
+  derivedAssetKey,
+  derivedAssetUrlPath,
+  derivedMarkdownKey,
+  derivedPrefix,
+  isConvertiblePath,
+  isMarkdownLikePage,
+  MARKDOWN_LIKE_EXTENSIONS,
+  pageSlugFromPath,
+  parseDerivedUrlPath,
+} from './convertible';
 export type { ContentType } from './content-type';
 export { CONTENT_TYPE_EXTENSIONS, getContentType } from './content-type';
 export { extractDescription, markdownToPlainText } from './description';

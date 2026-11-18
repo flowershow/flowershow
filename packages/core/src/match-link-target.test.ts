@@ -89,6 +89,21 @@ describe('case sensitivity', () => {
   });
 });
 
+describe('docx targets', () => {
+  test('resolves a docx file', () => {
+    expect(matchLinkTarget('report', [{ path: 'report.docx' }])).toEqual({
+      path: 'report.docx',
+    });
+  });
+
+  test('prefers md over docx on equal stripped path', () => {
+    expect(
+      matchLinkTarget('report', [{ path: 'report.docx' }, { path: 'report.md' }])
+        ?.path,
+    ).toBe('report.md');
+  });
+});
+
 describe('generic type — returns caller type', () => {
   test('returns full record including id', () => {
     const blobs = [
