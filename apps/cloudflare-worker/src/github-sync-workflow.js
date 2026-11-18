@@ -6,6 +6,7 @@ import {
   fetchGitHubFileStream,
   fetchGitHubRepoTree,
   getGitHubInstallationToken,
+  GitHubRateLimitError,
 } from './github.js';
 import {
   deleteFile,
@@ -29,6 +30,10 @@ const STORAGE_BRANCH = 'main';
 const PLAN_BRANCH = '_github-sync';
 // Batches per stored plan page: 1000 files, about 200 KB of JSON.
 const PLAN_PAGE_BATCHES = 50;
+// GitHub gives an installation about 5,000 API requests per hour, and the sync
+// uses one per file. A batch whose files GitHub refuses for the rate limit
+// waits for the reset and tries those files again, at most this many times.
+const MAX_RATE_LIMIT_WAITS = 3;
 
 export class GitHubSyncWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
@@ -46,10 +51,14 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
     const storage = getStorageClient(this.env);
     const plan = createPlanStore(storage, siteId, publishId);
 
+    // Set after the PublishFile rows exist; the catch block then starts the
+    // finalizer so that a failed sync still ends its publish.
+    let finalizerDue = false;
+
     try {
       // Generate a fresh token on every run (outside any step so retries don't reuse
       // a cached expired value — GitHub App installation tokens expire in 1h).
-      const accessToken = await getGitHubInstallationToken(
+      let accessToken = await getGitHubInstallationToken(
         githubInstallationId,
         this.env,
       );
@@ -185,68 +194,106 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
         ),
       );
 
-      // Start the finalizer after all PublishFile rows exist (uploading + terminal).
-      // The finalizer polls until all uploading rows reach a terminal state, then
-      // finalizes the Publish record. It naturally handles the zero-files and
-      // delete-only cases without any special signaling.
-      await step.do('start-publish-finalizer', async () => {
-        await this.env.PUBLISH_FINALIZER_WORKFLOW.create({
-          id: publishId,
-          params: { publishId, siteId },
-        });
-      });
+      finalizerDue = true;
 
       // Stream each file from GitHub into R2, so no file is held whole in
       // memory. Batches run one after another, files within a batch in parallel.
       for (let index = 0; index < counts.upsertBatches; index++) {
-        await step.do(`process-files-to-upsert-batch-${index}`, async () => {
-          const batch = await plan.readBatch('upsert', index);
-          await Promise.all(
-            batch.map(async ({ ghSha, size, filePath }) => {
-              try {
-                if (size > MAX_FILE_BYTES) {
-                  throw new Error(
-                    `File ${filePath} exceeds maximum size of ${MAX_FILE_BYTES / 1024 / 1024}MB`,
+        // Paths to try again after a rate-limit wait; null means the whole batch.
+        let retryPaths = null;
+        for (let wait = 0; ; wait++) {
+          const stepName = `process-files-to-upsert-batch-${index}${wait ? `-retry-${wait}` : ''}`;
+          const limited = await step.do(stepName, async () => {
+            const batch = await plan.readBatch('upsert', index);
+            const files = retryPaths
+              ? batch.filter(({ filePath }) => retryPaths.includes(filePath))
+              : batch;
+            const limitedPaths = [];
+            let resetAt = 0;
+            await Promise.all(
+              files.map(async ({ ghSha, size, filePath }) => {
+                try {
+                  if (size > MAX_FILE_BYTES) {
+                    throw new Error(
+                      `File ${filePath} exceeds maximum size of ${MAX_FILE_BYTES / 1024 / 1024}MB`,
+                    );
+                  }
+                  const stream = await fetchGitHubFileStream(
+                    ghRepository,
+                    ghSha,
+                    accessToken,
                   );
+                  await uploadFile(
+                    storage,
+                    siteId,
+                    STORAGE_BRANCH,
+                    filePath,
+                    stream,
+                    size,
+                    filePath.split('.').pop() || '',
+                    publishId,
+                  );
+                } catch (error) {
+                  if (
+                    error instanceof GitHubRateLimitError &&
+                    wait < MAX_RATE_LIMIT_WAITS
+                  ) {
+                    limitedPaths.push(filePath);
+                    resetAt = Math.max(resetAt, error.resetAt);
+                    return;
+                  }
+                  console.error(
+                    `Sync file error ${siteId}/${filePath}: ${error.message}`,
+                  );
+                  // Mark the row terminal so the failure surfaces in the publish
+                  // status. Otherwise the upload never produces an R2 event, the
+                  // PublishFile row stays 'uploading', and the finalizer polls it
+                  // for a full hour before expiring it — a silent failure that
+                  // still reports the publish as completed.
+                  await sql`
+                    UPDATE "PublishFile"
+                    SET status = 'error', error = ${error.message}
+                    WHERE publish_id = ${publishId} AND path = ${filePath}
+                  `;
                 }
-                const stream = await fetchGitHubFileStream(
-                  ghRepository,
-                  ghSha,
-                  accessToken,
-                );
-                await uploadFile(
-                  storage,
-                  siteId,
-                  STORAGE_BRANCH,
-                  filePath,
-                  stream,
-                  size,
-                  filePath.split('.').pop() || '',
-                  publishId,
-                );
-              } catch (error) {
-                console.error(
-                  `Sync file error ${siteId}/${filePath}: ${error.message}`,
-                );
-                // Mark the row terminal so the failure surfaces in the publish
-                // status. Otherwise the upload never produces an R2 event, the
-                // PublishFile row stays 'uploading', and the finalizer polls it
-                // for a full hour before expiring it — a silent failure that
-                // still reports the publish as completed.
-                await sql`
-                  UPDATE "PublishFile"
-                  SET status = 'error', error = ${error.message}
-                  WHERE publish_id = ${publishId} AND path = ${filePath}
-                `;
-              }
-            }),
+              }),
+            );
+            // The wait is worked out inside the step so that a replay sleeps
+            // for the same duration: a sleep's identity includes it.
+            return {
+              paths: limitedPaths,
+              waitMs: Math.max(0, resetAt - Date.now()) + 1000,
+            };
+          });
+          if (limited.paths.length === 0) break;
+          console.log(
+            `Sync ${siteId}: GitHub rate limit, ${limited.paths.length} files wait ${Math.round(limited.waitMs / 1000)}s`,
           );
-        });
+          await step.sleep(`rate-limit-wait-${index}-${wait}`, limited.waitMs);
+          // The first token can expire during a long sync.
+          accessToken = await getGitHubInstallationToken(
+            githubInstallationId,
+            this.env,
+          );
+          retryPaths = limited.paths;
+        }
       }
+
+      // Start the finalizer after every upload, not before: it polls for one
+      // hour, and rate-limit waits can make the uploads take longer than that.
+      // It waits for the R2 events of the uploads, then finalizes the Publish
+      // record. It also handles the zero-files and delete-only cases.
+      await step.do('start-publish-finalizer', () =>
+        startFinalizer(this.env, publishId, siteId),
+      );
+      finalizerDue = false;
 
       await step.do('delete-sync-plan', () => plan.delete());
     } catch (err) {
       await plan.delete().catch(() => {});
+      if (finalizerDue) {
+        await startFinalizer(this.env, publishId, siteId).catch(() => {});
+      }
       await captureError(this.env, {
         source: 'workflow_github_sync',
         siteId,
@@ -258,6 +305,14 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       throw err;
     }
   }
+}
+
+/** Returns nothing: a step output must be serializable, an instance is not. */
+async function startFinalizer(env, publishId, siteId) {
+  await env.PUBLISH_FINALIZER_WORKFLOW.create({
+    id: publishId,
+    params: { publishId, siteId },
+  });
 }
 
 function normalizeRootDir(rootDir) {

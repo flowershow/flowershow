@@ -152,6 +152,16 @@ async function generateGitHubAppJWT(appId, privateKeyBase64) {
   return `${message}.${sigB64Url}`;
 }
 
+/** GitHub refused a request because a rate limit is used up. */
+export class GitHubRateLimitError extends Error {
+  constructor(message, resetAt) {
+    super(message);
+    this.name = 'GitHubRateLimitError';
+    // Time in ms since the epoch when GitHub accepts requests again.
+    this.resetAt = resetAt;
+  }
+}
+
 async function githubFetch(url, token, accept = 'application/vnd.github+json') {
   const response = await fetch(`https://api.github.com${url}`, {
     headers: {
@@ -162,11 +172,28 @@ async function githubFetch(url, token, accept = 'application/vnd.github+json') {
     },
   });
   if (!response.ok) {
-    throw new Error(
-      `GitHub API ${response.status} ${response.statusText}: ${url}`,
-    );
+    const message = `GitHub API ${response.status} ${response.statusText}: ${url}`;
+    const resetAt = rateLimitResetAt(response);
+    if (resetAt !== null) throw new GitHubRateLimitError(message, resetAt);
+    throw new Error(message);
   }
   return response;
+}
+
+/**
+ * When a rate-limit refusal ends, in ms since the epoch, or null if the
+ * response is not one. See
+ * https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api#exceeding-the-rate-limit
+ */
+function rateLimitResetAt(response) {
+  if (response.status !== 403 && response.status !== 429) return null;
+  const retryAfter = Number(response.headers.get('retry-after'));
+  if (retryAfter > 0) return Date.now() + retryAfter * 1000;
+  const reset = Number(response.headers.get('x-ratelimit-reset'));
+  if (response.headers.get('x-ratelimit-remaining') === '0' && reset > 0) {
+    return reset * 1000;
+  }
+  return null;
 }
 
 export async function computeGitBlobSha(content) {
