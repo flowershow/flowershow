@@ -51,7 +51,7 @@ Derived objects are not Blobs. They are invisible to `fl` manifests, `/sync` rep
 
 Lifecycle:
 - **Convert succeeds:** write `derived/{path}/{sha}/…`, upsert the Blob (appPath, sha, metadata, links, tags, search), PublishFile → success, then delete other `{sha}` folders under `derived/{path}/`.
-- **Convert fails:** PublishFile → error with a readable message; the previous Blob and its derived folder stay live.
+- **Convert fails:** PublishFile → success (reported to PostHog, never fails the publish). A Word file that was never converted, or was a plain download, is stored as a plain download with its new sha; a previously converted page stays live.
 - **DOCX deleted:** delete the Blob row (existing) and the whole `derived/{path}/` prefix (trailing slash), even if no Blob row exists.
 
 ### Extension lists and link resolution
