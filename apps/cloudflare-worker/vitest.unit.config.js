@@ -7,6 +7,14 @@ import { defineWorkersConfig } from '@cloudflare/vitest-pool-workers/config';
 export default defineWorkersConfig({
   test: {
     include: ['test/unit/**/*.test.js'],
+    // mammoth's package.json "browser" field swaps out its Node-only file
+    // reader (fs, os, path). Wrangler's bundler honours that field; pre-bundle
+    // mammoth for the tests so they load the same code.
+    deps: {
+      optimizer: {
+        ssr: { enabled: true, include: ['mammoth'] },
+      },
+    },
     poolOptions: {
       workers: {
         wrangler: { configPath: './wrangler.flowershow.toml' },
