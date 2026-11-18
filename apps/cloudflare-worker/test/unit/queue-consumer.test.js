@@ -194,6 +194,14 @@ test('parseObjectKey throws when raw segment is missing', () => {
 
 // extractLinks
 
+test('extractLinks - links into /_derived/ are skipped', () => {
+  expect(
+    extractLinks(
+      '[img](/_derived/report.docx/abc/image1.png) [[/_derived/x/y]] [p](page.md)',
+    ),
+  ).toEqual([{ targetPath: 'page.md', linkType: 'commonmark' }]);
+});
+
 test('extractLinks - empty string returns empty array', () => {
   expect(extractLinks('')).toEqual([]);
 });
@@ -1219,21 +1227,78 @@ test('handleMessage - a docx deleted before it was read is acked without a workf
   expect(queries).toEqual([]);
 });
 
-test('handleMessage - a failure to start the workflow is not acked', async () => {
-  const { sql } = createRecordingSql();
+test('handleMessage - a failure to start the workflow is not acked and sets the PublishFile error', async () => {
+  const { sql, queries } = createRecordingSql();
   const { typesense } = createTypesenseMock();
   const create = vi.fn().mockRejectedValue(new Error('workflows down'));
   const msg = putMessage('report.docx');
+  const storage = createR2Storage('docx');
+  storage.client.head = async () => ({
+    customMetadata: { 'publish-id': 'pub-1' },
+  });
 
   await handleMessage({
     msg,
-    storage: createR2Storage('docx'),
+    storage,
     sql,
     typesense,
     env: { DOC_CONVERSION_WORKFLOW: { create } },
   });
 
   expect(msg.ack).not.toHaveBeenCalled();
+  const update = queries.find((q) => q.text.startsWith('UPDATE "PublishFile"'));
+  expect(update.text).toContain("status = 'error'");
+  expect(update.values).toEqual([
+    'Could not start converting this Word document.',
+    'pub-1',
+    'report.docx',
+  ]);
+});
+
+test('handleMessage - an already_exists workflow id is not an error', async () => {
+  const { sql, queries } = createRecordingSql();
+  const create = vi
+    .fn()
+    .mockRejectedValue(new Error('instance.already_exists'));
+  const msg = putMessage('report.docx');
+
+  await handleMessage({
+    msg,
+    storage: createR2Storage('docx'),
+    sql,
+    typesense: createTypesenseMock().typesense,
+    env: { DOC_CONVERSION_WORKFLOW: { create } },
+  });
+
+  expect(msg.ack).toHaveBeenCalled();
+  expect(queries.some((q) => q.text.startsWith('UPDATE "PublishFile"'))).toBe(
+    false,
+  );
+});
+
+test('handleMessage - the same bytes in a new publish start a new workflow; a redelivery does not', async () => {
+  const create = vi.fn().mockResolvedValue({ id: 'x' });
+  const run = async (publishId) => {
+    const storage = createR2Storage('same docx bytes');
+    storage.client.head = async () => ({
+      customMetadata: { 'publish-id': publishId },
+    });
+    await handleMessage({
+      msg: putMessage('report.docx'),
+      storage,
+      sql: createRecordingSql().sql,
+      typesense: createTypesenseMock().typesense,
+      env: { DOC_CONVERSION_WORKFLOW: { create } },
+    });
+  };
+
+  await run('pub-1');
+  await run('pub-1');
+  await run('pub-2');
+
+  const ids = create.mock.calls.map(([{ id }]) => id);
+  expect(ids[0]).toBe(ids[1]);
+  expect(ids[2]).not.toBe(ids[0]);
 });
 
 test('handleMessage - deleting a docx removes its derived folder even without a Blob row', async () => {

@@ -70,7 +70,15 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
     if (isConvertiblePath(path)) {
       // Converted in its own workflow (not in this shared batch isolate); the
       // workflow upserts the Blob, flips the PublishFile and revalidates.
-      await startDocConversion({ storage, env, siteId, path, key, publishId });
+      await startDocConversion({
+        storage,
+        sql,
+        env,
+        siteId,
+        path,
+        key,
+        publishId,
+      });
       return msg.ack();
     }
 
@@ -146,11 +154,15 @@ export async function handleMessage({ msg, storage, sql, typesense, env }) {
 
 /**
  * Start a DocConversionWorkflow for the stored file. The instance id is derived
- * from (siteId, path, sha), so a redelivered queue message for the same bytes
- * finds the instance already there and is treated as done.
+ * from (siteId, path, sha, publishId), so a redelivered queue message for the
+ * same upload finds the instance already there and is treated as done, while
+ * publishing the same bytes again starts a new one that settles its own
+ * PublishFile. When the workflow cannot be started, the PublishFile gets an
+ * error (so it never stays `uploading`) and the message is retried.
  */
 async function startDocConversion({
   storage,
+  sql,
   env,
   siteId,
   path,
@@ -167,14 +179,22 @@ async function startDocConversion({
   }
   const { size, stream } = opened;
   const { sha } = await hashGitBlobStream(stream, size, 0);
-  const id = await sha1Hex(`${siteId}:${path}:${sha}`);
+  const id = await sha1Hex(`${siteId}:${path}:${sha}:${publishId ?? ''}`);
   try {
     await env.DOC_CONVERSION_WORKFLOW.create({
       id,
       params: { siteId, path, sha, size, publishId },
     });
   } catch (err) {
-    if (/already exists|duplicate/i.test(String(err?.message))) return;
+    if (/already[ _]exists|duplicate/i.test(String(err?.message))) return;
+    await updatePublishFile(
+      sql,
+      publishId,
+      path,
+      'error',
+      'Could not start converting this Word document.',
+    );
+    await revalidateIfPublishDone({ sql, env, siteId, publishId });
     throw err;
   }
 }
@@ -371,8 +391,7 @@ async function processMarkdownFile({
  * file's), sync links and tags, and update search. `publish: false` deletes
  * the stored source file instead (its DeleteObject event cleans up the rest).
  *
- * `searchable: false` keeps the page out of search (removing any earlier
- * document). The caller sets the PublishFile status: `fileError` is an author-facing
+ * The caller sets the PublishFile status: `fileError` is an author-facing
  * problem with a live page (bad frontmatter, a document search rejected);
  * `blobId` is null when the page was not published.
  *
@@ -390,7 +409,6 @@ export async function indexMarkdownPage({
   sha,
   size,
   extraMetadata,
-  searchable = true,
 }) {
   const { metadata, body, permalink, shouldPublish, frontmatterError } =
     await parseMarkdown({
@@ -421,9 +439,9 @@ export async function indexMarkdownPage({
   const tags = extractTags(body, metadata);
   await syncTags(sql, siteId, blobId, tags);
   let searchError = null;
-  if (isDraft(metadata) || !searchable) {
+  if (isDraft(metadata)) {
     // A draft is reachable by URL but never in search: drop any earlier
-    // document. Same for a page another file's page shadows (`searchable: false`).
+    // document.
     await removeFromTypesense({ typesense, env, siteId, blobId, path });
   } else {
     searchError = await indexInTypesense({
@@ -694,6 +712,10 @@ export const extractTitle = async (source) => {
 
 export function extractLinks(markdown) {
   const links = [];
+  // Converted Word documents' images live under /_derived/: never vault files.
+  const push = (link) => {
+    if (!link.targetPath.startsWith('/_derived/')) links.push(link);
+  };
 
   // Strip fenced code blocks to avoid matching links inside them
   const stripped = markdown
@@ -710,7 +732,7 @@ export function extractLinks(markdown) {
     const ext =
       dotIndex !== -1 ? target.slice(dotIndex + 1).toLowerCase() : null;
     if (ext && ext !== 'md') continue;
-    links.push({ targetPath: target, linkType: 'embed' });
+    push({ targetPath: target, linkType: 'embed' });
   }
 
   // Wiki links: [[target]] or [[target|alias]] or [[target#heading]]
@@ -718,7 +740,7 @@ export function extractLinks(markdown) {
   const wikilinkRe = /(?<!!)(?<!\[)\[\[([^\]|#]+)(?:[|#][^\]]*)?\]\]/g;
   for (const m of stripped.matchAll(wikilinkRe)) {
     const target = m[1].trim().replace(/\\$/, '');
-    if (target) links.push({ targetPath: target, linkType: 'wikilink' });
+    if (target) push({ targetPath: target, linkType: 'wikilink' });
   }
 
   // CommonMark links: [text](href) — internal only; negative lookbehind excludes image embeds ![alt](src)
@@ -736,7 +758,7 @@ export function extractLinks(markdown) {
     ) {
       // Strip fragment
       const target = href.split('#')[0];
-      if (target) links.push({ targetPath: target, linkType: 'commonmark' });
+      if (target) push({ targetPath: target, linkType: 'commonmark' });
     }
   }
 
@@ -852,6 +874,23 @@ async function reportSearchError(env, source, { siteId, path, error }) {
     http_status: error?.httpStatus ?? null,
     source,
   });
+}
+
+/**
+ * Drop a file's page data (links, tags and search document), for a Word file
+ * kept as a plain download.
+ */
+export async function clearPageData({
+  sql,
+  typesense,
+  env,
+  siteId,
+  blobId,
+  path,
+}) {
+  await syncLinks(sql, siteId, blobId, '');
+  await syncTags(sql, siteId, blobId, []);
+  await removeFromTypesense({ typesense, env, siteId, blobId, path });
 }
 
 /**

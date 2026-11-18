@@ -248,7 +248,7 @@ describe('indexConvertedDocument', () => {
     expect(update.text).toContain("status = 'uploading'");
   });
 
-  test('warns when report.md has the same URL, and keeps the docx out of search', async () => {
+  test('when report.md has the same URL, stores the docx as a plain download and succeeds', async () => {
     const ctx = await setup({
       respond: (text) =>
         text.startsWith('SELECT path FROM "Blob"')
@@ -265,21 +265,39 @@ describe('indexConvertedDocument', () => {
       },
     };
 
+    await indexConvertedDocument(args(ctx, { typesense: recordingTypesense }));
+
+    const insert = blobInsert(ctx);
+    expect(insert.values[3]).toBeNull(); // app_path
+    expect(insert.values[5]).toBe(ctx.sha);
+    expect(insert.values[6]).toBe(WORD.length);
+    expect(insert.values[7]).toBeNull(); // metadata
+    expect(search.upserts).toBe(0);
+    expect(search.deleted).toEqual([{ siteId: SITE, id: 'blob-1' }]);
+    expect(publishFileUpdate(ctx).text).toContain("status = 'success'");
+    expect(derivedKeys(ctx.objects)).toEqual([]);
+  });
+
+  test('conversion warnings still succeed, and go to PostHog', async () => {
+    const ctx = await setup();
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+    vi.stubGlobal('fetch', fetchMock);
+
     await indexConvertedDocument(
       args(ctx, {
-        typesense: recordingTypesense,
+        env: { POSTHOG_KEY: 'k' },
         warnings: ['Equations are not supported and were left out.'],
       }),
     );
 
-    expect(search.upserts).toBe(0);
-    expect(search.deleted).toEqual([{ siteId: SITE, id: 'blob-1' }]);
-
-    const update = publishFileUpdate(ctx);
-    expect(update.text).toContain("status = 'error'");
-    expect(update.values[0]).toBe(
-      'Converted with warnings: Equations are not supported and were left out.; Q3 Report.md already uses this URL, so this Word file is only available as a download.',
-    );
+    expect(publishFileUpdate(ctx).text).toContain("status = 'success'");
+    const event = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(event.properties).toMatchObject({
+      source: 'worker_docx_convert',
+      siteId: SITE,
+      path: PATH,
+      error_message: 'Equations are not supported and were left out.',
+    });
   });
 
   const REVALIDATE_ENV = {
@@ -368,6 +386,7 @@ describe('recordConversionFailure', () => {
     recordConversionFailure({
       storage,
       sql,
+      typesense,
       env: {},
       siteId: SITE,
       path: PATH,
@@ -377,8 +396,10 @@ describe('recordConversionFailure', () => {
       error: 'Too big',
       ...extra,
     });
+  const blobInsertIn = (queries) =>
+    queries.find((q) => q.text.startsWith('INSERT INTO "Blob"'));
 
-  test('creates a raw-asset Blob when none exists and sets the PublishFile error', async () => {
+  test('creates a plain download Blob when none exists, succeeds, and reports to PostHog', async () => {
     const { sql, queries } = createSql();
     const { storage } = createMemoryR2({ [RAW]: WORD });
     const sha = await computeGitBlobSha(WORD);
@@ -388,6 +409,7 @@ describe('recordConversionFailure', () => {
     await recordConversionFailure({
       storage,
       sql,
+      typesense,
       env: { POSTHOG_KEY: 'k' },
       siteId: SITE,
       path: PATH,
@@ -397,14 +419,8 @@ describe('recordConversionFailure', () => {
       error: new Error('This Word document could not be read.'),
     });
 
-    const update = queries.find((q) =>
-      q.text.startsWith('UPDATE "PublishFile"'),
-    );
-    expect(update.text).toContain("status = 'error'");
-    expect(update.values[0]).toBe(
-      'Could not convert this Word document: This Word document could not be read.',
-    );
-    const insert = queries.find((q) => q.text.startsWith('INSERT INTO "Blob"'));
+    expect(publishFileUpdateIn(queries).text).toContain("status = 'success'");
+    const insert = blobInsertIn(queries);
     expect(insert.values[2]).toBe(PATH);
     expect(insert.values[3]).toBeNull();
     expect(insert.values[4]).toBe('docx');
@@ -418,26 +434,40 @@ describe('recordConversionFailure', () => {
       siteId: SITE,
       path: PATH,
       size: 1234,
+      error_message: 'This Word document could not be read.',
     });
   });
 
-  test('keeps an existing Blob (the previous version stays live)', async () => {
+  test('updates an existing plain download Blob to the new sha and size', async () => {
     const { sql, queries } = createSql((text) =>
-      text.startsWith('SELECT id FROM "Blob"') ? [{ id: 'blob-1' }] : undefined,
+      text.startsWith('SELECT id, app_path FROM "Blob"')
+        ? [{ id: 'blob-1', app_path: null }]
+        : undefined,
+    );
+    const { storage } = createMemoryR2({ [RAW]: WORD });
+    const sha = await computeGitBlobSha(WORD);
+
+    await failure(storage, sql, { sha, size: 99 });
+
+    const insert = blobInsertIn(queries);
+    expect(insert.values[3]).toBeNull();
+    expect(insert.values[5]).toBe(sha);
+    expect(insert.values[6]).toBe(99);
+    expect(publishFileUpdateIn(queries).text).toContain("status = 'success'");
+  });
+
+  test('keeps a previously converted page live', async () => {
+    const { sql, queries } = createSql((text) =>
+      text.startsWith('SELECT id, app_path FROM "Blob"')
+        ? [{ id: 'blob-1', app_path: '/Q3+Report' }]
+        : undefined,
     );
     const { storage } = createMemoryR2({ [RAW]: WORD });
 
     await failure(storage, sql, { sha: await computeGitBlobSha(WORD) });
 
-    expect(queries.some((q) => q.text.startsWith('INSERT INTO "Blob"'))).toBe(
-      false,
-    );
-    const update = queries.find((q) =>
-      q.text.startsWith('UPDATE "PublishFile"'),
-    );
-    expect(update.values[0]).toBe(
-      'Could not convert this Word document: Too big',
-    );
+    expect(blobInsertIn(queries)).toBeUndefined();
+    expect(publishFileUpdateIn(queries).text).toContain("status = 'success'");
   });
 
   test('creates no Blob when the docx was deleted meanwhile', async () => {
@@ -446,11 +476,9 @@ describe('recordConversionFailure', () => {
 
     await failure(storage, sql, { sha: await computeGitBlobSha(WORD) });
 
-    expect(queries.some((q) => q.text.startsWith('INSERT INTO "Blob"'))).toBe(
-      false,
-    );
-    expect(publishFileUpdateIn(queries).values[0]).toBe(
-      'Could not convert this Word document: Too big',
+    expect(blobInsertIn(queries)).toBeUndefined();
+    expect(publishFileUpdateIn(queries).text).toContain(
+      "SET status = 'canceled'",
     );
   });
 
@@ -460,9 +488,7 @@ describe('recordConversionFailure', () => {
 
     await failure(storage, sql, { sha: await computeGitBlobSha(WORD) });
 
-    expect(queries.some((q) => q.text.startsWith('INSERT INTO "Blob"'))).toBe(
-      false,
-    );
+    expect(blobInsertIn(queries)).toBeUndefined();
   });
 });
 

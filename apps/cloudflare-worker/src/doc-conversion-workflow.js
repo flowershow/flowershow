@@ -18,8 +18,9 @@ const RETRY = {
 
 /**
  * Converts one uploaded Word document (one version: `sha`) to a page. Started
- * by the queue consumer with id hash(siteId, path, sha), so each version is
- * converted once, in its own invocation, away from the shared queue batch.
+ * by the queue consumer with id hash(siteId, path, sha, publishId), so each
+ * upload is converted once, in its own invocation, away from the shared queue
+ * batch.
  *
  * payload: { siteId, path, sha, size, publishId }
  */
@@ -35,6 +36,7 @@ export class DocConversionWorkflow extends WorkflowEntrypoint {
         recordConversionFailure({
           storage,
           sql,
+          typesense,
           env,
           siteId,
           path,
@@ -84,7 +86,7 @@ export class DocConversionWorkflow extends WorkflowEntrypoint {
         }),
       );
     } catch (err) {
-      // Retries are used up: report it, and leave the file downloadable.
+      // Retries are used up: report it, and keep the file downloadable.
       await fail('record-failure', err);
     }
   }

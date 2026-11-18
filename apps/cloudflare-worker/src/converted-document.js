@@ -1,7 +1,7 @@
 // Word documents published as pages: convert the stored .docx to Markdown
 // (plus extracted images) under a derived prefix keyed by the file's git sha,
 // then index that Markdown as the page for the .docx Blob. Run by
-// DocConversionWorkflow, one instance per (siteId, path, sha).
+// DocConversionWorkflow, one instance per (siteId, path, sha, publishId).
 //
 //   {siteId}/main/raw/{path}                     the Word file (the Blob)
 //   {siteId}/main/derived/{path}/{sha}/index.md  converted Markdown
@@ -17,6 +17,7 @@ import {
 import { convertDocx, DocxRejectedError } from './docx/convert.js';
 import { computeGitBlobSha, hashGitBlobStream } from './github.js';
 import {
+  clearPageData,
   computeAppPath,
   indexMarkdownPage,
   revalidateIfPublishDone,
@@ -108,6 +109,30 @@ export async function indexConvertedDocument({
     return;
   }
 
+  // A .md/.mdx page with the same URL wins: the Word file stays a plain
+  // download (not an error: it would not have failed a publish before Word
+  // conversion existed).
+  const appPath = computeAppPath(path);
+  const [markdownPage] = await sql`
+    SELECT path FROM "Blob"
+    WHERE site_id = ${siteId} AND app_path = ${appPath}
+      AND (extension = 'md' OR extension = 'mdx')
+    LIMIT 1
+  `;
+  if (markdownPage) {
+    console.warn('Word document kept as a download:', {
+      siteId,
+      path,
+      reason: `${markdownPage.path} already uses this URL`,
+    });
+    await storeAsDownload({ sql, typesense, env, siteId, path, sha, size });
+    await updatePublishFile(sql, publishId, path, 'success');
+    // Purge before deleting the derived folders (see below).
+    await revalidateSite({ env, siteId });
+    await deleteStoragePrefix(storage, `${siteId}/main/${derivedPrefix(path)}`);
+    return;
+  }
+
   let markdown = await readDerivedMarkdown(storage, siteId, path, sha);
   if (markdown === null) {
     // A concurrent conversion of an older version cleaned up this folder
@@ -124,16 +149,6 @@ export async function indexConvertedDocument({
     }
   }
 
-  // A .md/.mdx page with the same URL wins: the app serves it, so the Word
-  // file's page stays out of search to avoid a duplicate hit.
-  const appPath = computeAppPath(path);
-  const [markdownPage] = await sql`
-    SELECT path FROM "Blob"
-    WHERE site_id = ${siteId} AND app_path = ${appPath}
-      AND (extension = 'md' OR extension = 'mdx')
-    LIMIT 1
-  `;
-
   // Deferred: the file could still be replaced between the sha check above and
   // these writes; the newer version's workflow then rewrites the Blob.
   const { blobId, fileError } = await indexMarkdownPage({
@@ -148,7 +163,6 @@ export async function indexConvertedDocument({
     size,
     publishId,
     extraMetadata: { convertedWith: CONVERTED_WITH },
-    searchable: !markdownPage,
   });
 
   if (blobId === null) {
@@ -159,25 +173,26 @@ export async function indexConvertedDocument({
     return;
   }
 
-  const allWarnings = [...warnings];
-  if (fileError) allWarnings.push(fileError);
-  if (markdownPage) {
-    allWarnings.push(
-      `${markdownPage.path} already uses this URL, so this Word file is only available as a download.`,
-    );
-  }
-
+  // Dropped content (equations, unsupported images) and search rejections do
+  // not fail the publish: report them, and keep them in the logs.
+  const allWarnings = fileError ? [...warnings, fileError] : warnings;
   if (allWarnings.length > 0) {
-    await updatePublishFile(
-      sql,
-      publishId,
+    const message = allWarnings.join('; ');
+    console.warn('Word document converted with warnings:', {
+      siteId,
       path,
-      'error',
-      `Converted with warnings: ${allWarnings.join('; ')}`,
-    );
-  } else {
-    await updatePublishFile(sql, publishId, path, 'success');
+      warnings: message,
+    });
+    await captureError(env, {
+      siteId,
+      path,
+      size,
+      error_message: message,
+      error_name: 'DocxConversionWarning',
+      source: 'worker_docx_convert',
+    });
   }
+  await updatePublishFile(sql, publishId, path, 'success');
   // Purge the site's cache unconditionally (not only when this is the last
   // file of a publish, and also for anonymous publishes): the app caches page
   // content (with its image URLs) for 60s by blob id under the site tag, so the
@@ -191,14 +206,17 @@ export async function indexConvertedDocument({
 }
 
 /**
- * Record a conversion that failed for good. The PublishFile gets a readable
- * error. A previously converted version stays live; when the file has no Blob
- * yet, it gets a plain (non-page) one so the Word file still downloads,
- * unless the stored file was deleted or replaced meanwhile (no ghost Blob).
+ * Record a conversion that failed for good (a document we cannot convert, or
+ * retries used up). The Word file still publishes: a previously converted
+ * version stays live; otherwise it gets a plain download Blob with the new
+ * sha and size. The PublishFile succeeds and the failure goes to PostHog. When
+ * the stored file was deleted or replaced meanwhile, nothing is written (no
+ * ghost Blob) and the newer event owns the result.
  */
 export async function recordConversionFailure({
   storage,
   sql,
+  typesense,
   env,
   siteId,
   path,
@@ -214,22 +232,6 @@ export async function recordConversionFailure({
     path,
     error: reason,
   });
-  await updatePublishFile(
-    sql,
-    publishId,
-    path,
-    'error',
-    `Could not convert this Word document: ${reason}`,
-  );
-  const existing = await sql`
-    SELECT id FROM "Blob" WHERE site_id = ${siteId} AND path = ${path}
-  `;
-  if (
-    existing.length === 0 &&
-    (await storedSha(storage, rawKey(siteId, path))) === sha
-  ) {
-    await upsertBlob(sql, siteId, path, { sha, size, appPath: null });
-  }
   await captureError(env, {
     siteId,
     path,
@@ -238,7 +240,39 @@ export async function recordConversionFailure({
     error_name: typeof error === 'string' ? 'DocxRejectedError' : error?.name,
     source: 'worker_docx_convert',
   });
+  if ((await storedSha(storage, rawKey(siteId, path))) !== sha) {
+    await settleSupersededConversion({ sql, env, siteId, path, publishId });
+    return;
+  }
+  const [existing] = await sql`
+    SELECT id, app_path FROM "Blob" WHERE site_id = ${siteId} AND path = ${path}
+  `;
+  if (!existing || existing.app_path === null) {
+    await storeAsDownload({ sql, typesense, env, siteId, path, sha, size });
+  }
+  await updatePublishFile(sql, publishId, path, 'success');
   await revalidateIfPublishDone({ sql, env, siteId, publishId });
+}
+
+/**
+ * Store the Word file as a plain download: a Blob with no app path or
+ * metadata, and no links, tags or search document.
+ */
+async function storeAsDownload({
+  sql,
+  typesense,
+  env,
+  siteId,
+  path,
+  sha,
+  size,
+}) {
+  const blobId = await upsertBlob(sql, siteId, path, {
+    sha,
+    size,
+    appPath: null,
+  });
+  await clearPageData({ sql, typesense, env, siteId, blobId, path });
 }
 
 /**
