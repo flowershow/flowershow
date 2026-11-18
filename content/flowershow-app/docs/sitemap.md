@@ -34,6 +34,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 - [Publishing from the Terminal](/docs/guides/publish-from-terminal) — A step-by-step tutorial covering installation, publishing, syncing changes, and managing your sites from the command line.
 - [Publishing a GitHub Repo with Markdown](/docs/guides/publish-github-repo) — Learn how to publish your repository containing markdown files with Flowershow in 2 simple steps.
 - [Publishing Your Obsidian Vault](/docs/guides/publish-obsidian-vault) — Learn how to publish your Obsidian Vault quickly and easily using Flowershow. We'll go through four simple steps to get your notes online. Let's get started!
+- [Publish Word Documents](/docs/guides/publish-word-documents) — Publish a .docx file as a page on your site, with the original still available to download.
 - [Publish Your Obsidian Vault with Enveloppe + Flowershow](/docs/guides/publish-vault-with-enveloppe) — Learn how to set up the Enveloppe plugin in Obsidian to publish your vault with Flowershow
 - [Turn Your Obsidian Vault into a Blog with Flowershow](/docs/guides/turn-obsidian-vault-into-a-blog) — A step-by-step guide to turning your Obsidian vault into a published blog with Flowershow — sections, authors, navigation, and themes, all from Markdown.
 

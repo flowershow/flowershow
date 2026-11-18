@@ -16,7 +16,8 @@ Flowershow publishes a folder of files as a website. Markdown is rendered with y
 | `.json`, `.csv`, `.yaml`, `.yml` | The file, for pages to fetch or readers to download | No | `/docs/example.json` |
 | `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webp` | The image | No | `/docs/example.png` |
 | `.pdf` | The PDF, which opens in the browser | No | `/docs/example.pdf` |
-| `.epub`, `.docx`, `.xlsx`, `.pptx`, `.zip` and other downloads | The file, which readers download | No | `/docs/example.epub` |
+| `.docx` (Word) | A page rendered from the document. The original still downloads at `/docs/example.docx`. See [[publish-word-documents\|Publish Word documents]]. | Yes | `/docs/example` |
+| `.epub`, `.xlsx`, `.pptx`, `.zip` and other downloads | The file, which readers download | No | `/docs/example.epub` |
 
 ## Markdown and MDX
 
@@ -53,7 +54,8 @@ These files are served as-is, with a content type that matches the extension, so
 - **Images** (`.png`, `.jpg`, `.gif`, `.svg`, `.webp`, `.avif`, `.bmp`, `.ico`) can be used in Markdown and HTML pages, and each one has its own URL.
 - **Audio and video** (`.mp3`, `.m4a`, `.aac`, `.ogg`, `.opus`, `.wav`, `.flac`, `.mp4`, `.m4v`, `.webm`, `.ogv`, `.mov`, `.mkv`, `.3gp`) play in the browser, if the browser supports the format. Captions (`.vtt`) load in a `<track>` when the `<video>` has the `crossorigin` attribute, for example `<video crossorigin src="clip.mp4"><track src="captions.vtt" kind="subtitles"></video>`. `.srt` files can be downloaded.
 - **PDFs** open in the browser's PDF viewer.
-- **Documents and ebooks** (`.epub`, `.docx`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.rtf`, `.bib`, `.tex`) can be linked to and downloaded, for example `[Download the book](book.epub)`.
+- **Word documents** (`.docx`) become pages, and the original stays downloadable: see [[publish-word-documents|Publish Word documents]].
+- **Documents and ebooks** (`.epub`, `.xlsx`, `.pptx`, `.odt`, `.ods`, `.odp`, `.rtf`, `.bib`, `.tex`) can be linked to and downloaded, for example `[Download the book](book.epub)`.
 - **Maps** (`.kml`, `.kmz`, `.gpx`) can be loaded by map libraries or downloaded.
 - **Calendars and contacts** (`.ics`, `.vcf`) can be downloaded and added to a calendar or address book, so you can offer an "add to calendar" link.
 - **Archives** (`.zip`, `.gz`, `.tgz`, `.tar`, `.7z`) can be downloaded.

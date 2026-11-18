@@ -1,6 +1,6 @@
 ---
 title: Publish Word documents
-description: Publish a .docx file as a page on your Flowershow site, with the original still available to download. Works from the CLI, dashboard, GitHub, Obsidian and AI tools.
+description: Publish a .docx file as a page on your Flowershow site, with the original still available to download. Works from the CLI, dashboard, GitHub and AI tools.
 date: 2026-11-19
 authors:
   - rufuspollock
@@ -25,7 +25,6 @@ Publish it the same way as any other file. All of these accept `.docx`:
 - the dashboard's file import
 - the drag-and-drop publish page
 - GitHub repo sync (see [[publish-github-repo|Publish a GitHub repo]])
-- the Obsidian plugin
 - AI publishing through MCP
 
 You should see the publish succeed, with no extra setup.
@@ -34,7 +33,7 @@ You should see the publish succeed, with no extra setup.
 
 `report.docx` is published at `/report`. A file in a folder keeps its folder: `notes/q3.docx` becomes `/notes/q3`. `index.docx` or `README.docx` becomes the index page of its folder.
 
-The page title is the document's first heading (Word's Title or Heading 1 style), or the file name if there is none. You should see your document as a normal page. Search, tags, backlinks and annotations work as they do on Markdown pages, and a `#tag` written in the document counts as a tag.
+The page title is the document's first heading (Word's Title or Heading 1 style), otherwise the file name. You should see your document as a normal page. Search, tags, backlinks and annotations work as they do on Markdown pages, and a `#tag` written in the document counts as a tag.
 
 ## Step 3: Link to the page or the download
 
@@ -76,5 +75,4 @@ With track changes, insertions are kept and deletions are dropped, as if all cha
 ## Next steps
 
 - [[publish-from-terminal|Publish from the terminal]]
-- [[publish-obsidian-vault|Publish an Obsidian vault]]
 - [[publish-github-repo|Publish a GitHub repo]]
