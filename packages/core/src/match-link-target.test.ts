@@ -127,6 +127,47 @@ describe('docx targets', () => {
       ])?.path,
     ).toBe('report.docx');
   });
+
+  test('a deeper md beats a shorter-path docx', () => {
+    expect(
+      matchLinkTarget('report', [
+        { path: '/notes/report.md' },
+        { path: '/report.docx' },
+      ])?.path,
+    ).toBe('/notes/report.md');
+  });
+
+  test('a lone docx still resolves by suffix', () => {
+    expect(matchLinkTarget('report', [{ path: '/a/report.docx' }])?.path).toBe(
+      '/a/report.docx',
+    );
+  });
+
+  test('an explicit .docx target prefers a deeper docx over a shorter md', () => {
+    expect(
+      matchLinkTarget('report.docx', [
+        { path: '/report.md' },
+        { path: '/notes/report.docx' },
+      ])?.path,
+    ).toBe('/notes/report.docx');
+  });
+
+  test('exact format prefers md over docx', () => {
+    expect(
+      matchLinkTarget(
+        'report',
+        [{ path: 'report.docx' }, { path: 'report.md' }],
+        { format: 'exact' },
+      )?.path,
+    ).toBe('report.md');
+    expect(
+      matchLinkTarget(
+        'report.docx',
+        [{ path: 'report.md' }, { path: 'report.docx' }],
+        { format: 'exact' },
+      )?.path,
+    ).toBe('report.docx');
+  });
 });
 
 describe('generic type — returns caller type', () => {

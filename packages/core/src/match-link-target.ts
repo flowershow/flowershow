@@ -27,8 +27,19 @@ export function matchLinkTarget<T extends { path: string }>(
 
   const normalizedTarget = norm(stripExt(target));
 
+  const isDocx = (p: string) => /\.docx$/i.test(p);
+  // md/mdx win over docx whenever both match; an explicit `.docx` target
+  // ([[report.docx]]) means the Word file itself, so docx wins instead.
+  const preferred = (candidates: T[]): T[] => {
+    const wantDocx = isDocx(target);
+    const narrowed = candidates.filter((f) => isDocx(f.path) === wantDocx);
+    return narrowed.length > 0 ? narrowed : candidates;
+  };
+
   if (format === 'exact') {
-    return files.find((f) => norm(stripExt(f.path)) === normalizedTarget);
+    return preferred(
+      files.filter((f) => norm(stripExt(f.path)) === normalizedTarget),
+    )[0];
   }
 
   // shortestPossible: suffix match across all files, pick shortest on ties
@@ -38,15 +49,5 @@ export function matchLinkTarget<T extends { path: string }>(
   });
 
   if (matches.length === 0) return undefined;
-  const isDocx = (p: string) => /\.docx$/i.test(p);
-  // An explicit `.docx` target ([[report.docx]]) means the Word file itself.
-  const docxFirst = isDocx(target) ? -1 : 1;
-  return matches.sort((a, b) => {
-    // Equal stripped path: prefer md/mdx over docx, unless the target names the docx.
-    if (norm(stripExt(a.path)) === norm(stripExt(b.path))) {
-      const d = docxFirst * (Number(isDocx(a.path)) - Number(isDocx(b.path)));
-      if (d !== 0) return d;
-    }
-    return a.path.length - b.path.length;
-  })[0];
+  return preferred(matches).sort((a, b) => a.path.length - b.path.length)[0];
 }
