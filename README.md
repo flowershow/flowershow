@@ -9,8 +9,8 @@
 Want to see it in action? 🎉 https://flowershow.app itself is built and published with Flowershow 💐
 
 - 📝 Docs: https://flowershow.app/docs
-- 🤖 for AI: https://flowershow.app/cli
-- 💎 for Obsidian: https://flowershow.app/uses/obsidian
+- 🤖 for AI: https://flowershow.app/docs/agents
+- 💎 for Obsidian: https://flowershow.app/docs/getting-started/from-obsidian
 
 Flowershow is proudly open-source.
 
@@ -35,7 +35,7 @@ fl ./my-notes
 
 Windows: download `fl_windows_amd64.zip` from the [latest release](https://github.com/flowershow/flowershow/releases/latest) and put `fl.exe` on your `PATH`. Full details: [CLI reference](https://flowershow.app/docs/reference/cli).
 
-Using an AI agent (Claude, ChatGPT, Codex, Cursor)? See https://flowershow.app/publish-with-ai.
+Using an AI agent (Claude, ChatGPT, Codex, Cursor)? See https://flowershow.app/docs/agents.
 
 ---
 ---

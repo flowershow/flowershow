@@ -26,7 +26,7 @@ showComments: false
               </svg>
               Sign up with Google
             </a>
-            <a className="btn btn-secondary btn-ai" href="/publish-with-ai">Connect your AI <span className="arw">→</span></a>
+            <a className="btn btn-secondary btn-ai" href="/docs/agents">Connect your AI <span className="arw">→</span></a>
           </div>
           <p className="hero-aside">One-click deploys for notes, docs, wikis and websites.</p>
           <p className="microcopy"><b>Free to start</b> · about $5/month for your own domain · open source</p>
@@ -294,7 +294,7 @@ showComments: false
               Works with your AI
             </dt>
             <dd className="ft-desc">Connect Flowershow to Claude or ChatGPT, or add the skill to your coding agent. Then ask it to publish, add pages or update your site.</dd>
-            <a className="ft-learn" href="/publish-with-ai"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <a className="ft-learn" href="/docs/agents"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             <div className="ft-vis">
               <div className="panel vis-agent">
                 <div className="chat">
@@ -355,7 +355,7 @@ showComments: false
               Using a coding agent?
             </span>
             <p className="pa-copy">Ask Claude Code, Codex or Cursor to install the Flowershow skill, then ask it to publish. One page or a whole site, same URL on every update.</p>
-            <a className="textlink" href="/publish-with-ai"><span className="lm-txt">Publish from your AI</span> <span className="arw">→</span></a>
+            <a className="textlink" href="/docs/agents"><span className="lm-txt">Publish from your AI</span> <span className="arw">→</span></a>
           </div>
         </div>
         <div className="wf-grid reveal">
@@ -365,7 +365,7 @@ showComments: false
             </span>
             <h3>Obsidian</h3>
             <p>Your vault is already the finished format. Wiki-links, graph, Bases and Canvas included.</p>
-            <a className="wf-learn" href="/publish-obsidian"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <a className="wf-learn" href="/docs/getting-started/from-obsidian"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
           </div>
           <div className="wf-card">
             <span className="wf-ico brand-github" aria-hidden="true">
@@ -373,7 +373,7 @@ showComments: false
             </span>
             <h3>GitHub</h3>
             <p>Connect a repo; every push republishes automatically.</p>
-            <a className="wf-learn" href="/publish-github"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <a className="wf-learn" href="/docs/getting-started/from-github"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
           </div>
           <div className="wf-card">
             <span className="wf-ico" aria-hidden="true">
@@ -389,7 +389,7 @@ showComments: false
             </span>
             <h3>CLI</h3>
             <p>Publish straight from the terminal.</p>
-            <a className="wf-learn" href="/cli"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            <a className="wf-learn" href="/docs/reference/cli"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
           </div>
         </div>
       </div>

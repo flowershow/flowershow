@@ -6,7 +6,7 @@ authors: [philippe-du-preez]
 ---
 
 > [!warning] Historical page: these install steps are out of date
-> This page describes an old version of Flowershow (a Node.js / Next.js template and the old `npx flowershow` CLI). None of that is needed today. To publish, install the single-binary CLI with `curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh` and run `fl ./my-folder`. See the [CLI reference](/docs/reference/cli) or [Publish with AI](/publish-with-ai).
+> This page describes an old version of Flowershow (a Node.js / Next.js template and the old `npx flowershow` CLI). None of that is needed today. To publish, install the single-binary CLI with `curl -fsSL https://raw.githubusercontent.com/flowershow/flowershow/main/apps/cli/install.sh | sh` and run `fl ./my-folder`. See the [CLI reference](/docs/reference/cli) or [Publish with AI](/docs/agents).
 
 Have you ever considered creating a blog or documentation site for your open-source library or personal project? Maybe you always wanted to, but you didn't really have time to set everything up from scratch, and so you ended up keeping your awesome writings hidden from the world? This is why we started working on Flowershow - a project that can help you focus on your content, while we do the heavy lifting for you.
 

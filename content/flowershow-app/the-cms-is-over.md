@@ -60,4 +60,4 @@ Rufus and Ola
 
 Take a folder you already have and put it on show.
 
-**[Publish for free](https://cloud.flowershow.app/login)** · **[Connect your AI](/publish-with-ai)**
+**[Publish for free](https://cloud.flowershow.app/login)** · **[Connect your AI](/docs/agents)**
