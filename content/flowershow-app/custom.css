@@ -1484,11 +1484,79 @@
 .site-footer-custom a:hover { color: var(--on-dark); }
 .site-footer-custom .fs-provenance a { color: var(--on-dark); text-decoration: underline; text-underline-offset: 3px; }
 
-/* /indie: the numbers */
-.indie-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 28px 0 10px; }
-.indie-stat { border: 1px solid var(--hairline-strong, #e4e0da); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
-.indie-stat b { font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: var(--berry-ink, #872c5b); font-variant-numeric: tabular-nums; }
-.indie-stat span { color: var(--muted, #6b6860); font-size: .95rem; line-height: 1.4; }
-.indie-updated { font-size: .85rem; color: var(--muted-soft, #928d84); }
-@media (max-width: 520px) { .indie-stats { grid-template-columns: 1fr; } }
 .fs-root .final-card .fine a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ==========================================================================
+   /indie — the independence page
+   --------------------------------------------------------------------------
+   A quiet editorial page: one narrow measure, a big headline, the numbers set
+   as large type on a hairline (no tiles), and prose in label + body rows.
+   Scoped under `.lp-indie`; reuses .wrap, .eyebrow, .lede, .btn from the kit.
+   ========================================================================== */
+.fs-root.lp-indie { --indie-maxw: 880px; }
+.fs-root.lp-indie .wrap { max-width: var(--indie-maxw); }
+
+/* Hero */
+.fs-root.lp-indie .indie-hero { padding: clamp(56px, 9vw, 120px) 0 clamp(56px, 8vw, 96px); }
+.fs-root.lp-indie .indie-hero h1 { max-width: 16ch; font-size: clamp(2.7rem, 6.8vw, 5rem); margin-bottom: 28px; }
+.fs-root.lp-indie .indie-hero .lede { max-width: 54ch; font-size: clamp(1.1rem, 1.7vw, 1.3rem); color: var(--body); }
+.fs-root.lp-indie .indie-byline {
+  display: flex; align-items: center; gap: 12px; margin-top: 30px;
+  font-size: 14.5px; color: var(--muted);
+}
+.fs-root.lp-indie .indie-byline a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--hairline-strong); text-underline-offset: 3px; }
+.fs-root.lp-indie .indie-byline a:hover { text-decoration-color: var(--berry); color: var(--berry-ink); }
+.fs-root.lp-indie .indie-faces { display: inline-flex; }
+.fs-root.lp-indie .indie-faces img {
+  width: 30px; height: 30px; border-radius: 50%; object-fit: cover;
+  border: 2px solid var(--canvas); box-shadow: 0 0 0 1px var(--hairline);
+}
+.fs-root.lp-indie .indie-faces img + img { margin-left: -9px; }
+
+/* Numbers */
+.fs-root.lp-indie .indie-numbers { padding: 0 0 clamp(56px, 8vw, 96px); }
+.fs-root.lp-indie .indie-label {
+  font-size: 13px; font-weight: 600; color: var(--ink); letter-spacing: 0.02em;
+  padding-bottom: 18px; border-bottom: 1px solid var(--hairline-strong);
+}
+.fs-root.lp-indie .indie-grid {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 32px 32px; padding-top: 44px;
+}
+.fs-root.lp-indie .indie-num { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+.fs-root.lp-indie .indie-num b {
+  display: block; font-weight: 600; color: var(--ink);
+  font-size: clamp(2.6rem, 5.4vw, 4rem); line-height: 1; letter-spacing: -0.045em;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.fs-root.lp-indie .indie-num b small { font-size: 0.42em; font-weight: 500; color: var(--muted); letter-spacing: -0.02em; }
+.fs-root.lp-indie .indie-num span { font-size: 15px; line-height: 1.45; color: var(--muted); max-width: 22ch; }
+.fs-root.lp-indie .indie-bar {
+  display: block; height: 2px; width: 100%; background: var(--hairline-strong); border-radius: 1px; overflow: hidden;
+  margin-top: 2px;
+}
+.fs-root.lp-indie .indie-bar i { display: block; height: 100%; background: var(--berry); border-radius: 1px; }
+.fs-root.lp-indie .indie-updated { margin-top: 48px; font-size: 13.5px; color: var(--muted-soft); max-width: 60ch; line-height: 1.5; }
+
+/* Prose rows: heading in the left column, body in the right */
+.fs-root.lp-indie .indie-prose { padding: 0 0 clamp(72px, 10vw, 120px); }
+.fs-root.lp-indie .indie-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: 24px 48px;
+  padding: clamp(36px, 5vw, 56px) 0; border-top: 1px solid var(--hairline-strong);
+}
+.fs-root.lp-indie .indie-row h2 { font-size: 1.45rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.3; }
+.fs-root.lp-indie .indie-body { display: flex; flex-direction: column; gap: 18px; max-width: 58ch; }
+.fs-root.lp-indie .indie-body p { font-size: 1.05rem; line-height: 1.6; color: var(--body); }
+.fs-root.lp-indie .indie-body b { color: var(--ink); font-weight: 600; }
+.fs-root.lp-indie .indie-body p a { color: var(--ink); text-decoration: underline; text-decoration-color: var(--hairline-strong); text-underline-offset: 3px; text-decoration-thickness: 1px; transition: color .15s ease, text-decoration-color .15s ease; }
+.fs-root.lp-indie .indie-body p a:hover { color: var(--berry-ink); text-decoration-color: var(--berry); }
+.fs-root.lp-indie .indie-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 10px; }
+.fs-root.lp-indie .indie-more { font-size: 15px; color: var(--muted); margin-top: 22px; }
+.fs-root.lp-indie .indie-more a { color: var(--muted); }
+
+@media (max-width: 720px) {
+  .fs-root.lp-indie .indie-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 24px; padding-top: 32px; }
+  .fs-root.lp-indie .indie-num b { font-size: clamp(2.4rem, 11vw, 3rem); }
+  .fs-root.lp-indie .indie-row { grid-template-columns: 1fr; gap: 16px; }
+  .fs-root.lp-indie .indie-cta .btn { width: 100%; }
+}
