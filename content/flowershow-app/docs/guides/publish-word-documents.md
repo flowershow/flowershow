@@ -7,7 +7,7 @@ authors:
 ---
 
 > [!tip] Using an AI assistant?
-> Give it this page as Markdown: https://flowershow.app/docs/publish-word-documents.md. For all of Flowershow, point it at https://flowershow.app/llms.txt.
+> Give it this page as Markdown: https://flowershow.app/docs/guides/publish-word-documents.md. For all of Flowershow, point it at https://flowershow.app/llms.txt.
 
 Publish a Word file and Flowershow turns it into a page on your site. `report.docx` becomes the page `/report`, styled by your site theme, and the original stays downloadable at `/report.docx`.
 
