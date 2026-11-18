@@ -402,11 +402,6 @@
       "permanent": true
     },
     {
-      "from": "/the-cms-is-over",
-      "to": "/blog/cms-is-over",
-      "permanent": true
-    },
-    {
       "from": "/docs/analytics",
       "to": "/docs/reference/analytics"
     },
@@ -607,7 +602,7 @@
       "to": "/blog/listing-pages-tutorial"
     },
     {
-      "from": "/blog/the-cms-is-over",
+      "from": "/cms-is-over",
       "to": "/blog/cms-is-over",
       "permanent": true
     }

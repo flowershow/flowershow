@@ -563,7 +563,7 @@ showComments: false
           <span className="petal p1" aria-hidden="true">💐</span>
           <span className="petal p2" aria-hidden="true">💐</span>
           <h2>Who wants to manage content?</h2>
-          <p>Make publishing fast and fun again. Join the writers, researchers and teams behind 2,600+ sites.</p>
+          <p>Let's make publishing fast and fun again. Join the writers, researchers and teams behind 2,600+ sites.</p>
           <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Publish for free <span className="arw">→</span></a>
           <p className="fine">No credit card required · Free plan, forever</p>
         </div>
