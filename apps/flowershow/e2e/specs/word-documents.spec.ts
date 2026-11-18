@@ -7,14 +7,20 @@ test('Word document page', async ({ page, basePath }) => {
   const content = page.locator('#mdxpage');
 
   await test.step('renders headings, table, image and footnote', async () => {
+    // The title is rendered in the page header, outside #mdxpage, and the
+    // body's matching first heading is dropped (as for Markdown pages).
     await expect(
-      content.getByRole('heading', { name: 'Board Memo', level: 1 }),
+      page.getByRole('heading', { name: 'Board Memo', level: 1 }),
+    ).toBeVisible();
+    await expect(
+      content.getByRole('heading', { name: 'Summary', level: 1 }),
     ).toBeVisible();
     await expect(
       content.locator('td', { hasText: 'North' }).first(),
     ).toBeVisible();
 
-    const img = content.locator('img').first();
+    // Heading anchors also render icons, so select the converted image itself.
+    const img = content.locator('img[src*="_derived"]').first();
     await expect(img).toBeVisible();
     await expect
       .poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth))
