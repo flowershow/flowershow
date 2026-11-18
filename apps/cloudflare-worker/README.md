@@ -17,8 +17,8 @@ Two publish paths share one Queue consumer and one `PublishFinalizerWorkflow`.
 **GitHub path** (`POST /sync`):
 
 1. Terminates any in-flight `GitHubSyncWorkflow` for the site, then starts a new one.
-2. Workflow creates the `Publish` record, diffs the GitHub tree against stored `Blob` records, creates `PublishFile` rows, and starts `PublishFinalizerWorkflow`.
-3. Workflow uploads files to R2 with `publishId` in object metadata. Deleted files are removed from R2 immediately with terminal `PublishFile` rows; Blob/Typesense cleanup follows via `DeleteObject` → queue consumer.
+2. Workflow creates the `Publish` record, diffs the GitHub tree against stored `Blob` records, and creates `PublishFile` rows.
+3. Workflow uploads files to R2 with `publishId` in object metadata, then starts `PublishFinalizerWorkflow`. Deleted files are removed from R2 immediately with terminal `PublishFile` rows; Blob/Typesense cleanup follows via `DeleteObject` → queue consumer.
 4. Each R2 PUT fires a queue event. The consumer reads the file, computes a git-compatible SHA-1, upserts the `Blob`, indexes in Typesense, and flips the `PublishFile` row to `success` (or `error`). A Typesense failure never fails the file, since the page is already live, but it is always reported to PostHog (`source: worker_typesense_index` / `worker_typesense_delete`). If Typesense rejects the document itself (HTTP 400, e.g. `authors` is not a list), the row is set to `error` with `Not added to search: <reason>` so the author sees it.
 5. `PublishFinalizerWorkflow` polls every 10 s until no `uploading` rows remain, then sets `Publish.completedAt` and revalidates Next.js cache tags.
 
@@ -288,6 +288,7 @@ A file with `publish: false` in its frontmatter is deleted from R2, which fires 
 ## Known Limitations and Gotchas
 
 - **GitHub sync size**: A step output is capped at 1 MiB, so the sync plan (the batches of files to upsert and delete) is stored in R2 under `{siteId}/_github-sync/raw/{publishId}/` and deleted when the sync ends. Each batch of 20 files is one step, and an instance runs at most 10,000 steps by default, which is roughly 200k changed files. GitHub's tree listing stops sooner, at 100,000 entries or 7 MB: when it comes back truncated, the sync fails before it deletes anything. Files stream from GitHub into R2; files over 100 MB are marked as errors without being downloaded.
+- **GitHub rate limit**: Each file is one GitHub API request, and an installation gets about 5,000 requests per hour. When GitHub refuses files for the rate limit (403 or 429 with `x-ratelimit-remaining: 0` or `retry-after`), the batch sleeps until the reset and fetches those files again, at most 3 times; then they are marked as errors. A first sync of 6,000 files therefore takes a little over an hour. The finalizer starts after the uploads because it polls for only one hour.
 - **File size limit**: The queue consumer reads markdown files whole and rejects ones over 10 MiB. Other files are streamed, so their size is limited only by the API's upload cap; images over 10 MiB get their dimensions from their first 10 MiB.
 - **Dev Workflow workaround**: `env.PUBLISH_WORKFLOW.get()` does not resolve correctly in Miniflare (local dev). In `dev` mode, the queue consumer's completion check finalizes the `Publish` record directly rather than sending a `publish-complete` event to the Workflow.
 - **At-least-once delivery**: Cloudflare Queues deliver messages at least once. The atomic completion `UPDATE` and the `Blob` upsert (`INSERT ... ON CONFLICT DO UPDATE`) are both idempotent, so redelivery is safe.

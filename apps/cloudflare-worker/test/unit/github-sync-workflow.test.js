@@ -1,9 +1,12 @@
-import { describe, it, expect, vi } from 'vitest';
+import { afterEach, describe, it, expect, vi } from 'vitest';
 
 vi.mock('cloudflare:workers', () => ({ WorkflowEntrypoint: class {} }));
 
 const { computeFilesToUpsert, computeFilesToDelete } = await import(
   '../../src/github-sync-workflow.js'
+);
+const { GitHubRateLimitError, fetchGitHubFileStream } = await import(
+  '../../src/github.js'
 );
 
 function makeTree(items) {
@@ -317,9 +320,10 @@ function createFakeBucket(keys = []) {
 
 /**
  * Run the workflow against a fake bucket and GitHub. The site has `blobs`;
- * steps fail like Cloudflare's when their output is over 1 MiB.
+ * steps fail like Cloudflare's when their output is over 1 MiB. `fetchFile`
+ * runs before each GitHub file download and can throw.
  */
-async function runSync({ tree, blobs = [], bucketKeys = [] }) {
+async function runSync({ tree, blobs = [], bucketKeys = [], fetchFile }) {
   vi.resetModules();
   const bucket = createFakeBucket(bucketKeys);
   const queries = [];
@@ -329,11 +333,13 @@ async function runSync({ tree, blobs = [], bucketKeys = [] }) {
     generateId: () => 'id',
   }));
   vi.doMock('../../src/github.js', () => ({
+    GitHubRateLimitError,
     getGitHubInstallationToken: async () => 'token',
     fetchGitHubConfig: async () => ({}),
     fetchGitHubRepoTree: async () => tree,
     fetchGitHubFileStream: async (_repo, sha) => {
       downloads.push(sha);
+      if (fetchFile) await fetchFile(sha);
       const { size } = tree.tree.find((item) => item.sha === sha);
       return new Blob([new Uint8Array(size)]).stream();
     },
@@ -362,6 +368,7 @@ async function runSync({ tree, blobs = [], bucketKeys = [] }) {
       if (bytes > 1024 * 1024) throw new Error(`${name} output ${bytes} B`);
       return output;
     },
+    sleep: vi.fn(),
   };
   const run = workflow.run(
     {
@@ -376,7 +383,14 @@ async function runSync({ tree, blobs = [], bucketKeys = [] }) {
     },
     step,
   );
-  return { run, bucket, queries, downloads };
+  return {
+    run,
+    bucket,
+    queries,
+    downloads,
+    sleep: step.sleep,
+    finalizer: workflow.env.PUBLISH_FINALIZER_WORKFLOW.create,
+  };
 }
 
 const planKeys = (bucket) =>
@@ -452,5 +466,85 @@ describe('GitHubSyncWorkflow', () => {
       'pub1',
       'video.mp4',
     ]);
+  });
+
+  // GitHub allows about 5,000 API requests per hour, one per file. A sync of
+  // 6,001 files lost 1,003 of them to 403 responses.
+  it('waits for the rate-limit reset and fetches the refused files again', async () => {
+    let refuse = true;
+    const { run, bucket, queries, downloads, sleep, finalizer } =
+      await runSync({
+        tree: makeTree([makeItem('a.md', 'sha1'), makeItem('b.md', 'sha2')]),
+        fetchFile: async (sha) => {
+          if (sha === 'sha2' && refuse) {
+            refuse = false;
+            throw new GitHubRateLimitError('limit', Date.now() + 60_000);
+          }
+        },
+      });
+    await run;
+
+    expect(downloads).toEqual(['sha1', 'sha2', 'sha2']);
+    expect(sleep).toHaveBeenCalledOnce();
+    const ms = sleep.mock.calls[0][1];
+    expect(ms).toBeGreaterThan(59_000);
+    expect(ms).toBeLessThanOrEqual(61_000);
+    expect([...bucket.objects.keys()].sort()).toEqual([
+      'site1/main/raw/a.md',
+      'site1/main/raw/b.md',
+    ]);
+    expect(queries.some((q) => q.text.includes("SET status = 'error'"))).toBe(
+      false,
+    );
+    // The finalizer polls for one hour, so it must start after the wait.
+    expect(finalizer.mock.invocationCallOrder[0]).toBeGreaterThan(
+      sleep.mock.invocationCallOrder[0],
+    );
+  });
+
+  it('marks a file as an error when the rate limit refuses it after every wait', async () => {
+    const { run, bucket, queries, sleep } = await runSync({
+      tree: makeTree([makeItem('a.md', 'sha1')]),
+      fetchFile: async () => {
+        throw new GitHubRateLimitError('GitHub API 403 Forbidden', 0);
+      },
+    });
+    await run;
+
+    expect(sleep).toHaveBeenCalledTimes(3);
+    expect(bucket.objects.size).toBe(0);
+    const error = queries.find((q) => q.text.includes("SET status = 'error'"));
+    expect(error.values).toEqual(['GitHub API 403 Forbidden', 'pub1', 'a.md']);
+  });
+});
+
+describe('githubFetch errors', () => {
+  const respond = (status, headers) =>
+    vi.stubGlobal('fetch', async () => new Response('', { status, headers }));
+  const fetchBlob = () => fetchGitHubFileStream('org/repo', 'sha1', 'token');
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.useRealTimers();
+  });
+
+  it('reports a used-up rate limit with its reset time', async () => {
+    respond(403, { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': '1700' });
+    await expect(fetchBlob()).rejects.toMatchObject({
+      name: 'GitHubRateLimitError',
+      resetAt: 1_700_000,
+    });
+  });
+
+  it('waits for retry-after on a secondary rate limit', async () => {
+    vi.useFakeTimers({ now: 5_000 });
+    respond(429, { 'retry-after': '60' });
+    await expect(fetchBlob()).rejects.toMatchObject({ resetAt: 65_000 });
+  });
+
+  it('reports a 403 with requests left as a plain error', async () => {
+    respond(403, { 'x-ratelimit-remaining': '4000' });
+    const error = await fetchBlob().catch((e) => e);
+    expect(error).not.toBeInstanceOf(GitHubRateLimitError);
+    expect(error.message).toMatch(/GitHub API 403/);
   });
 });
