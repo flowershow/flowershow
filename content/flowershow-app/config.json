@@ -368,35 +368,43 @@
     },
     {
       "from": "/publish",
-      "to": "/docs/reference/cli"
+      "to": "/docs/reference/cli",
+      "permanent": true
     },
     {
       "from": "/ai",
-      "to": "/docs/agents"
+      "to": "/docs/agents",
+      "permanent": true
     },
     {
       "from": "/uses/obsidian",
-      "to": "/docs/getting-started/from-obsidian"
+      "to": "/docs/getting-started/from-obsidian",
+      "permanent": true
     },
     {
       "from": "/cli",
-      "to": "/docs/reference/cli"
+      "to": "/docs/reference/cli",
+      "permanent": true
     },
     {
       "from": "/publish-obsidian",
-      "to": "/docs/getting-started/from-obsidian"
+      "to": "/docs/getting-started/from-obsidian",
+      "permanent": true
     },
     {
       "from": "/publish-github",
-      "to": "/docs/getting-started/from-github"
+      "to": "/docs/getting-started/from-github",
+      "permanent": true
     },
     {
       "from": "/publish-with-ai",
-      "to": "/docs/agents"
+      "to": "/docs/agents",
+      "permanent": true
     },
     {
       "from": "/the-cms-is-over",
-      "to": "/blog/the-cms-is-over"
+      "to": "/blog/the-cms-is-over",
+      "permanent": true
     },
     {
       "from": "/docs/analytics",
