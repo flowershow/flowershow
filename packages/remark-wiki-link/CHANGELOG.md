@@ -1,5 +1,13 @@
 # remark-wiki-link
 
+## 4.1.0
+
+### Minor Changes
+
+- 230ac11: `urlResolver` also receives `target`, the link target as written (without `#heading`), so a resolver can tell `[[report]]` from `[[report.docx]]`.
+
+  Link matching (`matchLinkTarget` from `@flowershow/core`) now also matches `.docx` files, so `[[report]]` can resolve to `report.docx`. When a Markdown (`.md`/`.mdx`) file also matches, it wins, wherever it sits; `[[report.docx]]` prefers the Word file.
+
 ## 4.0.1
 
 ### Patch Changes
