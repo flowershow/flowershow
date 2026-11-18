@@ -30,37 +30,86 @@ export async function getPublishIdFromMetadata(storage, key) {
   }
 }
 
-export async function readFileBytes(storage, key) {
-  if (storage.type === 's3') {
-    const resp = await storage.client.send(
+/** A storage error with `code` 'NOT_FOUND' or 'TOO_LARGE'. */
+function storageError(code, message) {
+  const error = new Error(message);
+  error.code = code;
+  return error;
+}
+
+async function s3Get(storage, key) {
+  try {
+    return await storage.client.send(
       new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
     );
+  } catch (error) {
+    if (
+      error?.name === 'NoSuchKey' ||
+      error?.$metadata?.httpStatusCode === 404
+    ) {
+      throw storageError('NOT_FOUND', `Object not found: ${key}`);
+    }
+    throw error;
+  }
+}
+
+/**
+ * The whole stored file. Throws an error with `code: 'NOT_FOUND'` when it is
+ * missing and `code: 'TOO_LARGE'` when it is over MAX_BUFFERED_BYTES.
+ */
+export async function readFileBytes(storage, key) {
+  if (storage.type === 's3') {
+    const resp = await s3Get(storage, key);
     const length = resp.ContentLength;
     if (length > MAX_BUFFERED_BYTES)
-      throw new Error(`File too large: ${length}`);
+      throw storageError('TOO_LARGE', `File too large: ${length}`);
     return new Uint8Array(await resp.Body.transformToByteArray());
   }
   const obj = await storage.client.get(key);
-  if (!obj) throw new Error(`Object not found: ${key}`);
+  if (!obj) throw storageError('NOT_FOUND', `Object not found: ${key}`);
   if (obj.size > MAX_BUFFERED_BYTES)
-    throw new Error(`File too large: ${obj.size}`);
+    throw storageError('TOO_LARGE', `File too large: ${obj.size}`);
   return new Uint8Array(await obj.arrayBuffer());
 }
 
-/** The stored file as a stream, with its stored size. */
+/**
+ * The stored file as a stream, with its stored size. Throws an error with
+ * `code: 'NOT_FOUND'` when it is missing.
+ */
 export async function openFileStream(storage, key) {
   if (storage.type === 's3') {
-    const resp = await storage.client.send(
-      new GetObjectCommand({ Bucket: storage.bucket, Key: key }),
-    );
+    const resp = await s3Get(storage, key);
     return {
       size: resp.ContentLength,
       stream: resp.Body.transformToWebStream(),
     };
   }
   const obj = await storage.client.get(key);
-  if (!obj) throw new Error(`Object not found: ${key}`);
+  if (!obj) throw storageError('NOT_FOUND', `Object not found: ${key}`);
   return { size: obj.size, stream: obj.body };
+}
+
+/**
+ * Store a small, fully buffered object. Used for derived (converted) objects:
+ * their keys include the source file's sha, so they never change once written.
+ */
+export async function putObject(storage, key, bytes, contentType) {
+  const cacheControl = 'max-age=31536000, immutable';
+  if (storage.type === 's3') {
+    await storage.client.send(
+      new PutObjectCommand({
+        Bucket: storage.bucket,
+        Key: key,
+        Body: bytes,
+        ContentType: contentType,
+        CacheControl: cacheControl,
+      }),
+    );
+  } else {
+    await storage.client.put(key, bytes, {
+      httpMetadata: { contentType, cacheControl },
+    });
+  }
 }
 
 /**
@@ -121,20 +170,29 @@ export async function deleteFile(storage, siteId, branch, filePath) {
   }
 }
 
-/** Delete every object whose key starts with `prefix`. */
-export async function deleteStoragePrefix(storage, prefix) {
+/**
+ * Delete every object whose key starts with `prefix`, except those starting
+ * with `except` when it is given.
+ */
+export async function deleteStoragePrefix(storage, prefix, { except } = {}) {
+  const shouldDelete = (key) => !(except && key.startsWith(except));
   if (storage.type === 's3') {
+    // Each pass lists from the start again (deleted keys are gone), so stop
+    // once a page has nothing left to delete.
     let truncated = true;
     while (truncated) {
       const listed = await storage.client.send(
         new ListObjectsV2Command({ Bucket: storage.bucket, Prefix: prefix }),
       );
-      if (!listed.Contents || listed.Contents.length === 0) break;
+      const keys = (listed.Contents ?? [])
+        .map(({ Key }) => Key)
+        .filter(shouldDelete);
+      if (keys.length === 0) break;
       await storage.client.send(
         new DeleteObjectsCommand({
           Bucket: storage.bucket,
           Delete: {
-            Objects: listed.Contents.map(({ Key }) => ({ Key })),
+            Objects: keys.map((Key) => ({ Key })),
             Quiet: true,
           },
         }),
@@ -145,7 +203,7 @@ export async function deleteStoragePrefix(storage, prefix) {
     let cursor;
     do {
       const listed = await storage.client.list({ prefix, cursor, limit: 1000 });
-      const keys = listed.objects.map((o) => o.key);
+      const keys = listed.objects.map((o) => o.key).filter(shouldDelete);
       if (keys.length > 0) {
         await storage.client.delete(keys);
       }

@@ -3,8 +3,9 @@
 A Cloudflare Worker that drives the Flowershow publish pipeline. It combines:
 
 - **`GitHubSyncWorkflow`** — orchestrates GitHub-triggered publishes: fetches the GitHub tree, diffs against stored `Blob` records, creates `Publish`/`PublishFile` records, and uploads files to R2.
+- **`DocConversionWorkflow`** — converts one uploaded Word document (`.docx`) to a page. See [Word documents](#word-documents-docx).
 - **`PublishFinalizerWorkflow`** — shared by all publish paths. Polls until all `PublishFile` rows reach a terminal state, then sets `Publish.completedAt` and revalidates Next.js cache tags.
-- A **Queue consumer** that fires on every R2 event: on **PUT**, parses frontmatter, extracts image dimensions, upserts `Blob` records, and indexes in Typesense (a `draft: true` page is stored but not indexed, and loses any earlier search document); on **DELETE**, removes the `Blob` record and Typesense document. Only `.md`/`.mdx` files are processed as pages; everything else, including `.html` files such as the reserved root `_footer.html` and `_navbar.html` (custom footer and navbar), is stored as a plain, non-page `Blob` (no `app_path`, metadata, links, tags or search index). See `SITE_CHROME_FILES` in `@flowershow/core`.
+- A **Queue consumer** that fires on every R2 event: on **PUT**, parses frontmatter, extracts image dimensions, upserts `Blob` records, and indexes in Typesense (a `draft: true` page is stored but not indexed, and loses any earlier search document); on **DELETE**, removes the `Blob` record and Typesense document. Only `.md`/`.mdx` files are processed as pages (`.docx` files are handed to `DocConversionWorkflow`); everything else, including `.html` files such as the reserved root `_footer.html` and `_navbar.html` (custom footer and navbar), is stored as a plain, non-page `Blob` (no `app_path`, metadata, links, tags or search index). See `SITE_CHROME_FILES` in `@flowershow/core`.
 - **HTTP endpoints** for triggering workflows and a dev-mode adapter for MinIO webhook events.
 - A **daily cron** that purges deleted sites from storage, database, and Typesense.
 
@@ -36,6 +37,27 @@ Two publish paths share one Queue consumer and one `PublishFinalizerWorkflow`.
 ```
 
 Example: `my-site/main/raw/blog/welcome.md`
+
+Converted Word documents also write **derived objects** (not Blobs) beside the raw files:
+
+```
+{siteId}/main/derived/{path}/{sha}/index.md        converted Markdown
+{siteId}/main/derived/{path}/{sha}/image{N}.{ext}  extracted images (png, jpg, gif, webp)
+```
+
+`sha` is the git-compatible SHA-1 of the `.docx` bytes. The queue consumer acks any `{siteId}/main/derived/` key without processing it. The app serves the images at `/_derived/{path}/{sha}/image{N}.{ext}`.
+
+### Word documents (`.docx`)
+
+A `.docx` is published as a page at its slug (`My Notes/Q3 Report.docx` → `/My+Notes/Q3+Report`) and still downloads from its own path.
+
+1. On a PUT, the queue consumer streams the file to compute its sha and starts a `DocConversionWorkflow` with id `sha1("{siteId}:{path}:{sha}")` and params `{ siteId, path, sha, size, publishId }`. A duplicate id (a redelivered message) counts as done. The consumer does not touch the `Blob` or `PublishFile`.
+2. Step `convert` (`src/converted-document.js`): reads the file (stopping if it was deleted or replaced by a newer version), converts it with mammoth + unified (`src/docx/`), and writes the images, then `index.md`, under `derived/{path}/{sha}/`.
+3. Step `index`: runs the Markdown pipeline on `index.md` for the `.docx` Blob (`app_path` from the slug, `sha`/`size` of the Word file, `metadata.convertedWith = 'mammoth-1'`), sets the `PublishFile` (`success`, or `error` with `Converted with warnings: …` while the page is live), revalidates, and only then deletes older `{sha}` folders (the app caches page content for 60 s). If a `.md`/`.mdx` has the same URL, it wins and the publish shows a warning.
+4. A failed conversion sets the `PublishFile` error to `Could not convert this Word document: <reason>` and reports to PostHog (`source: worker_docx_convert`). A previously converted version stays live; with no earlier version, the file is stored as a plain download. Each step retries twice (5 s, exponential backoff), except for documents that cannot be converted.
+5. Deleting the `.docx` removes its Blob and the whole `derived/{path}/` folder.
+
+Conversion limits: the `.docx` must be at most 10 MB; its zip may hold at most 500 entries and 200 images, with `word/document.xml` at most 20 MB and 60 MB uncompressed in total. Only PNG, JPEG, GIF and WebP images are kept; equations are dropped with a warning; links other than http(s), mailto, fragments and relative ones are removed.
 
 ### HTTP endpoints
 

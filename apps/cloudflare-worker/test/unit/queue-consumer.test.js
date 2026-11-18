@@ -1113,3 +1113,144 @@ test('handleMessage - revalidates even when the last markdown file errors', asyn
 
   expect(fetchMock).toHaveBeenCalledTimes(1);
 });
+
+// Word documents (flowershow-eiz): the consumer only routes a .docx to the
+// DocConversionWorkflow; derived objects never reach the Blob table.
+
+test('handleMessage - a derived key is acked without parsing or DB writes', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense, calls } = createTypesenseMock();
+  const msg = {
+    body: {
+      action: 'PutObject',
+      object: { key: 'site-1/main/derived/report.docx/abc/index.md' },
+    },
+    ack: vi.fn(),
+  };
+
+  await handleMessage({ msg, storage: {}, sql, typesense, env: {} });
+
+  expect(msg.ack).toHaveBeenCalled();
+  expect(queries).toEqual([]);
+  expect(calls.upsert).toBe(0);
+});
+
+test("handleMessage - a docx PutObject starts one conversion workflow with the file's git sha", async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense } = createTypesenseMock();
+  const bytes = new TextEncoder().encode('pretend docx bytes');
+  const storage = createR2Storage(bytes);
+  storage.client.head = async () => ({
+    customMetadata: { 'publish-id': 'pub-1' },
+  });
+  const create = vi.fn().mockResolvedValue({ id: 'x' });
+  const msg = putMessage('My Notes/Q3 Report.docx');
+
+  await handleMessage({
+    msg,
+    storage,
+    sql,
+    typesense,
+    env: { DOC_CONVERSION_WORKFLOW: { create } },
+  });
+
+  expect(msg.ack).toHaveBeenCalled();
+  expect(create).toHaveBeenCalledTimes(1);
+  const [{ id, params }] = create.mock.calls[0];
+  expect(id).toMatch(/^[0-9a-f]{40}$/);
+  expect(params).toEqual({
+    siteId: 'site-1',
+    path: 'My Notes/Q3 Report.docx',
+    sha: await computeGitBlobSha(bytes),
+    size: bytes.length,
+    publishId: 'pub-1',
+  });
+  expect(queries.some((q) => q.text.startsWith('INSERT INTO "Blob"'))).toBe(
+    false,
+  );
+  expect(queries.some((q) => q.text.startsWith('UPDATE "PublishFile"'))).toBe(
+    false,
+  );
+});
+
+test('handleMessage - a duplicate workflow id is not an error', async () => {
+  const { sql } = createRecordingSql();
+  const { typesense } = createTypesenseMock();
+  const create = vi
+    .fn()
+    .mockRejectedValue(
+      new Error('instance.already_exists: Instance already exists'),
+    );
+  const fetchMock = vi.fn().mockResolvedValue({ ok: true });
+  vi.stubGlobal('fetch', fetchMock);
+  const msg = putMessage('report.DOCX');
+
+  await handleMessage({
+    msg,
+    storage: createR2Storage('docx'),
+    sql,
+    typesense,
+    env: { DOC_CONVERSION_WORKFLOW: { create }, POSTHOG_KEY: 'k' },
+  });
+
+  expect(create).toHaveBeenCalledTimes(1);
+  expect(msg.ack).toHaveBeenCalled();
+  expect(fetchMock).not.toHaveBeenCalled();
+});
+
+test('handleMessage - a failure to start the workflow is not acked', async () => {
+  const { sql } = createRecordingSql();
+  const { typesense } = createTypesenseMock();
+  const create = vi.fn().mockRejectedValue(new Error('workflows down'));
+  const msg = putMessage('report.docx');
+
+  await handleMessage({
+    msg,
+    storage: createR2Storage('docx'),
+    sql,
+    typesense,
+    env: { DOC_CONVERSION_WORKFLOW: { create } },
+  });
+
+  expect(msg.ack).not.toHaveBeenCalled();
+});
+
+test('handleMessage - deleting a docx removes its derived folder even without a Blob row', async () => {
+  const { sql } = createRecordingSql();
+  const { typesense } = createTypesenseMock();
+  const listed = [];
+  const deleted = [];
+  const storage = {
+    type: 'r2',
+    client: {
+      list: async ({ prefix }) => {
+        listed.push(prefix);
+        return {
+          objects: [{ key: `${prefix}abc/index.md` }],
+          truncated: false,
+        };
+      },
+      delete: async (keys) => {
+        deleted.push(keys);
+      },
+    },
+  };
+  const msg = {
+    body: {
+      action: 'DeleteObject',
+      object: { key: 'site-1/main/raw/My Notes/report.docx' },
+    },
+    ack: vi.fn(),
+  };
+
+  await handleMessage({ msg, storage, sql, typesense, env: {} });
+
+  expect(listed).toEqual(['site-1/main/derived/My Notes/report.docx/']);
+  expect(deleted).toEqual([
+    ['site-1/main/derived/My Notes/report.docx/abc/index.md'],
+  ]);
+});
+
+test('computeAppPath - a docx gets a page slug', () => {
+  expect(computeAppPath('Q3 Report.docx')).toBe('/Q3+Report');
+});

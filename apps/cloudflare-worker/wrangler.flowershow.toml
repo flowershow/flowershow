@@ -38,6 +38,11 @@ binding = "GITHUB_SYNC_WORKFLOW"
 name = "flowershow-github-sync-workflow"
 class_name = "GitHubSyncWorkflow"
 
+[[env.production.workflows]]
+binding = "DOC_CONVERSION_WORKFLOW"
+name = "flowershow-doc-conversion-workflow"
+class_name = "DocConversionWorkflow"
+
 # STAGING
 [env.staging.vars]
 ENVIRONMENT = "staging"
@@ -66,6 +71,11 @@ binding = "GITHUB_SYNC_WORKFLOW"
 name = "flowershow-github-sync-workflow-staging"
 class_name = "GitHubSyncWorkflow"
 
+[[env.staging.workflows]]
+binding = "DOC_CONVERSION_WORKFLOW"
+name = "flowershow-doc-conversion-workflow-staging"
+class_name = "DocConversionWorkflow"
+
 # DEV
 [env.dev]
 port = 8787
@@ -93,3 +103,8 @@ class_name = "PublishFinalizerWorkflow"
 binding = "GITHUB_SYNC_WORKFLOW"
 name = "flowershow-github-sync-workflow-dev"
 class_name = "GitHubSyncWorkflow"
+
+[[env.dev.workflows]]
+binding = "DOC_CONVERSION_WORKFLOW"
+name = "flowershow-doc-conversion-workflow-dev"
+class_name = "DocConversionWorkflow"

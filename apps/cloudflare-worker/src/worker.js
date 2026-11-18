@@ -4,13 +4,14 @@ import {
   getTypesenseClient,
   validateEnv,
 } from './clients.js';
+import { DocConversionWorkflow } from './doc-conversion-workflow.js';
 import { GitHubSyncWorkflow } from './github-sync-workflow.js';
 import { PublishFinalizerWorkflow } from './publish-finalizer-workflow.js';
 import { handleMessage } from './queue-consumer.js';
 import { deleteStoragePrefix } from './storage.js';
 import { captureError, generateId } from './utils.js';
 
-export { GitHubSyncWorkflow, PublishFinalizerWorkflow };
+export { DocConversionWorkflow, GitHubSyncWorkflow, PublishFinalizerWorkflow };
 
 export default {
   // HTTP endpoint (health + dev adapter + sync trigger)
