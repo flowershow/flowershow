@@ -412,7 +412,7 @@ export function registerSitesRoutes(registry: OpenAPIRegistry) {
     operationId: 'getSiteStatus',
     summary: 'Get file processing status',
     description:
-      "Polling endpoint for file processing status. Returns the detailed status to the site owner's CLI/PAT token or to a site-scoped claim token (`fs_claim_…`) for an anonymous site; unauthenticated callers get the public status.",
+      "Polling endpoint for file processing status. Returns the detailed status to the site owner's CLI/PAT token or to a site-scoped claim token (`fs_claim_…`) for an anonymous site; unauthenticated callers get the public status. Files with status `expired` (never received in storage before the publish timed out) count as failed, like `error`.",
     tags: ['Sites'],
     security: [{ bearerToken: [] }, {}],
     request: {

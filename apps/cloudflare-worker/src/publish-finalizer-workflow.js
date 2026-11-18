@@ -130,7 +130,9 @@ async function isSyncRunning(env, instanceId) {
 export async function finalizePublish({ sql, publishId, timedOut }) {
   if (timedOut) {
     await sql`
-      UPDATE "PublishFile" SET status = 'expired'
+      UPDATE "PublishFile"
+      SET status = 'expired',
+        error = 'Never received, so not published. Publish again to retry.'
       WHERE publish_id = ${publishId} AND status = 'uploading'
     `;
   }

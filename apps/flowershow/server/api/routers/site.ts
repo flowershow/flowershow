@@ -930,6 +930,11 @@ export const siteRouter = createTRPCRouter({
         }
 
         const files = p.files;
+        // 'expired' files never arrived in storage, so they are failures.
+        const failed = (f: (typeof files)[number]) =>
+          f.status === 'error' || f.status === 'expired';
+        const applied = (f: (typeof files)[number]) =>
+          f.status !== 'canceled' && !failed(f);
         return {
           id: p.id,
           startedAt: p.startedAt,
@@ -940,25 +945,15 @@ export const siteRouter = createTRPCRouter({
           isInProgress: !p.completedAt,
           legacy: false,
           counts: {
-            added: files.filter(
-              (f) =>
-                f.changeType === 'added' &&
-                f.status !== 'canceled' &&
-                f.status !== 'error',
-            ).length,
+            added: files.filter((f) => f.changeType === 'added' && applied(f))
+              .length,
             updated: files.filter(
-              (f) =>
-                f.changeType === 'updated' &&
-                f.status !== 'canceled' &&
-                f.status !== 'error',
+              (f) => f.changeType === 'updated' && applied(f),
             ).length,
             deleted: files.filter(
-              (f) =>
-                f.changeType === 'deleted' &&
-                f.status !== 'canceled' &&
-                f.status !== 'error',
+              (f) => f.changeType === 'deleted' && applied(f),
             ).length,
-            errors: files.filter((f) => f.status === 'error').length,
+            errors: files.filter(failed).length,
             canceled: files.filter((f) => f.status === 'canceled').length,
           },
           files,
