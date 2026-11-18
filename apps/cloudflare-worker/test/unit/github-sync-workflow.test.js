@@ -320,10 +320,10 @@ function createFakeBucket(keys = []) {
 
 /**
  * Run the workflow against a fake bucket and GitHub. The site has `blobs`;
- * steps fail like Cloudflare's when their output is over 1 MiB. `fetchFile`
+ * steps fail like Cloudflare's when their output is over 1 MiB. `beforeDownload`
  * runs before each GitHub file download and can throw.
  */
-async function runSync({ tree, blobs = [], bucketKeys = [], fetchFile }) {
+async function runSync({ tree, blobs = [], bucketKeys = [], beforeDownload }) {
   vi.resetModules();
   const bucket = createFakeBucket(bucketKeys);
   const queries = [];
@@ -339,7 +339,7 @@ async function runSync({ tree, blobs = [], bucketKeys = [], fetchFile }) {
     fetchGitHubRepoTree: async () => tree,
     fetchGitHubFileStream: async (_repo, sha) => {
       downloads.push(sha);
-      if (fetchFile) await fetchFile(sha);
+      if (beforeDownload) await beforeDownload(sha);
       const { size } = tree.tree.find((item) => item.sha === sha);
       return new Blob([new Uint8Array(size)]).stream();
     },
@@ -475,7 +475,7 @@ describe('GitHubSyncWorkflow', () => {
     const { run, bucket, queries, downloads, sleep, finalizer } =
       await runSync({
         tree: makeTree([makeItem('a.md', 'sha1'), makeItem('b.md', 'sha2')]),
-        fetchFile: async (sha) => {
+        beforeDownload: async (sha) => {
           if (sha === 'sha2' && refuse) {
             refuse = false;
             throw new GitHubRateLimitError('limit', Date.now() + 60_000);
@@ -505,7 +505,7 @@ describe('GitHubSyncWorkflow', () => {
   it('marks a file as an error when the rate limit refuses it after every wait', async () => {
     const { run, bucket, queries, sleep } = await runSync({
       tree: makeTree([makeItem('a.md', 'sha1')]),
-      fetchFile: async () => {
+      beforeDownload: async () => {
         throw new GitHubRateLimitError('GitHub API 403 Forbidden', 0);
       },
     });
