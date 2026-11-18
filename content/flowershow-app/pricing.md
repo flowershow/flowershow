@@ -161,6 +161,7 @@ showEditLink: false
         <h2>Like it? Help us make more of it.</h2>
         <p>We’ve built Flowershow with our own money and our own time since 2022, and we have no investors. Premium plans and supporters keep us going and let us do more. We’re in this for the long run.</p>
         <a className="btn btn-primary" href="https://buy.stripe.com/8wM9BeckD0vKfLi6ox">❤️ Become a supporter <span className="arw">→</span></a>
+        <p className="fine"><a href="/indie">See our real numbers →</a></p>
       </div>
     </div>
   </section>

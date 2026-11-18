@@ -1483,3 +1483,12 @@
 .site-footer-custom .site-footer-social-link { color: var(--on-dark-soft); }
 .site-footer-custom a:hover { color: var(--on-dark); }
 .site-footer-custom .fs-provenance a { color: var(--on-dark); text-decoration: underline; text-underline-offset: 3px; }
+
+/* /indie: the numbers */
+.indie-stats { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin: 28px 0 10px; }
+.indie-stat { border: 1px solid var(--hairline-strong, #e4e0da); border-radius: 16px; padding: 18px 20px; display: flex; flex-direction: column; gap: 4px; }
+.indie-stat b { font-size: clamp(1.8rem, 4vw, 2.4rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; color: var(--berry-ink, #872c5b); font-variant-numeric: tabular-nums; }
+.indie-stat span { color: var(--muted, #6b6860); font-size: .95rem; line-height: 1.4; }
+.indie-updated { font-size: .85rem; color: var(--muted-soft, #928d84); }
+@media (max-width: 520px) { .indie-stats { grid-template-columns: 1fr; } }
+.fs-root .final-card .fine a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }

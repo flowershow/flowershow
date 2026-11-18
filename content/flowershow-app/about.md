@@ -52,6 +52,8 @@ We also think the web works better open than walled. Publishing on your own addr
 
 There's no venture capitalist in this story. We've built Flowershow with our own money and our own time since 2022, because we're passionate about knowledge sharing and collaboration. When you pay for [Premium](/pricing) or back us as a supporter, you help us keep going and do more. We're in this for the long run.
 
+Our real numbers (sites, publishes and how many of you pay) are on our [indie page](/indie).
+
 ---
 
 ## Why the name?
