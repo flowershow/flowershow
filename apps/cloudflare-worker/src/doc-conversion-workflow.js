@@ -33,6 +33,7 @@ export class DocConversionWorkflow extends WorkflowEntrypoint {
     const fail = (name, error) =>
       step.do(name, () =>
         recordConversionFailure({
+          storage,
           sql,
           env,
           siteId,

@@ -157,7 +157,15 @@ async function startDocConversion({
   key,
   publishId,
 }) {
-  const { size, stream } = await openFileStream(storage, key);
+  let opened;
+  try {
+    opened = await openFileStream(storage, key);
+  } catch (err) {
+    // Deleted before we got to it: its DeleteObject event cleans up.
+    if (err?.code === 'NOT_FOUND') return;
+    throw err;
+  }
+  const { size, stream } = opened;
   const { sha } = await hashGitBlobStream(stream, size, 0);
   const id = await sha1Hex(`${siteId}:${path}:${sha}`);
   try {
@@ -201,6 +209,20 @@ export async function revalidateIfPublishDone({ sql, env, siteId, publishId }) {
       WHERE publish_id = ${publishId} AND status = 'uploading'
     `;
     if (Number(count) !== 0) return;
+  } catch (err) {
+    console.error(`Revalidate error for site ${siteId}: ${err.message}`);
+    return;
+  }
+  await revalidateSite({ env, siteId });
+}
+
+/**
+ * Purge the app's cached data for a site (its site-id tag) now. Never throws,
+ * including on timeout.
+ */
+export async function revalidateSite({ env, siteId }) {
+  if (!env?.NEXTJS_APP_URL || !env?.INTERNAL_API_SECRET) return;
+  try {
     const resp = await fetch(`${env.NEXTJS_APP_URL}/api/internal/revalidate`, {
       method: 'POST',
       headers: {
@@ -349,7 +371,8 @@ async function processMarkdownFile({
  * file's), sync links and tags, and update search. `publish: false` deletes
  * the stored source file instead (its DeleteObject event cleans up the rest).
  *
- * The caller sets the PublishFile status: `fileError` is an author-facing
+ * `searchable: false` keeps the page out of search (removing any earlier
+ * document). The caller sets the PublishFile status: `fileError` is an author-facing
  * problem with a live page (bad frontmatter, a document search rejected);
  * `blobId` is null when the page was not published.
  *
@@ -367,6 +390,7 @@ export async function indexMarkdownPage({
   sha,
   size,
   extraMetadata,
+  searchable = true,
 }) {
   const { metadata, body, permalink, shouldPublish, frontmatterError } =
     await parseMarkdown({
@@ -397,8 +421,9 @@ export async function indexMarkdownPage({
   const tags = extractTags(body, metadata);
   await syncTags(sql, siteId, blobId, tags);
   let searchError = null;
-  if (isDraft(metadata)) {
-    // A draft is reachable by URL but never in search: drop any earlier document
+  if (isDraft(metadata) || !searchable) {
+    // A draft is reachable by URL but never in search: drop any earlier
+    // document. Same for a page another file's page shadows (`searchable: false`).
     await removeFromTypesense({ typesense, env, siteId, blobId, path });
   } else {
     searchError = await indexInTypesense({

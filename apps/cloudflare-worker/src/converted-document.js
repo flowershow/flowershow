@@ -20,6 +20,7 @@ import {
   computeAppPath,
   indexMarkdownPage,
   revalidateIfPublishDone,
+  revalidateSite,
   updatePublishFile,
   upsertBlob,
 } from './queue-consumer.js';
@@ -123,6 +124,18 @@ export async function indexConvertedDocument({
     }
   }
 
+  // A .md/.mdx page with the same URL wins: the app serves it, so the Word
+  // file's page stays out of search to avoid a duplicate hit.
+  const appPath = computeAppPath(path);
+  const [markdownPage] = await sql`
+    SELECT path FROM "Blob"
+    WHERE site_id = ${siteId} AND app_path = ${appPath}
+      AND (extension = 'md' OR extension = 'mdx')
+    LIMIT 1
+  `;
+
+  // Deferred: the file could still be replaced between the sha check above and
+  // these writes; the newer version's workflow then rewrites the Blob.
   const { blobId, fileError } = await indexMarkdownPage({
     storage,
     sql,
@@ -135,6 +148,7 @@ export async function indexConvertedDocument({
     size,
     publishId,
     extraMetadata: { convertedWith: CONVERTED_WITH },
+    searchable: !markdownPage,
   });
 
   if (blobId === null) {
@@ -147,13 +161,6 @@ export async function indexConvertedDocument({
 
   const allWarnings = [...warnings];
   if (fileError) allWarnings.push(fileError);
-  const appPath = computeAppPath(path);
-  const [markdownPage] = await sql`
-    SELECT path FROM "Blob"
-    WHERE site_id = ${siteId} AND app_path = ${appPath}
-      AND (extension = 'md' OR extension = 'mdx')
-    LIMIT 1
-  `;
   if (markdownPage) {
     allWarnings.push(
       `${markdownPage.path} already uses this URL, so this Word file is only available as a download.`,
@@ -171,11 +178,13 @@ export async function indexConvertedDocument({
   } else {
     await updatePublishFile(sql, publishId, path, 'success');
   }
-  await revalidateIfPublishDone({ sql, env, siteId, publishId });
-
-  // Older versions go last, after the PublishFile flip and the cache purge:
-  // the app caches page content (with its image URLs) for 60s by blob id under
-  // the site tag, so deleting them earlier could break images on a cached page.
+  // Purge the site's cache unconditionally (not only when this is the last
+  // file of a publish, and also for anonymous publishes): the app caches page
+  // content (with its image URLs) for 60s by blob id under the site tag, so the
+  // older versions can only be deleted once no cached page points at them.
+  // This purge comes after the PublishFile flip, so it also covers the
+  // publish-completion purge that revalidateIfPublishDone would make.
+  await revalidateSite({ env, siteId });
   await deleteStoragePrefix(storage, `${siteId}/main/${derivedPrefix(path)}`, {
     except: ownFolder,
   });
@@ -184,9 +193,11 @@ export async function indexConvertedDocument({
 /**
  * Record a conversion that failed for good. The PublishFile gets a readable
  * error. A previously converted version stays live; when the file has no Blob
- * yet, it gets a plain (non-page) one so the Word file still downloads.
+ * yet, it gets a plain (non-page) one so the Word file still downloads,
+ * unless the stored file was deleted or replaced meanwhile (no ghost Blob).
  */
 export async function recordConversionFailure({
+  storage,
   sql,
   env,
   siteId,
@@ -213,7 +224,10 @@ export async function recordConversionFailure({
   const existing = await sql`
     SELECT id FROM "Blob" WHERE site_id = ${siteId} AND path = ${path}
   `;
-  if (existing.length === 0) {
+  if (
+    existing.length === 0 &&
+    (await storedSha(storage, rawKey(siteId, path))) === sha
+  ) {
     await upsertBlob(sql, siteId, path, { sha, size, appPath: null });
   }
   await captureError(env, {
@@ -241,7 +255,7 @@ export async function settleSupersededConversion({
 }) {
   if (!publishId) return;
   await sql`
-    UPDATE "PublishFile" SET status = 'success'
+    UPDATE "PublishFile" SET status = 'canceled'
     WHERE publish_id = ${publishId} AND path = ${path} AND status = 'uploading'
   `;
   await revalidateIfPublishDone({ sql, env, siteId, publishId });

@@ -1198,6 +1198,27 @@ test('handleMessage - a duplicate workflow id is not an error', async () => {
   expect(fetchMock).not.toHaveBeenCalled();
 });
 
+test('handleMessage - a docx deleted before it was read is acked without a workflow', async () => {
+  const { sql, queries } = createRecordingSql();
+  const { typesense } = createTypesenseMock();
+  const storage = createR2Storage('docx');
+  storage.client.get = async () => null;
+  const create = vi.fn();
+  const msg = putMessage('report.docx');
+
+  await handleMessage({
+    msg,
+    storage,
+    sql,
+    typesense,
+    env: { DOC_CONVERSION_WORKFLOW: { create } },
+  });
+
+  expect(msg.ack).toHaveBeenCalled();
+  expect(create).not.toHaveBeenCalled();
+  expect(queries).toEqual([]);
+});
+
 test('handleMessage - a failure to start the workflow is not acked', async () => {
   const { sql } = createRecordingSql();
   const { typesense } = createTypesenseMock();

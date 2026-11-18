@@ -242,21 +242,38 @@ describe('indexConvertedDocument', () => {
 
     expect(blobInsert(ctx)).toBeUndefined();
     expect(derivedKeys(ctx.objects)).toEqual([newer]);
+    // Superseded, in ADR 0009's vocabulary; only while still pending.
+    const update = publishFileUpdate(ctx);
+    expect(update.text).toContain("SET status = 'canceled'");
+    expect(update.text).toContain("status = 'uploading'");
   });
 
-  test('warns when report.md has the same URL', async () => {
+  test('warns when report.md has the same URL, and keeps the docx out of search', async () => {
     const ctx = await setup({
       respond: (text) =>
         text.startsWith('SELECT path FROM "Blob"')
           ? [{ path: 'Q3 Report.md' }]
           : undefined,
     });
+    const search = { upserts: 0, deleted: [] };
+    const recordingTypesense = {
+      upsertDocument: async () => {
+        search.upserts += 1;
+      },
+      deleteDocument: async (siteId, id) => {
+        search.deleted.push({ siteId, id });
+      },
+    };
 
     await indexConvertedDocument(
       args(ctx, {
+        typesense: recordingTypesense,
         warnings: ['Equations are not supported and were left out.'],
       }),
     );
+
+    expect(search.upserts).toBe(0);
+    expect(search.deleted).toEqual([{ siteId: SITE, id: 'blob-1' }]);
 
     const update = publishFileUpdate(ctx);
     expect(update.text).toContain("status = 'error'");
@@ -265,25 +282,60 @@ describe('indexConvertedDocument', () => {
     );
   });
 
-  test('removes older sha folders after success', async () => {
+  const REVALIDATE_ENV = {
+    NEXTJS_APP_URL: 'https://app.example',
+    INTERNAL_API_SECRET: 's3cret',
+  };
+
+  async function setupWithOldVersion() {
     const ctx = await setup();
     const old = `${DERIVED}${'0'.repeat(40)}/`;
     ctx.objects.set(`${old}index.md`, { bytes: new Uint8Array() });
     ctx.objects.set(`${old}image1.png`, { bytes: new Uint8Array() });
+    const fetchMock = vi.fn(async () => {
+      ctx.log.push(['fetch']);
+      return { ok: true };
+    });
+    vi.stubGlobal('fetch', fetchMock);
+    return { ctx, fetchMock };
+  }
 
-    await indexConvertedDocument(args(ctx));
+  test('removes older sha folders after success', async () => {
+    const { ctx, fetchMock } = await setupWithOldVersion();
 
-    // Old folders go only after the PublishFile flip (and revalidation), so a
-    // cached page never points at deleted images.
+    await indexConvertedDocument(args(ctx, { env: REVALIDATE_ENV }));
+
+    // Old folders go only after the PublishFile flip and the cache purge, so
+    // a cached page never points at deleted images.
     const flip = ctx.log.findIndex(([op]) => op === 'sql');
+    const purge = ctx.log.findIndex(([op]) => op === 'fetch');
     const firstDelete = ctx.log.findIndex(([op]) => op === 'delete');
     expect(flip).toBeGreaterThanOrEqual(0);
-    expect(firstDelete).toBeGreaterThan(flip);
+    expect(purge).toBeGreaterThan(flip);
+    expect(firstDelete).toBeGreaterThan(purge);
+    expect(JSON.parse(fetchMock.mock.calls[0][1].body)).toEqual({
+      tags: [SITE],
+    });
 
     expect(derivedKeys(ctx.objects)).toEqual([
       `${DERIVED}${ctx.sha}/image1.png`,
       `${DERIVED}${ctx.sha}/index.md`,
     ]);
+  });
+
+  test('purges the site cache before removing older folders, also without a publish id', async () => {
+    const { ctx, fetchMock } = await setupWithOldVersion();
+
+    await indexConvertedDocument(
+      args(ctx, { env: REVALIDATE_ENV, publishId: null }),
+    );
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const purge = ctx.log.findIndex(([op]) => op === 'fetch');
+    const firstDelete = ctx.log.findIndex(([op]) => op === 'delete');
+    expect(purge).toBeGreaterThanOrEqual(0);
+    expect(firstDelete).toBeGreaterThan(purge);
+    expect(derivedKeys(ctx.objects)).toHaveLength(2);
   });
 
   test('converts again when its index.md is missing', async () => {
@@ -312,17 +364,34 @@ describe('indexConvertedDocument', () => {
 });
 
 describe('recordConversionFailure', () => {
+  const failure = (storage, sql, extra = {}) =>
+    recordConversionFailure({
+      storage,
+      sql,
+      env: {},
+      siteId: SITE,
+      path: PATH,
+      sha: 'a'.repeat(40),
+      size: 1,
+      publishId: 'pub-1',
+      error: 'Too big',
+      ...extra,
+    });
+
   test('creates a raw-asset Blob when none exists and sets the PublishFile error', async () => {
     const { sql, queries } = createSql();
+    const { storage } = createMemoryR2({ [RAW]: WORD });
+    const sha = await computeGitBlobSha(WORD);
     const fetchMock = vi.fn().mockResolvedValue({ ok: true });
     vi.stubGlobal('fetch', fetchMock);
 
     await recordConversionFailure({
+      storage,
       sql,
       env: { POSTHOG_KEY: 'k' },
       siteId: SITE,
       path: PATH,
-      sha: 'a'.repeat(40),
+      sha,
       size: 1234,
       publishId: 'pub-1',
       error: new Error('This Word document could not be read.'),
@@ -339,7 +408,7 @@ describe('recordConversionFailure', () => {
     expect(insert.values[2]).toBe(PATH);
     expect(insert.values[3]).toBeNull();
     expect(insert.values[4]).toBe('docx');
-    expect(insert.values[5]).toBe('a'.repeat(40));
+    expect(insert.values[5]).toBe(sha);
     expect(insert.values[6]).toBe(1234);
     expect(insert.values[7]).toBeNull();
 
@@ -356,17 +425,9 @@ describe('recordConversionFailure', () => {
     const { sql, queries } = createSql((text) =>
       text.startsWith('SELECT id FROM "Blob"') ? [{ id: 'blob-1' }] : undefined,
     );
+    const { storage } = createMemoryR2({ [RAW]: WORD });
 
-    await recordConversionFailure({
-      sql,
-      env: {},
-      siteId: SITE,
-      path: PATH,
-      sha: 'a'.repeat(40),
-      size: 1,
-      publishId: 'pub-1',
-      error: 'Too big',
-    });
+    await failure(storage, sql, { sha: await computeGitBlobSha(WORD) });
 
     expect(queries.some((q) => q.text.startsWith('INSERT INTO "Blob"'))).toBe(
       false,
@@ -378,4 +439,33 @@ describe('recordConversionFailure', () => {
       'Could not convert this Word document: Too big',
     );
   });
+
+  test('creates no Blob when the docx was deleted meanwhile', async () => {
+    const { sql, queries } = createSql();
+    const { storage } = createMemoryR2({});
+
+    await failure(storage, sql, { sha: await computeGitBlobSha(WORD) });
+
+    expect(queries.some((q) => q.text.startsWith('INSERT INTO "Blob"'))).toBe(
+      false,
+    );
+    expect(publishFileUpdateIn(queries).values[0]).toBe(
+      'Could not convert this Word document: Too big',
+    );
+  });
+
+  test('creates no Blob when the docx was replaced meanwhile', async () => {
+    const { sql, queries } = createSql();
+    const { storage } = createMemoryR2({ [RAW]: 'a newer version' });
+
+    await failure(storage, sql, { sha: await computeGitBlobSha(WORD) });
+
+    expect(queries.some((q) => q.text.startsWith('INSERT INTO "Blob"'))).toBe(
+      false,
+    );
+  });
 });
+
+function publishFileUpdateIn(queries) {
+  return queries.find((q) => q.text.startsWith('UPDATE "PublishFile"'));
+}
