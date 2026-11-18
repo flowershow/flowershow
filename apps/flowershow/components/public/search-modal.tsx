@@ -13,7 +13,7 @@ import {
   Snippet,
   useInstantSearch,
 } from 'react-instantsearch';
-import { resolveContentLink } from '@/lib/resolve-link';
+import { searchHitUrl } from '@/lib/resolve-link';
 import { searchClient } from '@/lib/typesense-client';
 import { useSite } from './site-context';
 
@@ -285,9 +285,7 @@ function SearchResults({
         // })
         .map((item) => ({
           ...item,
-          path: resolveContentLink({
-            target: item.path,
-          }),
+          path: searchHitUrl(item.path),
         })),
     // [site, contentHide],
     [site],

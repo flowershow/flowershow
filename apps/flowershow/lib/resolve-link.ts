@@ -125,3 +125,15 @@ export const resolveWikiLinkUrl = ({
     siteHostname,
   });
 };
+
+/**
+ * URL for a search hit's `path` (the indexed file path). A Word document's
+ * hit links to its converted page, not to the file itself.
+ */
+export const searchHitUrl = (filePath: string) => {
+  if (isConvertiblePath(filePath)) {
+    const urlPath = pageSlugFromPath(ensureLeadingSlash(filePath));
+    if (urlPath) return urlPath;
+  }
+  return resolveContentLink({ target: filePath });
+};

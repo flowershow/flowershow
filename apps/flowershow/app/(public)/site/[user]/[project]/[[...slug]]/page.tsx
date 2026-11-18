@@ -778,7 +778,10 @@ export default async function SitePage(props: {
       })
     : undefined;
 
-  const showEditLink = metadata?.showEditLink ?? siteConfig?.showEditLink;
+  // GitHub cannot edit a Word document in the browser: no edit link for it.
+  const showEditLink =
+    !isConvertiblePath(blob.path) &&
+    (metadata?.showEditLink ?? siteConfig?.showEditLink);
   const pageReadingTime =
     (metadata?.showReadingTime ?? siteConfig?.showReadingTime) === true
       ? readingTime(pageContent ?? '')

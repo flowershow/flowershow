@@ -15,6 +15,7 @@ import {
   resolveContentLink,
   resolveToAbsolutePath,
   resolveWikiLinkUrl,
+  searchHitUrl,
 } from './resolve-link';
 
 /* example site file tree:
@@ -524,5 +525,16 @@ describe('Word documents (convertible files)', () => {
     expect(
       resolveWikiLinkUrl({ filePath: '/a.pdf', heading: '', siteHostname }),
     ).toBe('http://site.example.com/a.pdf');
+  });
+});
+
+describe('searchHitUrl', () => {
+  it('links a Word document hit to its converted page', () => {
+    expect(searchHitUrl('My Notes/Q3 Report.docx')).toBe('/My+Notes/Q3+Report');
+    expect(searchHitUrl('/report.DOCX')).toBe('/report');
+  });
+
+  it('links a Markdown hit to its page', () => {
+    expect(searchHitUrl('blog/post.md')).toBe('/blog/post');
   });
 });

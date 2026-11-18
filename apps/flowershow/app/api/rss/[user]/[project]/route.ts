@@ -46,7 +46,7 @@ export async function GET(
           OR: [
             { path: { endsWith: '.md' } },
             { path: { endsWith: '.mdx' } },
-            { path: { endsWith: '.docx' } },
+            { path: { endsWith: '.docx', mode: 'insensitive' } },
           ],
           metadata: {
             not: Prisma.AnyNull,
