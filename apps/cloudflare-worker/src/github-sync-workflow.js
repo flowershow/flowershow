@@ -128,11 +128,6 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
 
         const upsertBatches = createBatches(toUpsert, BATCH_SIZE);
         const deleteBatches = createBatches(toDelete, BATCH_SIZE);
-        // A failed sync leaves its plan behind: run() cannot clean up on
-        // failure, because the runtime also throws into run() for errors it
-        // replays, such as a code update. /sync has already stopped any older
-        // sync of this site, so its plans are safe to delete here.
-        await plan.deleteAllForSite();
         await plan.write('upsert', upsertBatches);
         await plan.write('delete', deleteBatches);
         return {
@@ -200,10 +195,18 @@ export class GitHubSyncWorkflow extends WorkflowEntrypoint {
       // polls until all uploading rows reach a terminal state and finalizes
       // the Publish record. It also handles the zero-files and delete-only cases.
       await step.do('start-publish-finalizer', async () => {
-        await this.env.PUBLISH_FINALIZER_WORKFLOW.create({
-          id: publishId,
-          params: { publishId, siteId, syncInstanceId: event.instanceId },
-        });
+        try {
+          await this.env.PUBLISH_FINALIZER_WORKFLOW.create({
+            id: publishId,
+            params: { publishId, siteId, syncInstanceId: event.instanceId },
+          });
+        } catch (err) {
+          // A reset after create() but before this step's result was stored
+          // runs the step again; the instance then exists already.
+          await this.env.PUBLISH_FINALIZER_WORKFLOW.get(publishId).catch(() => {
+            throw err;
+          });
+        }
       });
 
       // Stream each file from GitHub into R2, so no file is held whole in
@@ -358,8 +361,6 @@ function createPlanStore(storage, siteId, publishId) {
         storage,
         `${siteId}/${PLAN_BRANCH}/raw/${publishId}/`,
       ),
-    deleteAllForSite: () =>
-      deleteStoragePrefix(storage, `${siteId}/${PLAN_BRANCH}/raw/`),
   };
 }
 

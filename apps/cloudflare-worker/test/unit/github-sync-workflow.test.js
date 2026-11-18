@@ -324,6 +324,7 @@ function createFakeBucket(keys = []) {
  * runs before each GitHub file download and can throw. `resetAtStep` makes the
  * runtime throw into run() once when that step starts, as a code update does;
  * run() then runs again and finished steps return their stored output.
+ * `finalizerExists` makes creating the finalizer fail as a duplicate.
  */
 async function runSync({
   tree,
@@ -331,6 +332,7 @@ async function runSync({
   bucketKeys = [],
   beforeDownload,
   resetAtStep,
+  finalizerExists = false,
 }) {
   vi.resetModules();
   const bucket = createFakeBucket(bucketKeys);
@@ -368,7 +370,14 @@ async function runSync({
     '../../src/github-sync-workflow.js'
   );
   const workflow = new GitHubSyncWorkflow();
-  workflow.env = { PUBLISH_FINALIZER_WORKFLOW: { create: vi.fn() } };
+  workflow.env = {
+    PUBLISH_FINALIZER_WORKFLOW: {
+      create: vi.fn(async () => {
+        if (finalizerExists) throw new Error('instance.already_exists');
+      }),
+      get: async () => ({ id: 'pub1' }),
+    },
+  };
   const stored = new Map();
   let resetPending = resetAtStep;
   const step = {
@@ -537,14 +546,16 @@ describe('GitHubSyncWorkflow', () => {
     expect(finalizer).toHaveBeenCalledOnce();
   });
 
-  it('deletes sync plans left behind by failed syncs of the site', async () => {
+  // A reset after create() but before the step result is stored runs
+  // start-publish-finalizer again, and the finalizer then exists already.
+  it('carries on when the finalizer was already started by an earlier attempt', async () => {
     const { run, bucket } = await runSync({
       tree: makeTree([makeItem('a.md', 'sha1')]),
-      bucketKeys: ['site1/_github-sync/raw/oldpub/upsert-0.json'],
+      finalizerExists: true,
     });
     await run;
 
-    expect(planKeys(bucket)).toEqual([]);
+    expect([...bucket.objects.keys()]).toEqual(['site1/main/raw/a.md']);
   });
 
   it('marks a file as an error when the rate limit refuses it after every wait', async () => {

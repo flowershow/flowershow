@@ -5,7 +5,13 @@ import { captureError } from './utils.js';
 
 const MAX_POLL_ATTEMPTS = 360; // 1 hour at 10s intervals
 // Instance statuses of a GitHub sync that may still upload files.
-const SYNC_RUNNING_STATUSES = ['queued', 'running', 'waiting'];
+const SYNC_RUNNING_STATUSES = [
+  'queued',
+  'running',
+  'waiting',
+  'paused',
+  'waitingForPause',
+];
 
 export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
@@ -19,9 +25,10 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
       // a GitHub sync can wait hours for its rate limit to reset.
       let timedOut = false;
       for (let i = 0, idlePolls = 0; ; i++) {
-        // true: done; 'sync-running': files remain and the sync can still
-        // upload them; false: files remain. Older instances stored only
-        // true/false here, which keeps their replays valid.
+        // true: done; null: files remain and the sync can still upload them;
+        // false: files remain. null stays falsy so that older code, which
+        // stored only true/false here, replays it as "not done". `== null`
+        // also accepts undefined, in case a stored null comes back as that.
         const state = await step.do(`check-completion-${i}`, async () => {
           const [{ count }] = await sql`
           SELECT COUNT(*) AS count FROM "PublishFile"
@@ -29,17 +36,17 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
         `;
           if (Number(count) === 0) return true;
           if (syncInstanceId && (await isSyncRunning(this.env, syncInstanceId)))
-            return 'sync-running';
+            return null;
           return false;
         });
         if (state === true) break;
-        if (state !== 'sync-running' && ++idlePolls >= MAX_POLL_ATTEMPTS) {
+        if (state != null && ++idlePolls >= MAX_POLL_ATTEMPTS) {
           timedOut = true;
           break;
         }
         await step.sleep(
           `poll-interval-${i}`,
-          state === 'sync-running' ? '1 minute' : '10 seconds',
+          state == null ? '1 minute' : '10 seconds',
         );
       }
 
