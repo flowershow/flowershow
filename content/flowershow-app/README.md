@@ -17,19 +17,10 @@ showComments: false
           <p className="lede">Flowershow turns a Markdown or HTML file, a folder, or a whole Obsidian vault into a real website, with navigation, search and your domain. Publish from Obsidian, GitHub, the terminal or Claude.</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Publish for free <span className="arw">→</span></a>
-            <a className="btn btn-secondary btn-google" href="https://cloud.flowershow.app/login?provider=google">
-              <svg className="g-ico" aria-hidden="true" viewBox="0 0 24 24">
-                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
-                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
-                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
-                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
-              </svg>
-              Sign up with Google
-            </a>
             <a className="btn btn-secondary btn-ai" href="/docs/agents">Connect your AI <span className="arw">→</span></a>
           </div>
           <p className="hero-aside">One-click deploys for notes, docs, wikis and websites.</p>
-          <p className="microcopy"><b>Free to start</b> · about $5/month for your own domain · open source</p>
+          <p className="microcopy"><b>Free to start</b> · $5/month for your own domain · open source</p>
         </div>
         <div className="hero-media-next reveal">
           <div className="hm-chat" aria-label="A chat in Claude publishing a team offsite site">
@@ -80,8 +71,19 @@ showComments: false
           </div>
           <div className="proof-item">
             <h3>From wherever you work</h3>
-            <p>Claude, ChatGPT, Claude Code, Cursor, Obsidian, GitHub. Free to start, about $5/month, open source.</p>
+            <p>Claude, ChatGPT, Claude Code, Cursor, Obsidian, GitHub. Free to start, $5/month, open source.</p>
           </div>
+        </div>
+      </div>
+    </section>
+    <section className="section" id="demo-b">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">Demo</span>
+          <h2>See it go from Markdown to live site.</h2>
+        </div>
+        <div className="demo-media reveal">
+          <iframe src="https://www.youtube-nocookie.com/embed/E9mjeskpdf8?rel=0" title="Flowershow demo — publish markdown as a website" loading="lazy" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
         </div>
       </div>
     </section>
@@ -466,17 +468,6 @@ showComments: false
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23a11.5 11.5 0 0 1 3.003-.404c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222 0 1.606-.014 2.898-.014 3.293 0 .322.216.694.825.576C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12" /></svg>
             View the source <span className="arw">→</span>
           </a>
-        </div>
-      </div>
-    </section>
-    <section className="section" id="demo-b">
-      <div className="wrap">
-        <div className="section-head reveal">
-          <span className="eyebrow">Demo</span>
-          <h2>See it go from Markdown to live site.</h2>
-        </div>
-        <div className="demo-media reveal">
-          <iframe src="https://www.youtube-nocookie.com/embed/E9mjeskpdf8?rel=0" title="Flowershow demo — publish markdown as a website" loading="lazy" frameBorder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerPolicy="strict-origin-when-cross-origin" allowFullscreen></iframe>
         </div>
       </div>
     </section>

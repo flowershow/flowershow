@@ -47,7 +47,7 @@ showComments: false
   <section className="indie-prose">
     <div className="wrap">
       <div className="indie-row">
-        <h2>Why we'll be around</h2>
+        <h2>We're around for the long term</h2>
         <div className="indie-body">
           <p><b>We've built tools that outlived their first chapter.</b> Rufus started Open Knowledge and CKAN in the 2000s. CKAN still runs government data portals around the world. We're building Flowershow the same way: open source, plain files and a long view.</p>
           <p><b>We publish with it every day.</b> This page, <a href="https://lifeitself.org">Life Itself</a>, our notes and our reports all run on Flowershow. We're our own most demanding users.</p>
@@ -59,14 +59,16 @@ showComments: false
         <div className="indie-body">
           <p><b>A free plan that stays free.</b> It's how most sites start, and we mean to keep it that way.</p>
           <p><b>Features from real use.</b> We build what we and you need to publish. Lately: <a href="/changelog/2026-11-12-see-who-reads-your-site">see who reads your site</a>, <a href="/changelog/2026-11-09-invite-editors">invite editors</a> and <a href="/changelog/2026-11-11-sign-in-from-claude-and-chatgpt">sign in from Claude and ChatGPT</a>.</p>
-          <p><b>The people who build it.</b> Write to us on <a href="https://discord.gg/JChzM5VdFn">Discord</a> and it's usually one of us who answers.</p>
+          <p><b>The people who build it.</b> Write to us on <a href="https://discord.gg/JChzM5VdFn">Discord</a> and it's one of us who answers.</p>
         </div>
       </div>
       <div className="indie-row">
-        <h2>How to help</h2>
+        <h2>How to support us</h2>
         <div className="indie-body">
-          <p>Pay for Premium if a site matters to you: your own domain, search across every page, and no "Built with Flowershow" badge, for about $5 a month. Become a supporter if you just want to say thanks.</p>
-          <p>Tell one person whose notes deserve a website. Or tell us what broke. That helps too.</p>
+          <p>We want Flowershow to be the best way to publish in the world, and you help every time you use it.</p>
+          <p><b>Tell us what to fix.</b> Report bugs and suggest features on <a href="https://discord.gg/JChzM5VdFn">Discord</a>. We read all of it.</p>
+          <p><b>Tell a friend.</b> One person whose notes deserve a website.</p>
+          <p><b>Pay if you can.</b> Premium is for a site that matters to you: your own domain, search across every page, and no "Built with Flowershow" badge, for $5 a month. Or become a supporter: a small monthly amount that just says thanks.</p>
           <div className="indie-cta">
             <a className="btn btn-primary" href="/pricing">Go Premium <span className="arw">→</span></a>
             <a className="btn btn-secondary" href="https://buy.stripe.com/8wM9BeckD0vKfLi6ox">Become a supporter</a>
