@@ -453,7 +453,7 @@ mv fl /usr/local/bin/fl
 
 ### Releasing
 
-Releases are triggered by pushing a `cli/v*` tag. GoReleaser then builds binaries for all platforms and creates a GitHub release automatically — no manual artifact uploads needed.
+Releases are triggered by pushing a `cli/v*` tag. GoReleaser then builds binaries for all platforms and creates a GitHub release automatically — no manual artifact uploads needed. The release notes are the version's section of [`CHANGELOG.md`](CHANGELOG.md), not the commit log.
 
 **Steps:**
 
@@ -463,11 +463,13 @@ Releases are triggered by pushing a `cli/v*` tag. GoReleaser then builds binarie
 git tag --sort=-version:refname | grep '^cli/v' | head -5
 ```
 
-2. Create and push the tag (use semver, e.g. `cli/v2.0.5`):
+2. Add a `## X.Y.Z` section (e.g. `## 2.0.5`) at the top of `CHANGELOG.md` listing the release's changes, and commit it. The release fails before building if the section is missing or empty.
+
+3. Create and push the tag (use semver, e.g. `cli/v2.0.5`):
 
 ```bash
 git tag cli/v2.0.5
 git push origin cli/v2.0.5
 ```
 
-That's it. The [`release-cli-go.yml`](../../.github/workflows/release-cli-go.yml) workflow picks up the tag, extracts the version number, and passes it to GoReleaser which embeds it in the binary via `ldflags`.
+That's it. The [`release-cli-go.yml`](../../.github/workflows/release-cli-go.yml) workflow picks up the tag, extracts the version number and its `CHANGELOG.md` section, and passes them to GoReleaser, which embeds the version in the binary via `ldflags` and uses the section as the release notes.

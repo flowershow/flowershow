@@ -28,20 +28,32 @@ jobs:
         id: version
         run: echo "version=${GITHUB_REF_NAME#cli/v}" >> $GITHUB_OUTPUT
 
-      - name: Find previous CLI tag
-        id: prev_tag
+      # The release body is this version's section of apps/cli/CHANGELOG.md
+      # (everything under "## <version>" up to the next "## " heading), not
+      # GoReleaser's commit log, which in this monorepo lists every commit since
+      # the previous CLI tag, CLI-related or not.
+      - name: Extract release notes from CHANGELOG.md
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          prev=$(git tag --sort=-version:refname | grep '^cli/v' | sed -n '2p')
-          echo "tag=${prev}" >> $GITHUB_OUTPUT
+          notes="$RUNNER_TEMP/release-notes.md"
+          awk -v v="$VERSION" '
+            /^## / { if (found) exit; sub(/[[:space:]]+$/, ""); found = ($0 == "## " v); next }
+            found
+          ' apps/cli/CHANGELOG.md > "$notes"
+          if ! grep -q '[^[:space:]]' "$notes"; then
+            echo "::error file=apps/cli/CHANGELOG.md::No '## $VERSION' section (or it is empty). Add the release's changes to apps/cli/CHANGELOG.md, then delete and re-push the tag."
+            exit 1
+          fi
+          cat "$notes"
 
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
           version: latest
-          args: release --clean --skip=validate
+          args: release --clean --skip=validate --release-notes=${{ runner.temp }}/release-notes.md
           workdir: apps/cli
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GORELEASER_CURRENT_TAG: ${{ github.ref_name }}
-          GORELEASER_PREVIOUS_TAG: ${{ steps.prev_tag.outputs.tag }}
           CLI_VERSION: ${{ steps.version.outputs.version }}
