@@ -196,7 +196,7 @@ func WaitForSync(siteID string, maxWaitSeconds int) SyncResult {
 			switch b.Status {
 			case "uploading":
 				pending = append(pending, b)
-			case "error":
+			case "error", "expired":
 				errored = append(errored, b)
 			}
 		}

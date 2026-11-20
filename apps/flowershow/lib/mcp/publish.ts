@@ -515,7 +515,7 @@ function summarise(
     );
   } else if (last.status === 'error') {
     const failed = (last.blobs ?? [])
-      .filter((b) => b.status === 'error')
+      .filter((b) => b.status === 'error' || b.status === 'expired')
       .map((b) => `${b.path}: ${b.error ?? 'unknown error'}`);
     parts.push(
       `Some files failed to process${failed.length ? `:\n${failed.join('\n')}` : '.'}`,
