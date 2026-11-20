@@ -70,6 +70,7 @@ export default function Form({
     'showTags',
     'showLogo',
     'annotations',
+    'dismissible',
   ].includes(inputAttrs.name);
 
   // Controlled value for all non-toggle inputs (text, textarea, select)
