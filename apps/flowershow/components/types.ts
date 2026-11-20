@@ -66,6 +66,16 @@ export interface FooterConfig {
   navigation?: FooterNavigationGroup[];
 }
 
+/**
+ * Announcement bar shown above the navbar on every page of the public site.
+ */
+export interface BannerConfig {
+  /** Single line. Supports `**bold**`, `*italic*` and `[label](url)` only. */
+  text?: string;
+  /** Let visitors close the bar. Defaults to `true`. */
+  dismissible?: boolean;
+}
+
 export interface SiteConfig {
   /** The site's brand/name — used as the SEO title suffix, navbar name (when not overridden by nav.title), footer publication name, and RSS channel title. */
   siteName?: string;
@@ -81,6 +91,8 @@ export interface SiteConfig {
   favicon?: string;
   nav?: NavConfig;
   footer?: FooterConfig;
+  /** Announcement bar above the navbar. */
+  banner?: BannerConfig;
   social?: SocialLink[];
   analytics?: string;
   umami?: { websiteId: string; src?: string };

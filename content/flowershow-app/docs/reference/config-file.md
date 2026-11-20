@@ -180,6 +180,27 @@ Where `FooterNavigationGroup` is `{ title: string, links: Array<{ name: string, 
 
 ---
 
+### `banner`
+
+**Type:** `object`  
+**Default:** —
+
+An announcement bar shown above the navbar on every page. [[banner|Learn more →]]
+
+| Field         | Type      | Description                                                              |
+| ------------- | --------- | ------------------------------------------------------------------------ |
+| `text`        | `string`  | One line, up to 200 characters. Supports `**bold**`, `*italic*`, `[label](url)` |
+| `dismissible` | `boolean` | Let visitors close the bar. Default `true`                               |
+
+```json
+"banner": {
+  "text": "We just launched **v2**! [Read more](/blog/v2)",
+  "dismissible": false
+}
+```
+
+---
+
 ### `layout`
 
 **Type:** `"docs" | "reading"`  
