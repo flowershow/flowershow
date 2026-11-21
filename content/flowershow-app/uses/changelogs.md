@@ -60,15 +60,7 @@ showComments: false
           <div className="way reveal">
             <h3>One CHANGELOG.md</h3>
             <p>The file your project already has. Keep a Changelog, Changesets, release-please and conventional-changelog headings are recognized. Each version gets its own anchor, and a Compare link when its heading links to a diff.</p>
-            <div className="vis-code"><pre><span className="h"># Changelog</span>
-
-<span className="h">## [0.4.0] - 2026-11-21</span>
-<span className="s">### Added</span>
-- Export answers to CSV from any form.
-
-<span className="h">## [0.3.1] - 2026-11-04</span>
-<span className="s">### Fixed</span>
-- Dates are read day first in UK English.</pre></div>
+            <div className="vis-code cl-src"><span className="ln h"># Changelog</span><span className="ln">&nbsp;</span><span className="ln h">## [0.4.0] - 2026-11-21</span><span className="ln s">### Added</span><span className="ln">&#45; Export answers to CSV from any form.</span><span className="ln">&nbsp;</span><span className="ln h">## [0.3.1] - 2026-11-04</span><span className="ln s">### Fixed</span><span className="ln">&#45; Dates are read day first in UK English.</span></div>
             <div className="way-shot"><img src="/assets/uses/changelogs/changelog-file.webp" alt="A CHANGELOG.md rendered as a timeline: Unreleased first, then version 0.4.0 with its date and a Compare link" loading="lazy" /></div>
             <a className="textlink" href="/docs/reference/changelog#single-changelogmd-file"><span className="lm-txt">Publish your CHANGELOG.md</span> <span className="arw">→</span></a>
           </div>

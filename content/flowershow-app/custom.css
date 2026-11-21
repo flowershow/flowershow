@@ -1034,6 +1034,32 @@
 .fs-root .ways-note code { font-family: var(--mono); font-size: .86em; color: var(--berry-ink); background: var(--canvas); border-radius: 5px; padding: 1px 6px; }
 .fs-root.lp-changelog .callout, .fs-root.lp-product .callout { background: var(--tint-berry); }
 .fs-root .callout .cta-row { justify-content: center; margin-bottom: 0; }
+/* Product sites — hero mosaic of five screenshots: home large on the left,
+   four sections two by two on the right */
+.fs-root .hero-media.fan {
+  display: grid; grid-template-columns: 1.5fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 8px; padding: 8px;
+  background: var(--surface-card);
+}
+.fs-root .hero-media.fan img { width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: left top; border-radius: 10px; border: 1px solid var(--hairline); background: var(--canvas); }
+.fs-root .hero-media.fan .fan-main { grid-row: 1 / 3; }
+/* One folder, five sections — the folder beside rows of path → what readers get → link */
+.fs-root .fit-grid { display: grid; grid-template-columns: minmax(0, 0.7fr) minmax(0, 2fr); gap: 16px; align-items: start; }
+.fs-root .fit-rows { display: flex; flex-direction: column; gap: 10px; }
+.fs-root .fit-row { display: grid; grid-template-columns: 9rem minmax(0, 1fr) auto; gap: 18px; align-items: center; background: var(--canvas); border-radius: 16px; padding: 18px 22px; }
+.fs-root .fit-row h3 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.015em; }
+.fs-root .fit-row p { margin-top: 4px; color: var(--muted); font-size: 16px; line-height: 1.5; }
+.fs-root .fit-path code { font-size: .95em; }
+@media (max-width: 860px) {
+  .fs-root .fit-grid { grid-template-columns: 1fr; }
+  .fs-root .fit-row { grid-template-columns: 1fr; gap: 8px; }
+  .fs-root .hero-media.fan { grid-template-columns: 1fr 1fr; grid-template-rows: auto; aspect-ratio: auto; }
+  .fs-root .hero-media.fan .fan-main { grid-row: auto; grid-column: 1 / 3; aspect-ratio: 16 / 10; }
+  .fs-root .hero-media.fan img { aspect-ratio: 16 / 10; }
+}
+.fs-root .cl-src { font-family: var(--mono); font-size: 12.5px; line-height: 1.75; color: var(--body); }
+.fs-root .cl-src .ln { display: block; white-space: pre; }
+.fs-root .cl-src .h { color: var(--berry-ink); } .fs-root .cl-src .s { color: var(--ink); font-weight: 600; }
+.fs-root .lede code { font-family: var(--mono); font-size: .85em; color: var(--berry-ink); background: var(--surface-card); border-radius: 5px; padding: 1px 6px; }
 /* Two showcase cards, centred */
 .fs-root .show-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 920px; margin: 0 auto; }
 .fs-root.lp-web .show-card, .fs-root.lp-changelog .show-card, .fs-root.lp-product .show-card { background: var(--canvas); }
