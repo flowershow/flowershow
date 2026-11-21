@@ -61,30 +61,24 @@ export function titleFontSize(title: string): 72 | 60 | 50 {
   return n > 55 ? 50 : n > 28 ? 60 : 72;
 }
 
-function Monogram({ siteName, size }: { siteName: string; size: number }) {
-  const glyph = Array.from(siteName.trim())[0]?.toUpperCase() ?? '•';
-  return (
-    <div
-      style={{
-        display: 'flex',
-        width: size,
-        height: size,
-        borderRadius: 8,
-        background: ACCENT,
-        color: '#fff',
-        fontSize: size * 0.55,
-        fontWeight: 600,
-        alignItems: 'center',
-        justifyContent: 'center',
-      }}
-    >
-      {glyph}
-    </div>
-  );
-}
-
-/** Logo + site name: the one place the site is named, at the foot of both cards. */
+/**
+ * Logo + site name: the one place the site is named, at the foot of both
+ * cards. The name is left out when the title already is the site name (home
+ * pages), unless there's no logo to show instead.
+ */
 function Wordmark(p: SocialCardProps) {
+  const showName = !p.logoSrc || p.title !== p.siteName;
+  if (p.logoSrc && !showName) {
+    return (
+      <img
+        src={p.logoSrc}
+        width={64}
+        height={64}
+        style={{ borderRadius: 10, objectFit: 'contain' }}
+      />
+    );
+  }
+  if (!p.logoSrc && p.title === p.siteName) return null;
   return (
     <div
       style={{
@@ -103,9 +97,7 @@ function Wordmark(p: SocialCardProps) {
           height={44}
           style={{ borderRadius: 8, objectFit: 'contain' }}
         />
-      ) : (
-        <Monogram siteName={p.siteName} size={44} />
-      )}
+      ) : null}
       <div style={{ display: 'flex' }}>{clampText(p.siteName, 32)}</div>
     </div>
   );

@@ -303,6 +303,23 @@ describe('SocialCard layouts', () => {
     expect(titleFontSize('数'.repeat(30))).toBe(50);
   });
 
+  it('names the site once on a home card (title is the site name)', () => {
+    const home = {
+      ...props,
+      title: 'Garden',
+      siteName: 'Garden',
+      pictureSrc: null,
+    };
+    const count = (shown: string[]) =>
+      shown.filter((s) => s === 'Garden').length;
+    expect(count(text(SocialCard({ ...home, logoSrc: 'data:l' })))).toBe(1);
+    expect(count(text(SocialCard(home)))).toBe(1);
+    // An inner page names the site in the wordmark, with or without a logo.
+    expect(
+      text(SocialCard({ ...props, siteName: 'Garden', pictureSrc: null })),
+    ).toContain('Garden');
+  });
+
   it('card A draws the picture in the left column', () => {
     const tree = SocialCard({ ...props, pictureSrc: 'data:x' }) as any;
     const card = tree.type(tree.props);

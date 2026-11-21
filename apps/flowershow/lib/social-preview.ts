@@ -5,7 +5,8 @@ import type { ImageDimensionsMap } from '@/lib/image-dimensions';
 import { resolveListingImage } from '@/lib/listing/items';
 import { DEFAULT_FIELDS } from '@/lib/listing/spec';
 import { imageValue, siteImageKey } from '@/lib/post/hero';
-import { resolveSiteName } from '@/lib/site-config';
+import { getConfig } from '@/lib/app-config';
+import { resolveNavBrand, resolveSiteName } from '@/lib/site-config';
 
 /** Bump when the card design changes, so every cached card URL changes. */
 export const CARD_VERSION = 2;
@@ -67,11 +68,17 @@ export function toCardInputs(a: {
     !metadata ||
     metadata.publish === false;
   const isHome = a.slug === '/';
+  // The same logo as the navbar: Flowershow's when the site sets none.
+  const defaultLogo = getConfig().logo;
+  const logo = asText(
+    resolveNavBrand(a.siteConfig, siteName, defaultLogo).logo,
+  );
 
   return {
     siteName,
-    logo: asText(a.siteConfig?.logo ?? a.siteConfig?.nav?.logo),
-    showMark: a.site.plan !== Plan.PREMIUM,
+    logo,
+    // No second Flowershow mark when the logo already is Flowershow's.
+    showMark: a.site.plan !== Plan.PREMIUM && logo !== defaultLogo,
     image: hidePage ? null : (a.pageImage ?? a.siteImage ?? null),
     page: hidePage
       ? null
