@@ -1,11 +1,13 @@
 import clsx from 'clsx';
 import Image from 'next/image';
+import { HERO_OVERLAY_CLASS, type HeroOverlay } from '@/lib/hero-config';
 
 interface HeroProps {
   title?: string;
   description?: string;
   image?: string;
   imageLayout?: 'right' | 'full';
+  overlay?: HeroOverlay;
   cta?: Array<{ label: string; href: string }>;
 }
 
@@ -14,6 +16,7 @@ export default async function Hero({
   description,
   image,
   imageLayout,
+  overlay,
   cta,
 }: HeroProps) {
   const isFullWidthImage = image && imageLayout === 'full';
@@ -24,6 +27,7 @@ export default async function Hero({
           'page-hero',
           image && 'has-image',
           isFullWidthImage && 'image-full',
+          isFullWidthImage && overlay && HERO_OVERLAY_CLASS[overlay],
         )}
       >
         <div className="page-hero-content-container">

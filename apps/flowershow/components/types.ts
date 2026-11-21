@@ -172,6 +172,8 @@ export interface SiteConfig {
           label: string;
         }>;
         imagelayout?: 'right' | 'full';
+        /** Full-width image only: 'dark' (default) | 'light' | 'none'. */
+        overlay?: 'dark' | 'light' | 'none';
       };
   cta?: Array<{
     href: string;

@@ -59,6 +59,8 @@ test('classifyClassName assigns representative hooks to stable UI areas', () => 
   assert.equal(classifyClassName('not-found-title'), 'errors');
   assert.equal(classifyClassName('is-current'), 'states');
   assert.equal(classifyClassName('image-full'), 'states');
+  assert.equal(classifyClassName('overlay-dark'), 'states');
+  assert.equal(classifyClassName('overlay-light'), 'states');
   assert.equal(classifyClassName('prose'), 'compatibility');
   assert.equal(classifyClassName('overflow-hidden'), 'compatibility');
   assert.equal(classifyClassName('made-up-hook'), 'unclassified');
@@ -132,7 +134,10 @@ test('generateReference identifies the image-full layout variant and owner', () 
   const output = generateReference('.page-hero.image-full { display: grid; }');
 
   assert.match(output, /<code>\.image-full<\/code> \| Variant \| \.page-hero/);
-  assert.match(output, /\.page-hero\[\.has-image \| \.image-full\]/);
+  assert.match(
+    output,
+    /\.page-hero\[\.has-image \| \.image-full\[\.overlay-dark \| \.overlay-light\]\]/,
+  );
 });
 
 test('generateReference separates utilities from the public contract and names state owners', () => {

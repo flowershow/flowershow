@@ -76,9 +76,16 @@ describe('validateConfigPatch — accepts valid patches', () => {
           title: 'Hi',
           cta: [{ href: '/x', label: 'Go' }],
           imagelayout: 'full',
+          overlay: 'light',
         },
       }),
     ).not.toThrow();
+  });
+
+  it('rejects an unknown hero overlay on write', () => {
+    expect(() =>
+      validateConfigPatch({ hero: { imagelayout: 'full', overlay: 'blur' } }),
+    ).toThrow();
   });
 
   it('accepts nav.links as a dropdown (union) entry', () => {
@@ -498,10 +505,17 @@ describe('sanitizeSiteConfig — does not change how valid stored configs render
     expect(sanitizeSiteConfig(config)).toEqual(config);
   });
 
+  it('keeps the hero object when overlay is junk of any type', () => {
+    for (const overlay of [0.5, { a: 1 }, ['x'], 'rgba(0,0,0);}']) {
+      const config = { hero: { title: 'Hi', imagelayout: 'full', overlay } };
+      expect(sanitizeSiteConfig(config)).toEqual(config);
+    }
+  });
+
   it('tolerates unknown enum values that renderers already normalize', () => {
     const config = {
       theme: { theme: 'forest', defaultMode: 'auto' },
-      hero: { title: 'Hi', imagelayout: 'left' },
+      hero: { title: 'Hi', imagelayout: 'left', overlay: 'blur' },
     };
     expect(sanitizeSiteConfig(config)).toEqual(config);
   });

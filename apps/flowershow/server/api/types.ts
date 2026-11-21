@@ -178,6 +178,8 @@ export interface PageMetadata {
           label: string;
         }>;
         imagelayout?: 'right' | 'full';
+        /** Full-width image only: 'dark' (default) | 'light' | 'none'. */
+        overlay?: 'dark' | 'light' | 'none';
       };
   showEditLink?: boolean;
   showReadingTime?: boolean;

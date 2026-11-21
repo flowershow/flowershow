@@ -15,3 +15,7 @@ Three use-case pages now show the range of what you can build:
 - [Websites](/uses/websites): from one Markdown file to a whole site in five steps, Markdown and HTML side by side, and every website feature in one list, with Premium ones marked.
 - [Product sites](/uses/product-sites): how a landing page, pricing, docs, blog and changelog fit in one folder.
 - [Changelogs](/uses/changelogs): turn a `CHANGELOG.md` or a `changelog` folder into a timeline page.
+
+**Fixes**
+
+- Full-width hero images (`imagelayout: full`) now get a dark overlay with white text by default, so the title is readable on dark photos. Set `overlay: light` for a pale wash with dark text, or `overlay: none` to keep the old look. If you added your own overlay or text colours by styling `.page-hero.image-full` in custom CSS, set `overlay: none` so they apply again. See [[hero-sections|Hero sections]].
