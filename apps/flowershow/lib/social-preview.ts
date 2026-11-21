@@ -199,8 +199,16 @@ export function resolveSocialImage(a: {
   }
   if (a.isProtected) return card(a.siteCardUrl);
   if (a.pageImage && isShareCardShaped(a.pageImage)) return asIs(a.pageImage);
-  if (!a.pageImage && a.isHome && a.siteImage && isShareCardShaped(a.siteImage))
-    return asIs(a.siteImage);
+  // Home page: the site image as it is when it's a share card, or when its size
+  // is unknown (a dashboard upload, often a designed card, or an external URL).
+  const siteImg = a.siteImage;
+  if (
+    !a.pageImage &&
+    a.isHome &&
+    siteImg &&
+    (isShareCardShaped(siteImg) || !siteImg.width)
+  )
+    return asIs(siteImg);
   // The card shows the page picture, else the site picture, else text alone.
   return card(a.cardUrl);
 }

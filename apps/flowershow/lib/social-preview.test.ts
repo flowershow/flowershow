@@ -326,6 +326,16 @@ describe('resolveSocialImage', () => {
       { url: 'SHAPED', width: 1200, height: 630 },
     ],
     [
+      'uploaded site image (size unknown), home → as it is',
+      { isHome: true, siteImage: { src: 'UPLOAD', sitePath: null } },
+      { url: 'UPLOAD' },
+    ],
+    [
+      'site file not shaped like a share card, home → card',
+      { isHome: true, siteImage: photo },
+      card('CARD'),
+    ],
+    [
       'site image shaped like a share card, inner page → card',
       { siteImage: shaped },
       card('CARD'),

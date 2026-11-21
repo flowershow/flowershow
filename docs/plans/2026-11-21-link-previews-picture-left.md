@@ -34,7 +34,7 @@ Mock-ups: link-previews session; the rendering script is the reference for sizes
 | 1 | Password-protected site | Card C with the site name (no page data, no picture) |
 | 2 | Page `image` that already looks like a share card (ratio 1.8–2.05, at least 1000px wide, size known) | The image as it is, with width and height |
 | 3 | Page `image` | Card A with it |
-| 4 | Home page with a site `image` shaped like a share card | The site image as it is |
+| 4 | Home page with a site `image` shaped like a share card, or of unknown size (a dashboard upload or an external URL) | The site image as it is |
 | 5 | Site `image` | Card A with the site image and the page's title |
 | 6 | Otherwise | Card C |
 
