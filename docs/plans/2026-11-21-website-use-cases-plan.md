@@ -208,6 +208,13 @@ New page, `fs-root lp-product`. Composition page: short, visual, links out. Buil
 - Changelog entry: one entry "A page for changelogs, and a websites page that shows the range" when Changelogs ships; the Websites rewrite and the tutorial are bullets in it, not entries. Product sites, if built later, is a bullet in whichever entry is nearest.
 - Order of build: Websites v2 and the tutorial (one session), then Changelogs, then Product sites when it has a showcase. Each page gets an independent critique before it goes live, per AGENTS.md.
 
+## Decisions (Rufus, 21 Nov)
+
+- **Build all three pages now.** Product sites ships with flowershow.app and developmentalspaces.org (landing page plus blog) as its showcase, not deferred. Build order: Websites v2 and the product-site tutorial, then Changelogs, then Product sites.
+- **Websites H1:** the recommended "Your website, in Markdown and HTML. From one page to a whole site."
+- **Ignore the cut-off remark** (question 7).
+- Other open questions take the recommended option: Word only until PDF pages ship; nav "Changelog pages" and "Product Sites"; screenshots now, videos later; Changelogs showcase flowershow.app plus wilber.wiki if it renders.
+
 ## 7. Open questions for Rufus
 
 1. **Two pages now, Product sites later?** Recommendation: yes. Websites v2 (with the product site as rung 5 and a tutorial) and Changelogs now; Product sites as its own page once there are one or two external product sites to show, because without them it is a page of links to its siblings with one showcase. Backup: build all three now and ship Product sites with flowershow.app alone. If no answer, build the first two.
