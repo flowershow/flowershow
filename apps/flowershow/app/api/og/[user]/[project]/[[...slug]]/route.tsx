@@ -4,11 +4,13 @@ import type { SiteConfig } from '@/components/types';
 import { getConfig } from '@/lib/app-config';
 import { ANONYMOUS_USER_ID } from '@/lib/anonymous-user';
 import { isSocialCardsEnabled } from '@/lib/feature-flags';
+import { fetchFileBytes } from '@/lib/content-store';
 import { getSiteUrl } from '@/lib/get-site-url';
-import { renderSocialCardPng } from '@/lib/social-card-render';
+import { loadCardImages } from '@/lib/social-card-images';
+import { renderSocialCard } from '@/lib/social-card-render';
 import { socialCardResponse } from '@/lib/social-card-response';
 import {
-  displayUrl,
+  cardDomain,
   socialCardVersion,
   toCardInputs,
 } from '@/lib/social-preview';
@@ -70,17 +72,29 @@ export async function GET(
         .query({ siteId: site.id, slug: decodedSlug })
         .catch(() => null);
 
-  const inputs = toCardInputs({ site, siteConfig, blob });
-  const siteInputs = { ...inputs, page: null };
   const siteUrl = getSiteUrl(site);
+  const images = isProtected
+    ? { pageImage: null, siteImage: null }
+    : await loadCardImages({ siteId: site.id, siteUrl, blob, siteConfig });
+  const inputs = toCardInputs({
+    site,
+    siteConfig,
+    blob,
+    slug: isProtected ? '/' : decodedSlug,
+    ...images,
+  });
+  const siteInputs = { ...inputs, image: null, page: null };
+  const domain = cardDomain(siteUrl);
+  const readSiteFile = (path: string, maxBytes: number) =>
+    fetchFileBytes({ projectId: site.id, path, maxBytes });
 
   return socialCardResponse({
     expectedVersion: socialCardVersion(inputs),
     requestedVersion: req.nextUrl.searchParams.get('v'),
     renderPage: inputs.page
-      ? () => renderSocialCardPng(inputs, displayUrl(siteUrl, decodedSlug))
+      ? () => renderSocialCard(inputs, domain, { readSiteFile })
       : null,
-    renderSite: () => renderSocialCardPng(siteInputs, displayUrl(siteUrl, '/')),
+    renderSite: () => renderSocialCard(siteInputs, domain, { readSiteFile }),
     fallbackUrl: getConfig().thumbnail,
   });
 }

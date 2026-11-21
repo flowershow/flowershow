@@ -27,29 +27,26 @@ Aim for 150–160 characters for optimal display in search results.
 
 ## Social preview cards
 
-Every page gets a generated preview card for social sharing, showing the page title, description and your site name (with your logo, if you have one).
+Every page gets its own preview card when its link is shared in Slack, X, LinkedIn, WhatsApp or iMessage. The card shows the page title, its section (the top-level folder, such as "Blog" or "Docs") and your site name and logo.
 
-![[changelog-social-preview-cards.webp]]
+![[changelog-picture-preview-cards.webp]]
 
-- **Free sites:** every page gets a generated preview card with its title, description and site name, plus a small Flowershow mark.
-- **Premium sites:** the same cards without the mark. If you set an `image` (page or site), that image is used instead.
-- **Password-protected sites:** the card and the preview's title and description show only the site name and tagline, never page titles or descriptions.
+Which card a page gets:
+
+1. **The page has an `image`:** the picture fills the left of the card, with the title on the right.
+2. **No page image, but the site has one:** the site image takes its place, so every page still gets a picture card with its own title.
+3. **No image at all:** the title, centred, with your site name below it.
+
+- **Images already made for sharing** (about 1200×630, at least 1000 pixels wide) are used as they are, not put inside a card. The site image is used this way on the home page only.
+- **Small images** (under 400 pixels on a side), SVGs and images that can't be loaded are skipped, so the page falls back to the next card.
+- **Free sites** show a small Flowershow mark beside the site address; premium sites don't.
+- **Password-protected sites:** the card and the preview's title and description show only the site name and tagline, never page titles, descriptions or images.
 
 ## Default social image
 
-Go to **Settings → General → Social Image** and upload your default social sharing image.
+Set a site-wide `image` in `config.json` (all plans), or on premium sites upload one under **Settings → General → Social Image**. Pages without their own `image` show it in their card.
 
-> [!note] Premium Feature
-> Social media image configuration is a premium feature.
->
-> **Free sites:** a generated preview card is used for social sharing, regardless of your image settings (see [Social preview cards](#social-preview-cards)).
->
-> **Premium sites:** your custom images are used. If you don't set one, the generated preview card is used.
-
-Recommended size: 1200×630 pixels (JPG or PNG, under 1MB).
-
-> [!note]
-> To use a file path or external URL as your social image, use `config.json` — the dashboard social image field accepts image uploads only.
+Use a landscape picture at least 1000 pixels wide. JPG, PNG and WebP all work.
 
 ## Per-page configuration
 
@@ -79,13 +76,15 @@ If a page has no `description`, Flowershow uses the opening sentence of the page
 
 ### Image
 
-Set `image` in frontmatter to use a custom social image for that page:
+Set `image` in frontmatter to give a page its own picture in its preview card. A relative path, an absolute path, a `[[wikilink]]` or an external `https` URL all work:
 
 ```markdown
 ---
-image: /assets/docker-guide-social.jpg
+image: /assets/docker-guide-cover.jpg
 ---
 ```
+
+To use your own finished share image instead of a card, make it about 1200×630 pixels.
 
 ## Using config.json
 
@@ -101,7 +100,7 @@ If you want to version-control your configuration, or have your editor's AI agen
 
 - `siteName`: Your site's name, appended as a suffix to every page title. Overrides the name set in the dashboard; defaults to your project name.
 - `description`: Fallback description for pages with no frontmatter description
-- `image`: Path to the default social image (relative to site root) or an external URL
+- `image`: Path to the default social image (relative to site root) or an external URL, shown in the preview card of pages without their own `image`
 
 > [!note]
 > `title` is still accepted as a deprecated alias for `siteName`. Existing configs keep working, but new sites should use `siteName`.
@@ -132,4 +131,4 @@ Result:
 
 - **SEO title:** "Complete Guide to Docker Containers - DevTutorials"
 - **Description:** "Learn how to create, manage, and deploy Docker containers with practical examples and best practices."
-- **Social image:** `/assets/docker-guide-social.jpg`
+- **Social image:** a card with `/assets/docker-guide-social.jpg` on the left and the title on the right

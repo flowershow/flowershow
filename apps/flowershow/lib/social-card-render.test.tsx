@@ -3,14 +3,18 @@ import { describe, expect, it, vi } from 'vitest';
 import {
   SocialCard,
   clampText,
+  clampTitle,
   titleFontSize,
+  titleUnits,
 } from '@/components/og/social-card';
 import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import sharp from 'sharp';
 import {
   isFetchableImageUrl,
   loadImageDataUri,
-  renderSocialCardPng,
+  loadPictureDataUri,
+  renderSocialCard,
 } from './social-card-render';
 
 const PUBLIC = async () => ['93.184.216.34'];
@@ -39,9 +43,9 @@ describe('clampText / titleFontSize (Review Focus 2)', () => {
     expect(out).not.toMatch(/[\uD800-\uDBFF]…$/);
   });
   it('steps the title size down', () => {
-    expect(titleFontSize('a'.repeat(30))).toBe(76);
-    expect(titleFontSize('a'.repeat(50))).toBe(64);
-    expect(titleFontSize('a'.repeat(80))).toBe(54);
+    expect(titleFontSize('a'.repeat(20))).toBe(72);
+    expect(titleFontSize('a'.repeat(50))).toBe(60);
+    expect(titleFontSize('a'.repeat(80))).toBe(50);
   });
 });
 
@@ -194,104 +198,193 @@ describe('isFetchableImageUrl (SSRF guard)', () => {
   });
 });
 
-describe('SocialCard layout bounds', () => {
-  it('bounds the middle column so it cannot push the footer off-card', () => {
-    const tree = SocialCard({
-      siteName: 'S',
-      logoSrc: null,
-      title: '数'.repeat(300),
-      description: 'x'.repeat(400),
-      displayUrl: 'u',
-      showMark: true,
-      markSrc: 'data:image/png;base64,AA==',
-    }) as any;
-    const column = tree.props.children[1].props.children[1];
-    expect(column.props.style.overflow).toBe('hidden');
-    expect(column.props.style.maxHeight).toBeLessThanOrEqual(400);
-    const title = column.props.children[0].props.children as string;
-    expect(Array.from(title)).toHaveLength(90);
+const photo = (width: number, height: number, format: 'png' | 'webp' = 'png') =>
+  sharp({
+    create: { width, height, channels: 3, background: '#7a9e7e' },
+  })
+    .toFormat(format)
+    .toBuffer();
+
+const jpegSize = async (buf: ArrayBuffer | Buffer) => {
+  const meta = await sharp(Buffer.from(buf as ArrayBuffer)).metadata();
+  return { format: meta.format, width: meta.width, height: meta.height };
+};
+
+describe('loadPictureDataUri', () => {
+  const site = { src: 'https://g.test/a.png', sitePath: 'a.png' };
+
+  it('reads a site file from storage and crops it to the column as jpeg', async () => {
+    const readSiteFile = vi.fn(async () => photo(1024, 1024));
+    const uri = await loadPictureDataUri(site, { readSiteFile });
+    expect(readSiteFile).toHaveBeenCalledWith('a.png', expect.any(Number));
+    expect(uri).toMatch(/^data:image\/jpeg;base64,/);
+    const buf = Buffer.from(uri!.split(',')[1]!, 'base64');
+    expect(await jpegSize(buf)).toEqual({
+      format: 'jpeg',
+      width: 520,
+      height: 630,
+    });
+  });
+
+  it('fetches an external webp through the guard and converts it', async () => {
+    const uri = await loadPictureDataUri(
+      { src: 'https://cdn.example.com/p.webp', sitePath: null },
+      {
+        readSiteFile: vi.fn(),
+        fetchImpl: fakeFetch(
+          new Uint8Array(await photo(1200, 800, 'webp')),
+          'image/webp',
+        ),
+        resolve: PUBLIC,
+      },
+    );
+    expect(uri).toMatch(/^data:image\/jpeg;base64,/);
+  });
+
+  it.each([
+    ['a missing site file', async () => null],
+    ['a corrupt site file', async () => Buffer.from('not an image')],
+  ])('returns null for %s', async (_n, readSiteFile) => {
+    expect(await loadPictureDataUri(site, { readSiteFile })).toBeNull();
+  });
+
+  it('returns null for an external image on a private host', async () => {
     expect(
-      Array.from(column.props.children[1].props.children as string),
-    ).toHaveLength(120);
+      await loadPictureDataUri(
+        { src: 'https://cdn.example.com/p.png', sitePath: null },
+        {
+          readSiteFile: vi.fn(),
+          fetchImpl: fakeFetch(
+            new Uint8Array(await photo(800, 800)),
+            'image/png',
+          ),
+          resolve: async () => ['10.0.0.1'],
+        },
+      ),
+    ).toBeNull();
   });
 });
 
-describe('renderSocialCardPng', () => {
+describe('SocialCard layouts', () => {
+  const props = {
+    siteName: 'S',
+    logoSrc: null,
+    title: '数'.repeat(300),
+    section: 'Blog',
+    domain: 'garden.test',
+    showMark: true,
+    markSrc: 'data:image/png;base64,AA==',
+  };
+  const text = (node: any): string[] =>
+    node == null || typeof node === 'boolean'
+      ? []
+      : typeof node === 'string'
+        ? [node]
+        : Array.isArray(node)
+          ? node.flatMap(text)
+          : typeof node.type === 'function'
+            ? text(node.type(node.props))
+            : text(node.props?.children);
+
+  it('card C (no picture) clamps the title and shows label, wordmark and domain', () => {
+    const shown = text(SocialCard({ ...props, pictureSrc: null }));
+    expect(shown).toContain('Blog');
+    expect(shown).toContain('S');
+    expect(shown).toContain('garden.test');
+    const title = shown.find((s) => s.startsWith('数'))!;
+    expect(title.endsWith('…')).toBe(true);
+    expect(titleUnits(title)).toBeLessThanOrEqual(84);
+  });
+
+  it('counts wide characters double when clamping titles', () => {
+    expect(clampTitle('a'.repeat(84))).toBe('a'.repeat(84));
+    expect(Array.from(clampTitle('a'.repeat(200)))).toHaveLength(84);
+    expect(Array.from(clampTitle('数'.repeat(200)))).toHaveLength(42); // 41 + …
+    expect(titleFontSize('数'.repeat(30))).toBe(50);
+  });
+
+  it('card A draws the picture in the left column', () => {
+    const tree = SocialCard({ ...props, pictureSrc: 'data:x' }) as any;
+    const card = tree.type(tree.props);
+    expect(card.props.children[0].props).toMatchObject({
+      src: 'data:x',
+      width: 520,
+      height: 630,
+    });
+  });
+});
+
+describe('renderSocialCard', () => {
   const inputs = {
     siteName: 'Ana’s Garden',
-    siteDescription: 'Notes',
     logo: null,
     showMark: true,
+    image: null,
     page: {
       title: 'Why I moved my notes to a public digital garden',
-      description: 'Last spring…',
+      section: 'Notes',
       sha: 'a',
     },
   };
-  const isPng1200x630 = (buf: ArrayBuffer) => {
-    const v = new DataView(buf);
-    return (
-      v.getUint32(0) === 0x89504e47 &&
-      v.getUint32(16) === 1200 &&
-      v.getUint32(20) === 630
-    );
-  };
+  const readSiteFile = vi.fn(async () => photo(1200, 800));
+  const render = (over: object, domain = 'notes-ana.flowershow.me') =>
+    renderSocialCard({ ...inputs, ...over }, domain, { readSiteFile });
+  const isCard = async (buf: ArrayBuffer) =>
+    expect(await jpegSize(buf)).toEqual({
+      format: 'jpeg',
+      width: 1200,
+      height: 630,
+    });
 
-  it('renders a 1200x630 png for a page', async () => {
-    expect(
-      isPng1200x630(
-        await renderSocialCardPng(inputs, 'notes-ana.flowershow.me/x'),
+  it('renders a 1200x630 jpeg for a page, a site card and a picture card', async () => {
+    await isCard(await render({}));
+    await isCard(await render({ page: null }));
+    await isCard(
+      await render({
+        image: { src: 'https://g.test/a.png', sitePath: 'a.png' },
+      }),
+    );
+  }, 30_000);
+
+  it('falls back to the text card when the picture cannot be read', async () => {
+    const missing = vi.fn(async () => null);
+    await isCard(
+      await renderSocialCard(
+        {
+          ...inputs,
+          image: { src: 'https://g.test/a.png', sitePath: 'gone.png' },
+        },
+        'x',
+        { readSiteFile: missing },
       ),
-    ).toBe(true);
+    );
   }, 20_000);
 
-  it('renders the site-only card and pathological titles without throwing', async () => {
-    expect(
-      isPng1200x630(
-        await renderSocialCardPng(
-          { ...inputs, page: null },
-          'notes-ana.flowershow.me',
-        ),
-      ),
-    ).toBe(true);
+  it('renders pathological titles without throwing', async () => {
     for (const title of [
       'h'.repeat(400),
       '数字花园的笔记与想法'.repeat(10),
       '🌸🌼🌻'.repeat(30),
     ]) {
-      expect(
-        isPng1200x630(
-          await renderSocialCardPng(
-            { ...inputs, page: { ...inputs.page, title } },
-            'x',
-          ),
-        ),
-      ).toBe(true);
+      await isCard(await render({ page: { ...inputs.page, title } }, 'x'));
     }
   }, 60_000);
 
-  it('renders worst-case and CJK samples (saved for visual review)', async () => {
+  it('renders samples (saved for visual review)', async () => {
     const dir = process.env.SOCIAL_SAMPLE_DIR;
-    const worst = await renderSocialCardPng(
-      {
-        ...inputs,
-        page: {
-          ...inputs.page,
-          title: '数'.repeat(300),
-          description: 'Ｗ'.repeat(300),
-        },
-      },
-      'notes-ana.flowershow.me/x',
-    );
-    const cjk = await renderSocialCardPng(
-      { ...inputs, page: { ...inputs.page, title: '数字花园的笔记与想法' } },
-      'notes-ana.flowershow.me/x',
-    );
-    expect(isPng1200x630(worst)).toBe(true);
-    expect(isPng1200x630(cjk)).toBe(true);
-    if (dir) {
-      writeFileSync(join(dir, 'task-6-sample-worst.png'), Buffer.from(worst));
-      writeFileSync(join(dir, 'task-6-sample-cjk.png'), Buffer.from(cjk));
-    }
-  }, 30_000);
+    const samples = {
+      'card-a': await render({
+        image: { src: 'https://g.test/a.png', sitePath: 'a.png' },
+      }),
+      'card-c': await render({}),
+      'card-c-site': await render({ page: null }),
+      'card-c-worst': await render({
+        page: { ...inputs.page, title: '数'.repeat(300) },
+      }),
+    };
+    for (const buf of Object.values(samples)) await isCard(buf);
+    if (dir)
+      for (const [name, buf] of Object.entries(samples))
+        writeFileSync(join(dir, `${name}.jpg`), Buffer.from(buf));
+  }, 60_000);
 });

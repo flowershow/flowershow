@@ -47,6 +47,7 @@ import {
 } from '@/lib/social-preview';
 import type { SiteConfig } from '@/components/types';
 import { loadProtectedCardSource } from '@/lib/protected-card-source';
+import { loadCardImages } from '@/lib/social-card-images';
 import { generateScopedCss } from '@/lib/generate-scoped-css';
 import { getSite } from '@/lib/get-site';
 import { getSiteUrl } from '@/lib/get-site-url';
@@ -289,6 +290,12 @@ export async function generateMetadata(props: {
       ? await loadProtectedCardSource(site.id)
       : null;
 
+  // The card's picture, resolved exactly as the /_og route does (same `v`).
+  const cardImages =
+    cardsEnabled && site.privacyMode !== 'PASSWORD'
+      ? await loadCardImages({ siteId: site.id, siteUrl, blob, siteConfig })
+      : { pageImage: null, siteImage: null };
+
   const image = resolvePageSocialImage({
     cardsEnabled,
     isPremium: isFeatureEnabled(Feature.NoBranding, site),
@@ -299,6 +306,7 @@ export async function generateMetadata(props: {
     siteUrl,
     slug,
     legacyThumbnail: config.thumbnail,
+    ...cardImages,
   });
 
   return {

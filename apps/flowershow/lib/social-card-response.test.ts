@@ -22,7 +22,7 @@ describe('socialCardResponse (Review Focus 5)', () => {
       fallbackUrl: 'F',
     });
     expect(res.status).toBe(200);
-    expect(res.headers.get('content-type')).toBe('image/png');
+    expect(res.headers.get('content-type')).toBe('image/jpeg');
     expect(res.headers.get('cache-control')).toBe(LONG);
     expect(res.headers.get('cdn-cache-control')).toBe(CDN_LONG);
   });

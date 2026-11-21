@@ -12,12 +12,18 @@ vi.mock('@/trpc/server', () => ({
     site: {
       getConfig: { query: vi.fn() },
       getBlob: { query: vi.fn() },
+      getAllBlobPaths: { query: vi.fn() },
+      getImageDimensionsMap: { query: vi.fn() },
     },
   },
 }));
 
 vi.mock('@/lib/social-card-render', () => ({
-  renderSocialCardPng: vi.fn(async () => new Uint8Array([1, 2, 3]).buffer),
+  renderSocialCard: vi.fn(async () => new Uint8Array([1, 2, 3]).buffer),
+}));
+
+vi.mock('@/lib/content-store', () => ({
+  fetchFileBytes: vi.fn(async () => null),
 }));
 
 vi.mock('@/lib/feature-flags', () => ({
@@ -28,8 +34,9 @@ vi.mock('@/lib/get-site-url', () => ({
   getSiteUrl: vi.fn(() => 'https://site.test'),
 }));
 
+import { fetchFileBytes } from '@/lib/content-store';
 import { isSocialCardsEnabled } from '@/lib/feature-flags';
-import { renderSocialCardPng } from '@/lib/social-card-render';
+import { renderSocialCard } from '@/lib/social-card-render';
 import prisma from '@/server/db';
 import { api } from '@/trpc/server';
 import { GET } from './route';
@@ -37,7 +44,11 @@ import { GET } from './route';
 const findFirst = prisma.site.findFirst as ReturnType<typeof vi.fn>;
 const getConfig = api.site.getConfig.query as ReturnType<typeof vi.fn>;
 const getBlob = api.site.getBlob.query as ReturnType<typeof vi.fn>;
-const render = renderSocialCardPng as ReturnType<typeof vi.fn>;
+const getPaths = api.site.getAllBlobPaths.query as ReturnType<typeof vi.fn>;
+const getDims = api.site.getImageDimensionsMap.query as ReturnType<
+  typeof vi.fn
+>;
+const render = renderSocialCard as ReturnType<typeof vi.fn>;
 
 const SECRET = 'SENTINEL secret page title';
 
@@ -48,7 +59,11 @@ const site = (privacyMode: 'PUBLIC' | 'PASSWORD') => ({
   projectName: 'notes',
   customDomain: null,
   subdomain: null,
-  configJson: { siteName: 'Garden', description: 'Site tagline' },
+  configJson: {
+    siteName: 'Garden',
+    description: 'Site tagline',
+    image: '/cover.jpg',
+  },
   user: { username: 'ana' },
 });
 
@@ -63,30 +78,37 @@ beforeEach(() => {
   getConfig.mockResolvedValue({ siteName: 'Garden' });
   getBlob.mockResolvedValue({
     sha: 'sha1',
+    path: 'blog/my post.md',
     metadata: { title: SECRET, description: `${SECRET} description` },
+  });
+  getPaths.mockResolvedValue(['/blog/my post.md', '/blog/cover.jpg']);
+  getDims.mockResolvedValue({
+    '/blog/cover.jpg': { width: 1200, height: 800 },
   });
 });
 
 describe('GET /api/og — password-protected sites', () => {
-  it('never reads the page or file config and renders the site card', async () => {
+  it('never reads the page, file config or site files, and renders the site card', async () => {
     findFirst.mockResolvedValue(site('PASSWORD'));
 
     const res = await call({ user: 'ana', project: 'notes', slug: ['secret'] });
 
     expect(res.status).toBe(200);
-    expect(res.headers.get('content-type')).toBe('image/png');
+    expect(res.headers.get('content-type')).toBe('image/jpeg');
     expect(getBlob).not.toHaveBeenCalled();
     expect(getConfig).not.toHaveBeenCalled();
+    expect(getPaths).not.toHaveBeenCalled();
     expect(render).toHaveBeenCalledTimes(1);
     const inputs = render.mock.calls[0]?.[0];
     expect(inputs.page).toBeNull();
+    expect(inputs.image).toBeNull();
     expect(inputs.siteName).toBe('Garden');
     expect(JSON.stringify(render.mock.calls)).not.toContain('SENTINEL');
   });
 });
 
 describe('GET /api/og — public sites', () => {
-  it('looks up the page by its decoded slug and renders it', async () => {
+  it('looks up the page by its decoded slug and renders it with its section', async () => {
     findFirst.mockResolvedValue(site('PUBLIC'));
 
     const res = await call({
@@ -100,7 +122,40 @@ describe('GET /api/og — public sites', () => {
       siteId: 'site-1',
       slug: '/blog/my+post',
     });
-    expect(render.mock.calls[0]?.[0].page.title).toBe(SECRET);
+    const [inputs, domain] = render.mock.calls[0]!;
+    expect(inputs.page).toMatchObject({ title: SECRET, section: 'Blog' });
+    expect(inputs.image).toBeNull();
+    expect(domain).toBe('site.test');
+  });
+
+  it("puts the page's picture on the card and reads it from the site's storage", async () => {
+    findFirst.mockResolvedValue(site('PUBLIC'));
+    getBlob.mockResolvedValue({
+      sha: 'sha1',
+      path: 'blog/my post.md',
+      metadata: { title: 'Post', image: 'cover.jpg' },
+    });
+
+    await call({ user: 'ana', project: 'notes', slug: ['blog', 'my%20post'] });
+
+    const [inputs, , opts] = render.mock.calls[0]!;
+    expect(inputs.image).toMatchObject({
+      sitePath: 'blog/cover.jpg',
+      width: 1200,
+      height: 800,
+    });
+    await opts.readSiteFile('blog/cover.jpg', 100);
+    expect(fetchFileBytes).toHaveBeenCalledWith({
+      projectId: 'site-1',
+      path: 'blog/cover.jpg',
+      maxBytes: 100,
+    });
+  });
+
+  it('skips the file lookups when neither page nor site has an image', async () => {
+    findFirst.mockResolvedValue(site('PUBLIC'));
+    await call({ user: 'ana', project: 'notes', slug: ['blog', 'my%20post'] });
+    expect(getPaths).not.toHaveBeenCalled();
   });
 });
 

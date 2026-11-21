@@ -6,11 +6,11 @@ const LONG = {
 };
 const SHORT = { browser: 'public, max-age=300', cdn: 'max-age=300' };
 
-const png = (body: ArrayBuffer, cache: typeof LONG) =>
+const jpeg = (body: ArrayBuffer, cache: typeof LONG) =>
   new Response(body, {
     status: 200,
     headers: {
-      'content-type': 'image/png',
+      'content-type': 'image/jpeg',
       'cache-control': cache.browser,
       'cdn-cache-control': cache.cdn,
     },
@@ -30,12 +30,12 @@ export async function socialCardResponse(a: {
 }): Promise<Response> {
   const cache = a.requestedVersion === a.expectedVersion ? LONG : SHORT;
   try {
-    return png(await (a.renderPage ?? a.renderSite)(), cache);
+    return jpeg(await (a.renderPage ?? a.renderSite)(), cache);
   } catch (err) {
     console.error('[og] card render failed', err);
   }
   try {
-    return png(await a.renderSite(), SHORT);
+    return jpeg(await a.renderSite(), SHORT);
   } catch (err) {
     console.error('[og] site card render failed', err);
   }

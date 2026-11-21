@@ -1,15 +1,25 @@
 /* Satori (next/og) layout: inline styles only, every multi-child div is flex. */
 
 export const ACCENT = '#EA580C';
+export const PAPER = '#FAF8F3';
+const INK = '#16130F';
+const WORDMARK = '#2B2721';
+const FAINT = '#8A8478';
+const RULE = '#CFC9BD';
+
+const W = 1200;
+const H = 630;
+const PICTURE_WIDTH = 520;
 
 export interface SocialCardProps {
   siteName: string;
   logoSrc: string | null; // data URI, or null → monogram
   title: string;
-  description: string | null;
-  displayUrl: string;
+  section: string | null; // label above the title
+  domain: string;
   showMark: boolean;
   markSrc: string; // data URI
+  pictureSrc: string | null; // data URI (cropped to the column) → card A; null → card C
 }
 
 export function clampText(s: string, max: number): string {
@@ -22,23 +32,47 @@ export function clampText(s: string, max: number): string {
         .trimEnd()}…`;
 }
 
-export function titleFontSize(title: string): 76 | 64 | 54 {
-  const n = Array.from(title).length;
-  return n > 70 ? 54 : n > 40 ? 64 : 76;
+// CJK, fullwidth forms and emoji take about twice the width of a Latin letter.
+const WIDE_RE =
+  /[ᄀ-ᅟ⺀-꓏가-힣豈-﫿︰-﹏＀-｠￠-￦\u{1F300}-\u{1FAFF}\u{20000}-\u{3FFFD}]/u;
+const units = (c: string) => (WIDE_RE.test(c) ? 2 : 1);
+
+/** Title length in Latin-letter widths. */
+export function titleUnits(title: string): number {
+  return Array.from(title).reduce((n, c) => n + units(c), 0);
 }
 
-function Monogram({ siteName }: { siteName: string }) {
+/** Clamps a title to `max` Latin-letter widths, so wide scripts can't overflow the card. */
+export function clampTitle(title: string, max = 84): string {
+  if (titleUnits(title) <= max) return title;
+  let n = 1; // the ellipsis
+  let out = '';
+  for (const c of Array.from(title)) {
+    if (n + units(c) > max) break;
+    n += units(c);
+    out += c;
+  }
+  return `${out.trimEnd()}…`;
+}
+
+/** Steps down so a title fits three lines in its column. */
+export function titleFontSize(title: string): 72 | 60 | 50 {
+  const n = titleUnits(title);
+  return n > 55 ? 50 : n > 28 ? 60 : 72;
+}
+
+function Monogram({ siteName, size }: { siteName: string; size: number }) {
   const glyph = Array.from(siteName.trim())[0]?.toUpperCase() ?? '•';
   return (
     <div
       style={{
         display: 'flex',
-        width: 52,
-        height: 52,
-        borderRadius: 10,
+        width: size,
+        height: size,
+        borderRadius: 8,
         background: ACCENT,
         color: '#fff',
-        fontSize: 28,
+        fontSize: size * 0.55,
         fontWeight: 600,
         alignItems: 'center',
         justifyContent: 'center',
@@ -49,111 +83,204 @@ function Monogram({ siteName }: { siteName: string }) {
   );
 }
 
-export function SocialCard(p: SocialCardProps) {
-  const title = clampText(p.title, 90);
+/** Logo + site name: the one place the site is named, at the foot of both cards. */
+function Wordmark(p: SocialCardProps) {
   return (
     <div
       style={{
         display: 'flex',
-        width: 1200,
-        height: 630,
-        background: '#FAFAF7',
+        alignItems: 'center',
+        gap: 14,
+        fontSize: 26,
+        fontWeight: 600,
+        color: WORDMARK,
+      }}
+    >
+      {p.logoSrc ? (
+        <img
+          src={p.logoSrc}
+          width={44}
+          height={44}
+          style={{ borderRadius: 8, objectFit: 'contain' }}
+        />
+      ) : (
+        <Monogram siteName={p.siteName} size={44} />
+      )}
+      <div style={{ display: 'flex' }}>{clampText(p.siteName, 32)}</div>
+    </div>
+  );
+}
+
+function Domain(p: SocialCardProps) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        fontSize: 22,
+        color: FAINT,
+      }}
+    >
+      <div style={{ display: 'flex' }}>{clampText(p.domain, 40)}</div>
+      {p.showMark ? <img src={p.markSrc} width={24} height={24} /> : null}
+    </div>
+  );
+}
+
+function Label({ section }: { section: string | null }) {
+  return section ? (
+    <div
+      style={{
+        display: 'flex',
+        fontSize: 26,
+        fontWeight: 600,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        color: ACCENT,
+        marginBottom: 18,
+      }}
+    >
+      {section}
+    </div>
+  ) : null;
+}
+
+function Title({ title, centred }: { title: string; centred?: boolean }) {
+  return (
+    <div
+      style={{
+        display: 'flex',
+        fontFamily: 'Source Serif 4',
+        fontWeight: 600,
+        fontSize: titleFontSize(title) + (centred ? 8 : 0),
+        lineHeight: 1.08,
+        color: INK,
+        ...(centred
+          ? { maxWidth: 820, justifyContent: 'center', textAlign: 'center' }
+          : {}),
+      }}
+    >
+      {title}
+    </div>
+  );
+}
+
+/** Card A: the picture fills a column on the left; label, title and wordmark on paper. */
+function PictureCard(p: SocialCardProps & { pictureSrc: string }) {
+  const title = clampTitle(p.title);
+  return (
+    <div
+      style={{
+        display: 'flex',
+        width: W,
+        height: H,
+        background: PAPER,
         fontFamily: 'Inter',
       }}
     >
-      <div
-        style={{ display: 'flex', width: 14, height: 630, background: ACCENT }}
-      />
+      <img src={p.pictureSrc} width={PICTURE_WIDTH} height={H} />
+      <div style={{ display: 'flex', width: 2, height: H, background: RULE }} />
       <div
         style={{
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          padding: '64px 72px',
           flex: 1,
+          padding: '56px 60px 44px',
         }}
       >
         <div
           style={{
             display: 'flex',
-            alignItems: 'center',
-            gap: 18,
-            fontSize: 30,
-            fontWeight: 600,
-            color: '#374151',
-          }}
-        >
-          {p.logoSrc ? (
-            <img
-              src={p.logoSrc}
-              width={52}
-              height={52}
-              style={{ borderRadius: 8, objectFit: 'contain' }}
-            />
-          ) : (
-            <Monogram siteName={p.siteName} />
-          )}
-          <div style={{ display: 'flex' }}>{clampText(p.siteName, 50)}</div>
-        </div>
-        <div
-          style={{
-            display: 'flex',
             flexDirection: 'column',
-            gap: 22,
+            marginTop: 40,
             overflow: 'hidden',
             maxHeight: 400,
           }}
         >
-          <div
-            style={{
-              display: 'flex',
-              fontFamily: 'Source Serif 4',
-              fontWeight: 600,
-              fontSize: titleFontSize(title),
-              lineHeight: 1.1,
-              color: '#111827',
-            }}
-          >
-            {title}
-          </div>
-          {p.description ? (
-            <div
-              style={{
-                display: 'flex',
-                fontSize: 28,
-                lineHeight: 1.4,
-                color: '#4B5563',
-              }}
-            >
-              {clampText(p.description, 120)}
-            </div>
-          ) : null}
+          <Label section={p.section} />
+          <Title title={title} />
         </div>
         <div
           style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: 22,
-            color: '#9CA3AF',
+            borderTop: `2px solid ${RULE}`,
+            paddingTop: 22,
           }}
         >
-          <div style={{ display: 'flex' }}>{p.displayUrl}</div>
-          {p.showMark ? (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                color: '#6B7280',
-              }}
-            >
-              <img src={p.markSrc} width={30} height={30} />
-              <div style={{ display: 'flex' }}>Flowershow</div>
-            </div>
-          ) : null}
+          <Wordmark {...p} />
+          <Domain {...p} />
         </div>
       </div>
     </div>
+  );
+}
+
+/** Card C: no picture; label, title and wordmark centred in a ruled frame (survives a square crop). */
+function TextCard(p: SocialCardProps) {
+  const title = clampTitle(p.title);
+  return (
+    <div
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        width: W,
+        height: H,
+        background: PAPER,
+        fontFamily: 'Inter',
+      }}
+    >
+      <div
+        style={{
+          display: 'flex',
+          position: 'absolute',
+          top: 32,
+          left: 32,
+          right: 32,
+          bottom: 32,
+          border: `2px solid ${RULE}`,
+        }}
+      />
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          overflow: 'hidden',
+          maxHeight: 380,
+        }}
+      >
+        <Label section={p.section} />
+        <Title title={title} centred />
+      </div>
+      <div style={{ display: 'flex', marginTop: 40 }}>
+        <Wordmark {...p} />
+      </div>
+      <div
+        style={{
+          display: 'flex',
+          position: 'absolute',
+          bottom: 52,
+          left: 0,
+          right: 0,
+          justifyContent: 'center',
+        }}
+      >
+        <Domain {...p} />
+      </div>
+    </div>
+  );
+}
+
+export function SocialCard(p: SocialCardProps) {
+  return p.pictureSrc ? (
+    <PictureCard {...p} pictureSrc={p.pictureSrc} />
+  ) : (
+    <TextCard {...p} />
   );
 }
