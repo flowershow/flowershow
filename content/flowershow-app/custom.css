@@ -1006,9 +1006,126 @@
    Same shared kit + bento grid as the blogs page, scoped under `.lp-web`.
    Only the big design tile carries a screenshot; the other three are text.
    ========================================================================== */
-.fs-root.lp-web { background: var(--surface-soft); }
-.fs-root.lp-web .section-soft { background: transparent; }
-.fs-root.lp-web .uc-badge .uc-name { background: var(--tint-berry); color: var(--berry-ink); }
+/* Websites, Changelogs and Product sites share one berry-on-soft-ground look */
+.fs-root.lp-web, .fs-root.lp-changelog, .fs-root.lp-product { background: var(--surface-soft); }
+.fs-root.lp-web .section-soft, .fs-root.lp-changelog .section-soft, .fs-root.lp-product .section-soft { background: transparent; }
+.fs-root.lp-web .uc-badge .uc-name, .fs-root.lp-changelog .uc-badge .uc-name, .fs-root.lp-product .uc-badge .uc-name { background: var(--tint-berry); color: var(--berry-ink); }
+.fs-root.lp-web .publish-card, .fs-root.lp-changelog .publish-card, .fs-root.lp-product .publish-card { background: var(--canvas); border-radius: 24px; padding: clamp(32px, 5vw, 56px); }
+.fs-root.lp-web .ftree, .fs-root.lp-web .feature-mini, .fs-root.lp-product .ftree { background: var(--canvas); }
+.fs-root.lp-web .ftypes-row code { background: var(--surface-card); color: var(--berry-ink); }
+.fs-root .bento-body code, .fs-root .two-ways code, .fs-root .callout code, .fs-root .fit-row code {
+  font-family: var(--mono); font-size: .86em; color: var(--berry-ink);
+  background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
+}
+
+/* Two ways — a pair of white cards side by side: copy, a source panel, then
+   the rendered result (Changelogs page: folder vs CHANGELOG.md) */
+.fs-root .two-ways { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
+.fs-root .way { display: flex; flex-direction: column; background: var(--canvas); border-radius: 24px; padding: clamp(22px, 3vw, 32px); }
+.fs-root .way h3 { font-size: clamp(1.3rem, 2vw, 1.6rem); font-weight: 700; letter-spacing: -0.02em; }
+.fs-root .way > p { margin-top: 10px; color: var(--muted); font-size: 1.05rem; line-height: 1.6; }
+.fs-root .way .vis-code, .fs-root .way .ftree { margin-top: 20px; }
+.fs-root .way .ftree { background: var(--surface-soft); padding: 18px 20px; font-size: 15px; }
+.fs-root .way .vis-code { background: var(--surface-soft); border: none; overflow-x: auto; }
+.fs-root .way-shot { margin-top: 20px; aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden; border: 1px solid var(--hairline); }
+.fs-root .way-shot img { width: 100%; height: 100%; object-fit: cover; object-position: left top; }
+.fs-root .way .textlink { margin-top: 18px; }
+.fs-root .ways-note { margin-top: 28px; text-align: center; color: var(--muted); font-size: 1.05rem; }
+.fs-root .ways-note code { font-family: var(--mono); font-size: .86em; color: var(--berry-ink); background: var(--canvas); border-radius: 5px; padding: 1px 6px; }
+.fs-root.lp-changelog .callout, .fs-root.lp-product .callout { background: var(--tint-berry); }
+.fs-root .callout .cta-row { justify-content: center; margin-bottom: 0; }
+/* Two showcase cards, centred */
+.fs-root .show-grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 920px; margin: 0 auto; }
+.fs-root.lp-web .show-card, .fs-root.lp-changelog .show-card, .fs-root.lp-product .show-card { background: var(--canvas); }
+@media (max-width: 760px) {
+  .fs-root .two-ways { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .fs-root .show-grid.two { grid-template-columns: 1fr; }
+}
+.fs-root.lp-web .hero-copy h1 { max-width: 22ch; }
+/* Four showcase cards in one row on wide screens, two by two below */
+.fs-root .show-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+.fs-root .show-grid.four .show-body p { font-size: 1.05rem; }
+@media (max-width: 1100px) { .fs-root .show-grid.four { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 32px 22px; } }
+@media (max-width: 480px) { .fs-root .show-grid.four { grid-template-columns: 1fr; } }
+
+/* ---- Ladder — numbered rungs stacked down a connector line ----
+   Each rung is a white card: copy (title, one line, feature chips, Learn more)
+   beside a 16:10 media slot that takes a screenshot now and a <video> with
+   poster later, alternating sides. The number sits on the line to the left.
+   On phones the line goes, the number moves inside the card and media stacks
+   below the copy. */
+.fs-root .ladder { position: relative; display: flex; flex-direction: column; gap: clamp(20px, 3vw, 28px); padding-left: 64px; }
+.fs-root .ladder::before { content: ""; position: absolute; left: 19px; top: 40px; bottom: 40px; width: 2px; background: var(--hairline-strong); }
+.fs-root .rung {
+  position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  gap: clamp(24px, 3.5vw, 48px); align-items: center;
+  background: var(--canvas); border-radius: 24px; padding: clamp(22px, 3vw, 36px);
+}
+.fs-root .rung:nth-child(even) .rung-copy { order: 2; }
+.fs-root .rung-num {
+  position: absolute; left: -64px; top: clamp(22px, 3vw, 36px);
+  width: 40px; height: 40px; border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.05rem; color: var(--berry-ink); background: var(--tint-berry);
+  box-shadow: 0 0 0 6px var(--surface-soft);
+}
+.fs-root .rung-copy h3 { font-size: clamp(1.4rem, 2.2vw, 1.85rem); line-height: 1.15; letter-spacing: -0.025em; font-weight: 700; }
+.fs-root .rung-copy p { margin-top: 12px; color: var(--muted); font-size: 1.05rem; line-height: 1.6; }
+.fs-root .rung-copy code, .fs-root .feat-col code {
+  font-family: var(--mono); font-size: .86em; color: var(--berry-ink);
+  background: var(--surface-card); border-radius: 5px; padding: 1px 6px;
+}
+.fs-root .rung-chips { list-style: none; margin: 18px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; }
+.fs-root .rung-chips li { margin: 0; }
+.fs-root .rung-chips a {
+  display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px; border-radius: 999px;
+  font-size: 13.5px; font-weight: 600; color: var(--ink); background: var(--surface-soft);
+  border: 1px solid var(--hairline); transition: border-color .15s ease, color .15s ease;
+}
+.fs-root .rung-chips a:hover { border-color: var(--berry); color: var(--berry-ink); }
+.fs-root .prem {
+  font-family: var(--sans); font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em;
+  color: var(--gold-eyebrow); background: var(--tint-lemon); border-radius: 999px; padding: 2px 7px; line-height: 1.3;
+}
+.fs-root .rung-copy .textlink { margin-top: 20px; }
+.fs-root .rung-media {
+  position: relative; aspect-ratio: 16 / 10; border-radius: 14px; overflow: hidden;
+  border: 1px solid var(--hairline); background: var(--surface-card);
+}
+.fs-root .rung-media > img, .fs-root .rung-media > video { width: 100%; height: 100%; object-fit: cover; object-position: left top; display: block; }
+.fs-root .rung-media.quad { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; padding: 6px; }
+.fs-root .rung-media.quad img { width: 100%; height: 100%; min-height: 0; object-fit: cover; object-position: left top; border-radius: 8px; border: 1px solid var(--hairline); }
+
+/* ---- Feature inventory — five short linked lists, scannable in one screen ---- */
+.fs-root .feat-cols { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 16px; }
+.fs-root .feat-col { background: var(--canvas); border-radius: 18px; padding: 22px 20px; }
+.fs-root .feat-col h3 { font-size: 1.05rem; font-weight: 700; letter-spacing: -0.015em; padding-bottom: 12px; margin-bottom: 6px; border-bottom: 1px solid var(--hairline); }
+.fs-root .feat-col ul { list-style: none; margin: 0; padding: 0; }
+.fs-root .feat-col li { margin: 0; padding: 6px 0; font-size: 15px; line-height: 1.35; }
+.fs-root .feat-col li a { color: var(--body); transition: color .15s ease; }
+.fs-root .feat-col li a:hover { color: var(--berry-ink); }
+.fs-root .feat-col .prem { margin-left: 6px; vertical-align: 1px; }
+.fs-root .feat-note { margin-top: 24px; text-align: center; color: var(--muted); font-size: 15px; }
+.fs-root .feat-note a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+
+@media (max-width: 1100px) {
+  .fs-root .feat-cols { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+@media (max-width: 860px) {
+  .fs-root .ladder { padding-left: 0; }
+  .fs-root .ladder::before { display: none; }
+  .fs-root .rung { grid-template-columns: 1fr; }
+  .fs-root .rung:nth-child(even) .rung-copy { order: 0; }
+  .fs-root .rung-num { position: static; box-shadow: none; margin-bottom: 16px; }
+}
+@media (max-width: 640px) {
+  .fs-root .feat-cols { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 420px) {
+  .fs-root .feat-cols { grid-template-columns: 1fr; }
+}
 
 /* ==========================================================================
    Wikis landing — /uses/wikis

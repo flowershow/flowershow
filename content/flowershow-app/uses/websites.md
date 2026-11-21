@@ -1,6 +1,6 @@
 ---
-title: "Build a Website from Markdown"
-description: "Publish a full website from markdown files: your own design, navigation and social cards, plus your own domain on Premium. No code, no CMS. Free to start."
+title: "Build a Website in Markdown and HTML"
+description: "Publish a full website from Markdown and HTML files: one page in seconds, then your own hero, navbar, blog, docs and changelog, up to a whole site. Your own domain on Premium. Free to start."
 layout: plain
 showToc: false
 showEditLink: false
@@ -13,8 +13,8 @@ showComments: false
       <div className="wrap hero-grid">
         <div className="hero-copy reveal">
           <span className="uc-badge"><span className="uc-pre">Flowershow for:</span><span className="uc-name">Websites</span></span>
-          <h1>Your website, written in markdown.</h1>
-          <p className="lede">Write your pages in markdown and Flowershow turns them into a real website, with your own design, navigation and social cards. No CMS, no build pipeline. Add your own domain for $5/month.</p>
+          <h1>Your website, in Markdown and HTML. From one page to a whole site.</h1>
+          <p className="lede">Start with one Markdown file and get a page that already looks good. Grow it into a whole site with your own HTML and CSS, a blog, docs and a changelog. Free to start; your own domain and search on Premium ($5 a month).</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
             <a className="btn btn-secondary btn-google" href="https://cloud.flowershow.app/login?provider=google">
@@ -34,13 +34,111 @@ showComments: false
         </div>
       </div>
     </section>
+    <section className="section" id="ladder">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">From one page to a whole site</span>
+          <h2>Start small. Grow in any direction.</h2>
+          <p>Take the steps your site needs, in any order. Each one is a file or a setting, not a rebuild.</p>
+        </div>
+        <div className="ladder">
+          <div className="rung reveal">
+            <span className="rung-num">1</span>
+            <div className="rung-copy">
+              <h3>One file, one page</h3>
+              <p>Publish a single Markdown file and you get a clean, themed page at its own URL, with a preview card when you share it. Add <code>showHero: true</code> and its title, description and buttons become a hero banner.</p>
+              <ul className="rung-chips">
+                <li><a href="/docs/reference/syntax">Markdown syntax</a></li>
+                <li><a href="/docs/reference/hero-sections">Hero sections</a></li>
+                <li><a href="/docs/reference/seo-social-metadata">Social preview cards</a></li>
+              </ul>
+              <a className="textlink" href="/docs/getting-started"><span className="lm-txt">Publish your first page</span> <span className="arw">→</span></a>
+            </div>
+            <div className="rung-media"><img src="/assets/uses/websites/rung-one-file.webp" alt="A pottery studio's one-page site with a hero banner and two buttons, published from a single Markdown file" loading="lazy" /></div>
+          </div>
+          <div className="rung reveal">
+            <span className="rung-num">2</span>
+            <div className="rung-copy">
+              <h3>Make it yours</h3>
+              <p>Pick a theme, then set your colors and fonts in one <code>custom.css</code> file. Add your logo, menu links, dropdowns and footer links from the dashboard or <code>config.json</code>.</p>
+              <ul className="rung-chips">
+                <li><a href="/docs/reference/themes">Themes</a></li>
+                <li><a href="/docs/reference/custom-styles">Custom CSS</a></li>
+                <li><a href="/docs/guides/custom-fonts">Custom fonts</a></li>
+                <li><a href="/docs/reference/navbar">Navbar</a></li>
+                <li><a href="/docs/reference/footer">Footer</a></li>
+                <li><a href="/docs/reference/dark-mode">Dark mode</a></li>
+              </ul>
+              <a className="textlink" href="/docs/guides/custom-styles"><span className="lm-txt">Style your site</span> <span className="arw">→</span></a>
+            </div>
+            <div className="rung-media"><img src="/assets/uses/websites/sutras.webp" alt="The Sutras site, with its own fonts, colors and home page" loading="lazy" /></div>
+          </div>
+          <div className="rung reveal">
+            <span className="rung-num">3</span>
+            <div className="rung-copy">
+              <h3>Add sections</h3>
+              <p>A <code>blog</code> folder lists its own posts. Docs get a sidebar, which you can limit to the <code>docs</code> folder. A <code>changelog</code> folder becomes a timeline. Show a folder of people as a team page, and paste in a form for contact or newsletter signups.</p>
+              <ul className="rung-chips">
+                <li><a href="/uses/blogs">Blog</a></li>
+                <li><a href="/uses/docs">Docs</a></li>
+                <li><a href="/docs/reference/changelog">Changelog</a></li>
+                <li><a href="/docs/reference/listings">Listing pages</a></li>
+                <li><a href="/docs/reference/page-authors">Authors</a></li>
+                <li><a href="/docs/reference/forms">Forms</a></li>
+              </ul>
+              <a className="textlink" href="/docs/reference/listings"><span className="lm-txt">Add a section</span> <span className="arw">→</span></a>
+            </div>
+            <div className="rung-media quad">
+              <img src="/assets/uses/websites/rung-blog.webp" alt="The flowershow.app blog index" loading="lazy" />
+              <img src="/assets/uses/websites/rung-docs.webp" alt="The flowershow.app docs, with a sidebar" loading="lazy" />
+              <img src="/assets/uses/websites/rung-changelog.webp" alt="The flowershow.app changelog timeline" loading="lazy" />
+              <img src="/assets/uses/websites/rung-people.webp" alt="The Life Itself team page" loading="lazy" />
+            </div>
+          </div>
+          <div className="rung reveal">
+            <span className="rung-num">4</span>
+            <div className="rung-copy">
+              <h3>Go bespoke</h3>
+              <p>Write HTML with Tailwind classes inside any Markdown page, and set <code>layout: plain</code> for a full-width canvas for your own hero or landing page. Publish whole <code>.html</code> pages with their own CSS and JavaScript. On Premium, replace the navbar and footer with your own HTML and add code to every page's head. Or ask your AI agent to build it.</p>
+              <ul className="rung-chips">
+                <li><a href="/docs/guides/enhance-markdown-with-styled-jsx-blocks">HTML in Markdown</a></li>
+                <li><a href="/docs/agents/html">.html pages</a></li>
+                <li><a href="/docs/guides/custom-navbar-and-footer">Custom navbar and footer <span className="prem">Premium</span></a></li>
+                <li><a href="/docs/reference/custom-head">Head code <span className="prem">Premium</span></a></li>
+                <li><a href="/docs/reference/page-scripts">Page scripts <span className="prem">Premium</span></a></li>
+                <li><a href="/docs/agents">Publish with AI</a></li>
+              </ul>
+              <a className="textlink" href="/docs/guides/enhance-markdown-with-styled-jsx-blocks"><span className="lm-txt">Design your own pages</span> <span className="arw">→</span></a>
+            </div>
+            <div className="rung-media"><img src="/assets/uses/websites/rung-home.webp" alt="The flowershow.app home page, written as HTML inside a Markdown file" loading="lazy" /></div>
+          </div>
+          <div className="rung reveal">
+            <span className="rung-num">5</span>
+            <div className="rung-copy">
+              <h3>Launch and run</h3>
+              <p>A whole product or organization site from one folder: landing page, pricing, docs, blog and changelog. Put it on your own domain with search, see who reads it, redirect old links and invite people to edit it with you.</p>
+              <ul className="rung-chips">
+                <li><a href="/docs/reference/custom-domain">Custom domain <span className="prem">Premium</span></a></li>
+                <li><a href="/blog/announcing-full-text-search">Search <span className="prem">Premium</span></a></li>
+                <li><a href="/docs/reference/analytics">Analytics</a></li>
+                <li><a href="/docs/reference/redirects">Redirects</a></li>
+                <li><a href="/docs/reference/rss-feed">RSS feed</a></li>
+                <li><a href="/docs/reference/collaborators">Invite editors <span className="prem">Premium</span></a></li>
+              </ul>
+              <a className="textlink" href="/docs/guides/build-a-product-site"><span className="lm-txt">Build a product site</span> <span className="arw">→</span></a>
+            </div>
+            <div className="rung-media"><img src="/assets/uses/websites/rung-pricing.webp" alt="The flowershow.app pricing page, one section of a product site built from one folder" loading="lazy" /></div>
+          </div>
+        </div>
+      </div>
+    </section>
     <section className="section" id="publish">
       <div className="wrap">
         <div className="publish-card publish-grid">
           <div className="publish-copy reveal">
             <span className="eyebrow">Ways to publish</span>
             <h2>Publish from wherever you write.</h2>
-            <p className="pc-sub">Pick one. Switch later — your pages are always plain markdown.</p>
+            <p className="pc-sub">Pick one. Switch later — your pages are always plain files.</p>
             <div className="publish-cta">
               <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
             </div>
@@ -80,7 +178,7 @@ showComments: false
               </span>
               <h3>Drag &amp; drop</h3>
               <p>Upload a folder of markdown in the browser and get a live site.</p>
-              <a className="wf-learn" href="https://cloud.flowershow.app/"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+              <a className="wf-learn" href="/docs/getting-started/drag-and-drop"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
             </div>
             <div className="wf-card">
               <span className="wf-ico" aria-hidden="true">
@@ -94,49 +192,139 @@ showComments: false
         </div>
       </div>
     </section>
-    <section className="section section-soft" id="features">
+    <section className="section" id="file-types">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">Not just Markdown</span>
+          <h2>Markdown and HTML, in one folder.</h2>
+          <p>Mix files freely. Each one becomes the right kind of page.</p>
+        </div>
+        <div className="ftypes-grid reveal">
+          <div className="ftree" role="img" aria-label="An example website folder: Markdown pages, blog, changelog and team folders, a Word document, an HTML landing page with its CSS, a custom navbar and footer, and custom.css">
+            <div className="ftree-row ftree-root t-dir">my-site</div>
+            <ul>
+              <li className="ftree-row t-md">index<span className="ext">.md</span></li>
+              <li className="ftree-row t-md">about<span className="ext">.md</span></li>
+              <li className="ftree-row t-md">pricing<span className="ext">.md</span></li>
+              <li className="ftree-row t-dir">blog</li>
+              <li className="ftree-row t-dir">changelog</li>
+              <li className="ftree-row t-dir">team</li>
+              <li className="ftree-row t-md">report<span className="ext">.docx</span></li>
+              <li className="ftree-row t-code">landing<span className="ext">.html</span></li>
+              <li className="ftree-row t-code">landing<span className="ext">.css</span></li>
+              <li className="ftree-row t-code">_navbar<span className="ext">.html</span></li>
+              <li className="ftree-row t-code">_footer<span className="ext">.html</span></li>
+              <li className="ftree-row t-code">custom<span className="ext">.css</span></li>
+            </ul>
+          </div>
+          <div className="feature-row ftypes-row">
+            <div className="feature-mini">
+              <h3>Markdown pages</h3>
+              <p><code>.md</code> and <code>.mdx</code> files get your theme, navbar, sidebar and preview cards. Callouts, math, Mermaid and wikilinks work.</p>
+              <a className="fm-learn" href="/docs/reference/syntax"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            </div>
+            <div className="feature-mini">
+              <h3>HTML inside Markdown</h3>
+              <p>Write HTML with Tailwind classes in any Markdown page. With <code>layout: plain</code> it fills the width between your navbar and footer and still picks up <code>custom.css</code>.</p>
+              <a className="fm-learn" href="/docs/guides/enhance-markdown-with-styled-jsx-blocks"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            </div>
+            <div className="feature-mini">
+              <h3>Whole HTML pages</h3>
+              <p><code>.html</code> files are served exactly as written, outside the site layout: no navbar, theme or <code>custom.css</code>. Scripts run, and relative links to CSS, JavaScript and data work.</p>
+              <a className="fm-learn" href="/docs/agents/html"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            </div>
+            <div className="feature-mini">
+              <h3>Documents and files</h3>
+              <p>A Word document becomes a page, and the original stays downloadable. PDFs, images and data files are served at their own URLs.</p>
+              <a className="fm-learn" href="/docs/reference/supported-file-types"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section className="section" id="features">
       <div className="wrap">
         <div className="section-head reveal">
           <span className="eyebrow">Features</span>
-          <h2>Everything a site needs beyond the words.</h2>
-          <p>Set it in the dashboard, one config file or the page itself.</p>
+          <h2>Everything a website needs.</h2>
+          <p>All free, except where marked Premium ($5 a month).</p>
         </div>
-        <div className="bento">
-          <div className="bento-card bento-index reveal">
-            <div className="bento-media bg-soft">
-              <img src="/assets/uses/websites/sutras.webp" alt="The Sutras site, with its own fonts, colours and home page, published with Flowershow" loading="lazy" />
-            </div>
-            <div className="bento-body">
-              <h3>Your design, not a template</h3>
-              <p>Pick a theme, then override its colours and fonts in <code>custom.css</code>. For a landing page, set <code>layout: plain</code> to get a full-width blank page between navbar and footer, and write HTML with Tailwind classes right in the markdown file.</p>
-              <a className="ft-learn" href="/docs/reference/custom-styles"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
-            </div>
+        <div className="feat-cols reveal">
+          <div className="feat-col">
+            <h3>Look and layout</h3>
+            <ul>
+              <li><a href="/docs/reference/themes">Themes</a></li>
+              <li><a href="/docs/reference/custom-styles">Custom CSS</a></li>
+              <li><a href="/docs/guides/custom-fonts">Custom fonts</a></li>
+              <li><a href="/docs/reference/dark-mode">Dark mode</a></li>
+              <li><a href="/docs/reference/hero-sections">Hero sections</a></li>
+              <li><a href="/docs/reference/site-layouts">Docs and reading layouts</a></li>
+              <li><a href="/docs/guides/custom-navbar-and-footer">Custom navbar and footer</a><span className="prem">Premium</span></li>
+              <li><a href="/docs/reference/custom-head">Head code</a><span className="prem">Premium</span></li>
+              <li><a href="/docs/reference/page-scripts">Page scripts</a><span className="prem">Premium</span></li>
+              <li><a href="/docs/reference/custom-favicon">Favicon</a><span className="prem">Premium</span></li>
+            </ul>
           </div>
-          <div className="bento-card bento-search reveal">
-            <div className="bento-body">
-              <h3>Navigation and footer</h3>
-              <p>Set your logo, menu links, dropdowns and social icons in the dashboard or <code>config.json</code>. On Premium, replace the navbar or footer with your own HTML.</p>
-              <a className="ft-learn" href="/docs/reference/navbar"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
-            </div>
+          <div className="feat-col">
+            <h3>Structure</h3>
+            <ul>
+              <li><a href="/docs/reference/navbar">Navbar and dropdowns</a></li>
+              <li><a href="/docs/reference/footer">Footer and social links</a></li>
+              <li><a href="/docs/reference/home-page">Home page</a></li>
+              <li><a href="/docs/reference/sidebar">Sidebar</a></li>
+              <li><a href="/docs/reference/table-of-contents">Table of contents</a></li>
+              <li><a href="/docs/reference/page-headers">Breadcrumbs and bylines</a></li>
+              <li><a href="/docs/reference/listings">Listing pages</a></li>
+              <li><a href="/docs/reference/tags">Tags</a></li>
+              <li><a href="/docs/reference/redirects">Redirects</a></li>
+              <li><a href="/docs/reference/backlinks">Backlinks and graph</a></li>
+            </ul>
           </div>
-          <div className="bento-card bento-comments reveal">
-            <div className="bento-body">
-              <h3>Your own domain</h3>
-              <p>Point your domain at Flowershow and it serves your site with HTTPS. Available on the premium plan.</p>
-              <a className="ft-learn" href="/docs/reference/custom-domain"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
-            </div>
+          <div className="feat-col">
+            <h3>Content</h3>
+            <ul>
+              <li><a href="/docs/reference/syntax">Markdown and MDX</a></li>
+              <li><a href="/uses/blogs">Blog</a></li>
+              <li><a href="/uses/docs">Docs</a></li>
+              <li><a href="/docs/reference/changelog">Changelog</a></li>
+              <li><a href="/docs/reference/page-authors">Authors and team pages</a></li>
+              <li><a href="/docs/reference/forms">Forms</a></li>
+              <li><a href="/docs/guides/publish-word-documents">Word documents</a></li>
+              <li><a href="/uses/data-stories">Data stories</a></li>
+              <li><a href="/docs/reference/obsidian-canvas">Obsidian Canvas and Bases</a></li>
+              <li><a href="/docs/reference/annotations">Comments and annotations</a></li>
+            </ul>
           </div>
-          <div className="bento-card bento-news reveal">
-            <div className="bento-body">
-              <h3>Ready for search and sharing</h3>
-              <p>Titles and descriptions come from your frontmatter, and every page gets a generated social card, so it looks right in search results and when shared. On Premium, use your own images.</p>
-              <a className="ft-learn" href="/docs/reference/seo-social-metadata"><span className="lm-txt">Learn more</span> <span className="arw">→</span></a>
-            </div>
+          <div className="feat-col">
+            <h3>Publishing</h3>
+            <ul>
+              <li><a href="/docs/getting-started/from-obsidian">From Obsidian</a></li>
+              <li><a href="/docs/getting-started/from-github">From GitHub</a></li>
+              <li><a href="/docs/getting-started/drag-and-drop">Drag and drop</a></li>
+              <li><a href="/docs/reference/cli">From the terminal</a></li>
+              <li><a href="/docs/agents">With your AI agent</a></li>
+              <li><a href="/docs/reference/cli#publish-without-an-account">Without an account</a></li>
+              <li><a href="/docs/reference/edit-this-page">Edit this page link</a></li>
+              <li><a href="/docs/reference/collaborators">Invite editors</a><span className="prem">Premium</span></li>
+              <li><a href="/docs/reference/password-protection">Password protection</a><span className="prem">Premium</span></li>
+            </ul>
+          </div>
+          <div className="feat-col">
+            <h3>Reach</h3>
+            <ul>
+              <li><a href="/docs/reference/custom-domain">Custom domain</a><span className="prem">Premium</span></li>
+              <li><a href="/blog/announcing-full-text-search">Full-text search</a><span className="prem">Premium</span></li>
+              <li><a href="/docs/reference/seo-social-metadata">SEO and preview cards</a></li>
+              <li><a href="/docs/reference/analytics">Analytics</a></li>
+              <li><a href="/docs/reference/rss-feed">RSS feed</a></li>
+              <li><a href="/docs/reference/robots-txt">Sitemap and robots.txt</a></li>
+              <li><a href="/docs/reference/llms-txt">llms.txt for AI</a></li>
+              <li><a href="/docs/reference/page-actions">Copy page as Markdown</a></li>
+              <li><a href="/pricing">No "Built with" badge</a><span className="prem">Premium</span></li>
+            </ul>
           </div>
         </div>
-        <div style="text-align:center;margin-top:48px" className="reveal">
-          <a className="btn btn-primary" href="https://cloud.flowershow.app/login">Get started <span className="arw">→</span></a>
-        </div>
+        <p className="feat-note reveal">Every option is in the <a href="/docs">docs</a>. Compare plans on the <a href="/pricing">pricing page</a>.</p>
       </div>
     </section>
     <section className="section" id="showcase">
@@ -146,7 +334,7 @@ showComments: false
           <h2>Websites published with Flowershow</h2>
           <p>A few of the <span className="stat-hl">2,600+</span> sites already published.</p>
         </div>
-        <div className="show-grid">
+        <div className="show-grid four">
           <div className="show-card sc-blog reveal">
             <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
             <div className="show-thumb"><img className="show-thumb-img" src="/assets/uses/websites/developmental-spaces.webp" alt="Conscious Communities website published with Flowershow" loading="lazy" decoding="async" /></div>
@@ -172,6 +360,15 @@ showComments: false
               <span className="show-badge">Website</span>
               <p><span className="nm">Sutras</span> is a small library of wisdom texts, from Buddhist sutras to the Stoics, with its own typography and design.</p>
               <a className="show-link" href="https://sutras.lifeitself.org/"><span className="lm-txt">sutras.lifeitself.org</span> <span className="arw">→</span></a>
+            </div>
+          </div>
+          <div className="show-card sc-blog reveal">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
+            <div className="show-thumb"><img className="show-thumb-img" src="/assets/uses/websites/rung-home.webp" alt="The flowershow.app home page, published with Flowershow" loading="lazy" decoding="async" /></div>
+            <div className="show-body">
+              <span className="show-badge">Product site</span>
+              <p><span className="nm">Flowershow</span> runs its landing page, pricing, docs, blog and changelog from one folder. This page is part of it.</p>
+              <a className="show-link" href="/docs/guides/build-a-product-site"><span className="lm-txt">How it's built</span> <span className="arw">→</span></a>
             </div>
           </div>
         </div>
