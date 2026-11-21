@@ -22,6 +22,7 @@ An index of all documentation pages. Fetch this file to discover available docs 
 ## Guides
 
 - [Author Pages](/docs/guides/author-pages) — Learn how to set up author pages to attribute content to your creators with links to custom profiles page and avatars.
+- [Build a product site from one folder](/docs/guides/build-a-product-site) — Build a product website with a landing page, pricing page, docs, blog and changelog from one folder of Markdown and HTML, and publish it with Flowershow.
 - [Content Catalogs and Listing Pages](/docs/guides/content-catalogs) — Create blog index pages and other listing pages for tutorials, recipes, projects and more, with a few lines of plain Markdown.
 - [Custom Fonts](/docs/guides/custom-fonts) — Use Google Fonts or your own font files on your site
 - [Give your site a custom navbar and footer](/docs/guides/custom-navbar-and-footer) — Make your site look like your brand with your own navbar, footer, colors and fonts, using three small files.
