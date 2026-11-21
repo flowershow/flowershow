@@ -5,6 +5,7 @@ import { join } from 'node:path';
 import { ImageResponse } from 'next/og';
 import sharp from 'sharp';
 import { PAPER, SocialCard } from '@/components/og/social-card';
+import type { RenderedCard } from '@/lib/social-card-response';
 import type { CardImage, CardInputs } from '@/lib/social-preview';
 
 const OG_DIR = join(process.cwd(), 'components/og');
@@ -253,12 +254,16 @@ export async function loadPictureDataUri(
   }
 }
 
-/** Renders the card fully (so render errors surface here, not mid-stream), as JPEG. */
+/**
+ * Renders the card fully (so render errors surface here, not mid-stream), as
+ * JPEG. `complete` is false when a picture or a fetchable logo failed to load,
+ * so the response isn't cached for long.
+ */
 export async function renderSocialCard(
   inputs: CardInputs,
   domain: string,
   { readSiteFile }: { readSiteFile: ReadSiteFile },
-): Promise<ArrayBuffer> {
+): Promise<RenderedCard> {
   const [{ fonts, markSrc }, logoSrc, pictureSrc] = await Promise.all([
     loadAssets(),
     loadImageDataUri(inputs.logo),
@@ -281,8 +286,12 @@ export async function renderSocialCard(
   );
   const png = Buffer.from(await res.arrayBuffer());
   const jpeg = await sharp(png).jpeg({ quality: 88, mozjpeg: true }).toBuffer();
-  return jpeg.buffer.slice(
-    jpeg.byteOffset,
-    jpeg.byteOffset + jpeg.byteLength,
-  ) as ArrayBuffer;
+  const logoMissing = !logoSrc && /^https?:\/\//.test(inputs.logo ?? '');
+  return {
+    body: jpeg.buffer.slice(
+      jpeg.byteOffset,
+      jpeg.byteOffset + jpeg.byteLength,
+    ) as ArrayBuffer,
+    complete: !(inputs.image && !pictureSrc) && !logoMissing,
+  };
 }

@@ -139,12 +139,14 @@ export function resolveCardImage(
   });
   if (!src) return null;
   let url: URL;
+  let pathname: string;
   try {
     url = new URL(src);
+    pathname = decodeURIComponent(url.pathname); // a stray `%` throws
   } catch {
     return null;
   }
-  if (!PICTURE_EXT_RE.test(decodeURIComponent(url.pathname))) return null;
+  if (!PICTURE_EXT_RE.test(pathname)) return null;
   if (url.host !== ctx.siteHostname)
     return url.protocol === 'https:' ? { src, sitePath: null } : null;
   const key = siteImageKey(src, ctx.siteHostname, ctx.dimensions);

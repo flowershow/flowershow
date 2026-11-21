@@ -37,7 +37,7 @@ Which card a page gets:
 2. **No page image, but the site has one:** the site image takes its place, so every page still gets a picture card with its own title.
 3. **No image at all:** the title, centred, with your site name below it.
 
-- **Images already made for sharing** (about 1200×630, at least 1000 pixels wide) are used as they are, not put inside a card. The site image is used this way on the home page only.
+- **Images already made for sharing** (about 1200×630, at least 1000 pixels wide, stored in your site) are used as they are, not put inside a card. The site image is used this way on the home page only.
 - **Small images** (under 400 pixels on a side), SVGs and images that can't be loaded are skipped, so the page falls back to the next card.
 - **Free sites** show a small Flowershow mark beside the site address; premium sites don't.
 - **Password-protected sites:** the card and the preview's title and description show only the site name and tagline, never page titles, descriptions or images.
@@ -84,7 +84,7 @@ image: /assets/docker-guide-cover.jpg
 ---
 ```
 
-To use your own finished share image instead of a card, make it about 1200×630 pixels.
+To use your own finished share image instead of a card, make it about 1200×630 pixels and put it in your site (not an external URL: Flowershow only knows the size of images in your site).
 
 ## Using config.json
 

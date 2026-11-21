@@ -19,7 +19,10 @@ vi.mock('@/trpc/server', () => ({
 }));
 
 vi.mock('@/lib/social-card-render', () => ({
-  renderSocialCard: vi.fn(async () => new Uint8Array([1, 2, 3]).buffer),
+  renderSocialCard: vi.fn(async () => ({
+    body: new Uint8Array([1, 2, 3]).buffer,
+    complete: true,
+  })),
 }));
 
 vi.mock('@/lib/content-store', () => ({

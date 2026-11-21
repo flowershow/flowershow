@@ -329,34 +329,44 @@ describe('renderSocialCard', () => {
   const readSiteFile = vi.fn(async () => photo(1200, 800));
   const render = (over: object, domain = 'notes-ana.flowershow.me') =>
     renderSocialCard({ ...inputs, ...over }, domain, { readSiteFile });
-  const isCard = async (buf: ArrayBuffer) =>
-    expect(await jpegSize(buf)).toEqual({
+  const isCard = async (card: { body: ArrayBuffer }) =>
+    expect(await jpegSize(card.body)).toEqual({
       format: 'jpeg',
       width: 1200,
       height: 630,
     });
 
-  it('renders a 1200x630 jpeg for a page, a site card and a picture card', async () => {
-    await isCard(await render({}));
-    await isCard(await render({ page: null }));
-    await isCard(
+  it('renders a complete 1200x630 jpeg for a page, a site card and a picture card', async () => {
+    for (const card of [
+      await render({}),
+      await render({ page: null }),
       await render({
         image: { src: 'https://g.test/a.png', sitePath: 'a.png' },
       }),
-    );
+    ]) {
+      await isCard(card);
+      expect(card.complete).toBe(true);
+    }
   }, 30_000);
 
-  it('falls back to the text card when the picture cannot be read', async () => {
+  it('falls back to the text card, marked incomplete, when the picture cannot be read', async () => {
     const missing = vi.fn(async () => null);
-    await isCard(
-      await renderSocialCard(
-        {
-          ...inputs,
-          image: { src: 'https://g.test/a.png', sitePath: 'gone.png' },
-        },
-        'x',
-        { readSiteFile: missing },
-      ),
+    const card = await renderSocialCard(
+      {
+        ...inputs,
+        image: { src: 'https://g.test/a.png', sitePath: 'gone.png' },
+      },
+      'x',
+      { readSiteFile: missing },
+    );
+    await isCard(card);
+    expect(card.complete).toBe(false);
+  }, 20_000);
+
+  it('a relative or emoji logo is not a failure; an unreachable logo URL is', async () => {
+    expect((await render({ logo: '/assets/logo.png' })).complete).toBe(true);
+    expect((await render({ logo: 'https://127.0.0.1/l.png' })).complete).toBe(
+      false,
     );
   }, 20_000);
 
@@ -385,6 +395,6 @@ describe('renderSocialCard', () => {
     for (const buf of Object.values(samples)) await isCard(buf);
     if (dir)
       for (const [name, buf] of Object.entries(samples))
-        writeFileSync(join(dir, `${name}.jpg`), Buffer.from(buf));
+        writeFileSync(join(dir, `${name}.jpg`), Buffer.from(buf.body));
   }, 60_000);
 });

@@ -258,6 +258,10 @@ describe('resolveCardImage', () => {
     ['an svg', 'https://cdn.example.com/logo.svg'],
     ['a page, not an image', 'https://example.com/post'],
     ['http', 'http://cdn.example.com/p.jpg'],
+    [
+      'a stray % in the URL (must not throw)',
+      'https://cdn.example.com/50%off.jpg',
+    ],
     ['an emoji', '🌸'],
   ])('ignores %s', (_n, raw) => {
     expect(at(raw)).toBeNull();
