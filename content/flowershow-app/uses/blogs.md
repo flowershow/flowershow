@@ -146,6 +146,35 @@ showComments: false
         </div>
       </div>
     </section>
+    <section className="section" id="showcase">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">Showcase</span>
+          <h2>Blogs published with Flowershow</h2>
+          <p>A few of the <span className="stat-hl">2,600+</span> sites already published.</p>
+        </div>
+        <div className="show-grid">
+          <div className="show-card sc-blog reveal">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
+            <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/integral-facticity.webp" alt="Integral [+] Facticity blog published with Flowershow" loading="lazy" decoding="async" /></div>
+            <div className="show-body">
+              <span className="show-badge">Blog</span>
+              <p><span className="nm">Integral [+] Facticity</span> moved its essays, papers and podcast from Substack to Flowershow, with subjects, types and search built in.</p>
+              <a className="show-link" href="https://erikhaines.org/integral-facticity"><span className="lm-txt">erikhaines.org/integral-facticity</span> <span className="arw">→</span></a>
+            </div>
+          </div>
+          <div className="show-card sc-blog reveal">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
+            <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/lifeitself.webp" alt="Life Itself site published with Flowershow" loading="lazy" decoding="async" /></div>
+            <div className="show-body">
+              <span className="show-badge">Blog</span>
+              <p><span className="nm">Life Itself</span> runs its blog, research and events on one Flowershow site.</p>
+              <a className="show-link" href="https://lifeitself.org/"><span className="lm-txt">lifeitself.org</span> <span className="arw">→</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     <section className="final">
       <div className="wrap">
         <div className="final-card reveal">
