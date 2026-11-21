@@ -894,12 +894,18 @@
         .page-hero-cta + .page-hero-cta {
           color: #fff;
         }
+        .page-hero-cta + .page-hero-cta:hover {
+          opacity: 0.8;
+        }
       }
       &.overlay-light {
         .page-hero-title,
         .page-hero-description,
         .page-hero-cta + .page-hero-cta {
           color: #1c1917;
+        }
+        .page-hero-cta + .page-hero-cta:hover {
+          opacity: 0.8;
         }
       }
     }

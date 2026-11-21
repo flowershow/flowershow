@@ -18,4 +18,4 @@ Three use-case pages now show the range of what you can build:
 
 **Fixes**
 
-- Full-width hero images (`imagelayout: full`) now get a dark overlay with white text by default, so the title is readable on dark photos. Set `overlay: light` for a pale wash with dark text, or `overlay: none` to keep the old look. See [[hero-sections|Hero sections]].
+- Full-width hero images (`imagelayout: full`) now get a dark overlay with white text by default, so the title is readable on dark photos. Set `overlay: light` for a pale wash with dark text, or `overlay: none` to keep the old look. If you added your own overlay or text colours by styling `.page-hero.image-full` in custom CSS, set `overlay: none` so they apply again. See [[hero-sections|Hero sections]].
