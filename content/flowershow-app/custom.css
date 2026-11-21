@@ -1001,6 +1001,16 @@
 }
 
 /* ==========================================================================
+   Websites landing — /uses/websites
+   --------------------------------------------------------------------------
+   Same shared kit + bento grid as the blogs page, scoped under `.lp-web`.
+   Only the big design tile carries a screenshot; the other three are text.
+   ========================================================================== */
+.fs-root.lp-web { background: var(--surface-soft); }
+.fs-root.lp-web .section-soft { background: transparent; }
+.fs-root.lp-web .uc-badge .uc-name { background: var(--tint-berry); color: var(--berry-ink); }
+
+/* ==========================================================================
    Wikis landing — /uses/wikis
    --------------------------------------------------------------------------
    Same shared kit + bento feature grid as the blogs page, but scoped under

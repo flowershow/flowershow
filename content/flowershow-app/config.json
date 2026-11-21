@@ -20,6 +20,10 @@
             "name": "Blog"
           },
           {
+            "href": "/uses/websites",
+            "name": "Websites"
+          },
+          {
             "href": "/uses/wikis",
             "name": "Wikis"
           },
