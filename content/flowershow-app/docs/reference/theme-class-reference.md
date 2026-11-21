@@ -7,8 +7,8 @@ Flowershow themes start with [custom properties](/docs/reference/custom-styles),
 then use semantic classes when a component needs more specific treatment. This
 page is generated from
 [`default-theme.css`](https://github.com/flowershow/flowershow/blob/main/apps/flowershow/styles/default-theme.css)
-and currently documents **375 styled class selectors**:
-**373 stable semantic hooks** and **2 non-contract
+and currently documents **377 styled class selectors**:
+**375 stable semantic hooks** and **2 non-contract
 compatibility utilities**.
 
 ## Stability contract
@@ -201,7 +201,7 @@ Page identity, hero content, Markdown body, code controls, images, and task-list
 
 ```text
 .page-hero-container
-└─ .page-hero[.has-image | .image-full]
+└─ .page-hero[.has-image | .image-full[.overlay-dark | .overlay-light]]
 main.page-main (structural wrapper)
 ├─ .page-header
 │  ├─ .page-header-title (or .page-header-title-row > h1.page-header-title, .page-header-actions)
@@ -761,7 +761,7 @@ Conditional presence, open/current, image, and layout modifiers.
 
 ```text
 Owning semantic hook
-└─ .is-* / .has-* / .no-* / .image-full
+└─ .is-* / .has-* / .no-* / .image-full / .overlay-*
 ```
 
 | Class | Kind | Owner |
@@ -785,6 +785,8 @@ Owning semantic hook
 | <code>.is-toc-rail</code> | State | .layout-inner |
 | <code>.is-unreleased</code> | State | .changelog-entry |
 | <code>.no-nav</code> | State | .site-layout |
+| <code>.overlay-dark</code> | Variant | .page-hero.image-full |
+| <code>.overlay-light</code> | Variant | .page-hero.image-full |
 
 ## Compatibility utilities (not public API)
 

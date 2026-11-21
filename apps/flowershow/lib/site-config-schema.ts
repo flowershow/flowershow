@@ -57,7 +57,7 @@ type Mode = 'strict' | 'loose';
  *    fields must be one of the known values.
  *  - `loose` (read): container objects tolerate unknown keys and enum-ish
  *    fields only need to be strings. Renderers already normalize unknown
- *    values (theme.defaultMode, hero.imagelayout), so dropping a whole
+ *    values (theme.defaultMode, hero.imagelayout, hero.overlay), so dropping a whole
  *    `theme`/`hero` object over them would change how existing sites render.
  */
 function buildConfigShape(mode: Mode) {
@@ -78,6 +78,7 @@ function buildConfigShape(mode: Mode) {
     image: z.string().optional(),
     cta: z.array(ctaItemSchema).optional(),
     imagelayout: enumOrString(['right', 'full']).optional(),
+    overlay: enumOrString(['dark', 'light', 'none']).optional(),
   });
   const umamiObjectSchema = obj({
     websiteId: z.string().optional(),

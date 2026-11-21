@@ -870,6 +870,38 @@
       .page-hero-ctas-container {
         justify-content: center;
       }
+
+      /* Overlay (hero.overlay): a scrim between the photo and the text.
+         Colours are fixed rather than theme tokens because they sit on a
+         photo, so they must hold in every theme and in dark mode. */
+      &.overlay-dark .page-hero-image-container::after,
+      &.overlay-light .page-hero-image-container::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+      &.overlay-dark .page-hero-image-container::after {
+        background-color: rgb(0 0 0 / 0.55);
+      }
+      &.overlay-light .page-hero-image-container::after {
+        background-color: rgb(255 252 245 / 0.8);
+      }
+
+      &.overlay-dark {
+        .page-hero-title,
+        .page-hero-description,
+        .page-hero-cta + .page-hero-cta {
+          color: #fff;
+        }
+      }
+      &.overlay-light {
+        .page-hero-title,
+        .page-hero-description,
+        .page-hero-cta + .page-hero-cta {
+          color: #1c1917;
+        }
+      }
     }
   }
 

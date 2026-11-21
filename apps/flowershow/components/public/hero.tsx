@@ -6,6 +6,7 @@ interface HeroProps {
   description?: string;
   image?: string;
   imageLayout?: 'right' | 'full';
+  overlay?: 'dark' | 'light' | 'none';
   cta?: Array<{ label: string; href: string }>;
 }
 
@@ -14,6 +15,7 @@ export default async function Hero({
   description,
   image,
   imageLayout,
+  overlay,
   cta,
 }: HeroProps) {
   const isFullWidthImage = image && imageLayout === 'full';
@@ -24,6 +26,8 @@ export default async function Hero({
           'page-hero',
           image && 'has-image',
           isFullWidthImage && 'image-full',
+          isFullWidthImage && overlay === 'dark' && 'overlay-dark',
+          isFullWidthImage && overlay === 'light' && 'overlay-light',
         )}
       >
         <div className="page-hero-content-container">

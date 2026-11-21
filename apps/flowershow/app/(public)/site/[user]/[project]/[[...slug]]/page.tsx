@@ -965,6 +965,7 @@ export default async function SitePage(props: {
           image={heroConfig.image}
           cta={heroConfig.cta}
           imageLayout={heroConfig.imageLayout}
+          overlay={heroConfig.overlay}
         />
       )}
 

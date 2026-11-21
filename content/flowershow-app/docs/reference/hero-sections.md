@@ -62,7 +62,24 @@ cta:
 ---
 ```
 
-The text sits directly on the image with no overlay, so pick a light, low-contrast photo (or lighten it first) so dark text stays readable. To add your own overlay or white text instead, style `.page-hero.image-full` in [[custom-styles|custom CSS]].
+### Overlay
+
+A full-width image gets a dark overlay with white text by default, so the title stays readable on any photo. Choose another with `overlay`:
+
+| `overlay` | What you get |
+| --- | --- |
+| `dark` (default) | A dark tint over the image, with white title, description and secondary button text. Works on most photos. |
+| `light` | A pale cream wash over the image, with dark text. Good for soft or bright photos. |
+| `none` | The image as is, with the theme's normal text colours. Use it with a light, low-contrast photo. |
+
+```yaml
+hero:
+  image: /pottery.jpg
+  imagelayout: full
+  overlay: light
+```
+
+`overlay` only applies with `imagelayout: full`. An unknown value falls back to `dark`. To fine-tune the overlay, style `.page-hero.overlay-dark` or `.page-hero.overlay-light` in [[custom-styles|custom CSS]].
 
 Any field in the `hero` object (`title`, `description`, `image`, `cta`) overrides the page's own field for the hero only.
 
@@ -90,6 +107,8 @@ Enable hero sections across your site using `config.json`:
 ```
 
 This sets default hero content for all pages. Individual page frontmatters can override these defaults.
+
+For a site-wide full-width image, use a `hero` object instead: `"hero": { "image": "/assets/hero.jpg", "imagelayout": "full", "overlay": "dark" }`.
 
 ## Disabling heroes
 
