@@ -505,6 +505,13 @@ describe('sanitizeSiteConfig — does not change how valid stored configs render
     expect(sanitizeSiteConfig(config)).toEqual(config);
   });
 
+  it('keeps the hero object when overlay is junk of any type', () => {
+    for (const overlay of [0.5, { a: 1 }, ['x'], 'rgba(0,0,0);}']) {
+      const config = { hero: { title: 'Hi', imagelayout: 'full', overlay } };
+      expect(sanitizeSiteConfig(config)).toEqual(config);
+    }
+  });
+
   it('tolerates unknown enum values that renderers already normalize', () => {
     const config = {
       theme: { theme: 'forest', defaultMode: 'auto' },

@@ -1,12 +1,13 @@
 import clsx from 'clsx';
 import Image from 'next/image';
+import { HERO_OVERLAY_CLASS, type HeroOverlay } from '@/lib/hero-config';
 
 interface HeroProps {
   title?: string;
   description?: string;
   image?: string;
   imageLayout?: 'right' | 'full';
-  overlay?: 'dark' | 'light' | 'none';
+  overlay?: HeroOverlay;
   cta?: Array<{ label: string; href: string }>;
 }
 
@@ -26,8 +27,7 @@ export default async function Hero({
           'page-hero',
           image && 'has-image',
           isFullWidthImage && 'image-full',
-          isFullWidthImage && overlay === 'dark' && 'overlay-dark',
-          isFullWidthImage && overlay === 'light' && 'overlay-light',
+          isFullWidthImage && overlay && HERO_OVERLAY_CLASS[overlay],
         )}
       >
         <div className="page-hero-content-container">

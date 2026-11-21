@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { PageMetadata } from '@/server/api/types';
-import { resolveHeroConfig } from './hero-config';
+import { HERO_OVERLAY_CLASS, resolveHeroConfig } from './hero-config';
 
 describe('resolveHeroConfig', () => {
   it('uses hero object values with top-level fallbacks for unset fields', () => {
@@ -116,6 +116,32 @@ describe('resolveHeroConfig', () => {
     it('normalises case', () => {
       expect(fullHero({ overlay: 'Light' })).toBe('light');
       expect(fullHero({ overlay: 'NONE' })).toBe('none');
+      expect(fullHero({ overlay: 'DARK' })).toBe('dark');
+    });
+
+    it.each([
+      ['a number', 0.5],
+      ['an object', { color: 'red' }],
+      ['an array', ['light']],
+      ['null', null],
+      ['a boolean', true],
+      ['a CSS fragment', 'rgba(0,0,0,.1);} body{display:none'],
+      ['an HTML string', '<script>alert(1)</script>'],
+      ['a padded value', ' light '],
+      ['an empty string', ''],
+    ])('falls back to dark for %s', (_label, value) => {
+      expect(fullHero({ overlay: value })).toBe('dark');
+    });
+
+    it('maps every overlay to a fixed class name only', () => {
+      expect(HERO_OVERLAY_CLASS).toEqual({
+        dark: 'overlay-dark',
+        light: 'overlay-light',
+        none: undefined,
+      });
+      expect(HERO_OVERLAY_CLASS[fullHero({ overlay: '"><img>' })!]).toBe(
+        'overlay-dark',
+      );
     });
 
     it('falls back to dark for unknown or non-string values', () => {

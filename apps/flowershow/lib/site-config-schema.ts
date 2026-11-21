@@ -78,7 +78,12 @@ function buildConfigShape(mode: Mode) {
     image: z.string().optional(),
     cta: z.array(ctaItemSchema).optional(),
     imagelayout: enumOrString(['right', 'full']).optional(),
-    overlay: enumOrString(['dark', 'light', 'none']).optional(),
+    // Read mode accepts any value (the renderer falls back to 'dark'), so a
+    // bad overlay never drops the rest of the hero object.
+    overlay:
+      mode === 'strict'
+        ? z.enum(['dark', 'light', 'none']).optional()
+        : z.unknown().optional(),
   });
   const umamiObjectSchema = obj({
     websiteId: z.string().optional(),

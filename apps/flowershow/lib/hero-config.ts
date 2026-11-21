@@ -37,19 +37,23 @@ const normalizeImageLayout = (value: unknown): HeroLayout | undefined => {
 };
 
 const DEFAULT_OVERLAY: HeroOverlay = 'dark';
+const OVERLAYS: readonly HeroOverlay[] = ['dark', 'light', 'none'];
 
-// Unknown or non-string values fall back to the default, like imagelayout.
+// Frontmatter and config.json are untrusted. Only an exact (case-insensitive)
+// match on one of the named values is accepted; anything else (numbers,
+// objects, CSS or HTML strings) falls back to the default. The value never
+// reaches CSS: it is mapped to a fixed class name (HERO_OVERLAY_CLASS).
 const normalizeOverlay = (value: unknown): HeroOverlay => {
   if (typeof value !== 'string') return DEFAULT_OVERLAY;
   const normalized = value.toLowerCase();
-  if (
-    normalized === 'dark' ||
-    normalized === 'light' ||
-    normalized === 'none'
-  ) {
-    return normalized;
-  }
-  return DEFAULT_OVERLAY;
+  return OVERLAYS.find((overlay) => overlay === normalized) ?? DEFAULT_OVERLAY;
+};
+
+/** Fixed lookup from overlay to class name on `.page-hero.image-full`. */
+export const HERO_OVERLAY_CLASS: Record<HeroOverlay, string | undefined> = {
+  dark: 'overlay-dark',
+  light: 'overlay-light',
+  none: undefined,
 };
 
 type TopLevelFields = {
