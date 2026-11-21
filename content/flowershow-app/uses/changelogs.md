@@ -181,7 +181,7 @@ showComments: false
           <p>Keep it in the same folder as the rest of your site, and one publish updates them all. Add a landing page and you have a whole product site.</p>
           <div className="cta-row">
             <a className="btn btn-primary" href="/docs/guides/build-a-product-site">Build a product site <span className="arw">→</span></a>
-            <a className="btn btn-secondary" href="/uses/websites#ladder">See what else a site can do <span className="arw">→</span></a>
+            <a className="btn btn-secondary" href="/uses/product-sites">See product sites <span className="arw">→</span></a>
           </div>
         </div>
       </div>

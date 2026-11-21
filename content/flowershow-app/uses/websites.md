@@ -81,7 +81,7 @@ showComments: false
               <ul className="rung-chips">
                 <li><a href="/uses/blogs">Blog</a></li>
                 <li><a href="/uses/docs">Docs</a></li>
-                <li><a href="/docs/reference/changelog">Changelog</a></li>
+                <li><a href="/uses/changelogs">Changelog</a></li>
                 <li><a href="/docs/reference/listings">Listing pages</a></li>
                 <li><a href="/docs/reference/page-authors">Authors</a></li>
                 <li><a href="/docs/reference/forms">Forms</a></li>
@@ -286,7 +286,7 @@ showComments: false
               <li><a href="/docs/reference/syntax">Markdown and MDX</a></li>
               <li><a href="/uses/blogs">Blog</a></li>
               <li><a href="/uses/docs">Docs</a></li>
-              <li><a href="/docs/reference/changelog">Changelog</a></li>
+              <li><a href="/uses/changelogs">Changelog</a></li>
               <li><a href="/docs/reference/page-authors">Authors and team pages</a></li>
               <li><a href="/docs/reference/forms">Forms</a></li>
               <li><a href="/docs/guides/publish-word-documents">Word documents</a></li>
@@ -368,7 +368,7 @@ showComments: false
             <div className="show-body">
               <span className="show-badge">Product site</span>
               <p><span className="nm">Flowershow</span> runs its landing page, pricing, docs, blog and changelog from one folder. This page is part of it.</p>
-              <a className="show-link" href="/docs/guides/build-a-product-site"><span className="lm-txt">How it's built</span> <span className="arw">→</span></a>
+              <a className="show-link" href="/uses/product-sites"><span className="lm-txt">Product sites</span> <span className="arw">→</span></a>
             </div>
           </div>
         </div>
