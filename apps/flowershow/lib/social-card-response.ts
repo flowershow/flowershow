@@ -6,11 +6,14 @@ const LONG = {
 };
 const SHORT = { browser: 'public, max-age=300', cdn: 'max-age=300' };
 
-const png = (body: ArrayBuffer, cache: typeof LONG) =>
+/** A rendered card; `complete` is false when its picture or logo couldn't be loaded. */
+export type RenderedCard = { body: ArrayBuffer; complete: boolean };
+
+const jpeg = (body: ArrayBuffer, cache: typeof LONG) =>
   new Response(body, {
     status: 200,
     headers: {
-      'content-type': 'image/png',
+      'content-type': 'image/jpeg',
       'cache-control': cache.browser,
       'cdn-cache-control': cache.cdn,
     },
@@ -18,24 +21,26 @@ const png = (body: ArrayBuffer, cache: typeof LONG) =>
 
 /**
  * Cache policy + fallbacks for /_og. Long cache only for a correct `v` and a
- * clean render; anything else gets a short cache so it self-heals. A missing
- * page is the site card (200), so the route never confirms a page exists.
+ * complete render; anything else gets a short cache so it self-heals (a
+ * picture that timed out is retried within minutes, not kept for a year). A
+ * missing page is the site card (200), so the route never confirms a page exists.
  */
 export async function socialCardResponse(a: {
   expectedVersion: string;
   requestedVersion: string | null;
-  renderPage: (() => Promise<ArrayBuffer>) | null;
-  renderSite: () => Promise<ArrayBuffer>;
+  renderPage: (() => Promise<RenderedCard>) | null;
+  renderSite: () => Promise<RenderedCard>;
   fallbackUrl: string;
 }): Promise<Response> {
-  const cache = a.requestedVersion === a.expectedVersion ? LONG : SHORT;
+  const versionOk = a.requestedVersion === a.expectedVersion;
   try {
-    return png(await (a.renderPage ?? a.renderSite)(), cache);
+    const card = await (a.renderPage ?? a.renderSite)();
+    return jpeg(card.body, versionOk && card.complete ? LONG : SHORT);
   } catch (err) {
     console.error('[og] card render failed', err);
   }
   try {
-    return png(await a.renderSite(), SHORT);
+    return jpeg((await a.renderSite()).body, SHORT);
   } catch (err) {
     console.error('[og] site card render failed', err);
   }

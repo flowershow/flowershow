@@ -52,6 +52,7 @@ export async function generateMetadata(props: {
     site: { ...site, plan },
     siteConfig: dbConfig,
     blob: null,
+    slug: '/',
   });
   const siteUrl = getSiteUrl(site);
   const image = {
@@ -63,7 +64,9 @@ export async function generateMetadata(props: {
     title: 'Site authentication',
     ...buildSocialMetadata({
       title: inputs.siteName,
-      description: inputs.siteDescription ?? undefined,
+      description: dbConfig?.description
+        ? String(dbConfig.description)
+        : undefined,
       url: `${siteUrl}/`,
       image,
     }),

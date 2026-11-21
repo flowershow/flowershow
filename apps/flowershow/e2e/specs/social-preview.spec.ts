@@ -30,7 +30,7 @@ test('page gets a generated social card and a computed description', async ({
 
   const res = await request.get(ogImage as string);
   expect(res.status()).toBe(200);
-  expect(res.headers()['content-type']).toBe('image/png');
+  expect(res.headers()['content-type']).toBe('image/jpeg');
   expect(res.headers()['cache-control']).toBe(
     'public, max-age=31536000, immutable',
   );
@@ -55,5 +55,5 @@ test('unknown pages get the site card, not a 404', async ({
   );
   const res = await request.get(missing);
   expect(res.status()).toBe(200);
-  expect(res.headers()['content-type']).toBe('image/png');
+  expect(res.headers()['content-type']).toBe('image/jpeg');
 });

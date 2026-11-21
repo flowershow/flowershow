@@ -155,6 +155,27 @@ export const fetchFile = async ({
   }
 };
 
+/** A site file's bytes (e.g. an image for a social card); null when missing or over `maxBytes`. */
+export const fetchFileBytes = async ({
+  projectId,
+  path,
+  maxBytes,
+}: {
+  projectId: string;
+  path: string;
+  maxBytes: number;
+}): Promise<Buffer | null> => {
+  try {
+    const response = await fetchS3Object(`${projectId}/main/raw/${path}`);
+    if ((response.ContentLength ?? 0) > maxBytes) return null;
+    const bytes = await response.Body?.transformToByteArray();
+    return bytes && bytes.byteLength <= maxBytes ? Buffer.from(bytes) : null;
+  } catch (err) {
+    if (err instanceof NoSuchKey) return null;
+    throw err;
+  }
+};
+
 /**
  * The Markdown converted from a Word document (`path` is the `.docx` path,
  * `sha` its Blob sha), or null if the conversion has not been stored.

@@ -130,7 +130,12 @@ export async function generateMetadata(props: {
       .query({ siteId: site.id })
       .catch(() => null);
   }
-  const inputs = toCardInputs({ site: cardSite, siteConfig, blob: null });
+  const inputs = toCardInputs({
+    site: cardSite,
+    siteConfig,
+    blob: null,
+    slug: '/',
+  });
   const image = {
     url: socialCardUrl(siteUrl, '/', socialCardVersion(inputs)),
     width: 1200,

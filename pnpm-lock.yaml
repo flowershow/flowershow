@@ -389,6 +389,9 @@ importers:
       server-only:
         specifier: ^0.0.1
         version: 0.0.1
+      sharp:
+        specifier: ^0.34.5
+        version: 0.34.5
       sonner:
         specifier: ^2.0.8
         version: 2.0.8(@types/react@19.2.2)(react-dom@19.2.1(react@19.2.1))(react@19.2.1)

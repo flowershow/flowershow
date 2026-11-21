@@ -1,8 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
 import { socialCardResponse } from './social-card-response';
 
-const png = new Uint8Array([1, 2, 3]).buffer;
-const ok = () => vi.fn(async () => png);
+const body = new Uint8Array([1, 2, 3]).buffer;
+const ok = () => vi.fn(async () => ({ body, complete: true }));
+const degraded = () => vi.fn(async () => ({ body, complete: false }));
 const boom = () =>
   vi.fn(async () => {
     throw new Error('render failed');
@@ -22,7 +23,7 @@ describe('socialCardResponse (Review Focus 5)', () => {
       fallbackUrl: 'F',
     });
     expect(res.status).toBe(200);
-    expect(res.headers.get('content-type')).toBe('image/png');
+    expect(res.headers.get('content-type')).toBe('image/jpeg');
     expect(res.headers.get('cache-control')).toBe(LONG);
     expect(res.headers.get('cdn-cache-control')).toBe(CDN_LONG);
   });
@@ -35,6 +36,18 @@ describe('socialCardResponse (Review Focus 5)', () => {
       expectedVersion: 'v1',
       requestedVersion: v,
       renderPage: ok(),
+      renderSite: ok(),
+      fallbackUrl: 'F',
+    });
+    expect(res.status).toBe(200);
+    expect(res.headers.get('cache-control')).toBe(SHORT);
+    expect(res.headers.get('cdn-cache-control')).toBe(CDN_SHORT);
+  });
+  it('short cache when the card is missing its picture or logo (so it self-heals)', async () => {
+    const res = await socialCardResponse({
+      expectedVersion: 'v1',
+      requestedVersion: 'v1',
+      renderPage: degraded(),
       renderSite: ok(),
       fallbackUrl: 'F',
     });

@@ -25,7 +25,7 @@ const text = (v: unknown): string | null =>
   typeof v === 'string' && v.trim() ? v.trim() : null;
 
 /** YAML reads an unquoted Obsidian `[[x]]` as [["x"]]. */
-function imageValue(v: unknown): string | null {
+export function imageValue(v: unknown): string | null {
   if (Array.isArray(v) && v.length === 1) {
     const inner = Array.isArray(v[0]) && v[0].length === 1 ? v[0][0] : v[0];
     return typeof inner === 'string' && inner.trim()
@@ -81,12 +81,12 @@ function bodyShows(body: string, src: string): boolean {
   ).test(text);
 }
 
-/** The site's intrinsic size for a site image URL: the longest dimensions-map key its path ends with (a path prefix such as /@user/site does not matter). */
-function knownSize(
+/** The dimensions-map key (`/path`) of a site image URL: the longest key its path ends with (a path prefix such as /@user/site does not matter). */
+export function siteImageKey(
   src: string,
   siteHostname: string,
   dimensions: ImageDimensionsMap | undefined,
-): { width: number; height: number } | undefined {
+): string | undefined {
   if (!dimensions) return undefined;
   let path: string;
   try {
@@ -96,11 +96,21 @@ function knownSize(
   } catch {
     return undefined;
   }
-  if (dimensions[path]) return dimensions[path];
+  if (dimensions[path]) return path;
   let best: string | undefined;
   for (const key of Object.keys(dimensions))
     if (path.endsWith(key) && (!best || key.length > best.length)) best = key;
-  return best ? dimensions[best] : undefined;
+  return best;
+}
+
+/** The site's intrinsic size for a site image URL. */
+function knownSize(
+  src: string,
+  siteHostname: string,
+  dimensions: ImageDimensionsMap | undefined,
+): { width: number; height: number } | undefined {
+  const key = siteImageKey(src, siteHostname, dimensions);
+  return key ? dimensions![key] : undefined;
 }
 
 /**

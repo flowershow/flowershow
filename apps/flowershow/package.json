@@ -109,6 +109,7 @@
     "remark-smartypants": "^3.0.3",
     "resend": "^6.19.0",
     "server-only": "^0.0.1",
+    "sharp": "^0.34.5",
     "sonner": "^2.0.8",
     "stripe": "^17.7.0",
     "superjson": "^2.2.6",

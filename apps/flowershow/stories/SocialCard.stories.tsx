@@ -8,17 +8,23 @@ const meta: Meta<typeof SocialCard> = {
     siteName: 'Ana’s Garden',
     logoSrc: null,
     title: 'Why I moved my notes from Obsidian to a public digital garden',
-    description:
-      'Last spring I made a slightly scary decision: I published my entire notes vault.',
-    displayUrl: 'notes-ana.flowershow.me/garden',
+    section: 'Notes',
+    domain: 'notes-ana.flowershow.me',
     showMark: true,
     markSrc: 'https://r2-assets.flowershow.app/logo.png',
+    pictureSrc: null,
   },
 };
 export default meta;
 type Story = StoryObj<typeof SocialCard>;
 
-export const FreeNoLogo: Story = {};
+export const TextCard: Story = {};
+export const PictureCard: Story = {
+  args: {
+    pictureSrc:
+      'https://flowershow.app/assets/covers/hokusai-poppies-large-flowers-series.webp',
+  },
+};
 export const Premium: Story = {
   args: {
     showMark: false,
@@ -27,11 +33,11 @@ export const Premium: Story = {
   },
 };
 export const LongTitle: Story = { args: { title: 'h'.repeat(200) } };
-export const NoDescription: Story = { args: { description: null } };
+export const NoSection: Story = { args: { section: null } };
 export const SiteOnly: Story = {
   args: {
     title: 'Team Handbook',
-    description: 'Private site',
-    displayUrl: 'handbook.example.org',
+    section: null,
+    domain: 'handbook.example.org',
   },
 };
