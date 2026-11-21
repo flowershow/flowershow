@@ -159,6 +159,26 @@ showComments: false
         </div>
       </div>
     </section>
+    <section className="section" id="showcase">
+      <div className="wrap">
+        <div className="section-head reveal">
+          <span className="eyebrow">Showcase</span>
+          <h2>Wikis growing on Flowershow</h2>
+          <p>A few of the <span className="stat-hl">2,600+</span> sites already published.</p>
+        </div>
+        <div className="show-grid">
+          <div className="show-card sc-wiki reveal">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
+            <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/wilber.webp" alt="Wilber Wiki published with Flowershow" loading="lazy" decoding="async" /></div>
+            <div className="show-body">
+              <span className="show-badge">Wiki</span>
+              <p><span className="nm">Wilber Wiki</span> is a concept-first index into Ken Wilber and Integral Theory: 41 concepts, each on its own page, with a reading roadmap.</p>
+              <a className="show-link" href="https://wilber.wiki"><span className="lm-txt">wilber.wiki</span> <span className="arw">→</span></a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
     <section className="final">
       <div className="wrap">
         <div className="final-card reveal">

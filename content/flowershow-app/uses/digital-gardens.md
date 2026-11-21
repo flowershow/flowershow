@@ -236,6 +236,15 @@ showComments: false
               <a className="show-link" href="https://dnd-compendium-iwuaa.flowershow.me/"><span className="lm-txt">dnd-compendium.flowershow.me</span> <span className="arw">→</span></a>
             </div>
           </div>
+          <div className="show-card sc-garden reveal">
+            <span className="show-go" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M7 17 17 7" /><path d="M7 7h10v10" /></svg></span>
+            <div className="show-thumb"><img className="show-thumb-img" src="/assets/showcases/wilber.webp" alt="Wilber Wiki published with Flowershow" loading="lazy" decoding="async" /></div>
+            <div className="show-body">
+              <span className="show-badge">Garden</span>
+              <p><span className="nm">Wilber Wiki</span> is a concept-first index into Ken Wilber and Integral Theory: 41 concepts, each on its own page, with a reading roadmap.</p>
+              <a className="show-link" href="https://wilber.wiki"><span className="lm-txt">wilber.wiki</span> <span className="arw">→</span></a>
+            </div>
+          </div>
         </div>
       </div>
     </section>
