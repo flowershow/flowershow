@@ -131,9 +131,13 @@ export async function GET(
       success: 0,
       failed: 0,
     };
+    // 'expired' files never arrived in storage, so they are missing from
+    // the site: count them as failed, not as success.
+    const isFailed = (status: string) =>
+      status === 'error' || status === 'expired';
     for (const pf of publishFiles) {
       if (pf.status === 'uploading') statusCounts.pending++;
-      else if (pf.status === 'error') statusCounts.failed++;
+      else if (isFailed(pf.status)) statusCounts.failed++;
       else statusCounts.success++; // 'success' or 'canceled'
     }
 
@@ -170,7 +174,7 @@ export async function GET(
       return NextResponse.json({
         status: 'error',
         errors: publishFiles
-          .filter((pf) => pf.status === 'error')
+          .filter((pf) => isFailed(pf.status))
           .map((pf) => ({
             path: pf.path,
             error: pf.error ?? 'Processing failed',

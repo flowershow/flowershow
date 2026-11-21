@@ -87,6 +87,25 @@ describe('GET /api/sites/id/:siteId/status — anonymous error branch', () => {
     expect(body.status).toBe('error');
     expect(body.errors).toEqual([{ path: 'secret/notes.md', error: 'boom' }]);
   });
+
+  // Production, 2026-11-18: 101 files never reached storage and expired, yet
+  // the status said complete with 0 failed.
+  it('reports expired files as failed', async () => {
+    findUnique.mockResolvedValue({
+      id: 'site-1',
+      userId: 'owner-1',
+      privacyMode: 'PUBLIC',
+    });
+    publishFileFindMany.mockResolvedValue([
+      { id: 'f1', path: 'a.md', status: 'success', error: null },
+      { id: 'f2', path: 'b.md', status: 'expired', error: 'Never received' },
+    ]);
+
+    const body = await (await GET(makeReq(), makeParams())).json();
+
+    expect(body.status).toBe('error');
+    expect(body.errors).toEqual([{ path: 'b.md', error: 'Never received' }]);
+  });
 });
 
 describe('GET /api/sites/id/:siteId/status — claim token', () => {

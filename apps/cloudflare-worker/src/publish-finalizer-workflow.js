@@ -4,29 +4,50 @@ import { getPostgresClient } from './clients.js';
 import { captureError } from './utils.js';
 
 const MAX_POLL_ATTEMPTS = 360; // 1 hour at 10s intervals
+// Instance statuses of a GitHub sync that may still upload files.
+const SYNC_RUNNING_STATUSES = [
+  'queued',
+  'running',
+  'waiting',
+  'paused',
+  'waitingForPause',
+];
 
 export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
   async run(event, step) {
-    const { publishId, siteId } = event.payload;
+    // syncInstanceId is set on the GitHub path only.
+    const { publishId, siteId, syncInstanceId } = event.payload;
 
     try {
       const sql = getPostgresClient(this.env);
 
+      // The one-hour timeout counts only polls made while no sync is running:
+      // a GitHub sync can wait hours for its rate limit to reset.
       let timedOut = false;
-      for (let i = 0; i < MAX_POLL_ATTEMPTS; i++) {
-        const done = await step.do(`check-completion-${i}`, async () => {
+      for (let i = 0, idlePolls = 0; ; i++) {
+        // true: done; null: files remain and the sync can still upload them;
+        // false: files remain. null stays falsy so that older code, which
+        // stored only true/false here, replays it as "not done". `== null`
+        // also accepts undefined, in case a stored null comes back as that.
+        const state = await step.do(`check-completion-${i}`, async () => {
           const [{ count }] = await sql`
           SELECT COUNT(*) AS count FROM "PublishFile"
           WHERE publish_id = ${publishId} AND status = 'uploading'
         `;
-          return Number(count) === 0;
+          if (Number(count) === 0) return true;
+          if (syncInstanceId && (await isSyncRunning(this.env, syncInstanceId)))
+            return null;
+          return false;
         });
-        if (done) break;
-        if (i === MAX_POLL_ATTEMPTS - 1) {
+        if (state === true) break;
+        if (state != null && ++idlePolls >= MAX_POLL_ATTEMPTS) {
           timedOut = true;
-        } else {
-          await step.sleep(`poll-interval-${i}`, '10 seconds');
+          break;
         }
+        await step.sleep(
+          `poll-interval-${i}`,
+          state == null ? '1 minute' : '10 seconds',
+        );
       }
 
       await step.do('finalize-publish', () =>
@@ -95,10 +116,23 @@ export class PublishFinalizerWorkflow extends WorkflowEntrypoint {
   }
 }
 
+async function isSyncRunning(env, instanceId) {
+  try {
+    const instance = await env.GITHUB_SYNC_WORKFLOW.get(instanceId);
+    const { status } = await instance.status();
+    return SYNC_RUNNING_STATUSES.includes(status);
+  } catch {
+    // Unknown instance or a lookup failure: count the poll towards the timeout.
+    return false;
+  }
+}
+
 export async function finalizePublish({ sql, publishId, timedOut }) {
   if (timedOut) {
     await sql`
-      UPDATE "PublishFile" SET status = 'expired'
+      UPDATE "PublishFile"
+      SET status = 'expired',
+        error = 'Never received, so not published. Publish again to retry.'
       WHERE publish_id = ${publishId} AND status = 'uploading'
     `;
   }

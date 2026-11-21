@@ -65,7 +65,7 @@ function FileStatusDot({ status }: { status: FileStatus }) {
       className={clsx(
         'inline-block h-1.5 w-1.5 rounded-full',
         status === 'success' && 'bg-green-500',
-        status === 'error' && 'bg-red-500',
+        (status === 'error' || status === 'expired') && 'bg-red-500',
         status === 'uploading' && 'bg-yellow-400',
         status === 'canceled' && 'bg-stone-300',
       )}
