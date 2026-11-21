@@ -45,6 +45,27 @@ cta:
 ---
 ```
 
+## Full-width background image
+
+By default the image sits on the right of the hero. To put it full width behind the title, description and buttons, use a `hero` object with `imagelayout: full`:
+
+```yaml
+---
+title: Maple & Moss Pottery
+description: Hand-thrown stoneware from a small studio in Bristol.
+hero:
+  image: /pottery.jpg
+  imagelayout: full
+cta:
+  - href: "#classes"
+    label: Book a class
+---
+```
+
+The text sits directly on the image with no overlay, so pick a light, low-contrast photo (or lighten it first) so dark text stays readable. To add your own overlay or white text instead, style `.page-hero.image-full` in [[custom-styles|custom CSS]].
+
+Any field in the `hero` object (`title`, `description`, `image`, `cta`) overrides the page's own field for the hero only.
+
 ## Site-wide configuration
 
 Enable hero sections across your site using `config.json`:

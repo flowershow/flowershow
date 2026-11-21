@@ -37,7 +37,7 @@ showComments: false
             <span className="rung-num">1</span>
             <div className="rung-copy">
               <h3>One file, one page</h3>
-              <p>Publish a single Markdown file and you get a clean, themed page at its own URL, with a preview card when you share it. Add <code>showHero: true</code> and its title, description and buttons become a hero banner.</p>
+              <p>Publish a single Markdown file and you get a clean, themed page at its own URL, with a preview card when you share it. Add <code>showHero: true</code> and its title, description and buttons become a hero banner, with a full-width photo behind them if you add one.</p>
               <ul className="rung-chips">
                 <li><a href="/docs/reference/syntax">Markdown syntax</a></li>
                 <li><a href="/docs/reference/hero-sections">Hero sections</a></li>
@@ -45,7 +45,7 @@ showComments: false
               </ul>
               <a className="textlink" href="/docs/getting-started"><span className="lm-txt">Publish your first page</span> <span className="arw">→</span></a>
             </div>
-            <div className="rung-media"><img src="/assets/uses/websites/rung-one-file.webp" alt="A pottery studio's one-page site with a hero banner and two buttons, published from a single Markdown file" loading="lazy" /></div>
+            <div className="rung-media"><img src="/assets/uses/websites/rung-one-file-hero.webp" alt="A pottery studio's one-page site with a full-width photo hero and two buttons, published from a single Markdown file" loading="lazy" /></div>
           </div>
           <div className="rung reveal">
             <span className="rung-num">2</span>
