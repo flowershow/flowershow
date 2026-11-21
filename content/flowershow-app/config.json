@@ -32,6 +32,10 @@
             "name": "Docs"
           },
           {
+            "href": "/uses/changelogs",
+            "name": "Changelog pages"
+          },
+          {
             "href": "/uses/data-stories",
             "name": "Data Stories"
           }
