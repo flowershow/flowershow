@@ -9,7 +9,7 @@ import { getConfig } from '@/lib/app-config';
 import { resolveNavBrand, resolveSiteName } from '@/lib/site-config';
 
 /** Bump when the card design changes, so every cached card URL changes. */
-export const CARD_VERSION = 2;
+export const CARD_VERSION = 3;
 
 /** A picture for the card: a site file (read from storage) or an external https image. */
 export interface CardImage {
