@@ -145,6 +145,23 @@ describe('toCardInputs', () => {
     expect(at(null)).toBe(siteImg);
   });
 
+  it('uses the navbar logo: the Flowershow logo when the site sets none, none when hidden', () => {
+    const logo = (siteConfig: unknown) =>
+      toCardInputs({
+        site,
+        siteConfig: siteConfig as never,
+        blob: null,
+        slug: '/',
+      });
+    const fallback = logo(null);
+    expect(fallback.logo).toBe('https://r2-assets.flowershow.app/logo.png');
+    // The logo is already Flowershow's, so no second mark beside the domain.
+    expect(fallback.showMark).toBe(false);
+    expect(logo({ showLogo: false }).logo).toBeNull();
+    expect(logo({ showLogo: false }).showMark).toBe(true);
+    expect(logo({ logo: 'https://x/l.png' }).showMark).toBe(true);
+  });
+
   it('hides the mark on premium', () => {
     expect(
       toCardInputs({
@@ -187,7 +204,7 @@ describe('socialCardVersion', () => {
   it.each([
     ['siteName', { ...base, siteName: 'S2' }],
     ['logo', { ...base, logo: 'x' }],
-    ['showMark', { ...base, showMark: false }],
+    ['showMark', { ...base, showMark: !base.showMark }],
     ['page sha', { ...base, page: { ...base.page!, sha: 'zzz' } }],
     ['section', { ...base, page: { ...base.page!, section: 'Docs' } }],
     ['no page', { ...base, page: null }],
