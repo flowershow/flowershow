@@ -136,6 +136,19 @@
         ]
       },
       {
+        "title": "Learn",
+        "links": [
+          {
+            "href": "https://wayofmarkdown.com",
+            "name": "The Way of Markdown"
+          },
+          {
+            "href": "https://wayofmarkdown.com/basics",
+            "name": "Markdown basics"
+          }
+        ]
+      },
+      {
         "title": "Community",
         "links": [
           {
