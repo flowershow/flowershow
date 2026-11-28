@@ -11,12 +11,14 @@ import Footer from '@/components/public/footer';
 import { FlowershowAnalytics } from '@/components/public/flowershow-analytics';
 import { ChromeErrorBoundary } from '@/components/public/chrome-error-boundary';
 import Nav, { CustomNavbar } from '@/components/public/nav';
+import { SiteBanner } from '@/components/public/site-banner';
 import { SiteProvider } from '@/components/public/site-context';
 import { TemporarySiteBanner } from '@/components/public/temporary-site-banner';
 import { env } from '@/env.mjs';
 import { isAnonymousSite, reportAbuseUrl } from '@/lib/anon-site-safety';
 import { getConfig } from '@/lib/app-config';
 import { customCssHref } from '@/lib/custom-css';
+import { formatBannerText } from '@/lib/format-banner-text';
 import {
   Feature,
   isFeatureEnabled,
@@ -366,6 +368,15 @@ export default async function PublicLayout(props: {
                     expiresAt={site.expiresAt ?? null}
                     anonymousOwnerId={site.anonymousOwnerId}
                   />
+                )}
+                {siteConfig?.banner?.text && (
+                  <SiteBanner
+                    siteId={site.id}
+                    text={siteConfig.banner.text}
+                    dismissible={siteConfig.banner.dismissible !== false}
+                  >
+                    {formatBannerText(siteConfig.banner.text)}
+                  </SiteBanner>
                 )}
                 {customNavbar ? (
                   // If the custom navbar fails to render, fall back to the default

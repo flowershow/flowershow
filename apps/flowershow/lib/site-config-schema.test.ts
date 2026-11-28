@@ -558,3 +558,47 @@ describe('sanitizeSiteConfig — toc', () => {
     expect(sanitizeSiteConfig({ toc: { style: 5 } })).toEqual({});
   });
 });
+
+describe('banner', () => {
+  it('accepts a banner on write and keeps it on read', () => {
+    const config = {
+      banner: { text: 'We **launched**! [More](/blog)', dismissible: false },
+    };
+    expect(() => validateConfigPatch(config)).not.toThrow();
+    expect(sanitizeSiteConfig(config)).toEqual(config);
+  });
+
+  it('accepts a partial patch and clearing the text', () => {
+    expect(() =>
+      validateConfigPatch({ banner: { dismissible: true } }),
+    ).not.toThrow();
+    expect(() => validateConfigPatch({ banner: { text: null } })).not.toThrow();
+  });
+
+  it.each([
+    ['empty text', { text: '' }],
+    ['multi-line text', { text: 'one\ntwo' }],
+    ['carriage return', { text: 'one\rtwo' }],
+    ['over-long text', { text: 'x'.repeat(201) }],
+    ['non-string text', { text: 5 }],
+    ['non-boolean dismissible', { text: 'Hi', dismissible: 'yes' }],
+    ['unknown key', { text: 'Hi', color: 'red' }],
+  ])('rejects %s on write', (_name, banner) => {
+    expect(() => validateConfigPatch({ banner })).toThrow(/banner/);
+  });
+
+  it('accepts text of exactly the maximum length', () => {
+    expect(() =>
+      validateConfigPatch({ banner: { text: 'x'.repeat(200) } }),
+    ).not.toThrow();
+  });
+
+  it('drops an invalid banner on read instead of throwing', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    expect(
+      sanitizeSiteConfig({ siteName: 'Brand', banner: { text: 'a\nb' } }),
+    ).toEqual({ siteName: 'Brand' });
+    expect(warn).toHaveBeenCalledOnce();
+    warn.mockRestore();
+  });
+});

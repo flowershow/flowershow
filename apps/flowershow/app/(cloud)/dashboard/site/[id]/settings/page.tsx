@@ -14,6 +14,7 @@ import { validDomainRegex } from '@/lib/domains';
 import { Feature, isFeatureEnabled } from '@/lib/feature-flags';
 import { getRepoFullName } from '@/lib/get-repo-full-name';
 import { ownerSectionVisibility } from '@/lib/settings-sections';
+import { BANNER_TEXT_MAX_LENGTH } from '@/lib/site-config-schema';
 import { PLANS } from '@/lib/stripe-plans';
 import { OFFICIAL_THEMES } from '@/lib/themes';
 import { SITE_NAME_MAX_LENGTH } from '@/lib/validate-site-name';
@@ -136,6 +137,24 @@ export default async function SiteSettingsPage(props: {
     await api.site.updateDbConfig.mutate({
       siteId: id,
       config: { nav: { [key]: value || null } },
+    });
+  };
+
+  const updateBannerConfig = async ({
+    id,
+    key,
+    value,
+  }: {
+    id: string;
+    key: string;
+    value: string;
+  }) => {
+    'use server';
+    const configValue =
+      key === 'dismissible' ? value === 'true' : value || null;
+    await api.site.updateDbConfig.mutate({
+      siteId: id,
+      config: { banner: { [key]: configValue } },
     });
   };
 
@@ -516,6 +535,43 @@ export default async function SiteSettingsPage(props: {
               defaultValue: (siteConfig?.showLogo !== false).toString(),
             }}
             handleSubmit={updateDbConfig}
+          />
+          <Form
+            title="Announcement Banner"
+            description="A message shown in a bar above the navbar on every page, e.g. to announce a launch or a notice."
+            helpText={
+              <>
+                Supports **bold**, *italic* and [label](url). One line only.{' '}
+                <a
+                  className="underline"
+                  href="https://flowershow.app/docs/reference/banner"
+                >
+                  Learn more
+                  <ExternalLinkIcon className="inline h-4" />
+                </a>
+              </>
+            }
+            inputAttrs={{
+              name: 'text',
+              type: 'text',
+              defaultValue: siteConfig?.banner?.text ?? '',
+              placeholder: 'We just launched **v2**! [Read more](/blog/v2)',
+              maxLength: BANNER_TEXT_MAX_LENGTH,
+              required: false,
+            }}
+            handleSubmit={updateBannerConfig}
+          />
+          <Form
+            title="Banner Dismissible"
+            description="Let visitors close the announcement banner. If they do, it stays closed until you change the text."
+            inputAttrs={{
+              name: 'dismissible',
+              type: 'text',
+              defaultValue: (
+                siteConfig?.banner?.dismissible !== false
+              ).toString(),
+            }}
+            handleSubmit={updateBannerConfig}
           />
           <Form
             title="Nav Title"

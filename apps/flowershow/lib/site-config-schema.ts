@@ -48,6 +48,16 @@ const ctaItemSchema = z.object({ href: z.string(), label: z.string() });
 // giscus is Partial<GiscusProps> — many props, so accept any plain object.
 const giscusSchema = z.record(z.string(), z.unknown());
 
+/** Longest announcement-bar text we accept. */
+export const BANNER_TEXT_MAX_LENGTH = 200;
+// Single line only: the dashboard field is a one-line input and the inline
+// parser has no notion of line breaks.
+const bannerTextSchema = z
+  .string()
+  .min(1)
+  .max(BANNER_TEXT_MAX_LENGTH)
+  .regex(/^[^\r\n]*$/, 'must be a single line');
+
 type Mode = 'strict' | 'loose';
 
 /**
@@ -99,6 +109,12 @@ function buildConfigShape(mode: Mode) {
   const footerConfigSchema = obj({
     navigation: z.array(footerGroupSchema).optional(),
   });
+  // Both fields optional: a patch may set one without the other, and a cleared
+  // `text` hides the banner.
+  const bannerConfigSchema = obj({
+    text: bannerTextSchema.optional(),
+    dismissible: z.boolean().optional(),
+  });
   const sidebarSchema = obj({
     orderBy: enumOrString(['title', 'path']).optional(),
     paths: z.array(z.string()).optional(),
@@ -120,6 +136,7 @@ function buildConfigShape(mode: Mode) {
     favicon: z.string(),
     nav: navConfigSchema,
     footer: footerConfigSchema,
+    banner: bannerConfigSchema,
     social: z.array(socialLinkSchema),
     analytics: z.string(),
     umami: z.union([z.string(), umamiObjectSchema]),
